@@ -1,6 +1,6 @@
 from .browser_factory import BrowserDriverFactory, BrowserConfigTemplates, BrowserUtils
 from .fingerprint_collector import FingerprintCollector, FingerprintAnalyzer
-from .test_utils import TestConfig, TestResultManager, TestExecutor, TestValidator
+from .test_utils import TestResultManager, TestExecutor, TestValidator
 from .login_helper import LoginHelper
 
 __all__ = [
@@ -9,7 +9,6 @@ __all__ = [
     'BrowserUtils',
     'FingerprintCollector',
     'FingerprintAnalyzer',
-    'TestConfig',
     'TestResultManager',
     'TestExecutor',
     'TestValidator',

@@ -7,6 +7,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.edge.options import Options as EdgeOptions
+from config import ConfigManager
 
 class BrowserDriverFactory:
     
@@ -22,7 +23,9 @@ class BrowserDriverFactory:
             options.add_argument("--no-sandbox")
             options.add_argument("--disable-dev-shm-usage")
             options.add_argument("--disable-gpu")
-            options.add_argument("--window-size=1920,1080")  # Default size
+
+            default_resolution = ConfigManager.SCREEN_SIZES[0] if ConfigManager.SCREEN_SIZES else {"width": 1920, "height": 1080}
+            options.add_argument(f"--window-size={default_resolution['width']},{default_resolution['height']}")
             
             options.add_argument("--enable-unsafe-swiftshader")
             options.add_argument("--disable-software-rasterizer")
@@ -38,13 +41,10 @@ class BrowserDriverFactory:
             if custom_config:
                 BrowserDriverFactory._apply_chrome_config(options, custom_config)
             
-            print(f"Setting up Chrome driver with config: {custom_config.get('name', 'Default') if custom_config else 'Default'}")
-            
             driver = webdriver.Chrome(options=options)
             
             driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
             
-            print("✓ Chrome driver setup successful")
             return driver
             
         except Exception as e:
@@ -86,14 +86,11 @@ class BrowserDriverFactory:
             if custom_config:
                 BrowserDriverFactory._apply_firefox_config(options, custom_config)
             
-            print(f"Setting up Firefox driver with config: {custom_config.get('name', 'Default') if custom_config else 'Default'}")
-            
             driver = webdriver.Firefox(options=options)
             
             if custom_config:
                 BrowserDriverFactory._apply_firefox_post_config(driver, custom_config)
             
-            print("✓ Firefox driver setup successful")
             return driver
             
         except Exception as e:
@@ -145,16 +142,15 @@ class BrowserDriverFactory:
             
             options.add_argument("--no-sandbox")
             options.add_argument("--disable-dev-shm-usage")
-            options.add_argument("--window-size=1920,1080")  # Default size
+            # Get default screen resolution from config  
+            default_resolution = ConfigManager.SCREEN_SIZES[0] if ConfigManager.SCREEN_SIZES else {"width": 1920, "height": 1080}
+            options.add_argument(f"--window-size={default_resolution['width']},{default_resolution['height']}")
             
             if custom_config:
                 BrowserDriverFactory._apply_edge_config(options, custom_config)
             
-            print(f"Setting up Edge driver with config: {custom_config.get('name', 'Default') if custom_config else 'Default'}")
-            
             driver = webdriver.Edge(options=options)
             
-            print("✓ Edge driver setup successful")
             return driver
             
         except Exception as e:
@@ -188,9 +184,11 @@ class BrowserDriverFactory:
 
 
 class BrowserConfigTemplates:
+    """Browser configuration templates using centralized config"""
     
     @staticmethod
     def get_language_config(language_code, language_name):
+        """Get language configuration template"""
         return {
             "name": f"Lang_{language_name}",
             "language": language_code
@@ -198,10 +196,59 @@ class BrowserConfigTemplates:
     
     @staticmethod
     def get_user_agent_config(user_agent_string, config_name):
+        """Get user agent configuration template"""
         return {
             "name": f"UA_{config_name}",
             "user_agent": user_agent_string
         }
+    
+    @staticmethod
+    def get_timezone_config(timezone_name, display_name):
+        """Get timezone configuration template"""
+        return {
+            "name": f"TZ_{display_name}",
+            "timezone": timezone_name
+        }
+    
+    @staticmethod
+    def get_resolution_config(width, height, name):
+        """Get screen resolution configuration template"""
+        return {
+            "name": f"Res_{name}",
+            "resolution": {"width": width, "height": height}
+        }
+    
+    @staticmethod
+    def get_all_language_configs():
+        """Get all language configurations from ConfigManager"""
+        return [
+            BrowserConfigTemplates.get_language_config(lang['language'], lang['name'])
+            for lang in ConfigManager.LANGUAGES
+        ]
+    
+    @staticmethod
+    def get_all_user_agent_configs():
+        """Get all user agent configurations from ConfigManager"""
+        return [
+            BrowserConfigTemplates.get_user_agent_config(ua['ua'], ua['name'])
+            for ua in ConfigManager.USER_AGENTS
+        ]
+    
+    @staticmethod
+    def get_all_timezone_configs():
+        """Get all timezone configurations from ConfigManager"""
+        return [
+            BrowserConfigTemplates.get_timezone_config(tz['timezone'], tz['name'])
+            for tz in ConfigManager.TIMEZONES
+        ]
+    
+    @staticmethod
+    def get_all_resolution_configs():
+        """Get all screen resolution configurations from ConfigManager"""
+        return [
+            BrowserConfigTemplates.get_resolution_config(res['width'], res['height'], res['name'])
+            for res in ConfigManager.SCREEN_SIZES
+        ]
 
 class BrowserUtils:
     
@@ -215,7 +262,7 @@ class BrowserUtils:
         if driver:
             try:
                 driver.quit()
-                print("✓ Browser driver closed successfully")
+                
             except Exception as e:
                 print(f"⚠️ Warning: Error closing driver: {e}")
     

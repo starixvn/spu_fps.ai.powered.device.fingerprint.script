@@ -1,6 +1,3 @@
-"""
-Login utilities for browser testing
-"""
 import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -13,7 +10,6 @@ class LoginHelper:
     
     def perform_login(self, test_url, username, password):
         try:
-            print(f"Navigating to login page...")
             self.driver.get(test_url)
             
             WebDriverWait(self.driver, 10).until(
@@ -57,7 +53,6 @@ class LoginHelper:
                         continue
                 
                 if password_field:
-                    print(f"Found password field, entering password")
                     password_field.clear()
                     password_field.send_keys(password)
                 
@@ -74,14 +69,13 @@ class LoginHelper:
                         continue
                 
                 if login_button:
-                    print(f"Clicking login button...")
                     login_button.click()
                     time.sleep(3)
                     
                     current_url = self.driver.current_url
                     if current_url != test_url:
-                        print(f"✅ Login successful! Redirected to: {current_url}")
                         return True, None
+                    
                     else:
                         print(f"⚠️ Login may have failed - still on login page")
                         return False, "Still on login page"

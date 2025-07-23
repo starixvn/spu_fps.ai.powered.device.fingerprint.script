@@ -3,54 +3,12 @@ import json
 import time
 from datetime import datetime
 
-class TestConfig:
-    
-    LANGUAGE_CONFIGS = [
-        {"language": "en-US", "name": "English_US"},
-        {"language": "vi-VN", "name": "Vietnamese"},
-        {"language": "ja-JP", "name": "Japanese"},
-        {"language": "de-DE", "name": "German"},
-        {"language": "fr-FR", "name": "French"}
-    ]
-    
-    USER_AGENT_CONFIGS = [
-        {
-            "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "name": "Chrome_120_Windows"
-        },
-        {
-            "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "name": "Chrome_120_Mac"
-        },
-        {
-            "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "name": "Chrome_120_Linux"
-        },
-        {
-            "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0",
-            "name": "Firefox_121_Windows"
-        }
-    ]
-    
-    TIMEZONE_CONFIGS = [
-        {"timezone": "America/New_York", "name": "UTC-5_NewYork"},
-        {"timezone": "Europe/London", "name": "UTC+0_London"},
-        {"timezone": "Asia/Tokyo", "name": "UTC+9_Tokyo"},
-        {"timezone": "Asia/Ho_Chi_Minh", "name": "UTC+7_Vietnam"}
-    ]
-    
-    DEFAULT_LOGIN_URL = "http://localhost:60207/Login"
-    DEFAULT_TEST_URL = "http://localhost:60207/Login"
-    
-    @staticmethod
-    def get_test_credentials(prefix="test"):
-        computer_name = os.environ.get('COMPUTERNAME', 'unknown')
+import os
+import json
+import time
+from datetime import datetime
 
-        return {
-            "username": f"{computer_name}_{prefix}",
-            "password": "1234aa"
-        }
-
+from config import ConfigManager
 
 class TestResultManager:
     
@@ -137,10 +95,10 @@ class TestResultManager:
 class TestExecutor:
     
     def __init__(self, test_url=None):
-        self.test_url = test_url or TestConfig.DEFAULT_TEST_URL
+        self.test_url = test_url or ConfigManager.get_default_test_url("DEV")
         self.result_manager = TestResultManager()
-        self.credentials = TestConfig.get_test_credentials()
-    
+        self.credentials = ConfigManager.get_test_credentials("login_test")
+
     def execute_test_with_config(self, test_func, browser_type, config, headless=False):
         from .browser_factory import BrowserDriverFactory, BrowserUtils
         
