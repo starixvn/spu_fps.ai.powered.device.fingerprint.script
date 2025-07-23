@@ -1,5 +1,3 @@
-import sys
-import json
 from datetime import datetime
 from fps_test import BrowserAutomation, BrowserAttributeTest
 from config.general_config import SUPPORTED_BROWSERS

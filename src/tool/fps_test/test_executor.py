@@ -1,5 +1,4 @@
-from .language_tests import LanguageTest
-from .user_agent_tests import UserAgentTest
+from .attribute_tests import LanguageTest, UserAgentTest
 from utils import TestExecutor
 
 class BrowserAttributeTest(TestExecutor):
