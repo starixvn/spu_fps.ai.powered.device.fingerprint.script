@@ -88,9 +88,6 @@ class BrowserDriverFactory:
             
             driver = webdriver.Firefox(options=options)
             
-            if custom_config:
-                BrowserDriverFactory._apply_firefox_post_config(driver, custom_config)
-            
             return driver
             
         except Exception as e:
@@ -105,6 +102,19 @@ class BrowserDriverFactory:
             options.add_argument(f"--width={res['width']}")
             options.add_argument(f"--height={res['height']}")
         
+        if "user_agent" in config:
+            options.set_preference("general.useragent.override", config['user_agent'])
+            options.set_preference("general.useragent.site_specific_overrides", False)
+            options.set_preference("general.useragent.extra.firefox", "")
+        
+        if "language" in config:
+
+            lang_code = config['language']
+            options.set_preference("intl.locale.requested", lang_code)
+            options.set_preference("intl.accept_languages", f"{lang_code},en-US,en")
+            options.set_preference("general.useragent.locale", lang_code)
+            options.set_preference("javascript.use_us_english_locale", False)
+        
         if "additional_args" in config:
             for arg in config['additional_args']:
                 options.add_argument(arg)
@@ -112,24 +122,6 @@ class BrowserDriverFactory:
         if "prefs" in config:
             for key, value in config['prefs'].items():
                 options.set_preference(key, value)
-    
-    @staticmethod
-    def _apply_firefox_post_config(driver, config):
-       
-        if "language" in config:
-            try:
-                driver.execute_script(f"""
-                    try {{
-                        var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                            .getService(Components.interfaces.nsIPrefBranch);
-                        prefs.setCharPref("intl.locale.requested", "{config['language']}");
-                    }} catch(e) {{
-                        // Firefox may not allow this in some versions
-                        console.log("Could not set language preference:", e);
-                    }}
-                """)
-            except:
-                pass
     
     @staticmethod
     def create_edge_driver(headless=False, custom_config=None):
@@ -142,7 +134,7 @@ class BrowserDriverFactory:
             
             options.add_argument("--no-sandbox")
             options.add_argument("--disable-dev-shm-usage")
-            # Get default screen resolution from config  
+
             default_resolution = ConfigManager.SCREEN_SIZES[0] if ConfigManager.SCREEN_SIZES else {"width": 1920, "height": 1080}
             options.add_argument(f"--window-size={default_resolution['width']},{default_resolution['height']}")
             
@@ -184,11 +176,9 @@ class BrowserDriverFactory:
 
 
 class BrowserConfigTemplates:
-    """Browser configuration templates using centralized config"""
     
     @staticmethod
     def get_language_config(language_code, language_name):
-        """Get language configuration template"""
         return {
             "name": f"Lang_{language_name}",
             "language": language_code
@@ -196,7 +186,6 @@ class BrowserConfigTemplates:
     
     @staticmethod
     def get_user_agent_config(user_agent_string, config_name):
-        """Get user agent configuration template"""
         return {
             "name": f"UA_{config_name}",
             "user_agent": user_agent_string
@@ -204,7 +193,6 @@ class BrowserConfigTemplates:
     
     @staticmethod
     def get_timezone_config(timezone_name, display_name):
-        """Get timezone configuration template"""
         return {
             "name": f"TZ_{display_name}",
             "timezone": timezone_name
@@ -212,7 +200,6 @@ class BrowserConfigTemplates:
     
     @staticmethod
     def get_resolution_config(width, height, name):
-        """Get screen resolution configuration template"""
         return {
             "name": f"Res_{name}",
             "resolution": {"width": width, "height": height}
@@ -220,7 +207,6 @@ class BrowserConfigTemplates:
     
     @staticmethod
     def get_all_language_configs():
-        """Get all language configurations from ConfigManager"""
         return [
             BrowserConfigTemplates.get_language_config(lang['language'], lang['name'])
             for lang in ConfigManager.LANGUAGES
@@ -228,7 +214,6 @@ class BrowserConfigTemplates:
     
     @staticmethod
     def get_all_user_agent_configs():
-        """Get all user agent configurations from ConfigManager"""
         return [
             BrowserConfigTemplates.get_user_agent_config(ua['ua'], ua['name'])
             for ua in ConfigManager.USER_AGENTS
@@ -236,7 +221,6 @@ class BrowserConfigTemplates:
     
     @staticmethod
     def get_all_timezone_configs():
-        """Get all timezone configurations from ConfigManager"""
         return [
             BrowserConfigTemplates.get_timezone_config(tz['timezone'], tz['name'])
             for tz in ConfigManager.TIMEZONES
@@ -244,7 +228,6 @@ class BrowserConfigTemplates:
     
     @staticmethod
     def get_all_resolution_configs():
-        """Get all screen resolution configurations from ConfigManager"""
         return [
             BrowserConfigTemplates.get_resolution_config(res['width'], res['height'], res['name'])
             for res in ConfigManager.SCREEN_SIZES

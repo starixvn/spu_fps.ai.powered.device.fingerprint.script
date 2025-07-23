@@ -1,5 +1,5 @@
-from .browser_customization_tests import BrowserAttributeTest
-from .cross_browser_automation import BrowserAutomation
+from .browser_test_suite import BrowserAttributeTest
+from .cross_browser_login_tests import BrowserAutomation
 
 __all__ = [
     "BrowserAutomation",

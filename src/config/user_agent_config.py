@@ -1,11 +1,11 @@
 USER_AGENT_CONFIGS = [
-    {
-        "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "name": "Chrome_120_Windows",
-        "platform": "Windows",
-        "browser": "Chrome",
-        "version": "120"
-    },
+    # {
+    #     "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    #     "name": "Chrome_120_Windows",
+    #     "platform": "Windows",
+    #     "browser": "Chrome",
+    #     "version": "120"
+    # },
     {
         "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "name": "Chrome_120_Mac",
@@ -20,13 +20,13 @@ USER_AGENT_CONFIGS = [
         "browser": "Chrome",
         "version": "120"
     },
-    {
-        "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0",
-        "name": "Firefox_121_Windows",
-        "platform": "Windows",
-        "browser": "Firefox",
-        "version": "121"
-    },
+    # {
+    #     "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0",
+    #     "name": "Firefox_121_Windows",
+    #     "platform": "Windows",
+    #     "browser": "Firefox",
+    #     "version": "121"
+    # },
     # {
     #     "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/121.0",
     #     "name": "Firefox_121_Mac",

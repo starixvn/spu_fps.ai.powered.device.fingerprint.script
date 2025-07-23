@@ -1,11 +1,14 @@
 import time
+import os
 from datetime import datetime
 from utils import BrowserDriverFactory, BrowserUtils, TestResultManager, LoginHelper, TestExecutor
 from config import ConfigManager
 
 class BrowserAutomation(TestExecutor):
     def __init__(self):
-        self.login_url = ConfigManager.get_default_login_url("LOCAL")
+        env = os.getenv("ENVIRONMENT", "DEV")
+        self.login_url = ConfigManager.get_default_login_url(env)
+        
         self.result_manager = TestResultManager()
         self.credentials = ConfigManager.get_test_credentials("login_test")
         
@@ -74,7 +77,7 @@ class BrowserAutomation(TestExecutor):
     
     def run_single_browser_test(self, browser_type="chrome", headless=True):
         print(f"\n{'='*50}")
-        print(f"Starting {browser_type.upper()} browser test (headless: {headless})")
+        print(f"Starting Test case Login for {browser_type.upper()} browser (headless: {headless})")
         print(f"{'='*50}")
         
         driver = None
@@ -115,20 +118,4 @@ class BrowserAutomation(TestExecutor):
     def results(self):
         return self.result_manager.results  
     
-# if __name__ == "__main__":
-#     import sys
-    
-#     automation = BrowserAutomation()
-    
-#     if len(sys.argv) > 1:
-#         if sys.argv[1].lower() == "visible":
-#             automation.run_all_browsers_test(headless=True)
-#         elif sys.argv[1].lower() in ["chrome", "firefox"]:
-#             visible = len(sys.argv) > 2 and sys.argv[2].lower() == "visible"
-#             automation.run_single_browser_test(sys.argv[1].lower(), headless=not visible)
-#         else:
-#             print("Usage: python cross_browser_automation.py [chrome|firefox|edge|visible]")
-#             print("       python cross_browser_automation.py <browser> visible")
-#             print("       Default: headless mode (no browser window)")
-#     else:
-#         automation.run_all_browsers_test()
+
