@@ -4,13 +4,13 @@
 block_cipher = None
 
 a = Analysis(
-    ['src/tool/app.py'],
+    ['src/app.py'],
     pathex=['src'],
     binaries=[],
     datas=[
-        ('src/tool/config', 'config'),
-        ('src/tool/fps_test', 'fps_test'),
-        ('src/tool/utils', 'utils'),
+        ('src/config', 'config'),
+        ('src/fps_test', 'fps_test'),
+        ('src/utils', 'utils'),
     ],
     hiddenimports=[
         'selenium',
