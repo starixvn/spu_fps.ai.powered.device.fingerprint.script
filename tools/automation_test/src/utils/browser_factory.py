@@ -1,168 +1,134 @@
-"""
-Browser Driver Utilities
-Common functions for setting up and configuring browser drivers
-"""
 import os
+import platform
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.edge.options import Options as EdgeOptions
+from selenium.webdriver.safari.options import Options as SafariOptions
 from config import ConfigManager
 
 class BrowserDriverFactory:
     
     @staticmethod
     def create_chrome_driver(headless=False, custom_config=None):
-       
-        try:
-            options = ChromeOptions()
-            
-            if headless:
-                options.add_argument("--headless")
-            
-            options.add_argument("--no-sandbox")
-            options.add_argument("--disable-dev-shm-usage")
-            options.add_argument("--disable-gpu")
-
-            default_resolution = ConfigManager.SCREEN_SIZES[0] if ConfigManager.SCREEN_SIZES else {"width": 1920, "height": 1080}
-            options.add_argument(f"--window-size={default_resolution['width']},{default_resolution['height']}")
-            
-            options.add_argument("--enable-unsafe-swiftshader")
-            options.add_argument("--disable-software-rasterizer")
-            options.add_argument("--disable-extensions")
-            options.add_argument("--disable-plugins")
-            options.add_argument("--disable-logging")
-            options.add_argument("--log-level=3")  # Chỉ hiển thị lỗi nghiêm trọng
-            
-            options.add_argument("--disable-blink-features=AutomationControlled")
-            options.add_experimental_option("excludeSwitches", ["enable-automation"])
-            options.add_experimental_option('useAutomationExtension', False)
-            
-            if custom_config:
-                BrowserDriverFactory._apply_chrome_config(options, custom_config)
-            
-            driver = webdriver.Chrome(options=options)
-            
-            driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-            
-            return driver
-            
-        except Exception as e:
-            print(f"Chrome setup error: {e}")
-            raise e
+        options = ChromeOptions()
+        
+        if headless:
+            options.add_argument("--headless")
+        
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-gpu")
+        options.add_argument("--log-level=3")
+        
+        options.add_argument("--disable-blink-features=AutomationControlled")
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        options.add_experimental_option('useAutomationExtension', False)
+        
+        default_resolution = ConfigManager.SCREEN_SIZES[0] if ConfigManager.SCREEN_SIZES else {"width": 1920, "height": 1080}
+        options.add_argument(f"--window-size={default_resolution['width']},{default_resolution['height']}")
+        
+        if custom_config:
+            BrowserDriverFactory._apply_chrome_config(options, custom_config)
+        
+        driver = webdriver.Chrome(options=options)
+        driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+        
+        return driver
     
     @staticmethod
     def _apply_chrome_config(options, config):
-
         if "language" in config:
             options.add_argument(f"--lang={config['language']}")
-            prefs = options.experimental_options.get("prefs", {})
-            prefs["intl.accept_languages"] = config['language']
+            prefs = {"intl.accept_languages": config['language']}
             options.add_experimental_option("prefs", prefs)
         
         if "user_agent" in config:
             options.add_argument(f"--user-agent={config['user_agent']}")
-        
-        if "resolution" in config:
-            res = config['resolution']
-            options.add_argument(f"--window-size={res['width']},{res['height']}")
-        
-        if "timezone" in config:
-            prefs = options.experimental_options.get("prefs", {})
-            prefs["profile.default_content_setting_values.geolocation"] = 1
-    
+
     @staticmethod
     def create_firefox_driver(headless=False, custom_config=None):
+        options = FirefoxOptions()
         
-        try:
-            options = FirefoxOptions()
-            
-            if headless:
-                options.add_argument("--headless")
-            
-            options.add_argument("--width=1920")
-            options.add_argument("--height=1080")
-            
-            if custom_config:
-                BrowserDriverFactory._apply_firefox_config(options, custom_config)
-            
-            driver = webdriver.Firefox(options=options)
-            
-            return driver
-            
-        except Exception as e:
-            print(f"Firefox setup error: {e}")
-            raise e
+        if headless:
+            options.add_argument("--headless")
+        
+        options.add_argument("--width=1920")
+        options.add_argument("--height=1080")
+        
+        if custom_config:
+            BrowserDriverFactory._apply_firefox_config(options, custom_config)
+        
+        return webdriver.Firefox(options=options)
     
     @staticmethod
     def _apply_firefox_config(options, config):
-        
-        if "resolution" in config:
-            res = config['resolution']
-            options.add_argument(f"--width={res['width']}")
-            options.add_argument(f"--height={res['height']}")
-        
+
         if "user_agent" in config:
             options.set_preference("general.useragent.override", config['user_agent'])
-            options.set_preference("general.useragent.site_specific_overrides", False)
-            options.set_preference("general.useragent.extra.firefox", "")
         
         if "language" in config:
-
             lang_code = config['language']
             options.set_preference("intl.locale.requested", lang_code)
             options.set_preference("intl.accept_languages", f"{lang_code},en-US,en")
-            options.set_preference("general.useragent.locale", lang_code)
-            options.set_preference("javascript.use_us_english_locale", False)
-        
-        if "additional_args" in config:
-            for arg in config['additional_args']:
-                options.add_argument(arg)
-        
-        if "prefs" in config:
-            for key, value in config['prefs'].items():
-                options.set_preference(key, value)
-    
+
     @staticmethod
     def create_edge_driver(headless=False, custom_config=None):
-       
-        try:
-            options = EdgeOptions()
-            
-            if headless:
-                options.add_argument("--headless")
-            
-            options.add_argument("--no-sandbox")
-            options.add_argument("--disable-dev-shm-usage")
-
-            default_resolution = ConfigManager.SCREEN_SIZES[0] if ConfigManager.SCREEN_SIZES else {"width": 1920, "height": 1080}
-            options.add_argument(f"--window-size={default_resolution['width']},{default_resolution['height']}")
-            
-            if custom_config:
-                BrowserDriverFactory._apply_edge_config(options, custom_config)
-            
-            driver = webdriver.Edge(options=options)
-            
-            return driver
-            
-        except Exception as e:
-            print(f"Edge setup error: {e}")
-            raise e
+        options = EdgeOptions()
+        
+        if headless:
+            options.add_argument("--headless")
+        
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-gpu")
+        options.add_argument("--log-level=3")
+        
+        options.add_argument("--disable-blink-features=AutomationControlled")
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        options.add_experimental_option('useAutomationExtension', False)
+        
+        default_resolution = ConfigManager.SCREEN_SIZES[0] if ConfigManager.SCREEN_SIZES else {"width": 1920, "height": 1080}
+        options.add_argument(f"--window-size={default_resolution['width']},{default_resolution['height']}")
+        
+        if custom_config:
+            BrowserDriverFactory._apply_edge_config(options, custom_config)
+        
+        driver = webdriver.Edge(options=options)
+        driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+        
+        return driver
     
     @staticmethod
     def _apply_edge_config(options, config):
+        if "language" in config:
+            options.add_argument(f"--lang={config['language']}")
+            prefs = {"intl.accept_languages": config['language']}
+            options.add_experimental_option("prefs", prefs)
         
-        if "resolution" in config:
-            res = config['resolution']
-            options.add_argument(f"--window-size={res['width']},{res['height']}")
+        if "user_agent" in config:
+            options.add_argument(f"--user-agent={config['user_agent']}")
+
+    @staticmethod
+    def create_safari_driver(headless=False, custom_config=None):
+        if platform.system() != "Darwin":
+            raise Exception("Safari WebDriver is only supported on macOS")
         
-        if "additional_args" in config:
-            for arg in config['additional_args']:
-                options.add_argument(arg)
-    
+        options = SafariOptions()
+        driver = webdriver.Safari(options=options)
+        
+        default_resolution = ConfigManager.SCREEN_SIZES[0] if ConfigManager.SCREEN_SIZES else {"width": 1920, "height": 1080}
+        driver.set_window_size(default_resolution['width'], default_resolution['height'])
+        
+        try:
+            driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+        except:
+            pass
+        
+        return driver
+
     @staticmethod
     def create_driver(browser_type, headless=False, custom_config=None):
-       
         browser_type = browser_type.lower()
         
         if browser_type == "chrome":
@@ -171,9 +137,19 @@ class BrowserDriverFactory:
             return BrowserDriverFactory.create_firefox_driver(headless, custom_config)
         elif browser_type == "edge":
             return BrowserDriverFactory.create_edge_driver(headless, custom_config)
+        elif browser_type == "safari":
+            return BrowserDriverFactory.create_safari_driver(headless, custom_config)
         else:
-            raise ValueError(f"Unsupported browser type: {browser_type}")
+            raise ValueError(f"Unsupported browser: {browser_type}")
 
+class BrowserUtils:
+    @staticmethod
+    def safe_quit_driver(driver):
+        if driver:
+            try:
+                driver.quit()
+            except:
+                pass
 
 class BrowserConfigTemplates:
     
@@ -190,74 +166,4 @@ class BrowserConfigTemplates:
             "name": f"UA_{config_name}",
             "user_agent": user_agent_string
         }
-    
-    @staticmethod
-    def get_timezone_config(timezone_name, display_name):
-        return {
-            "name": f"TZ_{display_name}",
-            "timezone": timezone_name
-        }
-    
-    @staticmethod
-    def get_resolution_config(width, height, name):
-        return {
-            "name": f"Res_{name}",
-            "resolution": {"width": width, "height": height}
-        }
-    
-    @staticmethod
-    def get_all_language_configs():
-        return [
-            BrowserConfigTemplates.get_language_config(lang['language'], lang['name'])
-            for lang in ConfigManager.LANGUAGES
-        ]
-    
-    @staticmethod
-    def get_all_user_agent_configs():
-        return [
-            BrowserConfigTemplates.get_user_agent_config(ua['ua'], ua['name'])
-            for ua in ConfigManager.USER_AGENTS
-        ]
-    
-    @staticmethod
-    def get_all_timezone_configs():
-        return [
-            BrowserConfigTemplates.get_timezone_config(tz['timezone'], tz['name'])
-            for tz in ConfigManager.TIMEZONES
-        ]
-    
-    @staticmethod
-    def get_all_resolution_configs():
-        return [
-            BrowserConfigTemplates.get_resolution_config(res['width'], res['height'], res['name'])
-            for res in ConfigManager.SCREEN_SIZES
-        ]
 
-class BrowserUtils:
-    
-    @staticmethod
-    def get_computer_name():
-
-        return os.environ.get('COMPUTERNAME', 'unknown')
-    
-    @staticmethod
-    def safe_quit_driver(driver):
-        if driver:
-            try:
-                driver.quit()
-                
-            except Exception as e:
-                print(f"⚠️ Warning: Error closing driver: {e}")
-    
-    @staticmethod
-    def apply_anti_detection(driver):
-        try:
-            driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-            
-            driver.execute_script("Object.defineProperty(navigator, 'plugins', {get: () => [1, 2, 3, 4, 5]})")
-            
-            driver.execute_script("Object.defineProperty(navigator, 'languages', {get: () => ['en-US', 'en']})")
-            
-            print("✓ Anti-detection measures applied")
-        except Exception as e:
-            print(f"⚠️ Warning: Could not apply all anti-detection measures: {e}")
