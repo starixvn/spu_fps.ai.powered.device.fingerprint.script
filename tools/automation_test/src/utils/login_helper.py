@@ -1,5 +1,4 @@
 import time
-from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
 class LoginHelper:
     
@@ -8,9 +7,10 @@ class LoginHelper:
     
     def perform_login(self, test_url, username, password):
         try:
-            self.driver.page.goto(test_url)
+            self.driver.get(test_url)
             
-            self.driver.page.wait_for_load_state("networkidle")
+            self.driver.execute_script("return document.readyState === 'complete'")
+            time.sleep(2)  # Simple wait instead of networkidle
             
             username_selectors = ["input[name='Username']", "input[id='Username']"]
             username_field = self._find_element(username_selectors)
@@ -18,8 +18,8 @@ class LoginHelper:
             if not username_field:
                 return False, "No username field found"
             
-            username_field.fill("") 
-            username_field.fill(username)
+            username_field.clear()
+            username_field.send_keys(username)
             
             password_selectors = ["input[name='Password']", "input[id='Password']", "input[type='password']"]
             password_field = self._find_element(password_selectors)
@@ -27,8 +27,8 @@ class LoginHelper:
             if not password_field:
                 return False, "No password field found"
             
-            password_field.fill("")  # Clear field
-            password_field.fill(password)
+            password_field.clear()
+            password_field.send_keys(password)
             
             login_selectors = ["button[type='submit']", "input[type='submit']", "button[id='login']"]
             login_button = self._find_element(login_selectors, wait=False)
@@ -40,7 +40,7 @@ class LoginHelper:
             
             time.sleep(3)
             
-            current_url = self.driver.page.url
+            current_url = self.driver.current_url
             success = current_url != test_url
             error_msg = "Still on login page" if not success else None
             
@@ -52,17 +52,10 @@ class LoginHelper:
     def _find_element(self, selectors, wait=True):
         for selector in selectors:
             try:
-                if wait:
-                    element = self.driver.page.wait_for_selector(selector, timeout=2000)
+                element = self.driver.find_element("css selector", selector)
+                if element and element.is_displayed():
                     return element
-                
-                else:
-                    element = self.driver.page.query_selector(selector)
-                    if element:
-                        return element
                     
-            except PlaywrightTimeoutError:
-                continue
             except Exception:
                 continue
         return None

@@ -13,8 +13,8 @@ a = Analysis(
         ('src/utils', 'utils'),
     ],
     hiddenimports=[
-        'selenium',
-        'webdriver_manager',
+        'playwright',
+        'playwright.async_api',
         'requests',
         'beautifulsoup4',
         'fps_test',
