@@ -10,6 +10,7 @@ class BrowserAutomation:
     def __init__(self):
         env = os.getenv("ENVIRONMENT", "DEV")
         self.login_url = ConfigManager.get_default_login_url(env)
+
         self.result_manager = TestResultManager()
         self.credentials = ConfigManager.get_test_credentials("browser_login_test")
         
@@ -45,6 +46,7 @@ class BrowserAutomation:
         driver = None
         try:
             driver = BrowserDriverFactory.create_driver(browser_type, headless)
+                
             result = self.perform_login(driver, browser_type.upper())
             
             TestResultPrinter.print_browser_test_result(browser_type.upper(), result)

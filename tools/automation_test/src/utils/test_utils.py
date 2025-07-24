@@ -2,7 +2,7 @@ import json
 import time
 from datetime import datetime
 from config import ConfigManager
-
+from .browser_factory import BrowserDriverFactory, BrowserUtils
 class TestResultManager:
     
     def __init__(self):
@@ -51,12 +51,14 @@ class TestResultManager:
 class TestExecutor:
     
     def __init__(self, test_url=None):
+
         self.test_url = test_url or ConfigManager.get_default_test_url("DEV")
+
         self.result_manager = TestResultManager()
+
         self.credentials = ConfigManager.get_test_credentials("login_test")
 
     def execute_test_with_config(self, test_func, browser_type, config, headless=False):
-        from .browser_factory import BrowserDriverFactory, BrowserUtils
         
         driver = None
         try:
@@ -96,10 +98,11 @@ class TestValidator:
     @staticmethod
     def check_webdriver_availability(browser_type):
         try:
-            from .browser_factory import BrowserDriverFactory
             driver = BrowserDriverFactory.create_driver(browser_type, headless=True)
             driver.quit()
+
             return True, None
+        
         except Exception as e:
             return False, str(e)
 

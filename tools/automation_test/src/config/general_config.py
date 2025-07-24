@@ -12,7 +12,7 @@ TEST_URLS = {
     }
 }
 
-SUPPORTED_BROWSERS = ["chrome", "firefox"]
+SUPPORTED_BROWSERS = ["chrome", "firefox", "edge"]
 
 TIMEOUTS = {
     "page_load": 30,

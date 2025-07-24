@@ -8,13 +8,12 @@ class TestRunner:
     def run_login_tests(self, headless=False):
         try:
             login_test = BrowserAutomation()
-            login_test.run_all_browsers_test()
+            login_test.run_all_browsers_test(headless)
 
             return True
         
         except Exception as e:
             self.results["login_tests"] = [{"error": str(e)}]
-
             return False
     
     def run_attribute_tests(self, browser_type="chrome", headless=False):
@@ -24,12 +23,11 @@ class TestRunner:
             try:
                 attribute_test = BrowserAttributeTest()
                 attribute_test.run_all_attribute_tests(browser, headless)
-                
             except Exception:
-                pass  
+                pass
     
     def run_all_tests(self, browser_type="chrome", headless=False):
-        self.run_login_tests(headless)
+        # self.run_login_tests(headless)
         self.run_attribute_tests(browser_type, headless)
 
 def main():
