@@ -1,7 +1,5 @@
-from .test_executor import BrowserAttributeTest
-from .login_tests import BrowserAutomation
+from .test_TC_016_same_ua_diff_browser import TestTC016SameUADiffBrowser
 
 __all__ = [
-    "BrowserAutomation",
-    "BrowserAttributeTest"
+    "TestTC016SameUADiffBrowser"
 ]

@@ -47,52 +47,6 @@ class TestResultManager:
         except Exception:
             return None
 
-
-class TestExecutor:
-    
-    def __init__(self, test_url=None):
-
-        self.test_url = test_url or ConfigManager.get_default_test_url("DEV")
-
-        self.result_manager = TestResultManager()
-
-        self.credentials = ConfigManager.get_test_credentials("login_test")
-
-    def execute_test_with_config(self, test_func, browser_type, config, headless=False):
-        
-        driver = None
-        try:
-            driver = BrowserDriverFactory.create_driver(browser_type, headless, config)
-            result = test_func(driver, browser_type, config)
-            
-            if result:
-                self.result_manager.add_result(result)
-                return result
-                
-        except Exception as e:
-            self.result_manager.add_error_result(
-                browser_type.upper(), 
-                config.get('name', 'Unknown'), 
-                str(e)
-            )
-        finally:
-            if driver:
-                BrowserUtils.safe_quit_driver(driver)
-            time.sleep(1)
-        
-        return None
-    
-    def execute_test_suite(self, test_configs, test_func, browser_type="chrome", headless=False):
-        for config in test_configs:
-            self.execute_test_with_config(test_func, browser_type, config, headless)
-    
-    def get_results(self):
-        return self.result_manager.results
-    
-    def save_results(self, filename=None):
-        return self.result_manager.save_results(filename)
-
-
 class TestValidator:
     
     @staticmethod
@@ -109,21 +63,63 @@ class TestValidator:
 class TestResultPrinter:
     
     @staticmethod
-    def print_test_result(test_name, login_result, exception_error=None):
-       
+    def print_test_result(test_name, result_dict, exception_error=None):
+
         if exception_error:
             print(f"⚠️ ERROR: {test_name} - Exception: {exception_error}")
+            return
 
-        elif login_result.get('login_result') == 'SUCCESS':
+        # Handle verification results (UA verification, transaction verification, etc.)
+        if "ua_match" in result_dict:
+            has_trans = result_dict.get('has_transactions', False)
+            ua_match = result_dict.get('ua_match', False)
+            
+            if not has_trans:
+                print(f"⚠️ WARN: {test_name} - No transactions found")
+            elif ua_match:
+                print(f"✅ PASS: {test_name} - User Agent verification successful")
+            else:
+                expected = result_dict.get('expected_ua', 'N/A')[:50] + "..."
+                actual = result_dict.get('actual_ua', 'N/A')[:50] + "..."
+                print(f"❌ FAIL: {test_name} - User Agent mismatch")
+                print(f"   Expected: {expected}")
+                print(f"   Actual:   {actual}")
+            return
+
+        # Handle attribute verification results (new)
+        if "attribute_match" in result_dict:
+            has_trans = result_dict.get('has_transactions', False)
+            attr_match = result_dict.get('attribute_match', False)
+            attr_name = result_dict.get('attribute_name', 'Unknown')
+            
+            if not has_trans:
+                print(f"⚠️ WARN: {test_name} - No transactions found")
+            elif attr_match:
+                print(f"✅ PASS: {test_name} - {attr_name} verification successful")
+            else:
+                expected = str(result_dict.get('expected_value', 'N/A'))
+                actual = str(result_dict.get('actual_value', 'N/A'))
+                print(f"❌ FAIL: {test_name} - {attr_name} mismatch")
+                print(f"   Expected: {expected}")
+                print(f"   Actual:   {actual}")
+            return
+
+        # Handle login results
+        login_result = result_dict.get('login_result')
+        if login_result == 'SUCCESS':
             print(f"✅ PASS: {test_name} - Login successful")
 
-        elif login_result.get('login_result') == 'FAILED':
-            error_msg = login_result.get('error', 'Unknown error')
+        elif login_result == 'FAILED':
+            error_msg = result_dict.get('error', 'Unknown error')
             print(f"❌ FAIL: {test_name} - Login failed: {error_msg}")
 
-        else:
-            error_msg = login_result.get('error', 'Unknown error')
+        elif login_result == 'ERROR':
+            error_msg = result_dict.get('error', 'Unknown error')
             print(f"⚠️ ERROR: {test_name} - Test error: {error_msg}")
+
+        else:
+            message = result_dict.get('message', 'Unknown result')
+            print(f"ℹ️ INFO: {test_name} - {message}")
     
     @staticmethod
     def print_browser_test_result(browser_name, result_dict):

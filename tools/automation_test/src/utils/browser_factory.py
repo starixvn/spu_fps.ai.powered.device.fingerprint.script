@@ -1,21 +1,10 @@
 import platform
 import asyncio
-import threading
-import sys
-import subprocess
 from playwright.async_api import async_playwright
 
 from config import ConfigManager
 
 class BrowserDriverFactory:
-    
-    @staticmethod
-    def install_browsers():
-        try:
-            subprocess.run([sys.executable, "-m", "playwright", "install", "chromium", "firefox", "webkit"], check=True)
-            return True
-        except:
-            return False
     
     @staticmethod
     def _run_async(coro):
@@ -48,12 +37,8 @@ class BrowserDriverFactory:
                 args=['--no-sandbox', '--disable-dev-shm-usage', '--disable-blink-features=AutomationControlled', '--disable-features=VizDisplayCompositor']
             )
         except Exception:
-            if BrowserDriverFactory.install_browsers():
-                browser = await playwright.chromium.launch(headless=headless, args=['--no-sandbox', '--disable-dev-shm-usage'])
-            
-            elif platform.system() == "Windows":
+            if platform.system() == "Windows":
                 browser = await playwright.chromium.launch(channel='msedge', headless=headless, args=['--no-sandbox', '--disable-dev-shm-usage'])
-            
             else:
                 raise Exception("No browser available")
         
@@ -88,19 +73,13 @@ class BrowserDriverFactory:
         try:
             browser = await playwright.firefox.launch(headless=headless)
         except Exception:
-            if BrowserDriverFactory.install_browsers():
-                try:
-                    browser = await playwright.firefox.launch(headless=headless)
-                except:
-                    browser = await playwright.chromium.launch(headless=headless, args=['--no-sandbox', '--disable-dev-shm-usage'])
-            else:
-                try:
-                    browser = await playwright.chromium.launch(headless=headless, args=['--no-sandbox', '--disable-dev-shm-usage'])
-                except:
-                    if platform.system() == "Windows":
-                        browser = await playwright.chromium.launch(channel='msedge', headless=headless, args=['--no-sandbox', '--disable-dev-shm-usage'])
-                    else:
-                        raise Exception("No browser available")
+            try:
+                browser = await playwright.chromium.launch(headless=headless, args=['--no-sandbox', '--disable-dev-shm-usage'])
+            except:
+                if platform.system() == "Windows":
+                    browser = await playwright.chromium.launch(channel='msedge', headless=headless, args=['--no-sandbox', '--disable-dev-shm-usage'])
+                else:
+                    raise Exception("No browser available")
         
         default_resolution = ConfigManager.SCREEN_SIZES[0] if ConfigManager.SCREEN_SIZES else {"width": 1920, "height": 1080}
         context_options = {
