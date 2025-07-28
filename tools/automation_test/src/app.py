@@ -1,35 +1,29 @@
-from runner import AllTestRunner
-from config.general_config import SUPPORTED_BROWSERS
-from fps_test.test_TC_016_same_ua_diff_browser import TestTC016SameUADiffBrowser
+from tests import (ChangeUASameOSDiffBrowserTest, 
+                      DualTransUATest, 
+                      ChangeOSSameDeviceDiffBrowserTest, 
+                      ChangePluginsSameDeviceDiffBrowserTest,
+                      ChangePDFViewerEnabledSameDeviceDiffBrowserTest,
+                      ChangeLanguageMultiOSTest)
 
 class TestRunner:
     def __init__(self):
-        self.all_runner = AllTestRunner()
-        self.tc_016_test = TestTC016SameUADiffBrowser()
-
-    def run_login_tests(self, headless=False):
-        try:
-            return self.all_runner.run_all_browsers_tests(headless)
-        except Exception:
-            return []
+        self.change_ua_test = ChangeUASameOSDiffBrowserTest()
+        self.dual_session_test = DualTransUATest()
+        self.change_os_test = ChangeOSSameDeviceDiffBrowserTest()
+        self.change_plugins_test = ChangePluginsSameDeviceDiffBrowserTest()
+        self.change_pdf_viewer_test = ChangePDFViewerEnabledSameDeviceDiffBrowserTest()
+        self.change_language_test = ChangeLanguageMultiOSTest()
     
-    def run_attribute_tests(self, browser_type="chrome", headless=False):
-        browsers_to_test = SUPPORTED_BROWSERS if browser_type.lower() == "all" else [browser_type]
-        
-        for browser in browsers_to_test:
-            try:
-                self.all_runner.run_all_attribute_tests(browser, headless)
-            except Exception:
-                pass
-    
-    def run_all_tests(self, browser_type="chrome", headless=False):
-        # self.run_login_tests(headless)
-        self.tc_016_test.run_cross_browser_test()
-        # self.run_attribute_tests(browser_type, headless)
+    def run_all_tests(self):
+        # self.change_ua_test.run_cross_browser_test()
+        self.dual_session_test.run_dual_session_test_with_verification()
+        # self.change_os_test.run_cross_browser_test(headless=False)
+        # self.change_plugins_test.run_cross_browser_test(headless=False)
+        # self.change_pdf_viewer_test.run_cross_browser_test(headless=False)
 
 def main():
     runner = TestRunner()
-    runner.run_all_tests("all", True)
+    runner.run_all_tests()
 
 if __name__ == "__main__":
     main()

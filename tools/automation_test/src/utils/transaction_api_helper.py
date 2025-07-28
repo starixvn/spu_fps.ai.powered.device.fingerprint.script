@@ -4,11 +4,10 @@ API Helper for Transaction Verification
 
 import requests
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 
 
 class TransactionAPIHelper:
-    """Helper class for calling transaction API and verification"""
     
     def __init__(self, base_url="http://localhost:5001"):
         self.base_url = base_url
@@ -16,23 +15,13 @@ class TransactionAPIHelper:
     
     def get_transactions_by_login(self, subscriber_id, login_name, batch_size=10, 
                                 from_date=None, to_date=None):
-        """
-        Get transactions by login name
+
+        gmt_minus_4 = timezone(timedelta(hours=-4))
         
-        Args:
-            subscriber_id: Subscriber ID
-            login_name: Login name to search
-            batch_size: Number of records to return
-            from_date: Start date (YYYY-MM-DD) - defaults to today
-            to_date: End date (YYYY-MM-DD) - defaults to today
-            
-        Returns:
-            List of transaction records or None if error
-        """
         if not from_date:
-            from_date = datetime.now().strftime("%Y-%m-%d")
+            from_date = datetime.now(gmt_minus_4).strftime("%Y-%m-%d")
         if not to_date:
-            to_date = datetime.now().strftime("%Y-%m-%d")
+            to_date = datetime.now(gmt_minus_4).strftime("%Y-%m-%d")
         
         payload = {
             "subscriberID": subscriber_id,

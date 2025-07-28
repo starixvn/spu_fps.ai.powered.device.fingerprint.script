@@ -7,6 +7,123 @@ from config import ConfigManager
 class BrowserDriverFactory:
     
     @staticmethod
+    async def _configure_plugins(context, plugins_config, browser_type):
+        if not plugins_config:
+            return
+        
+        plugins_script = "(() => {"
+        plugins_script += f"  const plugins = {BrowserDriverFactory._format_plugins_for_js(plugins_config)};"
+        plugins_script += """
+          Object.defineProperty(navigator, 'plugins', {
+            get: () => plugins,
+            configurable: true
+          });
+          
+          // Build mimeTypes from plugins
+          const mimeTypes = [];
+          plugins.forEach(plugin => {
+            if (plugin.mimeTypes && plugin.mimeTypes.length > 0) {
+              plugin.mimeTypes.forEach(mimeType => {
+                mimeTypes.push({
+                  type: mimeType.type,
+                  description: mimeType.description,
+                  suffixes: mimeType.suffixes,
+                  enabledPlugin: plugin
+                });
+              });
+            }
+          });
+          
+          Object.defineProperty(navigator, 'mimeTypes', {
+            get: () => mimeTypes,
+            configurable: true
+          });
+        })();"""
+        
+        await context.add_init_script(plugins_script)
+    
+    @staticmethod
+    async def _configure_pdf_viewer(context, pdf_enabled, browser_type):
+        """Configure PDF viewer enabled/disabled state"""
+        if pdf_enabled is None:
+            return
+        
+        pdf_script = f"""
+        (function() {{
+          // Override navigator.pdfViewerEnabled
+          try {{
+            Object.defineProperty(navigator, 'pdfViewerEnabled', {{
+              get: function() {{ return {str(pdf_enabled).lower()}; }},
+              configurable: true,
+              enumerable: true
+            }});
+          }} catch (e) {{
+            console.warn('PDF viewer configuration warning:', e);
+          }}
+          
+          // Additional PDF-related configurations for different browsers
+          if ('{browser_type}' === 'chrome' || '{browser_type}' === 'chromium') {{
+            // Chrome-specific PDF configuration
+            if (navigator.plugins) {{
+              try {{
+                // Add or remove PDF plugin based on setting
+                const pdfPluginExists = Array.from(navigator.plugins).some(p => 
+                  p.name.toLowerCase().includes('pdf') || 
+                  p.description.toLowerCase().includes('pdf')
+                );
+                
+                if ({str(pdf_enabled).lower()} && !pdfPluginExists) {{
+                  console.log('PDF viewer enabled for Chrome');
+                }} else if (!{str(pdf_enabled).lower()} && pdfPluginExists) {{
+                  console.log('PDF viewer disabled for Chrome');
+                }}
+              }} catch (e) {{
+                console.warn('Chrome PDF plugin configuration warning:', e);
+              }}
+            }}
+          }}
+          
+          // Set PDF viewer state in window for debugging
+          window.pdfViewerEnabled = {str(pdf_enabled).lower()};
+        }})();
+        """
+        
+        await context.add_init_script(pdf_script)
+    
+    @staticmethod
+    def _format_plugins_for_js(plugins_config):
+        """Format plugins configuration for JavaScript injection"""
+        js_plugins = []
+        
+        for i, plugin in enumerate(plugins_config):
+            # Format mimeTypes if provided
+            mime_types_js = "[]"
+            if "mimeTypes" in plugin and plugin["mimeTypes"]:
+                mime_types_list = []
+                for mime_type in plugin["mimeTypes"]:
+                    mime_js = f"""{{
+                      type: "{mime_type.get('type', '')}",
+                      description: "{mime_type.get('description', '')}",
+                      suffixes: "{mime_type.get('suffixes', '')}"
+                    }}"""
+                    mime_types_list.append(mime_js)
+                mime_types_js = f"[{', '.join(mime_types_list)}]"
+            
+            js_plugin = f"""{{
+              name: "{plugin.get('name', '')}",
+              filename: "{plugin.get('filename', '')}",
+              description: "{plugin.get('description', '')}",
+              mimeTypes: {mime_types_js},
+              length: 0,
+              item: function(index) {{ return null; }},
+              namedItem: function(name) {{ return null; }},
+              refresh: function() {{ }}
+            }}"""
+            js_plugins.append(js_plugin)
+        
+        return f"[{', '.join(js_plugins)}]"
+    
+    @staticmethod
     def _run_async(coro):
         try:
             loop = asyncio.get_event_loop()
@@ -54,8 +171,20 @@ class BrowserDriverFactory:
                 context_options['user_agent'] = custom_config["user_agent"]
             if "language" in custom_config:
                 context_options['locale'] = custom_config["language"]
+            if "timezone" in custom_config:
+                context_options['timezone_id'] = custom_config["timezone"]
+            if "resolution" in custom_config:
+                res = custom_config["resolution"]
+                context_options['viewport'] = {'width': res['width'], 'height': res['height']}
         
         context = await browser.new_context(**context_options)
+        
+        if custom_config and "plugins" in custom_config:
+            await BrowserDriverFactory._configure_plugins(context, custom_config["plugins"], 'chrome')
+        
+        if custom_config and "pdfViewerEnabled" in custom_config:
+            await BrowserDriverFactory._configure_pdf_viewer(context, custom_config["pdfViewerEnabled"], 'chrome')
+            
         await context.add_init_script("delete Object.getPrototypeOf(navigator).webdriver;")
         page = await context.new_page()
         return AsyncPlaywrightDriverWrapper(page, context, browser, playwright, 'chrome')
@@ -92,8 +221,20 @@ class BrowserDriverFactory:
                 context_options['user_agent'] = custom_config["user_agent"]
             if "language" in custom_config:
                 context_options['locale'] = custom_config["language"]
+            if "timezone" in custom_config:
+                context_options['timezone_id'] = custom_config["timezone"]
+            if "resolution" in custom_config:
+                res = custom_config["resolution"]
+                context_options['viewport'] = {'width': res['width'], 'height': res['height']}
         
         context = await browser.new_context(**context_options)
+        
+        if custom_config and "plugins" in custom_config:
+            await BrowserDriverFactory._configure_plugins(context, custom_config["plugins"], 'firefox')
+        
+        if custom_config and "pdfViewerEnabled" in custom_config:
+            await BrowserDriverFactory._configure_pdf_viewer(context, custom_config["pdfViewerEnabled"], 'firefox')
+            
         page = await context.new_page()
         return AsyncPlaywrightDriverWrapper(page, context, browser, playwright, 'firefox')
 
@@ -126,8 +267,20 @@ class BrowserDriverFactory:
                 context_options['user_agent'] = custom_config["user_agent"]
             if "language" in custom_config:
                 context_options['locale'] = custom_config["language"]
+            if "timezone" in custom_config:
+                context_options['timezone_id'] = custom_config["timezone"]
+            if "resolution" in custom_config:
+                res = custom_config["resolution"]
+                context_options['viewport'] = {'width': res['width'], 'height': res['height']}
         
         context = await browser.new_context(**context_options)
+        
+        if custom_config and "plugins" in custom_config:
+            await BrowserDriverFactory._configure_plugins(context, custom_config["plugins"], 'edge')
+        
+        if custom_config and "pdfViewerEnabled" in custom_config:
+            await BrowserDriverFactory._configure_pdf_viewer(context, custom_config["pdfViewerEnabled"], 'edge')
+            
         page = await context.new_page()
         return AsyncPlaywrightDriverWrapper(page, context, browser, playwright, 'edge')
 
@@ -152,10 +305,25 @@ class BrowserDriverFactory:
             'locale': 'vi-VN'
         }
         
-        if custom_config and "language" in custom_config:
-            context_options['locale'] = custom_config["language"]
+        if custom_config:
+            if "language" in custom_config:
+                context_options['locale'] = custom_config["language"]
+            if "user_agent" in custom_config:
+                context_options['user_agent'] = custom_config["user_agent"]
+            if "timezone" in custom_config:
+                context_options['timezone_id'] = custom_config["timezone"]
+            if "resolution" in custom_config:
+                res = custom_config["resolution"]
+                context_options['viewport'] = {'width': res['width'], 'height': res['height']}
         
         context = await browser.new_context(**context_options)
+        
+        if custom_config and "plugins" in custom_config:
+            await BrowserDriverFactory._configure_plugins(context, custom_config["plugins"], 'safari')
+        
+        if custom_config and "pdfViewerEnabled" in custom_config:
+            await BrowserDriverFactory._configure_pdf_viewer(context, custom_config["pdfViewerEnabled"], 'safari')
+            
         page = await context.new_page()
         return AsyncPlaywrightDriverWrapper(page, context, browser, playwright, 'safari')
 
@@ -165,6 +333,61 @@ class BrowserDriverFactory:
             BrowserDriverFactory._create_safari_driver_async(headless, custom_config)
         )
     
+    @staticmethod
+    async def _create_chromium_driver_async(headless=False, custom_config=None):
+        playwright = await async_playwright().start()
+        
+        try:
+            # Try to launch Chromium
+            browser = await playwright.chromium.launch(
+                headless=headless,
+                args=['--no-sandbox', '--disable-dev-shm-usage', '--disable-blink-features=AutomationControlled']
+            )
+        except Exception:
+            # Fallback to Chrome if Chromium not available
+            try:
+                browser = await playwright.chromium.launch(
+                    headless=headless,
+                    args=['--no-sandbox', '--disable-dev-shm-usage']
+                )
+            except Exception:
+                raise Exception("No Chromium browser available")
+        
+        default_resolution = ConfigManager.SCREEN_SIZES[0] if ConfigManager.SCREEN_SIZES else {"width": 1920, "height": 1080}
+        context_options = {
+            'viewport': {'width': default_resolution['width'], 'height': default_resolution['height']},
+            'locale': 'vi-VN',
+            'timezone_id': 'Asia/Ho_Chi_Minh'
+        }
+        
+        if custom_config:
+            if "user_agent" in custom_config:
+                context_options['user_agent'] = custom_config["user_agent"]
+            if "language" in custom_config:
+                context_options['locale'] = custom_config["language"]
+            if "timezone" in custom_config:
+                context_options['timezone_id'] = custom_config["timezone"]
+            if "resolution" in custom_config:
+                res = custom_config["resolution"]
+                context_options['viewport'] = {'width': res['width'], 'height': res['height']}
+        
+        context = await browser.new_context(**context_options)
+        
+        if custom_config and "plugins" in custom_config:
+            await BrowserDriverFactory._configure_plugins(context, custom_config["plugins"], 'chromium')
+        
+        if custom_config and "pdfViewerEnabled" in custom_config:
+            await BrowserDriverFactory._configure_pdf_viewer(context, custom_config["pdfViewerEnabled"], 'chromium')
+            
+        await context.add_init_script("delete Object.getPrototypeOf(navigator).webdriver;")
+        page = await context.new_page()
+        return AsyncPlaywrightDriverWrapper(page, context, browser, playwright, 'chromium')
+
+    @staticmethod
+    def create_chromium_driver(headless=False, custom_config=None):
+        return BrowserDriverFactory._run_async(
+            BrowserDriverFactory._create_chromium_driver_async(headless, custom_config)
+        )
 
     @staticmethod
     def create_driver(browser_type, headless=False, custom_config=None):
@@ -181,6 +404,9 @@ class BrowserDriverFactory:
         
         elif browser_type == "safari":
             return BrowserDriverFactory.create_safari_driver(headless, custom_config)
+        
+        elif browser_type == "chromium":
+            return BrowserDriverFactory.create_chromium_driver(headless, custom_config)
         
         else:
             raise ValueError(f"Unsupported browser: {browser_type}")
@@ -340,5 +566,26 @@ class BrowserConfigTemplates:
         return {
             "name": f"UA_{config_name}",
             "user_agent": user_agent_string
+        }
+    
+    @staticmethod
+    def get_plugins_config(plugins_list, config_name):
+        return {
+            "name": f"Plugins_{config_name}",
+            "plugins": plugins_list
+        }
+    
+    @staticmethod
+    def get_timezone_config(timezone_id, config_name):
+        return {
+            "name": f"Timezone_{config_name}",
+            "timezone": timezone_id
+        }
+    
+    @staticmethod
+    def get_resolution_config(width, height, config_name):
+        return {
+            "name": f"Resolution_{config_name}",
+            "resolution": {"width": width, "height": height}
         }
 

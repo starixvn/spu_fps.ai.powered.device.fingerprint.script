@@ -3,18 +3,22 @@ from .general_config import (
     TEST_URLS,
     API_CONFIG,
     SUPPORTED_BROWSERS,
-    SCREEN_RESOLUTIONS,
-    MOBILE_RESOLUTIONS,
     get_test_credentials,
-    get_urls_for_environment
+    get_urls_for_environment,
+    get_api_config_for_environment
 )
 
 class ConfigManager:
     BROWSERS = SUPPORTED_BROWSERS
     
     URLS = TEST_URLS
-    SCREEN_SIZES = SCREEN_RESOLUTIONS
-    MOBILE_SIZES = MOBILE_RESOLUTIONS
+    
+    # Default screen sizes for browser testing
+    SCREEN_SIZES = [
+        {"width": 1920, "height": 1080},
+        {"width": 1366, "height": 768},
+        {"width": 1280, "height": 720}
+    ]
     
     @classmethod
     def get_default_login_url(cls, env="DEV"):
@@ -24,8 +28,13 @@ class ConfigManager:
     def get_test_credentials(cls, prefix="test"):
         return get_test_credentials(prefix)
     
+    @classmethod
+    def get_api_config(cls, env="DEV"):
+        """Get API configuration for specific environment"""
+        return get_api_config_for_environment(env)
+    
 __all__ = [
-    'TEST_URLS', 'API_CONFIG', 'SUPPORTED_BROWSERS', 'SCREEN_RESOLUTIONS', 'MOBILE_RESOLUTIONS',
-    'get_test_credentials', 'get_urls_for_environment',
+    'TEST_URLS', 'API_CONFIG', 'SUPPORTED_BROWSERS',
+    'get_test_credentials', 'get_urls_for_environment', 'get_api_config_for_environment',
     'ConfigManager'
 ]
