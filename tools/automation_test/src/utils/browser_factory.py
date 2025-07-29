@@ -7,6 +7,49 @@ from config import ConfigManager
 class BrowserDriverFactory:
     
     @staticmethod
+    def _prepare_context_options(custom_config=None):
+        default_resolution = ConfigManager.SCREEN_SIZES[0] if ConfigManager.SCREEN_SIZES else {"width": 1920, "height": 1080}
+        context_options = {
+            'viewport': {'width': default_resolution['width'], 'height': default_resolution['height']},
+            'locale': 'vi-VN'
+        }
+        
+        if custom_config:
+            if "user_agent" in custom_config:
+                context_options['user_agent'] = custom_config["user_agent"]
+            if "language" in custom_config:
+                context_options['locale'] = custom_config["language"]
+            if "timezone" in custom_config:
+                context_options['timezone_id'] = custom_config["timezone"]
+            if "resolution" in custom_config:
+                res = custom_config["resolution"]
+                context_options['viewport'] = {'width': res['width'], 'height': res['height']}
+            if "screen_width" in custom_config and "screen_height" in custom_config:
+                context_options['screen'] = {
+                    'width': custom_config["screen_width"],
+                    'height': custom_config["screen_height"]
+                }
+            if "available_width" in custom_config and "available_height" in custom_config:
+                if "resolution" not in custom_config:
+                    context_options['viewport'] = {
+                        'width': custom_config["available_width"],
+                        'height': custom_config["available_height"]
+                    }
+        
+        return context_options
+
+    @staticmethod
+    async def _setup_browser_context(context, custom_config, browser_type):
+        if custom_config and any(key in custom_config for key in ["screen_width", "screen_height", "available_width", "available_height"]):
+            await BrowserDriverFactory._configure_screen_frame(context, custom_config)
+        
+        if custom_config and "plugins" in custom_config:
+            await BrowserDriverFactory._configure_plugins(context, custom_config["plugins"], browser_type)
+        
+        if custom_config and "pdfViewerEnabled" in custom_config:
+            await BrowserDriverFactory._configure_pdf_viewer(context, custom_config["pdfViewerEnabled"], browser_type)
+    
+    @staticmethod
     async def _configure_plugins(context, plugins_config, browser_type):
         if not plugins_config:
             return
@@ -91,8 +134,74 @@ class BrowserDriverFactory:
         await context.add_init_script(pdf_script)
     
     @staticmethod
+    async def _configure_screen_frame(context, config):
+        screen_width = config.get("screen_width", 1920)
+        screen_height = config.get("screen_height", 1080)
+        available_width = config.get("available_width", screen_width)
+        available_height = config.get("available_height", screen_height)
+        
+        screen_script = f"""
+        (function() {{
+          Object.defineProperties(screen, {{
+            width: {{
+              get: function() {{ return {screen_width}; }},
+              configurable: true,
+              enumerable: true
+            }},
+            height: {{
+              get: function() {{ return {screen_height}; }},
+              configurable: true,
+              enumerable: true
+            }},
+            availWidth: {{
+              get: function() {{ return {available_width}; }},
+              configurable: true,
+              enumerable: true
+            }},
+            availHeight: {{
+              get: function() {{ return {available_height}; }},
+              configurable: true,
+              enumerable: true
+            }}
+          }});
+          
+          // Also set window.screen for compatibility
+          Object.defineProperties(window.screen, {{
+            width: {{
+              get: function() {{ return {screen_width}; }},
+              configurable: true,
+              enumerable: true
+            }},
+            height: {{
+              get: function() {{ return {screen_height}; }},
+              configurable: true,
+              enumerable: true
+            }},
+            availWidth: {{
+              get: function() {{ return {available_width}; }},
+              configurable: true,
+              enumerable: true
+            }},
+            availHeight: {{
+              get: function() {{ return {available_height}; }},
+              configurable: true,
+              enumerable: true
+            }}
+          }});
+          
+          console.log('Screen frame configured:', {{
+            width: {screen_width},
+            height: {screen_height},
+            availWidth: {available_width},
+            availHeight: {available_height}
+          }});
+        }})();
+        """
+        
+        await context.add_init_script(script=screen_script)
+    
+    @staticmethod
     def _format_plugins_for_js(plugins_config):
-        """Format plugins configuration for JavaScript injection"""
         js_plugins = []
         
         for i, plugin in enumerate(plugins_config):
@@ -159,31 +268,12 @@ class BrowserDriverFactory:
             else:
                 raise Exception("No browser available")
         
-        default_resolution = ConfigManager.SCREEN_SIZES[0] if ConfigManager.SCREEN_SIZES else {"width": 1920, "height": 1080}
-        context_options = {
-            'viewport': {'width': default_resolution['width'], 'height': default_resolution['height']},
-            'locale': 'vi-VN',
-            'timezone_id': 'Asia/Ho_Chi_Minh'
-        }
-        
-        if custom_config:
-            if "user_agent" in custom_config:
-                context_options['user_agent'] = custom_config["user_agent"]
-            if "language" in custom_config:
-                context_options['locale'] = custom_config["language"]
-            if "timezone" in custom_config:
-                context_options['timezone_id'] = custom_config["timezone"]
-            if "resolution" in custom_config:
-                res = custom_config["resolution"]
-                context_options['viewport'] = {'width': res['width'], 'height': res['height']}
+        context_options = BrowserDriverFactory._prepare_context_options(custom_config)
+        context_options['timezone_id'] = context_options.get('timezone_id', 'Asia/Ho_Chi_Minh')
         
         context = await browser.new_context(**context_options)
         
-        if custom_config and "plugins" in custom_config:
-            await BrowserDriverFactory._configure_plugins(context, custom_config["plugins"], 'chrome')
-        
-        if custom_config and "pdfViewerEnabled" in custom_config:
-            await BrowserDriverFactory._configure_pdf_viewer(context, custom_config["pdfViewerEnabled"], 'chrome')
+        await BrowserDriverFactory._setup_browser_context(context, custom_config, 'chrome')
             
         await context.add_init_script("delete Object.getPrototypeOf(navigator).webdriver;")
         page = await context.new_page()
@@ -210,30 +300,10 @@ class BrowserDriverFactory:
                 else:
                     raise Exception("No browser available")
         
-        default_resolution = ConfigManager.SCREEN_SIZES[0] if ConfigManager.SCREEN_SIZES else {"width": 1920, "height": 1080}
-        context_options = {
-            'viewport': {'width': default_resolution['width'], 'height': default_resolution['height']},
-            'locale': 'vi-VN'
-        }
-        
-        if custom_config:
-            if "user_agent" in custom_config:
-                context_options['user_agent'] = custom_config["user_agent"]
-            if "language" in custom_config:
-                context_options['locale'] = custom_config["language"]
-            if "timezone" in custom_config:
-                context_options['timezone_id'] = custom_config["timezone"]
-            if "resolution" in custom_config:
-                res = custom_config["resolution"]
-                context_options['viewport'] = {'width': res['width'], 'height': res['height']}
-        
+        context_options = BrowserDriverFactory._prepare_context_options(custom_config)
         context = await browser.new_context(**context_options)
         
-        if custom_config and "plugins" in custom_config:
-            await BrowserDriverFactory._configure_plugins(context, custom_config["plugins"], 'firefox')
-        
-        if custom_config and "pdfViewerEnabled" in custom_config:
-            await BrowserDriverFactory._configure_pdf_viewer(context, custom_config["pdfViewerEnabled"], 'firefox')
+        await BrowserDriverFactory._setup_browser_context(context, custom_config, 'firefox')
             
         page = await context.new_page()
         return AsyncPlaywrightDriverWrapper(page, context, browser, playwright, 'firefox')
@@ -256,30 +326,10 @@ class BrowserDriverFactory:
         except Exception:
             browser = await playwright.chromium.launch(headless=headless, args=['--no-sandbox', '--disable-dev-shm-usage'])
         
-        default_resolution = ConfigManager.SCREEN_SIZES[0] if ConfigManager.SCREEN_SIZES else {"width": 1920, "height": 1080}
-        context_options = {
-            'viewport': {'width': default_resolution['width'], 'height': default_resolution['height']},
-            'locale': 'vi-VN'
-        }
-        
-        if custom_config:
-            if "user_agent" in custom_config:
-                context_options['user_agent'] = custom_config["user_agent"]
-            if "language" in custom_config:
-                context_options['locale'] = custom_config["language"]
-            if "timezone" in custom_config:
-                context_options['timezone_id'] = custom_config["timezone"]
-            if "resolution" in custom_config:
-                res = custom_config["resolution"]
-                context_options['viewport'] = {'width': res['width'], 'height': res['height']}
-        
+        context_options = BrowserDriverFactory._prepare_context_options(custom_config)
         context = await browser.new_context(**context_options)
         
-        if custom_config and "plugins" in custom_config:
-            await BrowserDriverFactory._configure_plugins(context, custom_config["plugins"], 'edge')
-        
-        if custom_config and "pdfViewerEnabled" in custom_config:
-            await BrowserDriverFactory._configure_pdf_viewer(context, custom_config["pdfViewerEnabled"], 'edge')
+        await BrowserDriverFactory._setup_browser_context(context, custom_config, 'edge')
             
         page = await context.new_page()
         return AsyncPlaywrightDriverWrapper(page, context, browser, playwright, 'edge')
@@ -299,30 +349,10 @@ class BrowserDriverFactory:
         playwright = await async_playwright().start()
         browser = await playwright.webkit.launch(headless=headless)
         
-        default_resolution = ConfigManager.SCREEN_SIZES[0] if ConfigManager.SCREEN_SIZES else {"width": 1920, "height": 1080}
-        context_options = {
-            'viewport': {'width': default_resolution['width'], 'height': default_resolution['height']},
-            'locale': 'vi-VN'
-        }
-        
-        if custom_config:
-            if "language" in custom_config:
-                context_options['locale'] = custom_config["language"]
-            if "user_agent" in custom_config:
-                context_options['user_agent'] = custom_config["user_agent"]
-            if "timezone" in custom_config:
-                context_options['timezone_id'] = custom_config["timezone"]
-            if "resolution" in custom_config:
-                res = custom_config["resolution"]
-                context_options['viewport'] = {'width': res['width'], 'height': res['height']}
-        
+        context_options = BrowserDriverFactory._prepare_context_options(custom_config)
         context = await browser.new_context(**context_options)
         
-        if custom_config and "plugins" in custom_config:
-            await BrowserDriverFactory._configure_plugins(context, custom_config["plugins"], 'safari')
-        
-        if custom_config and "pdfViewerEnabled" in custom_config:
-            await BrowserDriverFactory._configure_pdf_viewer(context, custom_config["pdfViewerEnabled"], 'safari')
+        await BrowserDriverFactory._setup_browser_context(context, custom_config, 'safari')
             
         page = await context.new_page()
         return AsyncPlaywrightDriverWrapper(page, context, browser, playwright, 'safari')
@@ -338,13 +368,11 @@ class BrowserDriverFactory:
         playwright = await async_playwright().start()
         
         try:
-            # Try to launch Chromium
             browser = await playwright.chromium.launch(
                 headless=headless,
                 args=['--no-sandbox', '--disable-dev-shm-usage', '--disable-blink-features=AutomationControlled']
             )
         except Exception:
-            # Fallback to Chrome if Chromium not available
             try:
                 browser = await playwright.chromium.launch(
                     headless=headless,
@@ -353,31 +381,12 @@ class BrowserDriverFactory:
             except Exception:
                 raise Exception("No Chromium browser available")
         
-        default_resolution = ConfigManager.SCREEN_SIZES[0] if ConfigManager.SCREEN_SIZES else {"width": 1920, "height": 1080}
-        context_options = {
-            'viewport': {'width': default_resolution['width'], 'height': default_resolution['height']},
-            'locale': 'vi-VN',
-            'timezone_id': 'Asia/Ho_Chi_Minh'
-        }
-        
-        if custom_config:
-            if "user_agent" in custom_config:
-                context_options['user_agent'] = custom_config["user_agent"]
-            if "language" in custom_config:
-                context_options['locale'] = custom_config["language"]
-            if "timezone" in custom_config:
-                context_options['timezone_id'] = custom_config["timezone"]
-            if "resolution" in custom_config:
-                res = custom_config["resolution"]
-                context_options['viewport'] = {'width': res['width'], 'height': res['height']}
+        context_options = BrowserDriverFactory._prepare_context_options(custom_config)
+        context_options['timezone_id'] = context_options.get('timezone_id', 'Asia/Ho_Chi_Minh')
         
         context = await browser.new_context(**context_options)
         
-        if custom_config and "plugins" in custom_config:
-            await BrowserDriverFactory._configure_plugins(context, custom_config["plugins"], 'chromium')
-        
-        if custom_config and "pdfViewerEnabled" in custom_config:
-            await BrowserDriverFactory._configure_pdf_viewer(context, custom_config["pdfViewerEnabled"], 'chromium')
+        await BrowserDriverFactory._setup_browser_context(context, custom_config, 'chromium')
             
         await context.add_init_script("delete Object.getPrototypeOf(navigator).webdriver;")
         page = await context.new_page()

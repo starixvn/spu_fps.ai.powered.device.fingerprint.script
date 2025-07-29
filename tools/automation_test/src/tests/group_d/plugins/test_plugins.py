@@ -1,139 +1,78 @@
-import time
-
-from ...base_test.base_attribue import (
+from ...base_attribute.attribue import (
     BaseAttributeTest,
     get_browsers_by_os,
     detect_current_os
 )
 
-# Plugin configurations by OS and browser
+# Centralized plugin configurations by OS and browser
 PLUGINS_CONFIG = {
     'windows': {
         'chrome': {
             "name": "TC078_Windows_Chrome_Plugins",
-            "plugins": [
-                {
-                    "name": "Chrome PDF Plugin",
-                    "description": "Portable Document Format",
-                    "mimeTypes": []
-                }
-            ]
+            "plugins": [{"name": "Chrome PDF Plugin", "description": "Portable Document Format", "mimeTypes": []}]
         },
         'firefox': {
             "name": "TC078_Windows_Firefox_Plugins",
-            "plugins": [
-                {
-                    "name": "OpenH264 Video Codec provided by Cisco Systems, Inc.",
-                    "description": "OpenH264 Video Codec provided by Cisco Systems, Inc.",
-                    "mimeTypes": []
-                }
-            ]
+            "plugins": [{"name": "OpenH264 Video Codec provided by Cisco Systems, Inc.", "description": "OpenH264 Video Codec provided by Cisco Systems, Inc.", "mimeTypes": []}]
         },
         'edge': {
             "name": "TC078_Windows_Edge_Plugins",
-            "plugins": [
-                {
-                    "name": "Microsoft Edge PDF",
-                    "description": "Portable Document Format",
-                    "mimeTypes": []
-                }
-            ]
+            "plugins": [{"name": "Microsoft Edge PDF", "description": "Portable Document Format", "mimeTypes": []}]
         }
     },
     'macos': {
         'chrome': {
             "name": "TC079_macOS_Chrome_Plugins",
-            "plugins": [
-                {
-                    "name": "Chrome PDF Plugin",
-                    "description": "Portable Document Format",
-                    "mimeTypes": []
-                }
-            ]
+            "plugins": [{"name": "Chrome PDF Plugin", "description": "Portable Document Format", "mimeTypes": []}]
         },
         'firefox': {
             "name": "TC079_macOS_Firefox_Plugins",
-            "plugins": [
-                {
-                    "name": "OpenH264 Video Codec provided by Cisco Systems, Inc.",
-                    "description": "OpenH264 Video Codec provided by Cisco Systems, Inc.",
-                    "mimeTypes": []
-                }
-            ]
+            "plugins": [{"name": "OpenH264 Video Codec provided by Cisco Systems, Inc.", "description": "OpenH264 Video Codec provided by Cisco Systems, Inc.", "mimeTypes": []}]
         },
         'safari': {
             "name": "TC079_macOS_Safari_Plugins",
-            "plugins": [
-                {
-                    "name": "Safari PDF Plugin",
-                    "description": "Safari PDF Plugin",
-                    "mimeTypes": []
-                }
-            ]
+            "plugins": [{"name": "Safari PDF Plugin", "description": "Safari PDF Plugin", "mimeTypes": []}]
         },
         'edge': {
             "name": "TC079_macOS_Edge_Plugins",
-            "plugins": [
-                {
-                    "name": "Microsoft Edge PDF",
-                    "description": "Portable Document Format",
-                    "mimeTypes": []
-                }
-            ]
+            "plugins": [{"name": "Microsoft Edge PDF", "description": "Portable Document Format", "mimeTypes": []}]
         }
     },
     'linux': {
         'chrome': {
             "name": "TC080_Linux_Chrome_Plugins",
-            "plugins": [
-                {
-                    "name": "Chrome PDF Plugin",
-                    "description": "Portable Document Format",
-                    "mimeTypes": []
-                }
-            ]
+            "plugins": [{"name": "Chrome PDF Plugin", "description": "Portable Document Format", "mimeTypes": []}]
         },
         'firefox': {
             "name": "TC080_Linux_Firefox_Plugins",
-            "plugins": [
-                {
-                    "name": "OpenH264 Video Codec provided by Cisco Systems, Inc.",
-                    "description": "OpenH264 Video Codec provided by Cisco Systems, Inc.",
-                    "mimeTypes": []
-                }
-            ]
+            "plugins": [{"name": "OpenH264 Video Codec provided by Cisco Systems, Inc.", "description": "OpenH264 Video Codec provided by Cisco Systems, Inc.", "mimeTypes": []}]
         },
         'chromium': {
             "name": "TC080_Linux_Chromium_Plugins",
-            "plugins": [
-                {
-                    "name": "Chromium PDF Plugin",
-                    "description": "Portable Document Format",
-                    "mimeTypes": []
-                }
-            ]
+            "plugins": [{"name": "Chromium PDF Plugin", "description": "Portable Document Format", "mimeTypes": []}]
         }
     }
 }
 
+CREDENTIALS_MAPPING = {
+    'single': {
+        'windows': 'gd_tc078_test',
+        'macos': 'gd_tc079_test',
+        'linux': 'gd_tc080_test'
+    }
+}
 
-class ChangePluginsSameDeviceDiffBrowserTest(BaseAttributeTest):
+class PluginsTest(BaseAttributeTest):
     
-    def __init__(self, os_type=None):
+    def __init__(self, os_type=None, test_type='single'):
         if os_type is None:
             os_type = detect_current_os()
         
-        # Simplified credentials mapping
-        credentials_mapping = {
-            'windows': 'gd_tc078_test',
-            'macos': 'gd_tc079_test',
-            'linux': 'gd_tc080_test'
-        }
-        
-        credentials_key = credentials_mapping.get(os_type, 'gd_tc078_test')
-        super().__init__(credentials_key)
-        
         self.os_type = os_type
+        self.test_type = test_type
+        
+        credentials_key = CREDENTIALS_MAPPING[test_type].get(os_type, CREDENTIALS_MAPPING[test_type]['windows'])
+        super().__init__(credentials_key)
     
     def get_test_configs(self):
         browsers = get_browsers_by_os(self.os_type)
@@ -149,6 +88,12 @@ class ChangePluginsSameDeviceDiffBrowserTest(BaseAttributeTest):
     def get_test_browsers(self):
         return get_browsers_by_os(self.os_type)
     
+    def get_test_description(self):
+        current_os = detect_current_os()
+        cross_platform = " (Cross-platform)" if self.os_type != current_os else ""
+        test_desc = "Single Session" if self.test_type == 'single' else "Dual Session"
+        return f"Plugins {test_desc} Test: {self.os_type.upper()} on {current_os.upper()}{cross_platform}"
+    
     def run_single_browser_test(self, browser_type, headless=True):
         if browser_type not in PLUGINS_CONFIG.get(self.os_type, {}):
             print(f"⚠️  No plugin config found for {browser_type} on {self.os_type}")
@@ -158,15 +103,14 @@ class ChangePluginsSameDeviceDiffBrowserTest(BaseAttributeTest):
         
         try:
             self.test_single_browser_attribute_combination(browser_type, test_config, headless)
-            
         except Exception as e:
             print(f"Error in {browser_type} plugin test: {e}")
     
-    def get_test_description(self):
-        return f"Change Plugins Same Device Diff Browser: {self.os_type.upper()} OS Plugin Testing"
+    def run_single_session_test(self, headless=True):
+        self.run_cross_browser_test(headless)
 
-            
-            
 
-        
-
+class ChangePluginsSameDeviceDiffBrowserTest(PluginsTest):
+    
+    def __init__(self, os_type=None):
+        super().__init__(os_type, 'single')

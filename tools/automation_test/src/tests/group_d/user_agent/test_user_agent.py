@@ -1,4 +1,4 @@
-from ...base_test.base_attribue import (
+from ...base_attribute.attribue import (
     BaseAttributeTest,
     get_browsers_by_os,
     detect_current_os
@@ -6,15 +6,15 @@ from ...base_test.base_attribue import (
 
 UA_CONFIG = {
     'windows': {
-        "name": "TC001_Windows",
+        "name": "UA_TC001_Windows",
         "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     },
     'macos': {
-        "name": "TC002_macOS",
+        "name": "UA_TC002_macOS",
         "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     },
     'linux': {
-        "name": "TC003_Linux",
+        "name": "UA_TC003_Linux",
         "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     }
 }

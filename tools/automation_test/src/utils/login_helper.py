@@ -85,3 +85,52 @@ class TestLoginHelper:
                 "error": str(e),
                 "username": credentials['username']
             }
+    
+    @staticmethod
+    def perform_logout(driver):
+        try:
+            # Try to find logout link/button using multiple selectors
+            logout_selectors = [
+                "a[href='/Login/Logout']",
+                "a[href*='Logout']", 
+                "button[onclick*='logout']",
+                "a[class*='logout']",
+                ".btn:contains('Logout')",
+                "a:contains('Logout')"
+            ]
+            
+            logout_element = None
+            for selector in logout_selectors:
+                try:
+                    if ":contains(" in selector:
+                        elements = driver.execute_script(f"""
+                            return Array.from(document.querySelectorAll('a, button')).filter(el => 
+                                el.textContent.toLowerCase().includes('logout')
+                            );
+                        """)
+                        if elements:
+                            logout_element = elements[0]
+                            break
+                    else:
+                        element = driver.find_element("css selector", selector)
+                        if element and element.is_displayed():
+                            logout_element = element
+                            break
+                except Exception:
+                    continue
+            
+            if logout_element:
+                logout_element.click()
+                time.sleep(2)  # Wait for logout to complete
+                return True, "Logout successful"
+            else:
+                current_url = driver.current_url
+                base_url = current_url.split('/')[0] + '//' + current_url.split('/')[2]
+                logout_url = f"{base_url}/Login/Logout"
+                
+                driver.get(logout_url)
+                time.sleep(2)
+                return True, "Logout via direct URL"
+                
+        except Exception as e:
+            return False, f"Logout failed: {str(e)}"
