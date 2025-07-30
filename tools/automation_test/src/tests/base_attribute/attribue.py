@@ -15,12 +15,7 @@ from config import ConfigManager
 load_dotenv()
 
 def get_browsers_by_os(os_type):
-    browsers_mapping = {
-        'windows': ["chrome"],
-        'macos': ["chrome", "firefox", "edge", "safari"],
-        'linux': ["chrome", "firefox", "chromium"]
-    }
-    return browsers_mapping.get(os_type, ["chrome", "firefox", "edge"])  
+    return ConfigManager.BROWSER_MAPPING.get(os_type, ["chrome", "firefox", "edge"])
 
 def detect_current_os():
     system = platform.system().lower()
@@ -266,7 +261,7 @@ class BaseAttributeTest(ABC):
             self._current_screen_height = None
 
     # Test Transaction
-    
+
     def test_single_browser_attribute_combination(self, browser_type, test_config, headless=True, is_verification=True):
         test_name = f"{browser_type.upper()}-{test_config['name']}"
         
@@ -282,7 +277,9 @@ class BaseAttributeTest(ABC):
             
             if login_result.get("login_result") == "SUCCESS" and is_verification:
                 try:
-                    TestLoginHelper.perform_logout(driver)
+                    # TestLoginHelper.perform_logout(driver)
+                    driver.quit()
+
                 except Exception as logout_error:
                     print(f"Logout error: {logout_error}")
                     pass
@@ -343,8 +340,8 @@ class BaseAttributeTest(ABC):
                 attributes["platform"] = self.get_platform_from_ua(test_config["user_agent"])
             attributes["vendor"] = self.get_vendor_from_browser(browser_type)
 
-        if "language" in test_config:
-            attributes["languages"] = f'"{test_config["language"]}"'
+        # if "language" in test_config:
+        #     attributes["languages"] = [[test_config["language"]]]
 
         if "timezone" in test_config:
             attributes["timezone"] = f'"{test_config["timezone"]}"'
@@ -365,6 +362,9 @@ class BaseAttributeTest(ABC):
         if "available_width" in test_config and "available_height" in test_config:
             screen_frame = f"[0,0,{test_config['available_width']},{test_config['available_height']}]"
             attributes["screenFrame"] = screen_frame
+
+        if "pdfViewerEnabled" in test_config:
+            attributes["pdfViewerEnabled"] = test_config["pdfViewerEnabled"]
 
         if attributes:
             expected_transaction_data["attributes"] = attributes

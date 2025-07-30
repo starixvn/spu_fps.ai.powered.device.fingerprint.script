@@ -6,16 +6,16 @@ from ...base_attribute.attribue import (
 
 TIMEZONE_CONFIG = {
     'windows': {
-        "name": "GE_TC054_Windows_UTC_Plus_7",
-        "timezone": "Asia/Ho_Chi_Minh",
+        "name": "GE_TC054_Windows",
+        "timezone": "Asia/Saigon",
     },
     'macos': {
-        "name": "GE_TC055_macOS_UTC_Plus_7",
-        "timezone": "Asia/Ho_Chi_Minh",
+        "name": "GE_TC055_macOS",
+        "timezone": "Asia/Saigon",
     },
     'linux': {
-        "name": "GE_TC056_Linux_UTC_Plus_7",
-        "timezone": "Asia/Ho_Chi_Minh",
+        "name": "GE_TC056_Linux",
+        "timezone": "Asia/Saigon",
     }
 }
 
@@ -85,30 +85,24 @@ class ChangeTimezoneMultiOSTest(TimezoneTest):
     def __init__(self, os_type=None, browser_type='chrome'):
         super().__init__(os_type, 'single', browser_type)
     
-    def run_timezone_test_for_os(self, target_os, headless=True):
-        original_os_type = self.os_type
+    def run_timezone_test(self, headless=True):
+            
+        browsers = self.get_test_browsers_for_os(self.os_type)
+        test_configs = self.get_test_configs()
         
-        try:
-            self.os_type = target_os
+        for browser_idx, browser_type in enumerate(browsers, 1):
+            try:
+                for i, test_config in enumerate(test_configs, 1):
+                    try:
+                        self.test_single_browser_attribute_combination(browser_type, test_config, headless)
+                        
+                    except Exception as e:
+                        print(f"Error in {browser_type} test {i}: {e}")
+                        continue
+                
+            except Exception as e:
+                print(f"Error in {browser_type} browser test: {e}")
+                continue
             
-            browsers = self.get_test_browsers_for_os(target_os)
-            test_configs = self.get_test_configs()
-            
-            for browser_idx, browser_type in enumerate(browsers, 1):
-                try:
-                    for i, test_config in enumerate(test_configs, 1):
-                        try:
-                            self.test_single_browser_attribute_combination(browser_type, test_config, headless)
-                            
-                        except Exception as e:
-                            print(f"Error in {browser_type} test {i}: {e}")
-                            continue
-                    
-                except Exception as e:
-                    print(f"Error in {browser_type} browser test: {e}")
-                    continue
-            
-        finally:
-            self.os_type = original_os_type
-    
+        
     

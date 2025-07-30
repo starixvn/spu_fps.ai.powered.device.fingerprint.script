@@ -69,30 +69,24 @@ class ScreenFrameFingerprintMultiOSTest(ScreenFrameTest):
     def __init__(self, os_type=None):
         super().__init__(os_type, 'single')
     
-    def run_screen_frame_test_for_os(self, target_os, headless=True):
-        original_os_type = self.os_type
+    def run_screen_frame_test_for_os(self, headless=True):
+
+        browsers = self.get_test_browsers_for_os(self.os_type)
+        test_configs = self.get_test_configs()
         
-        try:
-            self.os_type = target_os
+        for browser_idx, browser_type in enumerate(browsers, 1):
+            try:
+                for i, test_config in enumerate(test_configs, 1):
+                    try:
+                        self.test_single_browser_attribute_combination(browser_type, test_config, headless)
+                        
+                    except Exception as e:
+                        print(f"Error in {browser_type} test {i}: {e}")
+                        continue
+                
+            except Exception as e:
+                print(f"Error in {browser_type} browser test: {e}")
+                continue
             
-            browsers = self.get_test_browsers_for_os(target_os)
-            test_configs = self.get_test_configs()
-            
-            for browser_idx, browser_type in enumerate(browsers, 1):
-                try:
-                    for i, test_config in enumerate(test_configs, 1):
-                        try:
-                            self.test_single_browser_attribute_combination(browser_type, test_config, headless)
-                            
-                        except Exception as e:
-                            print(f"Error in {browser_type} test {i}: {e}")
-                            continue
-                    
-                except Exception as e:
-                    print(f"Error in {browser_type} browser test: {e}")
-                    continue
-            
-        finally:
-            self.os_type = original_os_type
-    
+       
     

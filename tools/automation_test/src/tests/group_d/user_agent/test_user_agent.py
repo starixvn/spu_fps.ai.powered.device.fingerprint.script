@@ -5,10 +5,20 @@ from ...base_attribute.attribue import (
 )
 
 UA_CONFIG = {
-    'windows': {
+    'windows': [
+        {
         "name": "UA_TC001_Windows",
-        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    },
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:127.0) Gecko/20100101 Firefox/127.0"
+        },
+        {
+        "name": "UA_TC001_Windows",
+        "user_agent": "Mozilla/5.0 (Windows NT 11.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0"
+        },
+        {
+        "name": "UA_TC001_Windows",
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36 Edg/125.0.0.0"
+        }
+    ],
     'macos': {
         "name": "UA_TC002_macOS",
         "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -48,7 +58,11 @@ class UserAgentTest(BaseAttributeTest):
     
     def get_test_configs(self):
         if self.test_type == 'single':
-            return [UA_CONFIG[self.os_type]]
+            configs = UA_CONFIG[self.os_type]
+            if isinstance(configs, list):
+                return configs
+            else:
+                return [configs]
         else:
             return self._get_dual_session_configs()
     

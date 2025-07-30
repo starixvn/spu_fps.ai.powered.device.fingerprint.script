@@ -2,6 +2,7 @@
 from .general_config import (
     TEST_URLS,
     API_CONFIG,
+    BROWSER_MAPPING,
     get_test_credentials,
     get_urls_for_environment,
     get_api_config_for_environment
@@ -10,6 +11,7 @@ from .general_config import (
 class ConfigManager:
     
     URLS = TEST_URLS
+    BROWSER_MAPPING = BROWSER_MAPPING
     
     # Default screen sizes for browser testing
     SCREEN_SIZES = [
@@ -32,7 +34,7 @@ class ConfigManager:
         return get_api_config_for_environment(env)
     
 __all__ = [
-    'TEST_URLS', 'API_CONFIG',
+    'TEST_URLS', 'API_CONFIG', 'BROWSER_MAPPING',
     'get_test_credentials', 'get_urls_for_environment', 'get_api_config_for_environment',
     'ConfigManager'
 ]

@@ -20,15 +20,15 @@ class TestRunner:
         self.test_login = LoginConsistencyMultiBrowserTest()
 
     def run_all_tests(self):
-        self.test_login.run_cross_browser_test(headless=False)
+        self.test_login.run_cross_browser_test()
         # self.test_login.run_dual_trans_login_test(headless=False)
         # self.test_ua.run_cross_browser_test()
         # self.test_ua_dual_trans.run_dual_session_test_with_verification()
         # self.test_plugins.run_cross_browser_test(headless=False)
         # self.test_pdf_viewer.run_cross_browser_test(headless=False)
-        # self.test_language.run_language_test_for_os(headless=False)
-        # self.test_timezone.run_timezone_change_test()
-        # self.test_screen_frame.run_all_os_screen_frame_tests()
+        # self.test_language.run_language_test_for_os()
+        # self.test_timezone.run_timezone_test()
+        # self.test_screen_frame.run_screen_frame_test_for_os()
 
 def main():
     runner = TestRunner()

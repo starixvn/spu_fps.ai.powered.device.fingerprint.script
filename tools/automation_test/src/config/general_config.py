@@ -2,7 +2,7 @@ import os
 
 TEST_URLS = {
     "DEV": {
-        "login": "http://fps-demo-standard.nexdev.net"
+        "login": "http://localhost:60207",
     },
     "LOCAL": {
         "login": "http://fps-demo-standard.nexdev.net",
@@ -15,7 +15,7 @@ TEST_URLS = {
 API_CONFIG = {
     "subscriber_id": 2,
     "DEV": {
-        "base_url": "https://spu-fps-int-api.nexdev.net"
+        "base_url": "http://localhost:5001"
     },
     "LOCAL": {
         "base_url": "https://spu-fps-int-api.nexdev.net"
@@ -23,6 +23,12 @@ API_CONFIG = {
     "UAT": {
         "base_url": ""
     }
+}
+
+BROWSER_MAPPING = {
+    'windows': ["chrome", "firefox", "edge"],
+    'macos': ["chrome", "firefox", "edge", "safari"],
+    'linux': ["chrome", "firefox", "chromium"]
 }
 
 def get_test_credentials(prefix="test"):

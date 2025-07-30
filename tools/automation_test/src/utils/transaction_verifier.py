@@ -22,6 +22,22 @@ class AttributeComparator:
         return expected_bool == actual_bool
     
     @staticmethod
+    def compare_languages_attribute(expected: Any, actual: Any) -> bool:
+        def recursive_flatten(val):
+            if isinstance(val, list):
+                result = []
+                for item in val:
+                    result.extend(recursive_flatten(item))
+                return result
+            else:
+                return [val]
+        def to_str_list(val):
+            return [str(x) for x in recursive_flatten(val)]
+        exp = to_str_list(expected)
+        act = to_str_list(actual)
+        return exp == act
+    
+    @staticmethod
     def compare_json_attribute(expected: Any, actual: Any) -> bool:
         try:
             if isinstance(expected, str) and isinstance(actual, str):
@@ -132,7 +148,7 @@ class TransactionFieldVerifier:
         
         ATTRIBUTE_HANDLERS = {
             "pdfViewerEnabled": AttributeComparator.compare_boolean_attribute,
-            "languages": AttributeComparator.compare_json_attribute,
+            "languages": AttributeComparator.compare_languages_attribute,
             "fonts": AttributeComparator.compare_json_attribute,
             "plugins": AttributeComparator.compare_json_attribute,
             "fontPreferences": AttributeComparator.compare_json_attribute,
