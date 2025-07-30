@@ -31,12 +31,19 @@ setup(
     
     package_dir={"": "src"},
     py_modules=["app"],
-    packages=["fps_test", "config", "utils"],
+    packages=find_packages(where="src"),
     
     include_package_data=True,
     package_data={
-        "fps_test": ["*.py"],
-        "config": ["*.py"],
+        "tests": ["*.py", "*/*.py", "*/*/*.py"],
+        "tests.base_attribute": ["*.py"],
+        "tests.group_a": ["*.py"],
+        "tests.group_b": ["*.py", "*/*.py"],
+        "tests.group_c": ["*.py"],
+        "tests.group_d": ["*.py", "*/*.py"],
+        "tests.group_e": ["*.py", "*/*.py"],
+        "tests.login": ["*.py"],
+        "config": ["*.py", ".env"],
         "utils": ["*.py"],
     },
     

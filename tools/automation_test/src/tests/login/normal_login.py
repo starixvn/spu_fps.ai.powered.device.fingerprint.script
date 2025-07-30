@@ -101,7 +101,7 @@ class LoginConsistencyMultiBrowserTest(LoginConsistencyTest):
     
     def __init__(self, os_type=None, browser_type='chrome'):
         super().__init__(os_type, 'consistency', browser_type)
-    
+
     def run_single_browser_consistency_test(self, browser_type, headless=True, session_delay=15):
         test_instance = LoginConsistencyTest(self.os_type, 'consistency', browser_type)
         
@@ -113,7 +113,7 @@ class LoginConsistencyMultiBrowserTest(LoginConsistencyTest):
         finally:
             test_instance.get_test_browsers = original_get_test_browsers
     
-    def run_all_browsers_consistency_test(self, headless=True, session_delay=5):
+    def run_dual_trans_login_test(self, headless=True, session_delay=5):
         browsers = get_browsers_by_os(self.os_type)
         
         for browser_type in browsers:
@@ -125,26 +125,7 @@ class LoginConsistencyMultiBrowserTest(LoginConsistencyTest):
                 print(f"❌ Error in {browser_type} browser consistency test: {e}")
                 continue
     
-    def run_cross_os_consistency_test(self, headless=True, session_delay=15):
-        supported_os = ['windows', 'macos', 'linux']
-        current_os = detect_current_os()
-        
-        for os_type in supported_os:
-            try:
-                if os_type != current_os:
-                    print(f"⚠️  Cross-platform simulation: {os_type.upper()} settings on {current_os.upper()}")
-                
-                original_os_type = self.os_type
-                self.os_type = os_type
-                
-                try:
-                    self.run_consistency_test(headless, session_delay)
-                finally:
-                    self.os_type = original_os_type
-                    
-            except Exception as e:
-                print(f"❌ Error running {os_type} consistency tests: {e}")
-                continue
+
 
 
 

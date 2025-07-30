@@ -4,7 +4,6 @@ from ...base_attribute.attribue import (
     detect_current_os
 )
 
-# Centralized language configurations by OS with multiple test cases
 LANGUAGE_CONFIG = {
     'windows': [
         {
@@ -62,18 +61,19 @@ class LanguageTest(BaseAttributeTest):
         if self.os_type in LANGUAGE_CONFIG:
             return LANGUAGE_CONFIG[self.os_type]
         return LANGUAGE_CONFIG['windows']  # Default fallback
-    
+        
     def get_test_browsers(self):
         return get_browsers_by_os(self.os_type)
     
     def get_test_browsers_for_os(self, os_type):
         return get_browsers_by_os(os_type)
-    
-    def get_test_description(self):
-        current_os = detect_current_os()
-        cross_platform = " (Cross-platform)" if self.os_type != current_os else ""
-        test_desc = "Single Session" if self.test_type == 'single' else "Multi Session"
-        return f"Language {test_desc} Test: {self.os_type.upper()} on {current_os.upper()}{cross_platform}"
+      
+    def get_config_by_language(self, language_code):
+        configs = self.get_test_configs()
+        for config in configs:
+            if config.get('language') == language_code:
+                return config
+        return None
     
     def run_single_session_test(self, headless=True):
         self.run_cross_browser_test(headless)
@@ -97,20 +97,6 @@ class LanguageTest(BaseAttributeTest):
         else:
             print(f"Language {language_code} not found in configurations")
     
-    def get_config_by_language(self, language_code):
-        """Get configuration for specific language code"""
-        configs = self.get_test_configs()
-        for config in configs:
-            if config.get('language') == language_code:
-                return config
-        return None
-    
-    def get_available_languages(self):
-        """Get list of available language codes for current OS"""
-        configs = self.get_test_configs()
-        return [config.get('language') for config in configs if config.get('language')]
-
-
 class ChangeLanguageMultiOSTest(LanguageTest):
     
     def __init__(self, os_type=None):

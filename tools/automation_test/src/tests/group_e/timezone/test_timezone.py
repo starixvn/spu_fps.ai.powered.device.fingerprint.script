@@ -76,12 +76,6 @@ class TimezoneTest(BaseAttributeTest):
     def get_test_browsers_for_os(self, os_type):
         return get_browsers_by_os(os_type)
     
-    def get_test_description(self):
-        current_os = detect_current_os()
-        cross_platform = " (Cross-platform)" if self.os_type != current_os else ""
-        test_desc = "Single Session" if self.test_type == 'single' else "Multi Session"
-        return f"Timezone {test_desc} Test: {self.os_type.upper()} on {current_os.upper()}{cross_platform}"
-    
     def run_single_session_test(self, headless=True):
         self.run_cross_browser_test(headless)
 
@@ -117,18 +111,4 @@ class ChangeTimezoneMultiOSTest(TimezoneTest):
         finally:
             self.os_type = original_os_type
     
-    def run_all_os_timezone_tests(self, headless=True):
-        supported_os = ['windows', 'macos', 'linux']
-        current_os = detect_current_os()
-        
-        for os_type in supported_os:
-            try:
-                if os_type != current_os:
-                    print(f"\n⚠️  Cross-platform simulation: {os_type.upper()} settings on {current_os.upper()}")
-                
-                self.run_timezone_test_for_os(os_type, headless)
-                    
-            except Exception as e:
-                print(f"Error running {os_type} timezone tests: {e}")
-                continue
-
+    

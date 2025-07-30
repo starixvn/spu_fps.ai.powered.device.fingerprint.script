@@ -2,14 +2,12 @@
 from .general_config import (
     TEST_URLS,
     API_CONFIG,
-    SUPPORTED_BROWSERS,
     get_test_credentials,
     get_urls_for_environment,
     get_api_config_for_environment
 )
 
 class ConfigManager:
-    BROWSERS = SUPPORTED_BROWSERS
     
     URLS = TEST_URLS
     
@@ -34,7 +32,7 @@ class ConfigManager:
         return get_api_config_for_environment(env)
     
 __all__ = [
-    'TEST_URLS', 'API_CONFIG', 'SUPPORTED_BROWSERS',
+    'TEST_URLS', 'API_CONFIG',
     'get_test_credentials', 'get_urls_for_environment', 'get_api_config_for_environment',
     'ConfigManager'
 ]

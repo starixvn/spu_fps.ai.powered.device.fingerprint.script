@@ -5,7 +5,6 @@ import json
 import asyncio
 
 from abc import ABC, abstractmethod
-from datetime import datetime
 from dotenv import load_dotenv
 from utils.browser_factory import BrowserDriverFactory, BrowserUtils
 from utils.test_utils import TestResultPrinter
@@ -17,7 +16,7 @@ load_dotenv()
 
 def get_browsers_by_os(os_type):
     browsers_mapping = {
-        'windows': ["chrome", "firefox", "edge"],
+        'windows': ["chrome"],
         'macos': ["chrome", "firefox", "edge", "safari"],
         'linux': ["chrome", "firefox", "chromium"]
     }
@@ -56,7 +55,7 @@ class BaseAttributeTest(ABC):
         self._current_timezone = None
         self._current_screen_width = None
         self._current_screen_height = None
-    
+
     @abstractmethod
     def get_test_configs(self):
         pass
@@ -64,6 +63,9 @@ class BaseAttributeTest(ABC):
     @abstractmethod  
     def get_test_browsers(self):
         pass
+    
+    def get_ua_configs(self):
+        return self.get_test_configs()
     
     def get_browser_display_name(self, browser_type):
         browser_names = {
@@ -262,13 +264,17 @@ class BaseAttributeTest(ABC):
             self._current_timezone = None
             self._current_screen_width = None
             self._current_screen_height = None
+
+    # Test Transaction
     
     def test_single_browser_attribute_combination(self, browser_type, test_config, headless=True, is_verification=True):
         test_name = f"{browser_type.upper()}-{test_config['name']}"
         
         try:
-            driver = self._get_or_create_driver(browser_type, test_config, headless)
-            
+            # driver = self._get_or_create_driver(browser_type, test_config, headless)
+            browser_config = self._prepare_browser_config(test_config)
+            driver = BrowserDriverFactory.create_driver(browser_type, headless, browser_config)
+
             login_result = TestLoginHelper.perform_login_with_attributes(
                 driver, self.test_url, self.credentials
             )
@@ -323,60 +329,51 @@ class BaseAttributeTest(ABC):
     
     def verify_transaction_attributes(self, test_name, browser_type, test_config):
         login_name = self.credentials['username']
-        
         expected_transaction_data = {
             "subscriberID": self.api_config["subscriber_id"],
             "loginName": login_name,
             "url": self.test_url
         }
-        
         if "user_agent" in test_config:
             expected_transaction_data["userAgent"] = test_config["user_agent"]
-        
+
         attributes = {}
-        
         if "user_agent" in test_config:
             if "expected_platform" not in test_config:
                 attributes["platform"] = self.get_platform_from_ua(test_config["user_agent"])
             attributes["vendor"] = self.get_vendor_from_browser(browser_type)
-        
+
         if "language" in test_config:
             attributes["languages"] = f'"{test_config["language"]}"'
-            
+
         if "timezone" in test_config:
             attributes["timezone"] = f'"{test_config["timezone"]}"'
-            
+
         if "expected_os" in test_config:
             attributes["osname"] = f'"{test_config["expected_os"]}"'
-            
+
         if "expected_platform" in test_config:
             attributes["platform"] = f'"{test_config["expected_platform"]}"'
-            
+
         if "plugins" in test_config:
             attributes["plugins"] = json.dumps(test_config["plugins"])
-        
+
         if "screen_width" in test_config and "screen_height" in test_config:
             screen_resolution = f"[{test_config['screen_width']},{test_config['screen_height']}]"
             attributes["screenResolution"] = screen_resolution
-            
+
         if "available_width" in test_config and "available_height" in test_config:
             screen_frame = f"[0,0,{test_config['available_width']},{test_config['available_height']}]"
             attributes["screenFrame"] = screen_frame
-        
-        attributes.update({
-            "cookiesEnabled": "true",
-            "localStorage": "true",
-            "sessionStorage": "true"
-        })
-        
+
         if attributes:
             expected_transaction_data["attributes"] = attributes
-        
+
         self.transaction_verifier.verify_complete_transaction(
             test_name,
             expected_transaction_data,
             max_retries=3,
-            retry_delay=5,
+            retry_delay=10,
             batch_size=10
         )
     
@@ -414,12 +411,11 @@ class BaseAttributeTest(ABC):
         
         self._cleanup_driver()
     
-    def get_ua_configs(self):
-        return self.get_test_configs()
-    
     def test_single_browser_ua_combination(self, browser_type, ua_config, headless=True, is_verification=True):
         return self.test_single_browser_attribute_combination(browser_type, ua_config, headless, is_verification)
-    
+
+    # Test 2 transaction 
+
     def run_dual_session_test(self, headless=False, session_delay=15):
         browsers = self.get_test_browsers()
         
@@ -519,193 +515,17 @@ class BaseAttributeTest(ABC):
         )
         
         TestResultPrinter.print_test_result(
-            f"{browser_type.upper()}-DUAL_SESSION_VERIFY", 
+            f"{browser_type.upper()}-{self.credentials['username']}-VERIFY", 
             comparison_result
         )
     
-    def generate_comprehensive_test_report(self, output_dir="reports"):
-        """Generate comprehensive test report with driver optimization statistics"""
-        try:
-            # Create reports directory if it doesn't exist
-            if not os.path.exists(output_dir):
-                os.makedirs(output_dir)
-            
-            # Generate timestamp for unique report filename
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            report_filename = f"browser_test_report_{timestamp}.json"
-            report_path = os.path.join(output_dir, report_filename)
-            
-            # Collect all transactions for each browser
-            browsers = self.get_test_browsers()
-            login_name = self.credentials['username']
-            subscriber_id = self.api_config["subscriber_id"]
-            
-            # Get all transactions
-            all_transactions = self.transaction_verifier.get_transactions(
-                subscriber_id, login_name, max_retries=3, retry_delay=5, batch_size=50
-            )
-            
-            if not all_transactions:
-                print("No transactions found for report generation")
-                return None
-            
-            # Group transactions by browser type (inferred from user agent)
-            browser_transactions = {browser: [] for browser in browsers}
-            unclassified_transactions = []
-            
-            for trans in all_transactions:
-                user_agent = trans.get('userAgent', '').lower()
-                classified = False
-                
-                for browser in browsers:
-                    if browser.lower() in user_agent:
-                        browser_transactions[browser].append(trans)
-                        classified = True
-                        break
-                
-                if not classified:
-                    unclassified_transactions.append(trans)
-            
-            # Generate report data
-            report_data = {
-                "test_session": {
-                    "timestamp": datetime.now().isoformat(),
-                    "test_url": self.test_url,
-                    "subscriber_id": subscriber_id,
-                    "username": login_name
-                },
-                "optimization_stats": {
-                    "driver_reuse_enabled": True,
-                    "dynamic_attribute_updates": True,
-                    "note": "Driver reuse optimized for performance - same driver used across compatible attribute tests"
-                },
-                "browser_results": {},
-                "summary": {
-                    "total_browsers_tested": len([b for b in browsers if browser_transactions[b]]),
-                    "total_transactions": len(all_transactions),
-                    "unclassified_count": len(unclassified_transactions)
-                }
-            }
-            
-            # Generate detailed report for each browser
-            for browser_type in browsers:
-                browser_trans = browser_transactions[browser_type]
-                
-                if not browser_trans:
-                    continue
-                
-                browser_report = {
-                    "browser_name": self.get_browser_display_name(browser_type),
-                    "transaction_count": len(browser_trans),
-                    "transactions": [],
-                    "unique_attributes": set(),
-                    "attributes_summary": {}
-                }
-                
-                # Process each transaction
-                for idx, trans in enumerate(browser_trans, 1):
-                    trans_data = {
-                        "transaction_id": trans.get('transID', f'unknown_{idx}'),
-                        "timestamp": trans.get('timestamp', ''),
-                        "login_time": trans.get('loginTime', ''),
-                        "url": trans.get('url', ''),
-                        "user_agent": trans.get('userAgent', ''),
-                        "attributes": trans.get('attributes', {}),
-                        "status": "SUCCESS" if trans.get('loginTime') else "FAILED"
-                    }
-                    
-                    browser_report["transactions"].append(trans_data)
-                    
-                    # Collect unique attributes
-                    if trans.get('attributes'):
-                        for attr_key in trans['attributes'].keys():
-                            browser_report["unique_attributes"].add(attr_key)
-                
-                # Convert set to list for JSON serialization
-                browser_report["unique_attributes"] = list(browser_report["unique_attributes"])
-                
-                # Generate attributes summary
-                if browser_trans:
-                    attrs_summary = {}
-                    for trans in browser_trans:
-                        if trans.get('attributes'):
-                            for attr_key, attr_value in trans['attributes'].items():
-                                if attr_key not in attrs_summary:
-                                    attrs_summary[attr_key] = {"values": set(), "count": 0}
-                                attrs_summary[attr_key]["values"].add(str(attr_value))
-                                attrs_summary[attr_key]["count"] += 1
-                    
-                    # Convert sets to lists for JSON serialization
-                    for attr_key in attrs_summary:
-                        attrs_summary[attr_key]["values"] = list(attrs_summary[attr_key]["values"])
-                        attrs_summary[attr_key]["unique_values_count"] = len(attrs_summary[attr_key]["values"])
-                    
-                    browser_report["attributes_summary"] = attrs_summary
-                
-                report_data["browser_results"][browser_type] = browser_report
-            
-            # Add unclassified transactions if any
-            if unclassified_transactions:
-                report_data["unclassified_transactions"] = {
-                    "count": len(unclassified_transactions),
-                    "transactions": [
-                        {
-                            "transaction_id": trans.get('transID', f'unclassified_{idx}'),
-                            "timestamp": trans.get('timestamp', ''),
-                            "user_agent": trans.get('userAgent', ''),
-                            "attributes": trans.get('attributes', {})
-                        }
-                        for idx, trans in enumerate(unclassified_transactions, 1)
-                    ]
-                }
-            
-            # Save report to file
-            with open(report_path, 'w', encoding='utf-8') as f:
-                json.dump(report_data, f, indent=2, ensure_ascii=False, default=str)
-            
-            # Print summary
-            print(f"\n{'='*80}")
-            print(f"COMPREHENSIVE BROWSER TEST REPORT GENERATED")
-            print(f"{'='*80}")
-            print(f"Report saved to: {report_path}")
-            print(f"Total Transactions: {report_data['summary']['total_transactions']}")
-            print(f"Browsers Tested: {report_data['summary']['total_browsers_tested']}")
-            print(f"Driver Optimization: ENABLED (Reuse + Dynamic Updates)")
-            
-            for browser_type, browser_data in report_data["browser_results"].items():
-                print(f"  - {browser_data['browser_name']}: {browser_data['transaction_count']} transactions")
-            
-            if unclassified_transactions:
-                print(f"  - Unclassified: {len(unclassified_transactions)} transactions")
-            
-            print(f"{'='*80}")
-            
-            return report_path
-            
-        except Exception as e:
-            print(f"Error generating comprehensive test report: {e}")
-            return None
-    
-    def run_optimized_cross_browser_test_with_report(self, headless=True, output_dir="reports"):
-        """Run optimized cross-browser test and generate comprehensive report"""
-        print(f"\n{'='*80}")
-        print("STARTING OPTIMIZED CROSS-BROWSER FINGERPRINT TEST")
-        print("Driver Reuse Optimization: ENABLED")
-        print("Dynamic Attribute Updates: ENABLED")
-        print(f"{'='*80}")
-        
-        try:
-            # Run cross-browser test with optimization
-            self.run_cross_browser_test(headless)
-            
-            # Generate comprehensive report
-            report_path = self.generate_comprehensive_test_report(output_dir)
-            
-            return report_path
-            
-        except Exception as e:
-            print(f"Error in optimized cross-browser test: {e}")
-            return None
+    def save_verified_transactions(self, output_path="verified_transactions.json"):
+        """
+        Lưu toàn bộ transaction đã verify ra file JSON, phân loại theo attribute và browser
+        """
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(self.verified_transactions, f, indent=2, ensure_ascii=False)
+        print(f"Saved verified transactions to {output_path}")
 
 
 

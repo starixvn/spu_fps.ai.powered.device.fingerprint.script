@@ -54,6 +54,16 @@ class UserAgentTest(BaseAttributeTest):
     
     def get_test_browsers(self):
         return get_browsers_by_os(self.os_type)
+
+    def get_browser_dual_configs(self, browser_type):
+        all_configs = self._get_dual_session_configs()
+        browser_configs = []
+        
+        for config in all_configs:
+            if browser_type.title() in config['name']:
+                browser_configs.append(config)
+        
+        return browser_configs   
     
     def _get_dual_session_configs(self):
         browsers = self.get_test_browsers()
@@ -69,34 +79,17 @@ class UserAgentTest(BaseAttributeTest):
             if browser in tc_mapping.get(self.os_type, {}):
                 tc_num = tc_mapping[self.os_type][browser]
                 configs.extend([
-                    {"name": f"{tc_num}_{self.os_type.title()}_{browser.title()}_Session1", "user_agent": COMMON_USER_AGENT},
-                    {"name": f"{tc_num}_{self.os_type.title()}_{browser.title()}_Session2", "user_agent": COMMON_USER_AGENT}
+                    {"name": f"{tc_num}_{self.os_type.title()}_{browser.title()}", "user_agent": COMMON_USER_AGENT},
+                    {"name": f"{tc_num}_{self.os_type.title()}_{browser.title()}", "user_agent": COMMON_USER_AGENT}
                 ])
         
         return configs
-    
-    def get_test_description(self):
-        current_os = detect_current_os()
-        cross_platform = " (Cross-platform)" if self.os_type != current_os else ""
-        test_desc = "Single Session" if self.test_type == 'single' else "Dual Session"
-        return f"UA {test_desc} Test: {self.os_type.upper()} on {current_os.upper()}{cross_platform}"
     
     def run_single_session_test(self, headless=True):
         self.run_cross_browser_test(headless)
     
     def run_dual_session_test(self, headless=False, session_delay=15):
         super().run_dual_session_test(headless, session_delay)
-    
-    def get_browser_dual_configs(self, browser_type):
-        all_configs = self._get_dual_session_configs()
-        browser_configs = []
-        
-        for config in all_configs:
-            if browser_type.title() in config['name']:
-                browser_configs.append(config)
-        
-        return browser_configs
-    
 
 class ChangeUASameOSDiffBrowserTest(UserAgentTest):
     

@@ -208,6 +208,8 @@ class TransactionComparator:
             "transactions_identical": is_identical,
             "trans1_id": trans1.get("transID"),
             "trans2_id": trans2.get("transID"),
+            "device1_id": trans1.get("deviceID"),
+            "device2_id": trans2.get("deviceID"),
             "total_fields_compared": len(all_fields) - len(ignore_fields),
             "ignored_fields": ignore_fields,
             "differences_count": len(differences),
@@ -301,6 +303,7 @@ class TransactionVerifier:
 
         overall_result = {
             "transID": latest_transaction.get("transID"),
+            "deviceID": latest_transaction.get("deviceID"),
             "verification_results": verification_results,
             "overall_success": all(
                 result.get("match", False) 
@@ -402,7 +405,8 @@ class TransactionVerifier:
             "attribute_name": attribute_name,
             "expected_value": expected_value,
             "actual_value": actual_value,
-            "trans_id": latest_transaction.get("transID"),
+            "transID": latest_transaction.get("transID"),
+            "deviceID": latest_transaction.get("deviceID"),
             "login_name": latest_transaction.get("loginName"),
             "message": f"{attribute_name} match" if attribute_match else f"{attribute_name} mismatch"
         }

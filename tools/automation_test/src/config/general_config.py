@@ -2,7 +2,7 @@ import os
 
 TEST_URLS = {
     "DEV": {
-        "login": "http://localhost:60207"
+        "login": "http://fps-demo-standard.nexdev.net"
     },
     "LOCAL": {
         "login": "http://fps-demo-standard.nexdev.net",
@@ -15,7 +15,7 @@ TEST_URLS = {
 API_CONFIG = {
     "subscriber_id": 2,
     "DEV": {
-        "base_url": "http://localhost:5001"
+        "base_url": "https://spu-fps-int-api.nexdev.net"
     },
     "LOCAL": {
         "base_url": "https://spu-fps-int-api.nexdev.net"
@@ -24,8 +24,6 @@ API_CONFIG = {
         "base_url": ""
     }
 }
-
-SUPPORTED_BROWSERS = ["chrome", "firefox", "edge"]
 
 def get_test_credentials(prefix="test"):
     computer_name = os.environ.get('COMPUTERNAME', 'unknown')

@@ -1,3 +1,4 @@
+from utils.test_utils import TestResultPrinter
 from tests import (ChangeUASameOSDiffBrowserTest, 
                       DualTransUATest, 
                       ChangePluginsSameDeviceDiffBrowserTest,
@@ -9,28 +10,31 @@ from tests import (ChangeUASameOSDiffBrowserTest,
 
 class TestRunner:
     def __init__(self):
-        self.change_ua_test = ChangeUASameOSDiffBrowserTest()
-        self.dual_session_test = DualTransUATest()
-        self.change_plugins_test = ChangePluginsSameDeviceDiffBrowserTest()
-        self.change_pdf_viewer_test = ChangePDFViewerEnabledSameDeviceDiffBrowserTest()
-        self.change_language_test = ChangeLanguageMultiOSTest()
-        self.change_timezone_test = ChangeTimezoneMultiOSTest()
-        self.screen_frame_test = ScreenFrameFingerprintMultiOSTest()
-        self.consistency_test = LoginConsistencyMultiBrowserTest()
-    
+        self.test_ua = ChangeUASameOSDiffBrowserTest()
+        self.test_ua_dual_trans = DualTransUATest()
+        self.test_plugins = ChangePluginsSameDeviceDiffBrowserTest()
+        self.test_pdf_viewer = ChangePDFViewerEnabledSameDeviceDiffBrowserTest()
+        self.test_language = ChangeLanguageMultiOSTest()
+        self.test_timezone = ChangeTimezoneMultiOSTest()
+        self.test_screen_frame = ScreenFrameFingerprintMultiOSTest()
+        self.test_login = LoginConsistencyMultiBrowserTest()
+
     def run_all_tests(self):
-        self.consistency_test.run_all_browsers_consistency_test(headless=False)
-        # self.change_ua_test.run_cross_browser_test()
-        # self.dual_session_test.run_dual_session_test_with_verification()
-        # self.change_plugins_test.run_cross_browser_test(headless=False)
-        # self.change_pdf_viewer_test.run_cross_browser_test(headless=False)
-        # self.change_language_test.run_language_test_for_os(headless=False)
-        # self.change_timezone_test.run_timezone_change_test()
-        # self.screen_frame_test.run_all_os_screen_frame_tests()
+        self.test_login.run_cross_browser_test(headless=False)
+        # self.test_login.run_dual_trans_login_test(headless=False)
+        # self.test_ua.run_cross_browser_test()
+        # self.test_ua_dual_trans.run_dual_session_test_with_verification()
+        # self.test_plugins.run_cross_browser_test(headless=False)
+        # self.test_pdf_viewer.run_cross_browser_test(headless=False)
+        # self.test_language.run_language_test_for_os(headless=False)
+        # self.test_timezone.run_timezone_change_test()
+        # self.test_screen_frame.run_all_os_screen_frame_tests()
 
 def main():
     runner = TestRunner()
     runner.run_all_tests()
+
+    TestResultPrinter.save_test_results_report("test_results_report.txt")
 
 if __name__ == "__main__":
     main()

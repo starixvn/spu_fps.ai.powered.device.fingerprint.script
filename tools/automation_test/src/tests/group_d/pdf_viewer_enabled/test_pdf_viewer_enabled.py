@@ -59,12 +59,6 @@ class PDFViewerTest(BaseAttributeTest):
     def get_test_browsers(self):
         return get_browsers_by_os(self.os_type)
     
-    def get_test_description(self):
-        current_os = detect_current_os()
-        cross_platform = " (Cross-platform)" if self.os_type != current_os else ""
-        test_desc = "Single Session" if self.test_type == 'single' else "Dual Session"
-        return f"PDF Viewer {test_desc} Test: {self.os_type.upper()} on {current_os.upper()}{cross_platform}"
-    
     def run_single_browser_test(self, browser_type, headless=True):
         if browser_type not in PDF_VIEWER_CONFIG.get(self.os_type, {}):
             print(f"⚠️  No PDF viewer config found for {browser_type} on {self.os_type}")
