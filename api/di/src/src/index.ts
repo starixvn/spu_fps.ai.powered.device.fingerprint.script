@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
+import * as path from 'path';
 import { FingerprintService } from './services/FingerprintService';
 import { HashService } from './services/HashService';
 import { ScriptService } from './services/ScriptService';
@@ -143,6 +144,35 @@ app.get('/api/script-info', (req: Request, res: Response) => {
       error: 'Failed to get script info'
     });
   }
+});
+
+app.post('/api/rebuild-script', (req: Request, res: Response) => {
+  try {
+    scriptService.rebuildScript();
+    res.json({
+      success: true,
+      message: 'Script rebuilt successfully',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to rebuild script'
+    });
+  }
+});
+
+// Serve HTML demo pages
+app.get('/demo.html', (req: Request, res: Response) => {
+  res.sendFile('demo.html', { root: path.join(__dirname, '..') });
+});
+
+app.get('/examples.html', (req: Request, res: Response) => {
+  res.sendFile('examples.html', { root: path.join(__dirname, '..') });
+});
+
+app.get('/login-demo.html', (req: Request, res: Response) => {
+  res.sendFile('login-demo.html', { root: path.join(__dirname, '..') });
 });
 
 app.listen(port, () => {

@@ -52,6 +52,130 @@ class FPSFingerprintClass {
   }
 
   /**
+   * Generate hash from fingerprint data
+   */
+  public generateHash(fingerprint?: FingerprintData): string {
+    const data = fingerprint || this.collect();
+    
+    // Create a string representation of key fingerprint attributes
+    const hashString = [
+      data.userAgent,
+      data.platform,
+      data.language,
+      data.screen ? `${data.screen.width}x${data.screen.height}x${data.screen.colorDepth}` : '',
+      data.timezone,
+      data.hardwareConcurrency,
+      data.deviceMemory,
+      data.webgl ? `${data.webgl.vendor}-${data.webgl.renderer}` : '',
+      data.canvas ? data.canvas.substring(0, 50) : '',
+      data.audio ? data.audio.substring(0, 30) : '',
+      data.fonts ? data.fonts.slice(0, 10).join(',') : ''
+    ].join('|');
+    
+    // Simple hash function (djb2)
+    let hash = 5381;
+    for (let i = 0; i < hashString.length; i++) {
+      hash = ((hash << 5) + hash) + hashString.charCodeAt(i);
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    
+    return Math.abs(hash).toString(16).padStart(8, '0');
+  }
+
+  /**
+   * Generate hashes for each fingerprint group
+   */
+  public generateGroupHashes(fingerprint?: FingerprintData): {
+    hardware: string;
+    graphics: string;
+    audio: string;
+    browser: string;
+    preferences: string;
+    combined: string;
+  } {
+    const data = fingerprint || this.collect();
+    
+    // Hardware hash
+    const hardwareString = [
+      data.deviceMemory,
+      data.hardwareConcurrency,
+      data.maxTouchPoints,
+      data.colorDepth,
+      data.pixelDepth,
+      data.screen ? `${data.screen.width}x${data.screen.height}x${data.screen.availWidth}x${data.screen.availHeight}` : '',
+      data.cpuClass,
+      data.oscpu,
+      data.buildID
+    ].join('|');
+    
+    // Graphics hash
+    const graphicsString = [
+      data.webgl ? `${data.webgl.vendor}-${data.webgl.renderer}-${data.webgl.version}` : '',
+      data.webgl && data.webgl.unmaskedVendor ? `${data.webgl.unmaskedVendor}-${data.webgl.unmaskedRenderer}` : '',
+      data.canvas ? data.canvas.substring(0, 100) : '',
+      data.fonts ? data.fonts.slice(0, 15).join(',') : ''
+    ].join('|');
+    
+    // Audio hash
+    const audioString = [
+      data.audio || ''
+    ].join('|');
+    
+    // Browser hash
+    const browserString = [
+      data.userAgent,
+      data.platform,
+      data.cookieEnabled,
+      data.doNotTrack,
+      data.onLine,
+      data.plugins ? data.plugins.map(p => `${p.name}-${p.filename}`).slice(0, 10).join(',') : '',
+      data.localStorage,
+      data.sessionStorage,
+      data.indexedDB,
+      data.webSQL
+    ].join('|');
+    
+    // Preferences hash
+    const preferencesString = [
+      data.language,
+      data.languages ? data.languages.join(',') : '',
+      data.timezone,
+      data.timezoneOffset,
+      data.clientHints ? JSON.stringify(data.clientHints) : ''
+    ].join('|');
+    
+    // Combined hash (all groups)
+    const combinedString = [
+      hardwareString,
+      graphicsString,
+      audioString,
+      browserString,
+      preferencesString
+    ].join('||');
+    
+    return {
+      hardware: this.hashString(hardwareString),
+      graphics: this.hashString(graphicsString),
+      audio: this.hashString(audioString),
+      browser: this.hashString(browserString),
+      preferences: this.hashString(preferencesString),
+      combined: this.hashString(combinedString)
+    };
+  }
+
+  /**
+   * Internal hash function (DJB2)
+   */
+  private hashString(input: string): string {
+    let hash = 5381;
+    for (let i = 0; i < input.length; i++) {
+      hash = ((hash << 5) + hash) + input.charCodeAt(i);
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash).toString(16).padStart(8, '0');
+  }
+
+  /**
    * Send fingerprint to server
    */
   public sendToServer(
