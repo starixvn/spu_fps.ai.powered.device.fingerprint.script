@@ -91,174 +91,6 @@ class BaseAttributeTest(ABC):
             "chromium": "\"Google Inc.\""
         }
         return vendors.get(browser_type.lower(), "\"\"")
-    
-    def _requires_new_driver(self, browser_type, test_config):
-        if self._current_driver is None or self._current_browser_type != browser_type:
-            return True
-            
-        if self._last_test_config is None:
-            return True
-            
-        critical_attributes = ['user_agent', 'plugins']
-        
-        for attr in critical_attributes:
-            if (test_config.get(attr) != self._last_test_config.get(attr)):
-                return True
-        
-        dynamic_attributes = ['language', 'timezone', 'screen_width', 'screen_height']
-        
-        changes_count = 0
-        for attr in dynamic_attributes:
-            if (test_config.get(attr) != self._last_test_config.get(attr)):
-                changes_count += 1
-        
-        if changes_count > 1:
-            return True
-                
-        return False
-    
-    def _get_or_create_driver(self, browser_type, test_config, headless=True):
-        if self._requires_new_driver(browser_type, test_config):
-            if self._current_driver is not None:
-                BrowserUtils.safe_quit_driver(self._current_driver)
-                self._current_driver = None
-                self._current_page = None
-            
-            browser_config = self._prepare_browser_config(test_config)
-            self._current_driver = BrowserDriverFactory.create_driver(browser_type, headless, browser_config)
-            self._current_browser_type = browser_type
-            self._current_page = self._current_driver.page if hasattr(self._current_driver, 'page') else self._current_driver
-        else:
-
-            self._update_browser_attributes_dynamically(test_config)
-            time.sleep(1)
-        
-        self._last_test_config = test_config.copy()
-        return self._current_driver
-    
-    def _update_browser_attributes_dynamically(self, test_config):
-        if self._current_page is None or self._last_test_config is None:
-            return
-            
-        dynamic_attributes = ['language', 'timezone', 'screen_width', 'screen_height']
-        changed_attribute = None
-        new_value = None
-        
-        for attr in dynamic_attributes:
-            old_val = self._last_test_config.get(attr)
-            new_val = test_config.get(attr)
-            if old_val != new_val:
-                changed_attribute = attr
-                new_value = new_val
-                break
-        
-        if changed_attribute:
-            try:
-                async def update_attribute():
-                    if changed_attribute == 'language':
-                        if hasattr(self._current_driver, 'context'):
-                            await self._current_driver.context.set_extra_http_headers({"Accept-Language": new_value})
-                        
-                        if hasattr(self._current_page, 'evaluate'):
-                            js_code = f"""
-                            () => {{
-                                // Override navigator.language
-                                Object.defineProperty(navigator, 'language', {{
-                                    get: function() {{ return '{new_value}'; }},
-                                    configurable: true
-                                }});
-                                
-                                // Override navigator.languages
-                                Object.defineProperty(navigator, 'languages', {{
-                                    get: function() {{ return ['{new_value}']; }},
-                                    configurable: true
-                                }});
-                                
-                                console.log('Language changed to:', '{new_value}');
-                                return navigator.language;
-                            }}
-                            """
-                            result = await self._current_page.evaluate(js_code)
-                            print(f"  Language updated to: {result}")
-                        
-                        self._current_language = new_value
-                        
-                    elif changed_attribute == 'timezone':
-                        if hasattr(self._current_page, 'evaluate'):
-                            js_code = f"""
-                            () => {{
-                                // Override Intl.DateTimeFormat to return new timezone
-                                const originalDateTimeFormat = Intl.DateTimeFormat;
-                                Intl.DateTimeFormat = function(...args) {{
-                                    const formatter = new originalDateTimeFormat(...args);
-                                    const originalResolvedOptions = formatter.resolvedOptions;
-                                    formatter.resolvedOptions = function() {{
-                                        const options = originalResolvedOptions.call(this);
-                                        options.timeZone = '{new_value}';
-                                        return options;
-                                    }};
-                                    return formatter;
-                                }};
-                                
-                                // Override Date.prototype.getTimezoneOffset if needed
-                                console.log('Timezone changed to:', '{new_value}');
-                                return '{new_value}';
-                            }}
-                            """
-                            result = await self._current_page.evaluate(js_code)
-                        else:
-                            print(f"  Timezone preference updated to: {new_value} (requires driver recreation for full effect)")
-                        
-                        self._current_timezone = new_value
-                        
-                    elif changed_attribute in ['screen_width', 'screen_height']:
-                        new_width = test_config.get('screen_width', self._current_screen_width)
-                        new_height = test_config.get('screen_height', self._current_screen_height)
-                        
-                        if hasattr(self._current_page, 'set_viewport_size'):
-                            await self._current_page.set_viewport_size({
-                                "width": int(new_width) if new_width else 1920,
-                                "height": int(new_height) if new_height else 1080
-                            })
-                            print(f"  Viewport updated to: {new_width}x{new_height}")
-                        
-                        self._current_screen_width = new_width
-                        self._current_screen_height = new_height
-                
-                try:
-                    loop = asyncio.get_event_loop()
-                    if loop.is_running():
-                        asyncio.create_task(update_attribute())
-                    else:
-                        loop.run_until_complete(update_attribute())
-                except RuntimeError:
-                    asyncio.run(update_attribute())
-                    
-            except Exception as e:
-                print(f"  Warning: Could not update {changed_attribute} dynamically: {e}")
-                print(f"  Driver will continue with original configuration")
-                if changed_attribute == 'language':
-                    self._current_language = new_value
-                elif changed_attribute == 'timezone':
-                    self._current_timezone = new_value
-                elif changed_attribute in ['screen_width', 'screen_height']:
-                    self._current_screen_width = test_config.get('screen_width', self._current_screen_width)
-                    self._current_screen_height = test_config.get('screen_height', self._current_screen_height)
-        
-        time.sleep(0.5)
-    
-    def _cleanup_driver(self):
-        if self._current_driver is not None:
-            BrowserUtils.safe_quit_driver(self._current_driver)
-            self._current_driver = None
-            self._current_browser_type = None
-            self._current_page = None
-            self._last_test_config = None
-            
-            self._current_language = None
-            self._current_timezone = None
-            self._current_screen_width = None
-            self._current_screen_height = None
 
     # Test Transaction
 
@@ -277,14 +109,14 @@ class BaseAttributeTest(ABC):
             
             if login_result.get("login_result") == "SUCCESS" and is_verification:
                 try:
-                    # TestLoginHelper.perform_logout(driver)
-                    driver.quit()
+                    self.verify_transaction_attributes(test_name, browser_type, test_config)
 
                 except Exception as logout_error:
                     print(f"Logout error: {logout_error}")
                     pass
 
-                self.verify_transaction_attributes(test_name, browser_type, test_config)
+            driver.quit()
+
 
         except Exception as e:
             TestResultPrinter.print_test_result(test_name, {}, str(e))
@@ -336,9 +168,7 @@ class BaseAttributeTest(ABC):
 
         attributes = {}
         if "user_agent" in test_config:
-            if "expected_platform" not in test_config:
-                attributes["platform"] = self.get_platform_from_ua(test_config["user_agent"])
-            attributes["vendor"] = self.get_vendor_from_browser(browser_type)
+            attributes["userAgent"] = test_config["user_agent"]
 
         # if "language" in test_config:
         #     attributes["languages"] = [[test_config["language"]]]
@@ -380,19 +210,16 @@ class BaseAttributeTest(ABC):
     def run_single_browser_test(self, browser_type, headless=True):
         test_configs = self.get_test_configs()
         
-        try:
-            for i, test_config in enumerate(test_configs, 1):
-                try:
-                    self.test_single_browser_attribute_combination(browser_type, test_config, headless)
+        for i, test_config in enumerate(test_configs, 1):
+            try:
+                self.test_single_browser_attribute_combination(browser_type, test_config, headless)
+                
+                if i < len(test_configs):
+                    time.sleep(3)
                     
-                    if i < len(test_configs):
-                        time.sleep(3)
-                        
-                except Exception as e:
-                    print(f"Error in {browser_type} test {i}: {e}")
-                    continue
-        finally:
-            self._cleanup_driver()
+            except Exception as e:
+                print(f"Error in {browser_type} test {i}: {e}")
+                continue
     
     def run_cross_browser_test(self, headless=True):
         browsers = self.get_test_browsers()
@@ -406,10 +233,8 @@ class BaseAttributeTest(ABC):
                     
             except Exception as e:
                 print(f"Error in {browser_type} browser test: {e}")
-                self._cleanup_driver()
                 continue
         
-        self._cleanup_driver()
     
     def test_single_browser_ua_combination(self, browser_type, ua_config, headless=True, is_verification=True):
         return self.test_single_browser_attribute_combination(browser_type, ua_config, headless, is_verification)
@@ -428,32 +253,13 @@ class BaseAttributeTest(ABC):
                 
                 session_results = []
                 
-                first_config = browser_configs[0]
-                driver = self._get_or_create_driver(browser_type, first_config, headless)
-                
-                configs_to_use = browser_configs[:2] if len(browser_configs) >= 2 else [first_config, first_config]
-                
-                for session_num, test_config in enumerate(configs_to_use, 1):  
+                for session_num, test_config in enumerate(browser_configs, 1):  
                     try:
                         test_name = f"{browser_type.upper()}-{test_config['name']}-SESSION{session_num}"
                         
-                        if session_num > 1 and test_config != configs_to_use[0]:
-                            self._update_browser_attributes_dynamically(test_config)
-                        
-                        login_result = TestLoginHelper.perform_login_with_attributes(
-                            driver, self.test_url, self.credentials
-                        )
-                        TestResultPrinter.print_test_result(test_name, login_result)
-                        
-                        if login_result.get("login_result") == "SUCCESS":
-                            session_results.append((test_name, browser_type, test_config))
-                            
-                            if session_num < 2:
-                                try:
-                                    TestLoginHelper.perform_logout(driver)
-                                except Exception as logout_error:
-                                    print(f"Logout error after session {session_num}: {logout_error}")
-                        
+                        self.test_single_browser_attribute_combination(browser_type, test_config, headless, is_verification=False)
+                        session_results.append((test_name, browser_configs, test_config))
+
                         if session_num < 2:
                             time.sleep(session_delay)
                             
@@ -470,9 +276,7 @@ class BaseAttributeTest(ABC):
             except Exception as e:
                 print(f"Error in {browser_type} dual session test: {e}")
                 continue
-
-            finally:
-                self._cleanup_driver()
+                
     
     def get_browser_dual_configs(self, browser_type):
         all_configs = self.get_test_configs()
@@ -519,13 +323,6 @@ class BaseAttributeTest(ABC):
             comparison_result
         )
     
-    def save_verified_transactions(self, output_path="verified_transactions.json"):
-        """
-        Lưu toàn bộ transaction đã verify ra file JSON, phân loại theo attribute và browser
-        """
-        with open(output_path, "w", encoding="utf-8") as f:
-            json.dump(self.verified_transactions, f, indent=2, ensure_ascii=False)
-        print(f"Saved verified transactions to {output_path}")
 
 
 

@@ -12,10 +12,6 @@ UA_CONFIG = {
         },
         {
         "name": "UA_TC001_Windows",
-        "user_agent": "Mozilla/5.0 (Windows NT 11.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0"
-        },
-        {
-        "name": "UA_TC001_Windows",
         "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36 Edg/125.0.0.0"
         }
     ],

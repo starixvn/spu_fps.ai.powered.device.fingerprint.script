@@ -7,35 +7,35 @@ from ...base_attribute.attribue import (
 TIMEZONE_CONFIG = {
     'windows': {
         "name": "GE_TC054_Windows",
-        "timezone": "Asia/Saigon",
+        "timezone": "America/New_York",
     },
     'macos': {
         "name": "GE_TC055_macOS",
-        "timezone": "Asia/Saigon",
+        "timezone": "America/New_York",
     },
     'linux': {
         "name": "GE_TC056_Linux",
-        "timezone": "Asia/Saigon",
+        "timezone": "America/New_York",
     }
 }
 
 CREDENTIALS_MAPPING = {
     'single': {
         'windows': {
-            'chrome': 'ge_tc054_win_chrome',
-            'firefox': 'ge_tc054_win_firefox',
-            'edge': 'ge_tc054_win_edge'
+            'chrome': 'ge_tc054_win',
+            'firefox': 'ge_tc054_win',
+            'edge': 'ge_tc054_win'
         },
         'macos': {
-            'chrome': 'ge_tc055_mac_chrome',
-            'firefox': 'ge_tc055_mac_firefox',
-            'edge': 'ge_tc055_mac_edge',
+            'chrome': 'ge_tc055_mac',
+            'firefox': 'ge_tc055_mac',
+            'edge': 'ge_tc055_mac',
             'safari': 'ge_tc055_mac_safari'
         },
         'linux': {
-            'chrome': 'ge_tc056_linux_chrome',
-            'firefox': 'ge_tc056_linux_firefox',
-            'chromium': 'ge_tc056_linux_chromium'
+            'chrome': 'ge_tc056_linux',
+            'firefox': 'ge_tc056_linux',
+            'chromium': 'ge_tc056_linux'
         }
     }
 }

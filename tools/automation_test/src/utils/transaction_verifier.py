@@ -167,7 +167,10 @@ class TransactionFieldVerifier:
                 match = handler(expected_value, actual_value)
             else:
                 match = str(expected_value) == str(actual_value)
-            
+            if attr_name == "userAgent":
+                actual_value = transaction.get("userAgent")
+                match = expected_value == actual_value
+
             attribute_results[attr_name] = {
                 "match": match,
                 "expected": expected_value,
@@ -222,10 +225,8 @@ class TransactionComparator:
         return {
             "comparison_name": comparison_name,
             "transactions_identical": is_identical,
-            "trans1_id": trans1.get("transID"),
-            "trans2_id": trans2.get("transID"),
-            "device1_id": trans1.get("deviceID"),
-            "device2_id": trans2.get("deviceID"),
+            "transaction1": trans1,
+            "transaction2": trans2,
             "total_fields_compared": len(all_fields) - len(ignore_fields),
             "ignored_fields": ignore_fields,
             "differences_count": len(differences),
@@ -318,8 +319,7 @@ class TransactionVerifier:
         verification_results = self._build_verification_results(latest_transaction, expected_data)
 
         overall_result = {
-            "transID": latest_transaction.get("transID"),
-            "deviceID": latest_transaction.get("deviceID"),
+            "transaction": latest_transaction,
             "verification_results": verification_results,
             "overall_success": all(
                 result.get("match", False) 
@@ -421,9 +421,7 @@ class TransactionVerifier:
             "attribute_name": attribute_name,
             "expected_value": expected_value,
             "actual_value": actual_value,
-            "transID": latest_transaction.get("transID"),
-            "deviceID": latest_transaction.get("deviceID"),
-            "login_name": latest_transaction.get("loginName"),
+            "transaction": latest_transaction,
             "message": f"{attribute_name} match" if attribute_match else f"{attribute_name} mismatch"
         }
     

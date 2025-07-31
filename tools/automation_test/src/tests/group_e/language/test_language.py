@@ -7,14 +7,6 @@ from ...base_attribute.attribue import (
 LANGUAGE_CONFIG = {
     'windows': [
         {
-            "name": "GE_TC001_Windows_VI_VN",
-            "language": "vi-VN",
-        },
-        {
-            "name": "GE_TC001_Windows_EN_US",
-            "language": "en-US",
-        },
-        {
             "name": "GE_TC001_Windows_ZH_CN",
             "language": "zh-CN", 
         },
