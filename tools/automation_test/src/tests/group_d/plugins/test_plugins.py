@@ -8,47 +8,47 @@ from ...base_attribute.attribue import (
 PLUGINS_CONFIG = {
     'windows': {
         'chrome': {
-            "name": "TC078_Plugins_Windows_Chrome",
+            "name": "TC089_Plugins_Windows_Chrome",
             "plugins": [{"name": "Chrome PDF Plugin", "description": "Portable Document Format", "mimeTypes": []}]
         },
         'firefox': {
-            "name": "TC078_Plugins_Windows_Firefox_Plugins",
+            "name": "TC089_Plugins_Windows_Firefox_Plugins",
             "plugins": [{"name": "OpenH264 Video Codec provided by Cisco Systems, Inc.", "description": "OpenH264 Video Codec provided by Cisco Systems, Inc.", "mimeTypes": []}]
         },
         'edge': {
-            "name": "TC078_Plugins_Windows_Edge_Plugins",
+            "name": "TC089_Plugins_Windows_Edge_Plugins",
             "plugins": [{"name": "Microsoft Edge PDF", "description": "Portable Document Format", "mimeTypes": []}]
         }
     },
     'macos': {
         'chrome': {
-            "name": "TC079_Plugins_macOS_Chrome_Plugins",
+            "name": "TC090_Plugins_macOS_Chrome_Plugins",
             "plugins": [{"name": "Chrome PDF Plugin", "description": "Portable Document Format", "mimeTypes": []}]
         },
         'firefox': {
-            "name": "TC079_Plugins_macOS_Firefox_Plugins",
+            "name": "TC090_Plugins_macOS_Firefox_Plugins",
             "plugins": [{"name": "OpenH264 Video Codec provided by Cisco Systems, Inc.", "description": "OpenH264 Video Codec provided by Cisco Systems, Inc.", "mimeTypes": []}]
         },
         'safari': {
-            "name": "TC079_Plugins_macOS_Safari_Plugins",
+            "name": "TC090_Plugins_macOS_Safari_Plugins",
             "plugins": [{"name": "Safari PDF Plugin", "description": "Safari PDF Plugin", "mimeTypes": []}]
         },
         'edge': {
-            "name": "TC079_Plugins_macOS_Edge_Plugins",
+            "name": "TC090_Plugins_macOS_Edge_Plugins",
             "plugins": [{"name": "Microsoft Edge PDF", "description": "Portable Document Format", "mimeTypes": []}]
         }
     },
     'linux': {
         'chrome': {
-            "name": "TC080_Linux_Chrome_Plugins",
+            "name": "TC091_Linux_Chrome_Plugins",
             "plugins": [{"name": "Chrome PDF Plugin", "description": "Portable Document Format", "mimeTypes": []}]
         },
         'firefox': {
-            "name": "TC080_Linux_Firefox_Plugins",
+            "name": "TC091_Linux_Firefox_Plugins",
             "plugins": [{"name": "OpenH264 Video Codec provided by Cisco Systems, Inc.", "description": "OpenH264 Video Codec provided by Cisco Systems, Inc.", "mimeTypes": []}]
         },
         'chromium': {
-            "name": "TC080_Linux_Chromium_Plugins",
+            "name": "TC091_Linux_Chromium_Plugins",
             "plugins": [{"name": "Chromium PDF Plugin", "description": "Portable Document Format", "mimeTypes": []}]
         }
     }

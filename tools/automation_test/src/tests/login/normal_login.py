@@ -105,7 +105,7 @@ class LoginConsistencyMultiBrowserTest(LoginConsistencyTest):
 
                     session_results.append(login_result)
                 if len(session_results) == 2:
-                    test_instance.verify_dual_session_transactions(session_results, browser_type)
+                    test_instance._verify_dual_session_transactions(session_results, browser_type)
             finally:
                 driver.quit()
 

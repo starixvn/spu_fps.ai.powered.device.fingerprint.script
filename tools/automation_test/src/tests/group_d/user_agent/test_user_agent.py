@@ -34,7 +34,7 @@ CREDENTIALS_MAPPING = {
         'linux': 'gd_tc003_test'
     },
     'dual': {
-        'windows': 'gd_tc004-6_test',
+        'windows': 'gd_tc00-4-5-20_test',
         'macos': 'gd_tc007-10_test',
         'linux': 'gd_tc011-13_test'
     }

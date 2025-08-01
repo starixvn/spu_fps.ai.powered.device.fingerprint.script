@@ -192,8 +192,8 @@ class TransactionComparator:
     def compare_transactions(trans1: Dict, trans2: Dict, ignore_fields: Optional[List[str]] = None, 
                            comparison_name: str = "Transaction Comparison") -> Dict[str, Any]:
         if ignore_fields is None:
-            ignore_fields = ['transID', 'timestamp', 'createdAt', 'updatedAt', 'loginTime']
-        
+            ignore_fields = ['transID', 'deviceCode', 'deviceStatus', 'fP_DeviceMappingID', 'insertTime', 'transTime']
+
         differences = []
         all_fields = set(trans1.keys()) | set(trans2.keys())
         
