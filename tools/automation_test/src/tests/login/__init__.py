@@ -1,7 +1,7 @@
-from .normal_login import (
-    LoginConsistencyMultiBrowserTest
+from .test_login import (
+    TestLogin
 )
 
 __all__ = [
-    'LoginConsistencyMultiBrowserTest'
+    'TestLogin'
 ]

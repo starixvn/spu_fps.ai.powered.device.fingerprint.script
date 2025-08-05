@@ -1,5 +1,5 @@
 
-from .general_config import (
+from .settings import (
     TEST_URLS,
     API_CONFIG,
     BROWSER_MAPPING,
