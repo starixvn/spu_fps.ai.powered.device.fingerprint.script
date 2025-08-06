@@ -1,88 +1,85 @@
-# 📝 Test Report Summary
+# 📝 Test Report Summary On 3 Browsers: Chrome, Firefox, Edge
 
-## 📊 Overall Statistics
+---
 
-- **Test Cases (Unique LoginNames):** 10
-- **Total Transactions:** 36
-- **Unique DeviceIDs:** 30
-- **Test Cases PASS:** 8
-- **Test Cases FAIL:** 2
+## Init Data Statistics
 
-## ✅ Passed Test Cases
+| Metric | Count |
+|--------|-------|
+| **Total Transactions** | 3 |
 
-- **CP24029-AIDA_login_tc001_chrome** ✅
-- **CP24029-AIDA_login_tc002_firefox** ✅
-- **CP24029-AIDA_gd_tc001_test** ✅
-- **CP24029-AIDA_gd_tc078_test** ✅
-- **CP24029-AIDA_gd_tc156_test** ✅
-- **CP24029-AIDA_ge_tc001_windows_test** ✅
-- **CP24029-AIDA_ge_tc054_win** ✅
-- **CP24029-AIDA_gb_tc044_windows_test** ✅
+### Init Device Recovery Breakdown
+| Status | Count | Percentage | 
+|--------|-------|------------|
+| New Device (Status=1) | 3 | 100.0% |
+| Recover by Tagging (Status=2) | 0 | 0.0% |
+| Recover by Fingerprint (Status=3) | 0 | 0.0% |
+| Empty Device (Status=0) | 0 | 0.0% |
 
-## ❌ Failed Test Cases
+---
 
-- **CP24029-AIDA_login_tc003_edge** ❌ 
-- **CP24029-AIDA_gd_tc004-6_test** ❌ 
+### ✅ Test Cases Group 1: Keep Same Browser Session Open (Login-Logout-Login Pattern)
+| # | Test Case Name | Description |
+|---|----------------|-------------|
+| 1 | **233595_NormalTrans_TC-001** | Verify 2 transactions on the same window device + Chrome: the same all attributes 	|
+| 2 | **233595_NormalTrans_TC-002** | Verify 2 transactions on the same window device + Firefox: the same all attributes	|
+| 3 | **233595_NormalTrans_TC-003** | Verify 2 transactions on the same window device + Edge: the same all attributes	|
 
-## 🔄 Device Recovery Statistics
+**Group 1 Device Recovery Statistics (6 transactions):**
+| Status | Count | Percentage |
+|--------|-------|------------|
+| New Device (Status=1) | 0 | 0.0% |
+| Recover by Tagging (Status=2) | 0 | 0.0% |
+| Recover by Fingerprint (Status=3) | 6 | 100.0% |
+| Empty Device (Status=0) | 0 | 0.0% |
 
-- **New Device (Status=1):** 3 transactions
-- **Recover by Tagging (Status=2):** 0 transactions
-- **Recover by Fingerprint (Status=3):** 33 transactions
+### ❌ Failed Test Cases
+- _No failed test cases_
+  
+---
 
-## 🌐 Browser Statistics
+### ✅ Test Cases Group 2: Open New Browser Instance For Each Test (Fresh Session Every Time)
+| # | Test Case Name | Description |
+|---|----------------|-------------|
+| 4 | **233595_GroupD_TC-001** | Verify transactions changing UserAgent on the same window device but different browsers: Chrome, Firefox, Edge |
+| 5 | **233595_GroupD_TC-004** | Verify 2 transactions changing UserAgent on the same window device + Chrome (open browser 2 times)	 |
+| 6 | **233595_GroupD_TC-005** | Verify 2 transactions changing UserAgent on the same window device + FireFox  (open browser 2 times)	 |
+| 7 | **233595_GroupD_TC-020** | Verify 2 transactions changing UserAgent on the same window device + Edge  (open browser 2 times)	 |
+| 8 | **233595_GroupD_TC-089** | Verify transactions changing Plugins on the same window device but different browsers: Chrome, Firefox, Edge	 |
+| 9 | **233595_GroupD_TC-167** | Verify transactions changing PdfViewerEnabled on the same window device but different browsers: Chrome, Firefox, Edge	 |
+| 10 | **233595_GroupE_TC-001** | Verify transactions changing Languages on the same window device but different browsers: Chrome, Firefox, Edge	 |
+| 11 | **233595_GroupE_TC-054** | Verify transactions changing Timezone on the same window device but different browsers: Chrome, Firefox, Edge	 |
+| 12 | **233595_GroupB_TC-044** | Verify transactions changing ScreenFrame on the same window device but different browsers: Chrome, Firefox, Edge	 |
 
-| Browser | Test Cases | Transactions | Unique Devices |
-|---------|------------|--------------|----------------|
-| Chrome | 6 | 13 | 9 |
-| Firefox | 6 | 10 | 9 |
-| Edge | 7 | 12 | 11 |
-| HeadlessChrome | 1 | 1 | 1 |
+**Group 2 Device Recovery Statistics (30 transactions):**
+| Status | Count | Percentage |
+|--------|-------|------------|
+| New Device (Status=1) | 28 | 93.33% |
+| Recover by Tagging (Status=2) | 0 | 0.0% |
+| Recover by Fingerprint (Status=3) | 2 | 6.67% |
+| Empty Device (Status=0) | 0 | 0.0% |
 
-## 💻 Operating System Distribution
+### ❌ Failed Test Cases
+- _No failed test cases_
 
-| OS | Count |
-|----|----- |
-| Windows | 36 |
+---
 
-## 👥 Subscriber Distribution
+## 📊 Overall Test Execution Summary
 
-| Subscriber | Count |
-|------------|----- |
-| Alpha | 36 |
+### Combined Device Recovery Statistics (All 36 transactions)
+| Status | Count | Percentage |
+|--------|-------|------------|
+| New Device (Status=1) | 28 | 77.78% |
+| Recover by Tagging (Status=2) | 0 | 0.0% |
+| Recover by Fingerprint (Status=3) | 8 | 22.22% |
+| Empty Device (Status=0) | 0 | 0.0% |
 
-## 🏆 Top 5 Most Common DeviceIDs
+**💡 Overall Device Recovery Success Rate: 22.22% (8/36 transactions recovered existing devices)**
 
-| DeviceID | Count |
-|----------|-------|
-| 1524 | 2 |
-| 1525 | 2 |
-| 1526 | 2 |
-| 1515 | 2 |
-| 1503 | 2 |
+### Key Insights:
+- **Group 1 (With Cookies)**: 100.0% recovery rate (6/6 via fingerprinting only)
+- **Group 2 (New Cookies)**: 6.67% recovery rate (2/30 via fingerprinting only)
+- Cookies dramatically improve fingerprinting performance (100% vs 6.67%)
 
-## 🧪 Attributes
+---
 
-- **OS**: Windows
-- **Browser**: Chrome, Edge, Firefox, HeadlessChrome
-- **Language**: [["ja-JP"],["ja-JP"]], [["ja-JP"]], [["vi-VN"],["vi-VN"]], [["vi-VN"]], [["zh-CN"],["zh-CN"]], [["zh-CN"]]
-- **TimeZone**: "America/New_York", "Asia/Bangkok", "Asia/Saigon"
-- **UserAgent**: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36, Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36 Edg/125.0.0.0, Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0, Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/120.0.6099.28 Safari/537.36, Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0, Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/119.0, Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:127.0) Gecko/20100101 Firefox/127.0
-- **Plugins**: [], [{"name":"Chrome PDF Plugin","description":"Portable Document Format","mimeTypes":[]}], [{"name":"Microsoft Edge PDF","description":"Portable Document Format","mimeTypes":[]}], [{"name":"OpenH264 Video Codec provided by Cisco Systems, Inc.","description":"OpenH264 Video Codec provided by Cisco Systems, Inc.","mimeTypes":[]}], [{"name":"PDF Viewer","description":"Portable Document Format","mimeTypes":[{"type":"application/pdf","suffixes":"pdf"},{"type":"text/pdf","suffixes":"pdf"}]},{"name":"Chrome PDF Viewer","description":"Portable Document Format","mimeTypes":[{"type":"application/pdf","suffixes":"pdf"},{"type":"text/pdf","suffixes":"pdf"}]},{"name":"Chromium PDF Viewer","description":"Portable Document Format","mimeTypes":[{"type":"application/pdf","suffixes":"pdf"},{"type":"text/pdf","suffixes":"pdf"}]},{"name":"Microsoft Edge PDF Viewer","description":"Portable Document Format","mimeTypes":[{"type":"application/pdf","suffixes":"pdf"},{"type":"text/pdf","suffixes":"pdf"}]},{"name":"WebKit built-in PDF","description":"Portable Document Format","mimeTypes":[{"type":"application/pdf","suffixes":"pdf"},{"type":"text/pdf","suffixes":"pdf"}]}]
-- **screenframe**: [0,0,0,0], [0,0,40,0]
-- **pdfViewerEnabled**: false, true
-
-## 📋 Sample Test Cases
-
-| TransactionID | DeviceID | Status Test | LoginName | OS | Browser | Language | TimeZone | UserAgent |
-|---------------|----------|-------------|-----------|----|---------|----------|----------|----------|
-| 22932812 | 1524 | PASS | CP24029-AIDA_login_tc001_chrome | Windows | Chrome | [["vi-VN"]] | "Asia/Saigon" | Mozilla/5.0 (Windows NT 10.0; ... |
-| 22932811 | 1524 | PASS | CP24029-AIDA_login_tc001_chrome | Windows | Chrome | [["vi-VN"]] | "Asia/Saigon" | Mozilla/5.0 (Windows NT 10.0; ... |
-| 22932814 | 1525 | PASS | CP24029-AIDA_login_tc002_firefox | Windows | Firefox | [["vi-VN"],["vi-VN"]] | "Asia/Bangkok" | Mozilla/5.0 (Windows NT 10.0; ... |
-| 22932813 | 1525 | PASS | CP24029-AIDA_login_tc002_firefox | Windows | Firefox | [["vi-VN"],["vi-VN"]] | "Asia/Bangkok" | Mozilla/5.0 (Windows NT 10.0; ... |
-| 22932816 | 1526 | FAIL | CP24029-AIDA_login_tc003_edge | Windows | Edge | [["vi-VN"]] | "Asia/Bangkok" | Mozilla/5.0 (Windows NT 10.0; ... |
-| 22932815 | 1526 | FAIL | CP24029-AIDA_login_tc003_edge | Windows | Edge | [["vi-VN"]] | "Asia/Bangkok" | Mozilla/5.0 (Windows NT 10.0; ... |
-| 22932817 | 1559 | PASS | CP24029-AIDA_gd_tc001_test | Windows | Firefox | [["vi-VN"]] | "Asia/Saigon" | Mozilla/5.0 (Windows NT 10.0; ... |
-| 22932819 | 1560 | PASS | CP24029-AIDA_gd_tc001_test | Windows | Edge | [["vi-VN"]] | "Asia/Saigon" | Mozilla/5.0 (Windows NT 10.0; ... |
-| 22932820 | 1561 | PASS | CP24029-AIDA_gd_tc001_test | Windows | Firefox | [["vi-VN"],["vi-VN"]] | "Asia/Bangkok" | Mozilla/5.0 (Windows NT 10.0; ... |
-| 22932821 | 1562 | PASS | CP24029-AIDA_gd_tc001_test | Windows | Edge | [["vi-VN"],["vi-VN"]] | "Asia/Bangkok" | Mozilla/5.0 (Windows NT 10.0; ... |
