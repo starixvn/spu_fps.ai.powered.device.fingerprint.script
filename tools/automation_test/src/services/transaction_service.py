@@ -63,26 +63,28 @@ class TransactionAPIHelper:
 
     
 class TransactionVerifier:
-    
+
+    IGNORE_FIELDS = ['transID', 'accountID', 'loginName', 'deviceCode', 'deviceStatus', 'fP_DeviceMappingID', 'insertTime', 'transTime']
+
     def __init__(self, api_helper: TransactionAPIHelper):
         self.api_helper = api_helper
-    
-    def verify_transaction_exists(self, subscriber_id: int, login_name: str, 
-                                expected_attributes: Optional[Dict[str, Any]] = None,
-                                processing_delay: int = 30) -> TransactionVerificationResult:
+
+    def _get_transaction_with_retry(self, subscriber_id: int, login_name: str, batch_size: int = 5, 
+                                    max_retries: int = 3, retry_delay: int = 30) -> Optional[List[Transaction]]:
         transactions = None
-        for attempt in range(3):
-            
-            transactions = self.api_helper.get_transactions_by_login(subscriber_id, login_name, batch_size=5)
+        for attempt in range(max_retries):
+            transactions = self.api_helper.get_transactions_by_login(subscriber_id, login_name, batch_size)
             
             if transactions and len(transactions) > 0:
-                logging.info(f"Found {len(transactions)} transactions on attempt {attempt + 1}")
-                break
+                return transactions
             
-            if attempt < 2:  
-                time.sleep(processing_delay)
+            if attempt < max_retries - 1:  
+                time.sleep(retry_delay)
+    
+    def verify_transaction_exists(self, subscriber_id: int, login_name: str) -> TransactionVerificationResult:
+        transactions = self._get_transaction_with_retry(subscriber_id, login_name)
 
-        if not transactions:
+        if not transactions or len(transactions) == 0:
             return TransactionVerificationResult(
                 success=False,
                 message="No transactions found or API error",
@@ -91,81 +93,126 @@ class TransactionVerifier:
                 transaction_count=0
             )
         
-        transaction_count = len(transactions)
-        if transaction_count == 0:
-            return TransactionVerificationResult(
-                success=False,
-                message="No transactions found for this login name",
-                login_name=login_name,
-                subscriber_id=subscriber_id,
-                transaction_count=0
-            )
-        
         latest_transaction = transactions[0] if transactions else None
-        
-        logging.info(f"Found {transaction_count} transactions for {login_name}")
-        if latest_transaction and latest_transaction.attributes:
-            logging.info(f"Latest transaction has attributes: {latest_transaction.attributes.to_dict()}")
-        else:
-            logging.warning(f"Latest transaction has no attributes or is None")
         
         result = TransactionVerificationResult(
             success=True,
-            message=f"Found {transaction_count} transaction(s)",
+            message=f"Found {len(transactions)} transaction(s)",
             login_name=login_name,
             subscriber_id=subscriber_id,
-            transaction_count=transaction_count,
+            transaction_count=len(transactions),
             latest_transaction=latest_transaction,
             all_transactions=transactions
         )
         
-        if expected_attributes and latest_transaction and latest_transaction.attributes:
-            logging.info(f"Verifying attributes: {expected_attributes}")
-            attributes_match = True
-            attribute_details = {}
-            
-            if latest_transaction.attributes:
-                trans_attributes = latest_transaction.attributes.to_dict()
-                logging.info(f"Transaction attributes: {trans_attributes}")
-                
-                for key, expected_value in expected_attributes.items():
-                    actual_value = trans_attributes.get(key)
-                    matches = str(actual_value) == str(expected_value)
-                    
-                    logging.info(f"Checking attribute '{key}': expected='{expected_value}', actual='{actual_value}', matches={matches}")
-                    
-                    attribute_details[key] = {
-                        "expected": expected_value,
-                        "actual": actual_value,
-                        "matches": matches
-                    }
-                    
-                    if not matches:
-                        attributes_match = False
-            else:
-                logging.error("No attributes found in transaction")
-                attributes_match = False
-                attribute_details = {"error": "No attributes found in transaction"}
-            
-            result.attributes_verification = {
-                "success": attributes_match,
-                "details": attribute_details
-            }
-        
         return result
     
-    def verify_login_transaction(self, subscriber_id: int, login_name: str, 
-                               time_retry: int = 30, max_retries: int = 3) -> bool:
-           
-        for attempt in range(max_retries):
-            
-            result = self.verify_transaction_exists(subscriber_id, login_name)
-            
-            if result.success and result.transaction_count > 0:
-                return True
-            
-            if attempt < max_retries - 1:
-                time.sleep(time_retry)
+    def verify_dual_transaction(self, subscriber_id, login_name1, login_name2) -> TransactionVerificationResult:
+
+        trans1 = self._get_transaction_with_retry(subscriber_id, login_name1, batch_size=1)
+        trans2 = self._get_transaction_with_retry(subscriber_id, login_name2, batch_size=1)
+
+        if not trans1 or not trans2:
+            return TransactionVerificationResult(
+                success=False,
+                message=f"Failed to retrieve transactions - Login1: {'Found' if trans1 else 'Not found'}, Login2: {'Found' if trans2 else 'Not found'}",
+                login_name=f"{login_name1} , {login_name2}",
+                subscriber_id=subscriber_id,
+                transaction_count=0
+            )
         
-        return False
+        # Extract first transaction from lists since _get_transaction_with_retry returns lists
+        transaction1 = trans1[0] if trans1 and len(trans1) > 0 else None
+        transaction2 = trans2[0] if trans2 and len(trans2) > 0 else None
+        
+        if not transaction1 or not transaction2:
+            return TransactionVerificationResult(
+                success=False,
+                message="One or both transactions are empty after extraction",
+                login_name=f"{login_name1} vs {login_name2}",
+                subscriber_id=subscriber_id,
+                transaction_count=0
+            )
+        
+        comparison_result = self._compare_transactions(transaction1, transaction2)
+        
+        return TransactionVerificationResult(
+            success=comparison_result["success"],
+            message=comparison_result["message"],
+            login_name=f"{login_name1} vs {login_name2}",
+            subscriber_id=subscriber_id,
+            transaction_count=2,
+            latest_transaction=transaction1,
+            all_transactions=[transaction1, transaction2],
+            attributes_verification=comparison_result.get("details")
+        )
     
+    def _compare_transactions(self, trans1: Transaction, trans2: Transaction) -> Dict[str, Any]:
+        differences = {}
+        all_match = True
+        
+        dict1 = trans1.to_dict()
+        dict2 = trans2.to_dict()
+        
+        for key in dict1.keys():
+            if key not in self.IGNORE_FIELDS and key != 'attributes':
+                value1 = dict1.get(key)
+                value2 = dict2.get(key)
+                
+                if value1 != value2:
+                    differences[key] = {
+                        "transaction1": value1,
+                        "transaction2": value2,
+                        "matches": False
+                    }
+                    all_match = False
+                else:
+                    differences[key] = {
+                        "transaction1": value1,
+                        "transaction2": value2,
+                        "matches": True
+                    }
+        
+        if hasattr(trans1, 'attributes') and hasattr(trans2, 'attributes'):
+            if trans1.attributes and trans2.attributes:
+                attr_dict1 = trans1.attributes.to_dict() if hasattr(trans1.attributes, 'to_dict') else trans1.attributes
+                attr_dict2 = trans2.attributes.to_dict() if hasattr(trans2.attributes, 'to_dict') else trans2.attributes
+                
+                all_attr_keys = set(attr_dict1.keys()).union(set(attr_dict2.keys()))
+                
+                for attr_key in all_attr_keys:
+                    if attr_key not in self.IGNORE_FIELDS:
+                        attr_value1 = attr_dict1.get(attr_key)
+                        attr_value2 = attr_dict2.get(attr_key)
+                        
+                        if attr_value1 != attr_value2:
+                            differences[f"attributes.{attr_key}"] = {
+                                "transaction1": attr_value1,
+                                "transaction2": attr_value2,
+                                "matches": False
+                            }
+                            all_match = False
+                        else:
+                            differences[f"attributes.{attr_key}"] = {
+                                "transaction1": attr_value1,
+                                "transaction2": attr_value2,
+                                "matches": True
+                            }
+        
+        message = "Transactions match (ignoring specified fields)" if all_match else f"Transactions differ in {len([k for k, v in differences.items() if not v['matches']])} field(s)"
+        
+        return {
+            "success": all_match,
+            "message": message,
+            "details": {
+                "comparison_summary": differences,
+                "ignored_fields": self.IGNORE_FIELDS,
+                "total_differences": len([k for k, v in differences.items() if not v['matches']])
+            }
+        }
+
+
+
+
+
+        

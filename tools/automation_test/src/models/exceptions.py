@@ -1,10 +1,4 @@
-"""
-Standardized exception models for FPS testing framework
-"""
-
 class BaseTestException(Exception):
-    """Base exception class for all test-related exceptions"""
-    
     def __init__(self, message: str, test_name: str = None, details: dict = None):
         self.message = message
         self.test_name = test_name
@@ -12,7 +6,6 @@ class BaseTestException(Exception):
         super().__init__(self.message)
     
     def to_dict(self):
-        """Convert exception to dictionary format"""
         return {
             "exception_type": self.__class__.__name__,
             "message": self.message,
@@ -31,7 +24,6 @@ class BaseTestException(Exception):
 
 
 class LoginTestException(BaseTestException):
-    """Exception raised during login test operations"""
     
     def __init__(self, message: str, test_name: str = None, username: str = None, 
                  login_result: str = None, final_url: str = None):
@@ -47,7 +39,6 @@ class LoginTestException(BaseTestException):
 
 
 class BrowserException(BaseTestException):
-    """Exception raised during browser operations"""
     
     def __init__(self, message: str, test_name: str = None, browser_type: str = None, 
                  browser_config: dict = None, url: str = None):
@@ -63,7 +54,6 @@ class BrowserException(BaseTestException):
 
 
 class CredentialsException(BaseTestException):
-    """Exception raised for credential-related issues"""
     
     def __init__(self, message: str, test_name: str = None, credentials_key: str = None):
         details = {}
@@ -74,7 +64,6 @@ class CredentialsException(BaseTestException):
 
 
 class TestConfigurationException(BaseTestException):
-    """Exception raised for test configuration issues"""
     
     def __init__(self, message: str, test_name: str = None, config_type: str = None, 
                  environment: str = None):

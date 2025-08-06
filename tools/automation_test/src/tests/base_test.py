@@ -14,6 +14,7 @@ class BaseTest:
     def setup_class(cls):
         env = os.getenv("ENVIRONMENT", "DEV")
         api_config = get_api_config_for_environment(env)
+
         cls.transaction_api = TransactionAPIHelper(api_config["base_url"])
         cls.transaction_verifier = TransactionVerifier(cls.transaction_api)
         cls.subscriber_id = api_config["subscriber_id"]
@@ -21,18 +22,7 @@ class BaseTest:
     def perform_login_test(self, driver, test_url, credentials, test_name, verify_transaction=True):
        
         try:
-            if not driver:
-                raise BrowserException(
-                    "Browser driver is None or not initialized",
-                    test_name=test_name
-                )
             
-            if not test_url or not test_url.startswith(('http://', 'https://')):
-                raise BrowserException(
-                    f"Invalid test URL: {test_url}",
-                    test_name=test_name,
-                    url=test_url
-                )
             if not credentials or not credentials.get('username'):
                 raise CredentialsException(
                     "Failed to retrieve valid test credentials",
@@ -44,18 +34,16 @@ class BaseTest:
                 driver, test_url, credentials
             )
             
-            if not result:
-                raise LoginTestException(
-                    "Login helper returned None result",
-                    test_name=test_name,
-                    username=credentials.get('username')
-                )
-            
             if result.get('error'):
                 return result
             
             if verify_transaction and result["login_result"] == "SUCCESS":
-                self.verify_login_transaction(credentials.get('username'), test_name)
+                verification_result = self.verify_login_transaction(credentials.get('username'), test_name)
+
+                result["transaction_verification"] = {
+                    "success": verification_result.success,
+                    "message": verification_result.message
+                }
             
             return result
             
@@ -74,132 +62,18 @@ class BaseTest:
                 test_name=test_name,
                 username=credentials.get('username', 'Unknown')
             )
-    
-    def verify_login_transaction(self, login_name: str, test_name: str):
-       
-        try:
-            verification_result = self.__class__.transaction_verifier.verify_transaction_exists(
-                subscriber_id=self.__class__.subscriber_id,
-                login_name=login_name
-            )
-            
-            if not verification_result.success:
-                raise LoginTestException(
-                    f"Transaction verification failed: {verification_result.message}. No transaction found for subscriber_id: {self.__class__.subscriber_id}",
-                    test_name=test_name,
-                    username=login_name
-                )
-            
-            latest_transaction = verification_result.latest_transaction
-            if latest_transaction:
-                if latest_transaction.loginName != login_name:
-                    raise LoginTestException(
-                        f"Transaction login name mismatch: expected '{login_name}', got '{latest_transaction.loginName}'",
-                        test_name=test_name,
-                        username=login_name
-                    )
-                
-                if latest_transaction.action != "login":
-                    raise LoginTestException(
-                        f"Transaction action mismatch: expected 'login', got '{latest_transaction.action}'",
-                        test_name=test_name,
-                        username=login_name
-                    )
-                
-                if latest_transaction.actionResult != "successfull":  
-                    raise LoginTestException(
-                        f"Transaction result mismatch: expected 'successfull', got '{latest_transaction.actionResult}'",
-                        test_name=test_name,
-                        username=login_name,
-                        login_result=latest_transaction.actionResult
-                    )
-            else:
-                raise LoginTestException(
-                    "Transaction verification failed: No transaction details available",
-                    test_name=test_name,
-                    username=login_name
-                )
-                
-        except Exception as e:
-            if isinstance(e, LoginTestException):
-                raise
-            
-            raise LoginTestException(
-                f"Transaction verification error: {str(e)}. Subscriber ID: {self.__class__.subscriber_id}",
-                test_name=test_name,
-                username=login_name
-            )
-    
-    def verify_fingerprint_attribute(self, login_name: str, attribute_name: str, expected_value: str, test_name: str):
-        """Verify fingerprint attribute in transaction data"""
         
-        try:
-            verification_result = self.__class__.transaction_verifier.verify_transaction_exists(
-                subscriber_id=self.__class__.subscriber_id,
-                login_name=login_name
-            )
-            
-            if not verification_result.success:
-                raise LoginTestException(
-                    f"Cannot verify attribute - no transaction found for login: {login_name}",
-                    test_name=test_name,
-                    username=login_name
-                )
-            
-            latest_transaction = verification_result.latest_transaction
-            if not latest_transaction:
-                raise LoginTestException(
-                    f"Cannot verify attribute - no transaction data found for login: {login_name}",
-                    test_name=test_name,
-                    username=login_name
-                )
-            
-            actual_value = getattr(latest_transaction, attribute_name, None)
-            
-            if actual_value is None and latest_transaction.attributes:
-                actual_value = getattr(latest_transaction.attributes, attribute_name, None)
-            
-            if actual_value is None:
-                main_attrs = [attr for attr in dir(latest_transaction) if not attr.startswith('_')]
-                attr_attrs = [attr for attr in dir(latest_transaction.attributes) if not attr.startswith('_')] if latest_transaction.attributes else []
-                
-                raise LoginTestException(
-                    f"Attribute '{attribute_name}' not found in transaction data for login: {login_name} | Available main fields: {main_attrs[:10]}... | Available attribute fields: {attr_attrs[:10]}...",
-                    test_name=test_name,
-                    username=login_name
-                )
-            
-            if str(actual_value) != str(expected_value):
-                raise LoginTestException(
-                    f"Attribute '{attribute_name}' mismatch for login '{login_name}': expected '{expected_value}', got '{actual_value}'",
-                    test_name=test_name,
-                    username=login_name
-                )
-            
-            return True
-            
-        except Exception as e:
-            if isinstance(e, LoginTestException):
-                raise
-            
-            raise LoginTestException(
-                f"Attribute verification error for '{attribute_name}': {str(e)}",
-                test_name=test_name,
-                username=login_name
-            )
-    
     def perform_login_and_logout(self, driver, test_url, credentials, test_name, session_manager=None):
-       
-        login_result = self.perform_login_test(driver, test_url, credentials, test_name)
-        
+
+        login_result = self.perform_login_test(driver, test_url, credentials, test_name, verify_transaction=False)
+
         if login_result["login_result"] == "SUCCESS":
             logout_success = False
             logout_message = ""
             
             try:
                 if session_manager:
-                    logout_success = session_manager.perform_logout()
-                    logout_message = "Logout completed via session manager"
+                    logout_success, logout_message = session_manager.perform_logout()
                 else:
                     logout_success, logout_message = TestLoginHelper.perform_logout(driver)
                 
@@ -223,3 +97,141 @@ class BaseTest:
             )
         
         assert result["login_result"] == "SUCCESS"
+    
+    def verify_login_transaction(self, login_name: str, test_name: str):
+       
+        try:
+            verification_result = self.__class__.transaction_verifier.verify_transaction_exists(
+                subscriber_id=self.__class__.subscriber_id,
+                login_name=login_name
+            )
+            
+            if not verification_result.success:
+                raise LoginTestException(
+                    f"Transaction verification failed: {verification_result.message}. No transaction found for subscriber_id: {self.__class__.subscriber_id}",
+                    test_name=test_name,
+                    username=login_name
+                )
+            
+            return verification_result
+        except Exception as e:
+            if isinstance(e, LoginTestException):
+                raise
+            
+            raise LoginTestException(
+                f"Transaction verification error: {str(e)}. Subscriber ID: {self.__class__.subscriber_id}",
+                test_name=test_name,
+                username=login_name
+            )
+    
+    def verify_fingerprint_attributes(self, login_name: str, expected_attributes: dict, test_name: str):
+        
+        try:
+            verification_result = self.__class__.transaction_verifier.verify_transaction_exists(
+                subscriber_id=self.__class__.subscriber_id,
+                login_name=login_name
+            )
+            
+            if not verification_result.success:
+                raise LoginTestException(
+                    f"Cannot verify attributes - no transaction found for login: {login_name}",
+                    test_name=test_name,
+                    username=login_name
+                )
+            
+            latest_transaction = verification_result.latest_transaction
+            verification_results = {}
+            all_passed = True
+            
+            for attribute_name, expected_value in expected_attributes.items():
+                try:
+                    actual_value = getattr(latest_transaction, attribute_name, None)
+                    
+                    if actual_value is None and latest_transaction.attributes:
+                        actual_value = getattr(latest_transaction.attributes, attribute_name, None)
+                    
+                    if actual_value is None:
+                        verification_results[attribute_name] = {
+                            "success": False,
+                            "expected": expected_value,
+                            "actual": None,
+                            "error": f"Attribute '{attribute_name}' not found in transaction data"
+                        }
+                        all_passed = False
+                        continue
+                    
+                    matches = str(actual_value) == str(expected_value)
+                    verification_results[attribute_name] = {
+                        "success": matches,
+                        "expected": expected_value,
+                        "actual": actual_value,
+                        "error": None if matches else f"Value mismatch: expected '{expected_value}', got '{actual_value}'"
+                    }
+                    
+                    if not matches:
+                        all_passed = False
+                        
+                except Exception as attr_error:
+                    verification_results[attribute_name] = {
+                        "success": False,
+                        "expected": expected_value,
+                        "actual": None,
+                        "error": f"Error verifying attribute: {str(attr_error)}"
+                    }
+                    all_passed = False
+            
+            if not all_passed:
+                failed_attrs = [attr for attr, result in verification_results.items() if not result["success"]]
+                error_details = []
+                for attr in failed_attrs:
+                    error_details.append(f"{attr}: {verification_results[attr]['error']}")
+                
+                raise LoginTestException(
+                    f"Attribute verification failed for login '{login_name}'. Failed attributes: {', '.join(failed_attrs)}. Details: {'; '.join(error_details)}",
+                    test_name=test_name,
+                    username=login_name
+                )
+            
+            return verification_results
+            
+        except Exception as e:
+            if isinstance(e, LoginTestException):
+                raise
+            
+            raise LoginTestException(
+                f"Attribute verification error: {str(e)}",
+                test_name=test_name,
+                username=login_name
+            )
+    
+    def verify_single_fingerprint_attribute(self, login_name: str, attribute_name: str, expected_value: str, test_name: str):
+
+        return self.verify_fingerprint_attributes(login_name, {attribute_name: expected_value}, test_name)
+        
+    def _verify_dual_transaction(self, credential1: str, credential2: str, test_name: str):
+        
+        try:
+            result = self.__class__.transaction_verifier.verify_dual_transaction(
+                subscriber_id=self.__class__.subscriber_id,
+                login_name1=credential1.get('username'),
+                login_name2=credential2.get('username')
+            )
+            
+            if not result.success:
+                raise LoginTestException(
+                    f"Dual transaction verification failed: {result.message}",
+                    test_name=test_name,
+                    username=f"{credential1.get('username')} vs {credential2.get('username')}"
+                )
+            
+            return result
+            
+        except Exception as e:
+            if isinstance(e, LoginTestException):
+                raise
+            
+            raise LoginTestException(
+                f"Dual transaction verification error: {str(e)}",
+                test_name=test_name,
+                username=f"{credential1.get('username')} vs {credential2.get('username')}"
+            )

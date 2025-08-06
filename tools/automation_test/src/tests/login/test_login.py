@@ -1,6 +1,5 @@
 import pytest
 from models.exceptions import LoginTestException, BrowserException, CredentialsException
-from factories.browser_factory import BrowserDriverFactory
 from tests.base_test import BaseTest
 
 
@@ -18,6 +17,9 @@ class TestLogin(BaseTest):
             result = self.perform_login_test(browser_driver, test_url, credentials, test_name)
             
             self.assert_login_success(result, test_name)
+
+            if result.get("transaction_verification"):
+                assert result["transaction_verification"]["success"], f"Transaction verification failed: {result['transaction_verification']['message']}"
             
         except (LoginTestException, BrowserException, CredentialsException) as e:
             pytest.fail(str(e))
@@ -25,87 +27,69 @@ class TestLogin(BaseTest):
             error_msg = f"Unexpected exception in {test_name}: {str(e)}"
             pytest.fail(error_msg)
     
+    #region NormalTrans TC_001
     @pytest.mark.login
-    def test_multiple_browser_dual_login(self, test_url, test_credentials, supported_browsers, browser_session_manager):
+    def test_chrome_dual_login(self, test_url, test_credentials, chrome_driver, browser_session_manager):
         
-        for browser_type in supported_browsers:
-            self._test_browser_dual_login(browser_type, test_url, test_credentials, browser_session_manager)
-    
-    def _test_browser_dual_login(self, browser_type, test_url, test_credentials, browser_session_manager):
-        
-        credential_numbers = {
-            "chrome": "TC001",
-            "firefox": "TC002", 
-            "edge": "TC003"
-        }
-        
-        tc_number = credential_numbers.get(browser_type, "TC001")
-        credential_key = f"{browser_type}_{tc_number}"
-    
-        driver = None
-        try:
-            driver = self._create_browser_driver(browser_type)
-            
-            if not driver:
-                pytest.fail(f"Failed to create {browser_type} driver")
-            
-            session_manager = browser_session_manager(driver)
+        session_manager = browser_session_manager(chrome_driver)
 
-            first_credentials = test_credentials(f"{credential_key}_Login1")
-            second_credentials = test_credentials(f"{credential_key}_Login2")
-            test_name = f"NormalTrans_{tc_number}"
-            
-            session_manager.prepare_for_new_login(test_url)
-            
-            first_result = self.perform_login_test(
-                driver=driver,
+        for attempt in range(2):
+            self.perform_login_and_logout(
+                driver=chrome_driver,
                 test_url=test_url,
-                credentials=first_credentials,
-                test_name=test_name,
-                verify_transaction=False
+                credentials=test_credentials(f"NormalTrans_TC001_Chrome_Login{attempt + 1}"),
+                test_name="NormalTrans_TC001_Chrome",
+                session_manager=session_manager
             )
-            
-            self.assert_login_success(first_result, test_name)
-            
-            session_manager.perform_logout()
-            
-            session_manager.prepare_for_new_login(test_url)
-            
-            second_result = self.perform_login_test(
-                driver=driver,
-                test_url=test_url,
-                credentials=second_credentials,
-                test_name=test_name,
-                verify_transaction=False
-            )
-            
-            self.assert_login_success(second_result, test_name)
-            
-        except Exception as e:
-            pytest.fail(f"Dual login failed for {browser_type}: {str(e)}")
-        finally:
-            if driver:
-                try:
-                    driver.quit()
-                except Exception:
-                    pass
-    
-    def _create_browser_driver(self, browser_type):
+        result = self._verify_dual_transaction(credential1=test_credentials(f"NormalTrans_TC001_Chrome_Login1"),
+                                      credential2=test_credentials(f"NormalTrans_TC001_Chrome_Login2"),
+                                      test_name="NormalTrans_TC001_Chrome")
         
-        try:
-            if browser_type == "chrome":
-                return BrowserDriverFactory.create_chrome_driver(headless=False)
-            elif browser_type == "firefox":
-                return BrowserDriverFactory.create_firefox_driver(headless=False)
-            elif browser_type == "edge":
-                return BrowserDriverFactory.create_edge_driver(headless=False)
-            else:
-                raise Exception(f"Unsupported browser type: {browser_type}")
-        except Exception as e:
-            print(f"Failed to create {browser_type} driver: {str(e)}")
-            return None
-    
-    
+        assert result.success, f"Dual transaction verification failed: {result.message}"
 
+    #endregion NormalTrans TC_001
+
+    #region NormalTrans TC_002
+    @pytest.mark.login
+    def test_firefox_dual_login(self, test_url, test_credentials, firefox_driver, browser_session_manager):
+
+        session_manager = browser_session_manager(firefox_driver)       
+
+        for attempt in range(2):
+            self.perform_login_and_logout(
+                driver=firefox_driver,
+                test_url=test_url,
+                credentials=test_credentials(f"NormalTrans_TC002_Firefox_Login{attempt + 1}"),
+                test_name="NormalTrans_TC002_Firefox",
+                session_manager=session_manager
+            )
+        result = self._verify_dual_transaction(credential1=test_credentials(f"NormalTrans_TC002_Firefox_Login1"),
+                                      credential2=test_credentials(f"NormalTrans_TC002_Firefox_Login2"),
+                                      test_name="NormalTrans_TC002_Firefox")
+        
+        assert result.success, f"Dual transaction verification failed: {result.message}"
+
+    #endregion NormalTrans TC_002
+
+    #region NormalTrans TC_003
+    @pytest.mark.login
+    def test_edge_dual_login(self, test_url, test_credentials, edge_driver, browser_session_manager):
+
+        session_manager = browser_session_manager(edge_driver)
+
+        for attempt in range(2):
+            self.perform_login_and_logout(
+                driver=edge_driver,
+                test_url=test_url,
+                credentials=test_credentials(f"NormalTrans_TC003_Edge_Login{attempt + 1}"),
+                test_name="NormalTrans_TC003_Edge",
+                session_manager=session_manager
+            )
+        result = self._verify_dual_transaction(credential1=test_credentials(f"NormalTrans_TC003_Edge_Login1"),
+                                      credential2=test_credentials(f"NormalTrans_TC003_Edge_Login2"),
+                                      test_name="NormalTrans_TC003_Edge")
+
+        assert result.success, f"Dual transaction verification failed: {result.message}"
+    #endregion NormalTrans TC_003
 
 

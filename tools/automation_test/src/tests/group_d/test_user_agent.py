@@ -1,217 +1,318 @@
 import pytest
 from tests.base_test import BaseTest
-from models.exceptions import  BrowserException
-from factories.browser_factory import BrowserDriverFactory, BrowserConfigTemplates
+from factories.browser_factory import BrowserConfigTemplates
+import platform
 
 
 class TestUserAgent(BaseTest):
-    
-    USER_AGENTS = {
-        "chrome": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "firefox": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
-        "edge": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0"
-    }
-    
+
+#region Windows Only Tests
+
+    #region GroupD_TC001  
     @pytest.mark.user_agent
-    def test_cross_browser_user_agent_spoofing(self, test_url, test_credentials):
+    @pytest.mark.skipif(platform.system() != "Windows", reason="Skipping user agent tests on non-Windows platforms")
+    @pytest.mark.parametrize("browser_driver", [
+        {
+            "browser_type": "chrome",
+            "test_case": "GroupD_TC001_chrome", 
+            "custom_config": BrowserConfigTemplates.get_user_agent_config("Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0", "chrome_spoofed")
+        },
+        {
+            "browser_type": "firefox", 
+            "test_case": "GroupD_TC001_firefox", 
+            "custom_config": BrowserConfigTemplates.get_user_agent_config("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36", "firefox_spoofed")
+        },
+        {
+            "browser_type": "edge", 
+            "test_case": "GroupD_TC001_edge", 
+            "custom_config": BrowserConfigTemplates.get_user_agent_config("Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0", "edge_spoofed")
+        }
+    ], indirect=True, ids=["chrome", "firefox", "edge"])
+    def test_cross_browser_user_agent_spoofing_windows(self, test_url, test_credentials, browser_driver):
         
-        chrome_credentials = test_credentials("chrome_user_agent")
-        firefox_credentials = test_credentials("firefox_user_agent")
-        edge_credentials = test_credentials("edge_user_agent")
-        
-        _ = self._test_browser_with_spoofed_ua(
-            browser_type="chrome",
-            spoofed_ua=self.USER_AGENTS["firefox"],
+        test_case = getattr(browser_driver, 'test_case', 'GroupD_TC001_chrome')
+        custom_config = getattr(browser_driver, 'custom_config', None)
+
+        credentials = test_credentials(test_case)
+    
+        result = self.perform_login_test(
+            driver=browser_driver,
             test_url=test_url,
-            credentials=chrome_credentials,
-            test_name="GroupD_TC001_Chrome"
+            credentials=credentials,
+            test_name=test_case,        
+            verify_transaction=True
         )
+
+        self.assert_login_success(result, test_case)
         
-        _ = self._test_browser_with_spoofed_ua(
-            browser_type="firefox",
-            spoofed_ua=self.USER_AGENTS["chrome"],
-            test_url=test_url,
-            credentials=firefox_credentials,
-            test_name="GroupD_TC001_Firefox"
+        self.verify_single_fingerprint_attribute(
+            login_name=credentials.get('username'),
+            attribute_name="userAgent",
+            expected_value=custom_config['user_agent'],
+            test_name=test_case
         )
-        
-        _ = self._test_browser_with_spoofed_ua(
-            browser_type="edge",
-            spoofed_ua=self.USER_AGENTS["firefox"],
-            test_url=test_url,
-            credentials=edge_credentials,
-            test_name="GroupD_TC001_Edge"
-        )
-        
+
+    #endregion GroupD_TC001
+
+    #region GroupD_TC004
     @pytest.mark.user_agent
-    def test_multiple_browser_dual_user_agent_login(self, test_url, test_credentials, supported_browsers, browser_session_manager):
-        
-        for browser_type in supported_browsers:
-            self._test_browser_dual_user_agent_login(browser_type, test_url, test_credentials, browser_session_manager)
-    
-    def _test_browser_dual_user_agent_login(self, browser_type, test_url, test_credentials, browser_session_manager):
-        
-        credential_numbers = {
-            "chrome": "GroupD_TC004",
-            "firefox": "GroupD_TC005", 
-            "edge": "GroupD_TC020"
+    @pytest.mark.skipif(platform.system() != "Windows", reason="Skipping user agent tests on non-Windows platforms")
+    @pytest.mark.parametrize("chrome_driver", [
+        {
+            "test_case": "GroupD_TC004",
+            "custom_config": BrowserConfigTemplates.get_user_agent_config(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0", 
+                "chrome_dual_spoofed"
+            )
         }
+    ], indirect=True)
+    def test_dual_user_agent_chrome_login_windows(self, test_url, test_credentials, chrome_driver, browser_session_manager):
         
-        tc_number = credential_numbers.get(browser_type, "GroupD_TC004")
-        credential_key = f"{browser_type}_{tc_number}"
-        
-        spoofed_ua = self._get_spoofed_user_agent(browser_type)
-        
-        driver = None
-        try:
-            driver = self._create_driver_with_user_agent(browser_type, spoofed_ua)
-            
-            if not driver:
-                pytest.fail(f"Failed to create {browser_type} driver with spoofed user-agent")
-            
-            session_manager = browser_session_manager(driver)
-            
-            first_credentials = test_credentials(f"{credential_key}_Login1")
-            second_credentials = test_credentials(f"{credential_key}_Login2")
-            test_name = tc_number
-            
-            session_manager.prepare_for_new_login(test_url)
-            
-            first_result = self.perform_login_test(
-                driver=driver,
-                test_url=test_url,
-                credentials=first_credentials,
-                test_name=test_name,
-                verify_transaction=False
+        test_case_base = getattr(chrome_driver, 'test_case', 'GroupD_TC004')
+
+        result = self._dual_user_agent_login(
+            driver=chrome_driver,
+            test_url=test_url,
+            test_credentials=test_credentials,
+            browser_session_manager=browser_session_manager,
+            test_case_base=test_case_base
+        )
+
+        assert result.success, f"Dual transaction verification failed: {result.message}"
+
+    #endregion GroupD_TC004
+
+    #region GroupD_TC005
+    @pytest.mark.user_agent
+    @pytest.mark.skipif(platform.system() != "Windows", reason="Skipping user agent tests on non-Windows platforms")
+    @pytest.mark.parametrize("firefox_driver", [
+        {
+            "test_case": "GroupD_TC005",
+            "custom_config": BrowserConfigTemplates.get_user_agent_config(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "firefox_spoofed"
             )
-            
-            self.assert_login_success(first_result, test_name)
-            
-            self.verify_fingerprint_attribute(
-                login_name=first_credentials.get('username'),
-                attribute_name="userAgent",
-                expected_value=spoofed_ua,
-                test_name=test_name
-            )
-            
-            session_manager.perform_logout()
-            
-            session_manager.prepare_for_new_login(test_url)
-            
-            second_result = self.perform_login_test(
-                driver=driver,
-                test_url=test_url,
-                credentials=second_credentials,
-                test_name=test_name,
-                verify_transaction=False
-            )
-            
-            self.assert_login_success(second_result, test_name)
-            
-            self.verify_fingerprint_attribute(
-                login_name=second_credentials.get('username'),
-                attribute_name="userAgent",
-                expected_value=spoofed_ua,
-                test_name=test_name
-            )
-            
-        except Exception as e:
-            pytest.fail(f"Dual user-agent login failed for {browser_type}: {str(e)}")
-        finally:
-            if driver:
-                try:
-                    driver.quit()
-                except Exception:
-                    pass
-    
-    def _get_spoofed_user_agent(self, browser_type):
-        ua_mapping = {
-            "chrome": self.USER_AGENTS["firefox"],
-            "firefox": self.USER_AGENTS["chrome"],
-            "edge": self.USER_AGENTS["firefox"]
         }
-        return ua_mapping.get(browser_type, self.USER_AGENTS["firefox"])
+    ], indirect=True)
+    def test_firefox_user_agent_spoofing_windows(self, test_url, test_credentials, firefox_driver, browser_session_manager):
+        test_case_base = getattr(firefox_driver, 'test_case', 'GroupD_TC005')
+
+        result = self._dual_user_agent_login(
+            driver=firefox_driver,
+            test_url=test_url,
+            test_credentials=test_credentials,
+            browser_session_manager=browser_session_manager,
+            test_case_base=test_case_base
+        )
+
+        assert result.success, f"Dual transaction verification failed: {result.message}"
+
+    #endregion GroupD_TC005
+
+    #region GroupD_TC006
+    @pytest.mark.user_agent
+    @pytest.mark.skipif(platform.system() != "Windows", reason="Skipping user agent tests on non-Windows platforms")
+    @pytest.mark.parametrize("edge_driver", [
+        {
+            "test_case": "GroupD_TC006",
+            "custom_config": BrowserConfigTemplates.get_user_agent_config(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "edge_spoofed"
+            )
+        }
+    ], indirect=True)
+    def test_edge_user_agent_spoofing_windows(self, test_url, test_credentials, edge_driver, browser_session_manager):
+        test_case_base = getattr(edge_driver, 'test_case', 'GroupD_TC006')
+
+        result = self._dual_user_agent_login(
+            driver=edge_driver,
+            test_url=test_url,
+            test_credentials=test_credentials,
+            browser_session_manager=browser_session_manager,
+            test_case_base=test_case_base
+        )
+
+        assert result.success, f"Dual transaction verification failed: {result.message}"
+
+    #endregion GroupD_TC006
+
+#endregion Windows Only Tests
+
+#region MacOS Only Tests
+
+    #region GroupD_TC002  
+    @pytest.mark.user_agent
+    @pytest.mark.skipif(platform.system() != "Darwin", reason="Skipping user agent tests on MacOS platforms")
+    @pytest.mark.parametrize("browser_driver", [
+        {
+            "browser_type": "safari",
+            "test_case": "GroupD_TC002_safari",
+            "custom_config": BrowserConfigTemplates.get_user_agent_config("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0.2 Safari/605.1.15", "safari_spoofed")
+        },
+        {
+            "browser_type": "chrome",
+            "test_case": "GroupD_TC002_chrome", 
+            "custom_config": BrowserConfigTemplates.get_user_agent_config("Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0", "chrome_spoofed")
+        },
+        {
+            "browser_type": "firefox", 
+            "test_case": "GroupD_TC002_firefox", 
+            "custom_config": BrowserConfigTemplates.get_user_agent_config("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36", "firefox_spoofed")
+        },
+        {
+            "browser_type": "edge", 
+            "test_case": "GroupD_TC002_edge", 
+            "custom_config": BrowserConfigTemplates.get_user_agent_config("Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0", "edge_spoofed")
+        },
+    ], indirect=True, ids=["safari", "chrome", "firefox", "edge"])
+    def test_cross_browser_user_agent_spoofing_macos(self, test_url, test_credentials, browser_driver):
+
+        test_case = getattr(browser_driver, 'test_case', 'GroupD_TC002_safari')
+        custom_config = getattr(browser_driver, 'custom_config', None)
+
+        credentials = test_credentials(test_case)
     
-    def _test_browser_with_spoofed_ua(self, browser_type, spoofed_ua, test_url, credentials, test_name):
+        result = self.perform_login_test(
+            driver=browser_driver,
+            test_url=test_url,
+            credentials=credentials,
+            test_name=test_case,        
+            verify_transaction=True
+        )
+
+        self.assert_login_success(result, test_case)
         
-        driver = None
-        try:
-            driver = self._create_driver_with_user_agent(browser_type, spoofed_ua)
-            
-            if not driver:
-                return {
-                    "login_result": "FAILED",
-                    "error": f"Failed to create {browser_type} driver with spoofed user-agent"
-                }
-            
-            result = self.perform_login_test(
+        self.verify_single_fingerprint_attribute(
+            login_name=credentials.get('username'),
+            attribute_name="userAgent",
+            expected_value=custom_config['user_agent'],
+            test_name=test_case
+        )
+
+    #endregion GroupD_TC002
+
+    #region GroupD_TC007
+
+    @pytest.mark.user_agent
+    @pytest.mark.skipif(platform.system() != "Darwin", reason="Skipping user agent tests on non-MacOS platforms")
+    @pytest.mark.parametrize("safari_driver", [
+        {
+            "test_case": "GroupD_TC007",
+            "custom_config": BrowserConfigTemplates.get_user_agent_config("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0.2 Safari/605.1.15", "safari_spoofed")
+        }
+    ], indirect=True)
+    def test_dual_user_agent_safari_login(self, test_url, test_credentials, safari_driver, browser_session_manager):
+
+        test_case = getattr(safari_driver, 'test_case', 'GroupD_TC007')
+        result = self._dual_user_agent_login(
+            driver=safari_driver,
+            test_url=test_url,
+            test_credentials=test_credentials,
+            browser_session_manager=browser_session_manager,
+            test_case_base=test_case
+        )
+
+        assert result.success, f"Dual transaction verification failed: {result.message}"
+
+    #endregion GroupD_TC007
+
+    #region GroupD_TC008
+    @pytest.mark.user_agent
+    @pytest.mark.skipif(platform.system() != "Darwin", reason="Skipping user agent tests on non-MacOS platforms")
+    @pytest.mark.parametrize("chrome_driver", [
+        {
+            "test_case": "GroupD_TC008",
+            "custom_config": BrowserConfigTemplates.get_user_agent_config(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0", 
+                "chrome_dual_spoofed"
+            )
+        }
+    ], indirect=True)
+    def test_dual_user_agent_chrome_login_macos(self, test_url, test_credentials, chrome_driver, browser_session_manager):
+        
+        test_case_base = getattr(chrome_driver, 'test_case', 'GroupD_TC008')
+
+        result = self._dual_user_agent_login(
+            driver=chrome_driver,
+            test_url=test_url,
+            test_credentials=test_credentials,
+            browser_session_manager=browser_session_manager,
+            test_case_base=test_case_base
+        )
+
+        assert result.success, f"Dual transaction verification failed: {result.message}"
+
+    #endregion GroupD_TC008
+
+    #region GroupD_TC009
+    @pytest.mark.user_agent
+    @pytest.mark.skipif(platform.system() != "Darwin", reason="Skipping user agent tests on non-MacOS platforms")
+    @pytest.mark.parametrize("firefox_driver", [
+        {
+            "test_case": "GroupD_TC009",
+            "custom_config": BrowserConfigTemplates.get_user_agent_config(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "firefox_spoofed"
+            )
+        }
+    ], indirect=True)
+    def test_firefox_user_agent_spoofing_macos(self, test_url, test_credentials, firefox_driver, browser_session_manager):
+        test_case_base = getattr(firefox_driver, 'test_case', 'GroupD_TC009')
+
+        result = self._dual_user_agent_login(
+            driver=firefox_driver,
+            test_url=test_url,
+            test_credentials=test_credentials,
+            browser_session_manager=browser_session_manager,
+            test_case_base=test_case_base
+        )
+
+        assert result.success, f"Dual transaction verification failed: {result.message}"
+
+    #endregion GroupD_TC009
+
+    #region GroupD_TC010
+    @pytest.mark.user_agent
+    @pytest.mark.skipif(platform.system() != "Darwin", reason="Skipping user agent tests on non-MacOS platforms")
+    @pytest.mark.parametrize("edge_driver", [
+        {
+            "test_case": "GroupD_TC010",
+            "custom_config": BrowserConfigTemplates.get_user_agent_config(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "edge_spoofed"
+            )
+        }
+    ], indirect=True)
+    def test_edge_user_agent_spoofing_macos(self, test_url, test_credentials, edge_driver, browser_session_manager):
+        test_case_base = getattr(edge_driver, 'test_case', 'GroupD_TC010')
+
+        result = self._dual_user_agent_login(
+            driver=edge_driver,
+            test_url=test_url,
+            test_credentials=test_credentials,
+            browser_session_manager=browser_session_manager,
+            test_case_base=test_case_base
+        )
+
+        assert result.success, f"Dual transaction verification failed: {result.message}"
+
+    #endregion GroupD_TC010
+
+#endregion MacOS Only Tests
+
+
+    def _dual_user_agent_login(self, driver, test_url, test_credentials, browser_session_manager, test_case_base):
+        session_manager = browser_session_manager(driver)
+
+        for attempt in range(2):
+            self.perform_login_and_logout(
                 driver=driver,
                 test_url=test_url,
-                credentials=credentials,
-                test_name=test_name,
-                verify_transaction=True
+                credentials=test_credentials(f"{test_case_base}_Login{attempt + 1}"),
+                test_name=test_case_base,
+                session_manager=session_manager
             )
-            
-            self.assert_login_success(result, test_name)
-            
-            try:
-                self.verify_fingerprint_attribute(
-                    login_name=credentials.get('username'),
-                    attribute_name="userAgent",
-                    expected_value=spoofed_ua,
-                    test_name=test_name
-                )
-            except Exception as ua_error:
-                result["user_agent_verification"] = "FAILED"
-                result["user_agent_error"] = str(ua_error)
-            
-            return result
-            
-        except Exception as e:
-            error_msg = f"User-agent spoofing test failed for {browser_type}: {str(e)}"
-            return {
-                "login_result": "FAILED",
-                "error": error_msg
-            }
-        
-        finally:
-            if driver:
-                try:
-                    driver.quit()
-                except Exception as e:
-                    print(f"   ⚠️ Error closing {browser_type} driver: {str(e)}")
-    
-    def _create_driver_with_user_agent(self, browser_type, user_agent):
-        
-        try:
-            custom_config = BrowserConfigTemplates.get_user_agent_config(
-                user_agent_string=user_agent,
-                config_name=f"{browser_type}_spoofed"
-            )
-            
-            if browser_type == "chrome":
-                return BrowserDriverFactory.create_chrome_driver(
-                    headless=False,
-                    custom_config=custom_config
-                )
-                
-            elif browser_type == "firefox":
-                return BrowserDriverFactory.create_firefox_driver(
-                    headless=False,
-                    custom_config=custom_config
-                )
-                
-            elif browser_type == "edge":
-                return BrowserDriverFactory.create_edge_driver(
-                    headless=False,
-                    custom_config=custom_config
-                )
-            else:
-                raise BrowserException(
-                    f"Unsupported browser type: {browser_type}",
-                    test_name="USER_AGENT_DRIVER_CREATION"
-                )
-                
-        except Exception as e:
-            print(f"Failed to create {browser_type} driver with user-agent: {str(e)}")
-            return None
+        result = self._verify_dual_transaction(credential1=test_credentials(f"{test_case_base}_Login1"),
+                                      credential2=test_credentials(f"{test_case_base}_Login2"),
+                                      test_name=test_case_base)
+        return result

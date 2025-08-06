@@ -60,25 +60,45 @@ def test_credentials():
     
     return _get_credentials
 
-@pytest.fixture(scope="function", params=["chrome", "firefox", "edge"])
-def browser_type(request, supported_browsers):
-    if request.param in supported_browsers:
-        return request.param
-    
-    pytest.skip(f"Browser {request.param} not supported on current OS")
+def pytest_generate_tests(metafunc):
+    if "auto_browser_type" in metafunc.fixturenames:
+        current_os = detect_current_os()
+        browsers = get_browsers_by_os(current_os)
+        metafunc.parametrize("auto_browser_type", browsers)
 
 @pytest.fixture(scope="function")
-def browser_driver(browser_type, request):
+def auto_browser_type(request):
+    return request.param
 
+@pytest.fixture(scope="function") 
+def browser_type(request):
+    if hasattr(request, 'param'):
+        return request.param
+    else:
+        return "chrome"  # Default browser type
+
+@pytest.fixture(scope="function")
+def browser_driver(request):
     headless = request.config.getoption("--headless", default=True)
-
-    custom_config = getattr(request, 'param', None)
     
+    if hasattr(request, 'param') and isinstance(request.param, dict):
+        param_browser_type = request.param.get('browser_type', 'chrome')
+        custom_config = request.param.get('custom_config', None)
+        test_case = request.param.get('test_case', None)
+    else:
+        param_browser_type = 'chrome'  # Default browser type
+        custom_config = None
+        test_case = None
+
     driver = BrowserDriverFactory.create_driver(
-        browser_type, 
+        param_browser_type, 
         headless=headless, 
         custom_config=custom_config
     )
+    
+    driver.browser_type = param_browser_type
+    driver.custom_config = custom_config
+    driver.test_case = test_case
     
     yield driver
     
@@ -90,12 +110,22 @@ def browser_driver(browser_type, request):
 @pytest.fixture(scope="function")
 def chrome_driver(request):
     headless = request.config.getoption("--headless", default=True)
-    custom_config = getattr(request, 'param', None)
+    
+    if hasattr(request, 'param') and isinstance(request.param, dict):
+        custom_config = request.param.get('custom_config', None)
+        test_case = request.param.get('test_case', None)
+    else:
+        custom_config = getattr(request, 'param', None)
+        test_case = None
     
     driver = BrowserDriverFactory.create_chrome_driver(
         headless=headless, 
         custom_config=custom_config
     )
+    
+    driver.browser_type = "chrome"
+    driver.custom_config = custom_config
+    driver.test_case = test_case
     
     yield driver
     
@@ -106,11 +136,11 @@ def chrome_driver(request):
 
 @pytest.fixture(scope="class")
 def chrome_driver_class(request):
-    """Chrome driver that persists for the entire test class"""
     headless = request.config.getoption("--headless", default=True)
-    
-    driver = BrowserDriverFactory.create_chrome_driver(headless=headless)
-    
+    custom_config = getattr(request, 'param', None)
+
+    driver = BrowserDriverFactory.create_chrome_driver(headless=headless, custom_config=custom_config)
+
     yield driver
     
     try:
@@ -121,12 +151,22 @@ def chrome_driver_class(request):
 @pytest.fixture(scope="function")
 def firefox_driver(request):
     headless = request.config.getoption("--headless", default=True)
-    custom_config = getattr(request, 'param', None)
+    
+    if hasattr(request, 'param') and isinstance(request.param, dict):
+        custom_config = request.param.get('custom_config', None)
+        test_case = request.param.get('test_case', None)
+    else:
+        custom_config = getattr(request, 'param', None)
+        test_case = None
     
     driver = BrowserDriverFactory.create_firefox_driver(
         headless=headless, 
         custom_config=custom_config
     )
+    
+    driver.browser_type = "firefox"
+    driver.custom_config = custom_config
+    driver.test_case = test_case
     
     yield driver
     
@@ -137,7 +177,6 @@ def firefox_driver(request):
 
 @pytest.fixture(scope="class")
 def firefox_driver_class(request):
-    """Firefox driver that persists for the entire test class"""
     headless = request.config.getoption("--headless", default=True)
     
     driver = BrowserDriverFactory.create_firefox_driver(headless=headless)
@@ -152,12 +191,22 @@ def firefox_driver_class(request):
 @pytest.fixture(scope="function")
 def edge_driver(request):
     headless = request.config.getoption("--headless", default=True)
-    custom_config = getattr(request, 'param', None)
+    
+    if hasattr(request, 'param') and isinstance(request.param, dict):
+        custom_config = request.param.get('custom_config', None)
+        test_case = request.param.get('test_case', None)
+    else:
+        custom_config = getattr(request, 'param', None)
+        test_case = None
     
     driver = BrowserDriverFactory.create_edge_driver(
         headless=headless, 
         custom_config=custom_config
     )
+    
+    driver.browser_type = "edge"
+    driver.custom_config = custom_config
+    driver.test_case = test_case
     
     yield driver
     
@@ -172,6 +221,60 @@ def edge_driver_class(request):
     headless = request.config.getoption("--headless", default=True)
     
     driver = BrowserDriverFactory.create_edge_driver(headless=headless)
+    
+    yield driver
+    
+    try:
+        driver.quit()
+    except Exception:
+        pass
+
+@pytest.fixture(scope="function")
+def safari_driver(request):
+    headless = request.config.getoption("--headless", default=True)
+    
+    if hasattr(request, 'param') and isinstance(request.param, dict):
+        custom_config = request.param.get('custom_config', None)
+        test_case = request.param.get('test_case', None)
+    else:
+        custom_config = getattr(request, 'param', None)
+        test_case = None
+    
+    driver = BrowserDriverFactory.create_safari_driver(
+        headless=headless, 
+        custom_config=custom_config
+    )
+    
+    driver.browser_type = "safari"
+    driver.custom_config = custom_config
+    driver.test_case = test_case
+    
+    yield driver
+    
+    try:
+        driver.quit()
+    except Exception:
+        pass
+
+@pytest.fixture(scope="function")
+def chromium_driver(request):
+    headless = request.config.getoption("--headless", default=True)
+    
+    if hasattr(request, 'param') and isinstance(request.param, dict):
+        custom_config = request.param.get('custom_config', None)
+        test_case = request.param.get('test_case', None)
+    else:
+        custom_config = getattr(request, 'param', None)
+        test_case = None
+    
+    driver = BrowserDriverFactory.create_chromium_driver(
+        headless=headless, 
+        custom_config=custom_config
+    )
+    
+    driver.browser_type = "chromium"
+    driver.custom_config = custom_config
+    driver.test_case = test_case
     
     yield driver
     
