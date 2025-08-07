@@ -234,3 +234,4 @@ mock_data/
 *.wmv
 *.flv
 *.webm
+/.vs/*
