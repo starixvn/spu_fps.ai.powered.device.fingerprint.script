@@ -3,7 +3,7 @@
  * Collects language, timezone, and client preferences
  */
 
-import { ClientHints } from './types';
+import { ClientHints } from '../types';
 
 export class PreferencesFingerprint {
   

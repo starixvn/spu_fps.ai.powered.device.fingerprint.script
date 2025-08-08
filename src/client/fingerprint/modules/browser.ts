@@ -3,7 +3,7 @@
  * Collects browser info, plugins, and storage capabilities
  */
 
-import { PluginInfo } from './types';
+import { PluginInfo } from '../types';
 
 export class BrowserFingerprint {
   

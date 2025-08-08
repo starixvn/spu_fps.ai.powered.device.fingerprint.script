@@ -1,3 +1,5 @@
+/// <reference lib="dom" />
+
 /**
  * Audio Fingerprinting Module
  * Collects audio context fingerprint

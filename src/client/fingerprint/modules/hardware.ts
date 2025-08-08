@@ -3,7 +3,7 @@
  * Collects CPU, memory, and device capabilities
  */
 
-import { ScreenInfo } from './types';
+import { ScreenInfo } from '../types';
 
 export class HardwareFingerprint {
   

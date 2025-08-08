@@ -1,5 +1,5 @@
 /**
- * Shared TypeScript interfaces for fingerprinting
+ * Local types for fingerprint modules
  */
 
 export interface FingerprintData {
@@ -70,7 +70,7 @@ declare global {
     FPSFingerprint: any;
     FPSAutoCollect?: boolean;
     FPSOnCollected?: (fingerprint: FingerprintData) => void;
-    webkitAudioContext?: typeof AudioContext;
+    webkitAudioContext?: any;
   }
   interface Navigator {
     userAgentData?: {

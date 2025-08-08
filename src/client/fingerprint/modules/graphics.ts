@@ -3,7 +3,7 @@
  * Collects WebGL and Canvas fingerprints
  */
 
-import { WebGLInfo } from './types';
+import { WebGLInfo } from '../types';
 
 export class GraphicsFingerprint {
   

@@ -1,6 +1,5 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as ts from 'typescript';
 
 export class ScriptService {
   private bundledScript: string | null = null;
@@ -15,31 +14,30 @@ export class ScriptService {
    */
   private generateBundledScript(): void {
     try {
-      // Define all TypeScript files to bundle in order
+      // Define all JavaScript files to bundle in order
       const clientFiles = [
-        'types.ts',
-        'hardware.ts',
-        'graphics.ts',
-        'audio.ts',
-        'browser.ts',
-        'preferences.ts',
-        'FingerprintClient.ts'
+        'modules/hardware.js',
+        'modules/graphics.js',
+        'modules/audio.js',
+        'modules/browser.js',
+        'modules/preferences.js',
+        'index.js'
       ];
       
-      const clientTsPath = path.join(__dirname, '..', '..', 'src', 'client');
-      const fallbackTsPath = path.join(__dirname, '..', 'client');
+      const clientDistPath = path.join(__dirname, '..', '..', 'client', 'fingerprint');
+      const fallbackDistPath = path.join(__dirname, '..', 'client', 'fingerprint');
       
       let basePath: string;
-      if (fs.existsSync(clientTsPath)) {
-        basePath = clientTsPath;
+      if (fs.existsSync(clientDistPath)) {
+        basePath = clientDistPath;
         console.log(`📂 Using client path: ${basePath}`);
-      } else if (fs.existsSync(fallbackTsPath)) {
-        basePath = fallbackTsPath;
+      } else if (fs.existsSync(fallbackDistPath)) {
+        basePath = fallbackDistPath;
         console.log(`📂 Using fallback path: ${basePath}`);
       } else {
-        console.warn(`❌ TypeScript client directory not found. Checked:
-        - ${clientTsPath}
-        - ${fallbackTsPath}`);
+        console.warn(`❌ Compiled client directory not found. Checked:
+        - ${clientDistPath}
+        - ${fallbackDistPath}`);
         this.bundledScript = this.generateFallbackScript();
         return;
       }
@@ -63,8 +61,8 @@ export class ScriptService {
         return; // No need to rebuild
       }
       
-      // Read and combine all TypeScript files
-      let combinedTsCode = '';
+      // Read and combine all JavaScript files
+      let combinedJsCode = '';
       let filesProcessed = 0;
       
       for (const fileName of clientFiles) {
@@ -72,41 +70,23 @@ export class ScriptService {
         if (fs.existsSync(filePath)) {
           const fileContent = fs.readFileSync(filePath, 'utf8');
           
-          // Process content for bundling
-          let processedContent = fileContent
-            // Remove import statements
-            .replace(/^import\s+.*?from\s+['"].*?['"];?\s*$/gm, '')
-            // Remove export statements but keep the content
-            .replace(/^export\s+\{.*?\}\s*;?\s*$/gm, '')
-            .replace(/^export\s+(default\s+)?/gm, '')
-            .replace(/^export\s+/gm, '');
-          
-          combinedTsCode += `\n// === ${fileName} ===\n${processedContent}\n`;
+          // Add file content to bundle
+          combinedJsCode += `\n// === ${fileName} ===\n${fileContent}\n`;
           filesProcessed++;
         }
       }
       
       if (filesProcessed === 0) {
-        throw new Error('No TypeScript client files found to bundle');
+        throw new Error('No compiled client files found to bundle');
       }
       
-      console.log(`📦 Bundling ${filesProcessed} TypeScript client files...`);
-      
-      // Compile TypeScript to JavaScript
-      const result = ts.transpile(combinedTsCode, {
-        target: ts.ScriptTarget.ES2018,
-        module: ts.ModuleKind.None,
-        removeComments: true,
-        strict: false,
-        lib: ['dom', 'es2018'],
-        skipLibCheck: true
-      });
+      console.log(`📦 Bundling ${filesProcessed} compiled JavaScript client files...`);
       
       // Wrap in IIFE for browser compatibility
-      this.bundledScript = this.wrapInIIFE(result);
+      this.bundledScript = this.wrapInIIFE(combinedJsCode);
       this.lastBuildTime = Date.now();
       
-      console.log('✅ Successfully bundled TypeScript client modules to JavaScript');
+      console.log('✅ Successfully bundled compiled client modules');
       
     } catch (error) {
       console.error('Error bundling TypeScript client:', error);

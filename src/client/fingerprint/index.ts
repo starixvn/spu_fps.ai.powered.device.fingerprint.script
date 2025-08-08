@@ -4,14 +4,14 @@
  */
 
 import { FingerprintData } from './types';
-import { HardwareFingerprint } from './hardware';
-import { GraphicsFingerprint } from './graphics';
-import { AudioFingerprint } from './audio';
-import { BrowserFingerprint } from './browser';
-import { PreferencesFingerprint } from './preferences';
+import { HardwareFingerprint } from './modules/hardware';
+import { GraphicsFingerprint } from './modules/graphics';
+import { AudioFingerprint } from './modules/audio';
+import { BrowserFingerprint } from './modules/browser';
+import { PreferencesFingerprint } from './modules/preferences';
 
 class FPSFingerprintClass {
-  public readonly version: string = '1.0.0';
+  public readonly version: string = '1.9.0';
 
   /**
    * Collect comprehensive device fingerprint

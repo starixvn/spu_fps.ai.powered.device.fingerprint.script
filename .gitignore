@@ -235,3 +235,4 @@ mock_data/
 *.flv
 *.webm
 /.vs/*
+node_modules

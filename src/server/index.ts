@@ -164,15 +164,15 @@ app.post('/api/rebuild-script', (req: Request, res: Response) => {
 
 // Serve HTML demo pages
 app.get('/demo.html', (req: Request, res: Response) => {
-  res.sendFile('demo.html', { root: path.join(__dirname, '../src') });
+  res.sendFile('demo.html', { root: path.join(__dirname, '../../examples') });
 });
 
 app.get('/examples.html', (req: Request, res: Response) => {
-  res.sendFile('examples.html', { root: path.join(__dirname, '../src') });
+  res.sendFile('examples.html', { root: path.join(__dirname, '../../examples') });
 });
 
 app.get('/login-demo.html', (req: Request, res: Response) => {
-  res.sendFile('login-demo.html', { root: path.join(__dirname, '../src') });
+  res.sendFile('login-demo.html', { root: path.join(__dirname, '../../examples') });
 });
 
 app.listen(port, () => {

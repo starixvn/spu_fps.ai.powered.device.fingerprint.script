@@ -1,0 +1,67 @@
+{
+  "name": "fps-ai-device-fingerprint",
+  "version": "1.9.0",
+  "description": "AI-Powered Device Fingerprinting System",
+  "main": "dist/server/index.js",
+  "scripts": {
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "tsc -p tsconfig.client.json",
+    "build:server": "tsc -p tsconfig.server.json",
+    "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
+    "dev:client": "tsc -p tsconfig.client.json --watch",
+    "dev:server": "ts-node --esm src/server/index.ts",
+    "start": "node dist/server/index.js",
+    "test": "jest",
+    "test:unit": "jest tests/unit",
+    "test:integration": "jest tests/integration",
+    "test:e2e": "playwright test",
+    "lint": "eslint src/**/*.ts",
+    "clean": "rimraf dist",
+    "migrate": "ts-node tools/migration/migrate.ts",
+    "migrate:dry-run": "ts-node tools/migration/migrate.ts --dry-run",
+    "migrate:check": "ts-node tools/migration/check-structure.ts",
+    "docs:serve": "http-server docs/",
+    "structure:check": "ts-node tools/migration/check-structure.ts"
+  },
+  "keywords": [
+    "fingerprinting",
+    "device-detection",
+    "ai",
+    "typescript",
+    "privacy",
+    "security"
+  ],
+  "author": "SPU Team",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "murmurhash3js": "^3.0.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.35.0",
+    "@types/cors": "^2.8.13",
+    "@types/express": "^4.17.17",
+    "@types/jest": "^29.5.0",
+    "@types/json-schema": "^7.0.15",
+    "@types/node": "^20.4.2",
+    "@typescript-eslint/eslint-plugin": "^5.59.0",
+    "@typescript-eslint/parser": "^5.59.0",
+    "chalk": "^4.1.2",
+    "concurrently": "^8.2.0",
+    "eslint": "^8.42.0",
+    "glob": "^10.3.0",
+    "http-server": "^14.1.1",
+    "jest": "^29.5.0",
+    "rimraf": "^5.0.0",
+    "ts-jest": "^29.1.0",
+    "ts-loader": "^9.4.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.1.6",
+    "webpack": "^5.88.0",
+    "webpack-cli": "^5.1.0"
+  },
+  "workspaces": [
+    "src/*"
+  ]
+}
