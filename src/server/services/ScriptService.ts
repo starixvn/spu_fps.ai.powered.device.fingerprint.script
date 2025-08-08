@@ -70,8 +70,23 @@ export class ScriptService {
         if (fs.existsSync(filePath)) {
           const fileContent = fs.readFileSync(filePath, 'utf8');
           
+          // Process content for bundling - remove ES6 imports/exports
+          let processedContent = fileContent
+            // Remove import statements (all variations)
+            .replace(/^import\s+.*?from\s+['"].*?['"];?\s*$/gm, '')
+            .replace(/^import\s+['"].*?['"];?\s*$/gm, '')
+            // Remove export statements (all variations)
+            .replace(/^export\s+\{[^}]*\}\s*;?\s*$/gm, '')
+            .replace(/^export\s+\{[^}]*\}\s+from\s+['"][^'"]*['"];?\s*$/gm, '')
+            .replace(/^export\s+\*\s+from\s+['"][^'"]*['"];?\s*$/gm, '')
+            .replace(/^export\s+default\s+.*;?\s*$/gm, '')
+            .replace(/^export\s+(default\s+)?/gm, '')
+            .replace(/^export\s*\{[^}]*\}\s*$/gm, '')
+            // Remove any remaining standalone 'export' keywords
+            .replace(/^export\s*$/gm, '');
+          
           // Add file content to bundle
-          combinedJsCode += `\n// === ${fileName} ===\n${fileContent}\n`;
+          combinedJsCode += `\n// === ${fileName} ===\n${processedContent}\n`;
           filesProcessed++;
         }
       }
@@ -99,7 +114,7 @@ export class ScriptService {
    */
   private wrapInIIFE(jsCode: string): string {
     return `
-(function() {
+(function(global) {
   'use strict';
   
   // FPS Device Fingerprinting - Bundled from TypeScript
@@ -107,7 +122,7 @@ export class ScriptService {
   
   ${jsCode}
   
-})();
+})(typeof window !== 'undefined' ? window : global);
 `.trim();
   }
   

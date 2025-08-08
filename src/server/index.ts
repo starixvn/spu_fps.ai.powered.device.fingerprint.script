@@ -12,6 +12,7 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.static('.'));
+app.use('/examples', express.static(path.join(__dirname, '../../examples')));
 
 // Services
 const fingerprintService = new FingerprintService();
@@ -131,6 +132,39 @@ app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
+app.get('/test', (req: Request, res: Response) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head><title>FPS Test</title></head>
+    <body>
+      <h1>FPS Fingerprint Test</h1>
+      <button onclick="testFPS()">Test FPSFingerprint</button>
+      <pre id="result"></pre>
+      
+      <script src="/script.js"></script>
+      <script>
+        function testFPS() {
+          try {
+            console.log('FPSFingerprint object:', FPSFingerprint);
+            const result = FPSFingerprint.collect();
+            document.getElementById('result').textContent = JSON.stringify(result, null, 2);
+          } catch (error) {
+            document.getElementById('result').textContent = 'Error: ' + error.message;
+            console.error('Error:', error);
+          }
+        }
+      </script>
+    </body>
+    </html>
+  `);
+});
+
+// Root route - redirect to examples
+app.get('/', (req: Request, res: Response) => {
+  res.redirect('/examples.html');
+});
+
 app.get('/api/script-info', (req: Request, res: Response) => {
   try {
     const info = scriptService.getScriptInfo();
@@ -164,15 +198,24 @@ app.post('/api/rebuild-script', (req: Request, res: Response) => {
 
 // Serve HTML demo pages
 app.get('/demo.html', (req: Request, res: Response) => {
-  res.sendFile('demo.html', { root: path.join(__dirname, '../../examples') });
+  res.sendFile('demo.html', { root: path.join(__dirname, '../../examples/basic') });
 });
 
 app.get('/examples.html', (req: Request, res: Response) => {
-  res.sendFile('examples.html', { root: path.join(__dirname, '../../examples') });
+  res.sendFile('index.html', { root: path.join(__dirname, '../../examples') });
 });
 
 app.get('/login-demo.html', (req: Request, res: Response) => {
-  res.sendFile('login-demo.html', { root: path.join(__dirname, '../../examples') });
+  // Return a simple message since login-demo.html doesn't exist yet
+  res.status(404).send(`
+    <html>
+      <head><title>Demo Not Available</title></head>
+      <body>
+        <h1>Login Demo Not Available</h1>
+        <p>This demo is not yet implemented. Please use the <a href="/demo.html">basic demo</a> instead.</p>
+      </body>
+    </html>
+  `);
 });
 
 app.listen(port, () => {
