@@ -13,9 +13,9 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "typeRoots": [
-      "node_modules/@types",
-      "src/server/types"
-    ]
+      "node_modules/@types"
+    ],
+    "types": []
   },
   "include": [
     "src/**/*"
@@ -23,6 +23,8 @@
   "exclude": [
     "node_modules",
     "dist",
-    "tests"
+    "tests",
+    "tools",
+    "examples"
   ]
 }

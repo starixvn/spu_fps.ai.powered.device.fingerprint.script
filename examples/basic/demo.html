@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FPS Device Fingerprinting - Basic Demo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .fingerprint-display {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 16px;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .hash-display {
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            font-weight: bold;
+            color: #28a745;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 FPS Device Fingerprinting Demo</h1>
+        
+        <div style="text-align: center;">
+            <button class="button" onclick="collectFingerprint()">Collect Fingerprint</button>
+            <button class="button" onclick="generateHash()">Generate Hash</button>
+            <button class="button" onclick="sendToServer()">Send to Server</button>
+        </div>
+        
+        <div id="hashDisplay" class="hash-display" style="display: none;">
+            <strong>Fingerprint Hash:</strong> <span id="hashValue"></span>
+        </div>
+        
+        <div id="fingerprintDisplay" class="fingerprint-display" style="display: none;">
+            <h3>Collected Fingerprint Data:</h3>
+            <pre id="fingerprintData"></pre>
+        </div>
+        
+        <div id="serverResponse" class="fingerprint-display" style="display: none;">
+            <h3>Server Response:</h3>
+            <pre id="serverData"></pre>
+        </div>
+    </div>
+
+    <script src="/script.js"></script>
+    <script>
+        let currentFingerprint = null;
+        
+        function collectFingerprint() {
+            console.log('Collecting fingerprint...');
+            currentFingerprint = FPSFingerprint.collect();
+            
+            document.getElementById('fingerprintData').textContent = JSON.stringify(currentFingerprint, null, 2);
+            document.getElementById('fingerprintDisplay').style.display = 'block';
+            
+            console.log('Fingerprint collected:', currentFingerprint);
+        }
+        
+        function generateHash() {
+            if (!currentFingerprint) {
+                currentFingerprint = FPSFingerprint.collect();
+            }
+            
+            const hash = FPSFingerprint.generateHash(currentFingerprint);
+            const groupHashes = FPSFingerprint.generateGroupHashes(currentFingerprint);
+            
+            document.getElementById('hashValue').textContent = hash;
+            document.getElementById('hashDisplay').style.display = 'block';
+            
+            console.log('Generated hash:', hash);
+            console.log('Group hashes:', groupHashes);
+        }
+        
+        function sendToServer() {
+            if (!currentFingerprint) {
+                currentFingerprint = FPSFingerprint.collect();
+            }
+            
+            FPSFingerprint.sendToServer('/api/fingerprint', currentFingerprint, function(error, response) {
+                if (error) {
+                    console.error('Error sending to server:', error);
+                    document.getElementById('serverData').textContent = 'Error: ' + error.message;
+                } else {
+                    console.log('Server response:', response);
+                    document.getElementById('serverData').textContent = JSON.stringify(response, null, 2);
+                }
+                document.getElementById('serverResponse').style.display = 'block';
+            });
+        }
+        
+        // Auto-collect on page load
+        window.addEventListener('load', function() {
+            setTimeout(collectFingerprint, 1000);
+        });
+    </script>
+</body>
+</html>

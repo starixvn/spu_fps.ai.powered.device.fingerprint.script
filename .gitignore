@@ -135,7 +135,6 @@ screenshots/
 test_report_*.txt
 test_report_*.html
 reports/
-*.html
 
 # Browser drivers (automatically downloaded)
 drivers/
