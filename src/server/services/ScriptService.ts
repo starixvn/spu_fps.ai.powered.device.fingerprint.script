@@ -16,16 +16,23 @@ export class ScriptService {
     try {
       // Define all JavaScript files to bundle in order
       const clientFiles = [
-        'modules/hardware.js',
-        'modules/graphics.js',
-        'modules/audio.js',
-        'modules/browser.js',
-        'modules/preferences.js',
-        'index.js'
+        'fingerprint/modules/hardware.js',
+        'fingerprint/modules/graphics.js',
+        'fingerprint/modules/audio.js',
+        'fingerprint/modules/browser.js',
+        'fingerprint/modules/preferences.js',
+        'fingerprint/index.js',
+        'tagging/modules/cacheApi.js',
+        'tagging/modules/cookie.js',
+        'tagging/modules/etag.js',
+        'tagging/modules/indexedDB.js',
+        'tagging/modules/localStorage.js',
+        'tagging/modules/tagging.js',
+        'tagging/index.js'
       ];
       
-      const clientDistPath = path.join(__dirname, '..', '..', 'client', 'fingerprint');
-      const fallbackDistPath = path.join(__dirname, '..', 'client', 'fingerprint');
+      const clientDistPath = path.join(__dirname, '..', '..', 'client');
+      const fallbackDistPath = path.join(__dirname, '..', 'client');
       
       let basePath: string;
       if (fs.existsSync(clientDistPath)) {

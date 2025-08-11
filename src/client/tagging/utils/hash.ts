@@ -3,97 +3,106 @@
  * Implements RC4 encryption with Hex encoding similar to C# version
  */
 
-const DEVICE_ID_ENCRYPT_KEY = process.env.DEVICE_ID_ENCRYPT_KEY || '&％#@?,:*!~^.';
-
 export class RC4 {
-    static encrypt(key: string, data: string): string {
-        return this.process(key, data);
-    }
-
-    static decrypt(key: string, data: string): string {
-        return this.process(key, data);
-    }
-
-    private static process(key: string, data: string): string {
-        var s = [], j = 0, x, res = "";
-        var i;
-        
-        for (i = 0; i < 256; i++) {
-            s[i] = i;
-        }
-        for (i = 0; i < 256; i++) {
-            j = (j + s[i] + key.charCodeAt(i % key.length)) % 256;
-            x = s[i];
-            s[i] = s[j];
-            s[j] = x;
+    public static encrypt(key: string, value: string): string {
+        if (!key || !value) {
+            return value || '';
         }
         
-        // Pseudo-Random Generation Algorithm (PRGA)
-        i = 0;
-        j = 0;
-        for (var y = 0; y < data.length; y++) {
+        const keyCharArray = key.split('');
+        const valueCharArray = value.split('');
+        const keyLength = key.length;
+        const valueLength = value.length;
+        const map = new Array(256);
+
+        for (let i = 0; i < 256; i++) {
+            map[i] = i;
+        }
+
+        for (let i = 0, j = 0; i < 256; i++) {
+            j = (j + map[i] + keyCharArray[i % keyLength].charCodeAt(0)) % 256;
+            const x = map[i];
+            map[i] = map[j];
+            map[j] = x;
+        }
+
+        let encryptedValue = '';
+        for (let y = 0, i = 0, j = 0; y < valueLength; y++) {
             i = (i + 1) % 256;
-            j = (j + s[i]) % 256;
-            x = s[i];
-            s[i] = s[j];
-            s[j] = x;
-            res += String.fromCharCode(data.charCodeAt(y) ^ s[(s[i] + s[j]) % 256]);
+            j = (j + map[i]) % 256;
+            const x = map[i];
+            map[i] = map[j];
+            map[j] = x;
+            encryptedValue += String.fromCharCode(valueCharArray[y].charCodeAt(0) ^ map[(map[i] + map[j]) % 256]);
         }
 
-        return res;
+        return encryptedValue;
+    }
+
+    public static decrypt(key: string, value: string): string {
+        // RC4 is symmetric - decrypt is same as encrypt
+        return this.encrypt(key, value);
     }
 }
 
 /**
- * Hexadecimal encoding/decoding utilities
+ * Hexadecimal encoding/decoding utilities 
  */
 export class Hex {
-    static encode(str: string): string {
-        var hex = "";
-        for (var i = 0; i < str.length; i++) {
-            hex += "" + str.charCodeAt(i).toString(16);
+    private static readonly HexDigits = "0123456789abcdef";
+
+    public static encode(data: string): string {
+        if (!data) {
+            return '';
         }
-        return hex;
+
+        const map: string[] = new Array(256);
+        for (let i = 0; i < 256; i++) {
+            map[i] = this.HexDigits[i >> 4] + this.HexDigits[i & 15];
+        }
+
+        const length = data.length;
+        const result: string[] = [];
+        for (let i = 0; i < length; i++) {
+            result.push(map[data.charCodeAt(i)]);
+        }
+
+        return result.join('');
     }
 
-    static decode(hex: string): string {
-        var str = "";
-        for (var i = 0; i < hex.length; i += 2) {
-            str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+    public static decode(data: string): string {
+        if (!data) {
+            return '';
         }
-        return str;
+
+        const map: { [key: number]: string } = {};
+
+        for (let i = 0; i < 256; i++) {
+            const hexStr = this.HexDigits[i >> 4] + this.HexDigits[i & 15];
+            map[parseInt(hexStr, 16)] = String.fromCharCode(i);
+        }
+
+        let length = data.length;
+
+        if (length % 2 !== 0) {
+            data = '0' + data;
+            length = data.length;
+        }
+
+        const result: string[] = [];
+        for (let i = 0; i < length; i += 2) {
+            const hexPair = data.substring(i, i + 2);
+            const charCode = parseInt(hexPair, 16);
+            
+            if (map[charCode] !== undefined) {
+                result.push(map[charCode]);
+            } else {
+                result.push(String.fromCharCode(charCode));
+            }
+        }
+
+        return result.join('');
     }
 }
-
-export class Hash {
-    static encrypt(plaintext: string, key?: string): string {
-        if (!plaintext) {
-            throw new Error('Plaintext cannot be empty');
-        }
-
-        try {
-            const encryptionKey = key || DEVICE_ID_ENCRYPT_KEY;
-            const encryptedData = RC4.encrypt(encryptionKey, plaintext);
-            return Hex.encode(encryptedData);
-        } catch (error) {
-            throw new Error(`Encryption failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
-    }
-
-    static decrypt(encryptedText: string, key?: string): string {
-        if (!encryptedText) {
-            throw new Error('Encrypted text cannot be empty');
-        }
-
-        try {
-            const decryptionKey = key || DEVICE_ID_ENCRYPT_KEY;
-            const encryptedData = Hex.decode(encryptedText);
-            return RC4.decrypt(decryptionKey, encryptedData);
-        } catch (error) {
-            throw new Error(`Decryption failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
-    }
-}
-
 
 
