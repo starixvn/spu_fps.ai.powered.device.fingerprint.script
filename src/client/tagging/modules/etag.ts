@@ -1,7 +1,7 @@
 export class ETagHandler {
 
   public static get(key: string): string | null {
-    return 'etag';
+    return null;
   }
 
   public static set(key: string, value: string): boolean {

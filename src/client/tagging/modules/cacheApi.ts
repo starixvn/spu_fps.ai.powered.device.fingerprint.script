@@ -1,7 +1,7 @@
 export class CacheApiHandler {
 
   public static get(key: string): string | null {
-    return 'cache api';
+    return null;
   }
 
   public static set(key: string, value: string): boolean {

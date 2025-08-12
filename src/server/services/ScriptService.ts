@@ -28,7 +28,8 @@ export class ScriptService {
         'tagging/modules/indexedDB.js',
         'tagging/modules/localStorage.js',
         'tagging/modules/tagging.js',
-        'tagging/index.js'
+        'tagging/index.js',
+        'tagging/utils/hash.js'
       ];
       
       const clientDistPath = path.join(__dirname, '..', '..', 'client');

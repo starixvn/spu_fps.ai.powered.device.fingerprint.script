@@ -9,29 +9,12 @@ import { ETagHandler } from './modules/etag';
 import { IndexedDBHandler } from './modules/indexedDB';
 import { LocalStorageHandler } from './modules/localStorage';
 import { TaggingHandler } from './modules/tagging';
-import { IStorageData } from './types';
 
 
-class FPSTaggingClass {
-    private key = '(global.c3)';
+class TaggingClass {
+    private newKey = '(global.c4)';
 
-    public async getStorage (callback?: (storage: IStorageData) => void): Promise<IStorageData> {
-        const storages : IStorageData = {
-            indexedDB: await IndexedDBHandler.get(this.key),
-            etag: ETagHandler.get(this.key),
-            cacheAPI: CacheApiHandler.get(this.key),
-            cookies: CookiesHandler.get(this.key),
-            localStorage: LocalStorageHandler.get(this.key)
-        };
-
-        if (callback && typeof callback === 'function') {
-            callback(storages);
-        }
-
-        return storages;
-    }
-
-    public async updateStorage (): Promise<boolean> {
+    public async getStorage (): Promise<string> {
         const storageHandlers = [
             IndexedDBHandler,
             ETagHandler,
@@ -40,45 +23,38 @@ class FPSTaggingClass {
             LocalStorageHandler
         ];
 
-        const targetDeviceID = await TaggingHandler.getDeviceId();
-
-        if (!targetDeviceID) {
-            return false;
-        }
+        let targetDeviceID = await TaggingHandler.getDeviceId();
 
         let updateCount = 0;
 
         for (const handler of storageHandlers) {
-            try {
-                const currentValue = await handler.get(this.key);
+                const currentValue = await handler.get(this.newKey);
+
                 if (currentValue !== targetDeviceID) {
-                    await handler.set(this.key, targetDeviceID);
+                    await handler.set(this.newKey, targetDeviceID);
                     updateCount++;
                 }
-            } catch (error) {
-                // Silent error handling - no console output
-            }
         }
 
-        return updateCount > 0;
+        return targetDeviceID;
     }
 }
 
 // Initialize and expose globally
-const fpsTagging = new FPSTaggingClass();
+const tagging = new TaggingClass();
 
 if (typeof window !== 'undefined') {
-  (window).FPSTagging = fpsTagging;
+  (window).Tagging = tagging;
 
-  if (window.FPSTaggingAutoCollect) {
+  if (window.TaggingAutoCollected) {
     document.addEventListener('DOMContentLoaded', async function() {
-      const data = await fpsTagging.getStorage();
+      const data = await tagging.getStorage();
 
-      if (window.FPSTaggingOnCollected && typeof window.FPSTaggingOnCollected === 'function') {
-        window.FPSTaggingOnCollected(data);
+      if (window.TaggingOnCollected && typeof window.TaggingOnCollected === 'function') {
+        window.TaggingOnCollected(data);
       }
     });
   }
 }
 
-export default fpsTagging;
+export default tagging;

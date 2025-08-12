@@ -4,7 +4,7 @@
  * Priority Order: IndexedDB > Etag > WebRTC > Cookies > Cache API > Local Storage
  */
 
-import { DeviceEncryption } from '../utils/deviceEncryption';
+import { DeviceEncryption } from '../utils/hash';
 import { CacheApiHandler } from './cacheApi';
 import { CookiesHandler } from './cookie';
 import { ETagHandler } from './etag';
@@ -18,26 +18,31 @@ export class TaggingHandler {
     }
 
     public static async getDeviceId(): Promise<string> {
-        const storages = await this.getStorages('(global.c3)');
-        const found = storages.find(t => t.value !== null);
-
-        if (!found) {
-            const guid = this.NewGuid();
-            const encryptedText = DeviceEncryption.Encrypt(guid);
-            return encryptedText;
-        } 
-
-        return found.value as string;
-    }
-
-    private static async getStorages(key: string) {
-        return [
-            { type: 'indexedDB', value: await IndexedDBHandler.get(key) },
-            { type: 'etag', value: ETagHandler.get(key) },
-            { type: 'cacheApi', value: CacheApiHandler.get(key) },
-            { type: 'cookie', value: CookiesHandler.get(key) },
-            { type: 'localStorage', value: LocalStorageHandler.get(key) },
+        const storageHandlers = [
+            IndexedDBHandler,
+            // ETagHandler,
+            // CacheApiHandler,
+            CookiesHandler,
+            LocalStorageHandler
         ];
+
+        for (const handler of storageHandlers) {
+            // Check for old key
+            let value = await handler.get('(global.c3)');
+            if (value) {
+                return value;
+            }
+
+            // Check for new key
+            value = await handler.get('(global.c4)');
+            if (value) {
+                return value;
+            }
+        }
+
+        const guid = this.NewGuid();
+        const encryptedText = DeviceEncryption.Encrypt(guid);
+        return encryptedText;
     }
 
     private static generateGuid(): string {

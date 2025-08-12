@@ -14,8 +14,8 @@ export interface IStorageData {
 
 declare global {
   interface Window {
-    FPSTagging: any; 
-    FPSTaggingAutoCollect?: boolean;
-    FPSTaggingOnCollected?: (data: IStorageData) => void;
+    Tagging: any;
+    TaggingAutoCollected?: boolean;
+    TaggingOnCollected?: (data: string) => void;
   }
 }
