@@ -132,6 +132,43 @@ app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
+app.get('/session', (req: Request, res: Response) => {
+  const clientETag = req.headers['if-none-match'];
+
+  res.setHeader('Cache-Control', 'private, max-age=600');
+  
+  if (clientETag) {
+    
+    res.json({ 
+      session: clientETag,
+      timestamp: new Date().toISOString()
+    });
+
+  } else {
+    res.json({ 
+      session: null,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+app.post('/session', (req: Request, res: Response) => {
+  const newSession = req.body.session || req.body.value;
+  
+  if (!newSession) {
+    res.status(400).json({ error: 'Session value required' });
+    return;
+  }
+  
+  res.setHeader('ETag', newSession);
+  res.setHeader('Cache-Control', 'private, max-age=600');
+  
+  res.json({
+    session: newSession,
+    timestamp: new Date().toISOString()
+  });
+});
+
 app.get('/test', (req: Request, res: Response) => {
   res.send(`
     <!DOCTYPE html>

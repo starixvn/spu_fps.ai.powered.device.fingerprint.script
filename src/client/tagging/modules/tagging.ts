@@ -21,7 +21,7 @@ export class TaggingHandler {
         const storageHandlers = [
             IndexedDBHandler,
             // ETagHandler,
-            // CacheApiHandler,
+            CacheApiHandler,
             CookiesHandler,
             LocalStorageHandler
         ];

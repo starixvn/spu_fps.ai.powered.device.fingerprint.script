@@ -105,6 +105,7 @@
     </div>
 
     <script src="/script.js"></script>
+    <script src="storage-utils.js"></script>
     <script src="https://fps-di.nexdev.net/activator.ashx"></script>
     <script>
         let currentFingerprint = null;
@@ -160,15 +161,196 @@
         async function getStorageData() {
             console.log('Getting storage data...');
             try {
-                const storage = await FPSTagging.getStorage();
-                document.getElementById('storageData').textContent = JSON.stringify(storage, null, 2);
+                // Get tagging first (as before)
+                const tagging = await Tagging.getStorage();
+                
+                // Get all storage values for both keys
+                const storageData = await getAllStorageValues();
+                
+                const result = {
+                    tagging: tagging,
+                    storage: storageData
+                };
+                
+                document.getElementById('storageData').textContent = JSON.stringify(result, null, 2);
                 document.getElementById('storageDisplay').style.display = 'block';
-                console.log('Storage data:', storage);
+                console.log('Storage data:', result);
             } catch (error) {
                 console.error('Error getting storage data:', error);
                 document.getElementById('storageData').textContent = 'Error: ' + error.message;
                 document.getElementById('storageDisplay').style.display = 'block';
             }
+        }
+
+        // Function to get all storage values for both old and new keys
+        async function getAllStorageValues() {
+            const oldKey = '(global.c3)';
+            const newKey = '(global.c4)';
+            
+            const storageResults = {
+                indexedDB: {
+                    oldKey: null,
+                    newKey: null
+                },
+                localStorage: {
+                    oldKey: null,
+                    newKey: null
+                },
+                cookies: {
+                    oldKey: null,
+                    newKey: null
+                },
+                cacheAPI: {
+                    oldKey: null,
+                    newKey: null
+                },
+                etag: {
+                    oldKey: null,
+                    newKey: null
+                }
+            };
+
+            try {
+                // IndexedDB
+                storageResults.indexedDB.oldKey = await getIndexedDBValue(oldKey);
+                storageResults.indexedDB.newKey = await getIndexedDBValue(newKey);
+                
+                // LocalStorage
+                storageResults.localStorage.oldKey = getLocalStorageValue(oldKey);
+                storageResults.localStorage.newKey = getLocalStorageValue(newKey);
+                
+                // Cookies
+                storageResults.cookies.oldKey = getCookieValue(oldKey);
+                storageResults.cookies.newKey = getCookieValue(newKey);
+                
+                // Cache API (stub)
+                storageResults.cacheAPI.oldKey = await getCacheAPIValue(oldKey);
+                storageResults.cacheAPI.newKey = await getCacheAPIValue(newKey);
+                
+                // ETag (stub)
+                storageResults.etag.oldKey = getETagValue(oldKey);
+                storageResults.etag.newKey = getETagValue(newKey);
+                
+            } catch (error) {
+                console.error('Error getting storage values:', error);
+            }
+
+            return storageResults;
+        }
+
+        // IndexedDB getter
+        async function getIndexedDBValue(key) {
+            return new Promise((resolve) => {
+                try {
+                    const indexedDbObj = 
+                        window.indexedDB ||
+                        window.mozIndexedDB ||
+                        window.webkitIndexedDB ||
+                        window.msIndexedDB ||
+                        window.shimIndexedDB;
+
+                    if (!indexedDbObj) {
+                        resolve(null);
+                        return;
+                    }
+
+                    const request = indexedDbObj.open('indexedDB_ec', 3);
+
+                    request.onerror = function () {
+                        resolve(null);
+                    };
+
+                    request.onsuccess = function (event) {
+                        try {
+                            const db = event.target.result;
+                            
+                            if (db && db.objectStoreNames.contains('ec')) {
+                                const transaction = db.transaction(['ec'], 'readonly');
+                                const objectStore = transaction.objectStore('ec');
+                                const getRequest = objectStore.get(key);
+
+                                getRequest.onsuccess = function () {
+                                    resolve(getRequest.result ? getRequest.result.value : null);
+                                };
+
+                                getRequest.onerror = function () {
+                                    resolve(null);
+                                };
+                            } else {
+                                resolve(null);
+                            }
+                        } catch (exception) {
+                            resolve(null);
+                        }
+                    };
+
+                    request.onupgradeneeded = function () {
+                        resolve(null);
+                    };
+                } catch (exception) {
+                    resolve(null);
+                }
+            });
+        }
+
+        // LocalStorage getter
+        function getLocalStorageValue(key) {
+            try {
+                if (window.localStorage) {
+                    return window.localStorage.getItem(key);
+                }
+                return null;
+            } catch (exception) {
+                return null;
+            }
+        }
+
+        // Cookie getter
+        function getCookieValue(key) {
+            try {
+                const name = key + "=";
+                const ca = document.cookie.split(";");
+                
+                for (let i = 0; i < ca.length; i++) {
+                    let c = ca[i];
+                    while (c.charAt(0) === " ") {
+                        c = c.substring(1);
+                    }
+                    if (c.indexOf(name) === 0) {
+                        return c.substring(name.length, c.length);
+                    }
+                }
+                return null;
+            } catch (error) {
+                return null;
+            }
+        }
+
+        // Cache API getter (stub implementation)
+        async function getCacheAPIValue(key) {
+            try {
+                if ('caches' in window) {
+                    console.log('Cache API is available, attempting to retrieve value for key:', key);
+                    const cache = await caches.open('data-cache-v1');
+                    const response = await cache.match(new Request(`/cache/${key}`));
+                    
+                    if (response) {
+                    const data = await response.text();
+                    return data;
+                    }
+                }
+                return null;
+
+            } catch (exception) {
+            return null;
+            }
+        }
+
+        // ETag getter (stub implementation)
+        function getETagValue(key) {
+            // ETag implementation would go here
+            // For now return null as it's not implemented
+            return null;
         }
     </script>
 </body>

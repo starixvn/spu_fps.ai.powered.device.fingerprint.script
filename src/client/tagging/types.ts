@@ -15,7 +15,6 @@ export interface IStorageData {
 declare global {
   interface Window {
     Tagging: any;
-    TaggingAutoCollected?: boolean;
-    TaggingOnCollected?: (data: string) => void;
+    TaggingStorage?: string;
   }
 }

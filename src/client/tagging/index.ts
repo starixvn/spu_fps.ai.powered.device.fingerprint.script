@@ -14,6 +14,16 @@ import { TaggingHandler } from './modules/tagging';
 class TaggingClass {
     private newKey = '(global.c4)';
 
+    constructor() {
+        
+        if (typeof window !== 'undefined') {
+            const protocol = window.location.protocol;
+            const hostname = window.location.hostname;
+            const port = window.location.port ? `:${window.location.port}` : '';
+            ETagHandler.setBaseUrl(`${protocol}//${hostname}${port}`);
+        }
+    }
+
     public async getStorage (): Promise<string> {
         const storageHandlers = [
             IndexedDBHandler,
@@ -44,17 +54,7 @@ class TaggingClass {
 const tagging = new TaggingClass();
 
 if (typeof window !== 'undefined') {
-  (window).Tagging = tagging;
-
-  if (window.TaggingAutoCollected) {
-    document.addEventListener('DOMContentLoaded', async function() {
-      const data = await tagging.getStorage();
-
-      if (window.TaggingOnCollected && typeof window.TaggingOnCollected === 'function') {
-        window.TaggingOnCollected(data);
-      }
-    });
-  }
+  (window as any).Tagging = tagging;
 }
 
 export default tagging;
