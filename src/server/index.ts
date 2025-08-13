@@ -10,14 +10,9 @@ import { TaggingService } from './services/TaggingService';
 
 const app = express();
 
-// Middleware - Environment-aware configuration
-app.use(cors({
-  origin: config.security.corsOrigin,
-  credentials: true
-}));
-app.use(express.json({ 
-  limit: config.performance.maxPayloadSize 
-}));
+// Middleware - Basic configuration
+app.use(cors());
+app.use(express.json());
 app.use(cookieParser());
 app.use(express.static('.'));
 app.use('/examples', express.static(path.join(__dirname, '../../examples')));
@@ -253,8 +248,8 @@ app.get('/login-demo.html', (req: Request, res: Response) => {
 app.listen(config.port, () => {
   console.log(`🚀 FPS API server running on port ${config.port}`);
   console.log(`🌍 Environment: ${config.nodeEnv.toUpperCase()}`);
-  console.log(`📊 Debug mode: ${config.features.enableDebugMode ? 'ON' : 'OFF'}`);
-  console.log(`🔗 API endpoint: ${config.api.fpsEndpoint}`);
+  console.log(`📊 Debug mode: ${config.nodeEnv !== 'production' ? 'ON' : 'OFF'}`);
+  console.log(`🔗 API endpoint: http://localhost:${config.port}/api`);
 });
 
 export default app;
