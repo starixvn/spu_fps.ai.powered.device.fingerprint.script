@@ -245,11 +245,38 @@ app.get('/login-demo.html', (req: Request, res: Response) => {
   `);
 });
 
-app.listen(config.port, () => {
+app.listen(config.port, '0.0.0.0', () => {
   console.log(`🚀 FPS API server running on port ${config.port}`);
   console.log(`🌍 Environment: ${config.nodeEnv.toUpperCase()}`);
   console.log(`📊 Debug mode: ${config.nodeEnv !== 'production' ? 'ON' : 'OFF'}`);
   console.log(`🔗 API endpoint: http://localhost:${config.port}/api`);
+  console.log(`🐳 Docker: Server listening on 0.0.0.0:${config.port}`);
+}).on('error', (err) => {
+  console.error('❌ Server failed to start:', err);
+  process.exit(1);
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('❌ Uncaught Exception:', err);
+  process.exit(1);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('🔄 SIGTERM received, shutting down gracefully');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('🔄 SIGINT received, shutting down gracefully');
+  process.exit(0);
 });
 
 export default app;
