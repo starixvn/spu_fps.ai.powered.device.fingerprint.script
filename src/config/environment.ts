@@ -7,11 +7,21 @@ const loadEnvironment = () => {
   const envFile = `.env.${nodeEnv}`;
   const envPath = path.resolve(process.cwd(), envFile);
   
+  console.log(`🔍 Loading environment file: ${envPath}`);
+  
   // Load specific environment file
-  config({ path: envPath });
+  const result = config({ path: envPath });
+  
+  if (result.error) {
+    console.warn(`⚠️ Failed to load ${envFile}:`, result.error.message);
+  } else {
+    console.log(`✅ Loaded environment file: ${envFile}`);
+  }
   
   // Also load base .env if it exists (for shared variables)
   config({ path: path.resolve(process.cwd(), '.env') });
+  
+  console.log(`🔍 After loading - NODE_ENV: ${process.env.NODE_ENV}, PORT: ${process.env.PORT}`);
 };
 
 // Load environment on import
