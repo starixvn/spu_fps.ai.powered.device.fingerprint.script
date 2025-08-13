@@ -7,6 +7,7 @@ import { HashService } from './services/HashService';
 import { ScriptService } from './services/ScriptService';
 import config from '../config/environment';
 import { TaggingService } from './services/TaggingService';
+import e from 'express';
 
 const app = express();
 
@@ -137,27 +138,31 @@ app.get('/healthz', (req: Request, res: Response) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-app.get('/session', (req: Request, res: Response) => {
+app.get('/resources/versions', (req: Request, res: Response) => {
   try {
     const cachedDeviceId = taggingService.GetCachedCandidateDeviceId(req);
 
     if (cachedDeviceId) {
       taggingService.SetEtag(res, cachedDeviceId);
-      res.setHeader('X-Meta-Tag', cachedDeviceId);
-    } else {
-      res.setHeader('X-Meta-Tag', '');
+
+      return res.json({
+        success: true,
+        t: cachedDeviceId
+      });
     }
 
-    res.sendStatus(204);
+    return res.json({ 
+      success: false, 
+      t: null,
+    });
 
   } catch (error) {
     res.status(500).json({
       success: false,
-      error: 'Failed to retrieve session'
+      error: 'Failed to retrieve session',
     });
   }
 });
-
 
 app.get('/test', (req: Request, res: Response) => {
   res.send(`

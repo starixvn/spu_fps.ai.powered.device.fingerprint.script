@@ -107,6 +107,46 @@
     <script src="/script.js"></script>
     <script src="https://fps-di.nexdev.net/activator.ashx"></script>
     <script>
+        class ETagHandler {
+            static _baseUrl = window.location.origin;
+            static _etag = null;
+            
+            static setBaseUrl(url) {
+                this._baseUrl = url;
+            }
+
+            static async get(key) {
+                try {
+                    if (!this._baseUrl) {
+                        return null;
+                    }
+
+                    if (this._etag) {
+                        return this._etag;
+                    }
+                    
+                    const response = await fetch(`${this._baseUrl}/resources/versions`, {
+                        method: 'GET'
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        
+                        if (data.success && data.t) {
+                            this._etag = data.t;
+                            return this._etag;
+                        }
+                    }
+                    
+                    return null;
+                } catch (error) {
+                    console.error('ETag error:', error);
+                    return null;
+                }
+            }
+        }
+    </script>
+    <script>
         let currentFingerprint = null;
         
         function collectFingerprint() {
@@ -158,7 +198,6 @@
 
         // Storage Management Functions
         async function getStorageData() {
-            console.log('Getting storage data...');
             try {
                 // Get tagging first (as before)
                 const tagging = await Tagging.getStorage();
@@ -173,7 +212,6 @@
                 
                 document.getElementById('storageData').textContent = JSON.stringify(result, null, 2);
                 document.getElementById('storageDisplay').style.display = 'block';
-                console.log('Storage data:', result);
             } catch (error) {
                 console.error('Error getting storage data:', error);
                 document.getElementById('storageData').textContent = 'Error: ' + error.message;
@@ -184,7 +222,7 @@
         // Function to get all storage values for both old and new keys
         async function getAllStorageValues() {
             const oldKey = '(global.c3)';
-            const newKey = '(global.c4)';
+            const newKey = 'pwr_client_sync';
             
             const storageResults = {
                 indexedDB: {
@@ -200,11 +238,9 @@
                     newKey: null
                 },
                 cacheAPI: {
-                    oldKey: null,
                     newKey: null
                 },
                 etag: {
-                    oldKey: null,
                     newKey: null
                 }
             };
@@ -223,12 +259,10 @@
                 storageResults.cookies.newKey = getCookieValue(newKey);
                 
                 // Cache API (stub)
-                storageResults.cacheAPI.oldKey = await getCacheAPIValue(oldKey);
                 storageResults.cacheAPI.newKey = await getCacheAPIValue(newKey);
                 
-                // ETag (stub)
-                storageResults.etag.oldKey = getETagValue(oldKey);
-                storageResults.etag.newKey = getETagValue(newKey);
+                // ETag (async implementation)
+                storageResults.etag.newKey = await getETagValue(newKey);
                 
             } catch (error) {
                 console.error('Error getting storage values:', error);
@@ -329,8 +363,7 @@
         async function getCacheAPIValue(key) {
             try {
                 if ('caches' in window) {
-                    console.log('Cache API is available, attempting to retrieve value for key:', key);
-                    const cache = await caches.open('data-cache-v1');
+                    const cache = await caches.open('pwr_client_sync');
                     const response = await cache.match(new Request(`/cache/${key}`));
                     
                     if (response) {
@@ -345,11 +378,21 @@
             }
         }
 
-        // ETag getter (stub implementation)
-        function getETagValue(key) {
-            // ETag implementation would go here
-            // For now return null as it's not implemented
-            return null;
+        async function getETagValue(key) {
+            try {
+                if (typeof ETagHandler !== 'undefined') {
+                    ETagHandler.setBaseUrl(window.location.origin);
+                    
+                    const etagValue = await ETagHandler.get(key);
+                    return etagValue;
+                } else {
+                    console.warn('ETagHandler is not available');
+                    return null;
+                }
+            } catch (error) {
+                console.error('Error getting ETag value:', error);
+                return null;
+            }
         }
     </script>
 </body>
