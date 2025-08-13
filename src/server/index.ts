@@ -133,7 +133,7 @@ app.get('/script.min.js', (req: Request, res: Response) => {
   }
 });
 
-app.get('/health', (req: Request, res: Response) => {
+app.get('/healthz', (req: Request, res: Response) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
