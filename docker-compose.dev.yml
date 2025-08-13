@@ -2,13 +2,15 @@ version: '3.8'
 
 services:
   fps-app:
-    build: .
+    build:
+      context: .
+      target: development
     ports:
       - "3000:3000"
     env_file:
-      - .env.local
+      - .env.development
     environment:
-      - NODE_ENV=local
+      - NODE_ENV=development
     volumes:
       - .:/app
       - /app/node_modules
@@ -30,9 +32,9 @@ services:
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_DB=fps_local
-      - POSTGRES_USER=fps_local_user
-      - POSTGRES_PASSWORD=local_password
+      - POSTGRES_DB=fps_development
+      - POSTGRES_USER=fps_dev_user
+      - POSTGRES_PASSWORD=dev_password
     volumes:
       - postgres_dev_data:/var/lib/postgresql/data
     networks:

@@ -25,7 +25,18 @@
     "migrate:dry-run": "ts-node tools/migration/migrate.ts --dry-run",
     "migrate:check": "ts-node tools/migration/check-structure.ts",
     "docs:serve": "http-server docs/",
-    "structure:check": "ts-node tools/migration/check-structure.ts"
+    "structure:check": "ts-node tools/migration/check-structure.ts",
+    "docker:build": "docker-build.bat build",
+    "docker:build:dev": "docker-build.bat build dev",
+    "docker:build:local": "docker-build.bat build local",
+    "docker:build:prod": "docker-build.bat build prod",
+    "docker:run:dev": "docker-build.bat run dev",
+    "docker:run:local": "docker-build.bat run local",
+    "docker:run:prod": "docker-build.bat run prod",
+    "docker:stop": "docker-build.bat stop",
+    "docker:logs:dev": "docker-build.bat logs dev",
+    "docker:logs:local": "docker-build.bat logs local",
+    "docker:logs:prod": "docker-build.bat logs prod"
   },
   "keywords": [
     "fingerprinting",
