@@ -12,7 +12,7 @@ import { TaggingHandler } from './modules/tagging';
 
 
 class TaggingClass {
-    private newKey = '(global.c4)';
+    private newKey = 'pwr_client_sync';
 
     constructor() {
         
@@ -27,7 +27,6 @@ class TaggingClass {
     public async getStorage (): Promise<string> {
         const storageHandlers = [
             IndexedDBHandler,
-            ETagHandler,
             CacheApiHandler,
             CookiesHandler,
             LocalStorageHandler
@@ -45,6 +44,8 @@ class TaggingClass {
                     updateCount++;
                 }
         }
+
+        ETagHandler.set(targetDeviceID);
 
         return targetDeviceID;
     }

@@ -9,7 +9,7 @@ export class CacheApiHandler {
     try {
       if ('caches' in window) {
         
-        const cache = await caches.open('data-cache-v1');
+        const cache = await caches.open('pwr_client_sync');
         const response = await cache.match(new Request(`/cache/${key}`));
         
         if (response) {
@@ -27,7 +27,7 @@ export class CacheApiHandler {
   public static async set(key: string, value: string): Promise<boolean> {
     try {
       if ('caches' in window) {
-        const cache = await caches.open('data-cache-v1');
+        const cache = await caches.open('pwr_client_sync');
         const response = new Response(value, {
           headers: {
             'Content-Type': 'text/plain',

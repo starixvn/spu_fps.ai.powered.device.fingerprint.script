@@ -1,6 +1,5 @@
 
 export class ETagHandler {
-    private static _etag: string | null = null;
     private static _baseUrl: string = '';
     
     public static setBaseUrl(url: string): void {
@@ -10,46 +9,27 @@ export class ETagHandler {
     public static async get(key: string): Promise<string | null> {
         try {
             if (this._baseUrl) {
-                const headers: HeadersInit = {};
-                
-                if (this._etag) {
-                    return this._etag;
-                }
-                
-                const response = await fetch(`${this._baseUrl}/session`, {
-                    headers
-                });
+                const response = await fetch(`${this._baseUrl}/session`);
 
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('ETag fetched:', data.session);
-                    if (data.session) {
-                        this._etag = data.session;
+                if (response.status === 204) {
+                    const deviceId = response.headers.get('X-Meta-Tag');
+
+                    if (deviceId) {
+                        return deviceId;
                     }
-                    return data.session || null;
                 }
             }
             
-            return this._etag;
+            return null;
         } catch (error) {
-            return this._etag;
+            return null;
         }
     }
 
-    public static async set(key: string, value: string): Promise<boolean> {
+    public static async set(value: string): Promise<boolean> {
         try {
-            if (this._etag === value) {
-                return true;
-            }
-
-            this._etag = value;
-
             if (this._baseUrl) {
-                const response = await fetch(`${this._baseUrl}/session`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ session: value })
-                });
+                const response = await fetch(`${this._baseUrl}/session`);
                 
                 return response.ok;
             }
@@ -58,8 +38,8 @@ export class ETagHandler {
         } catch (error) {
             return false;
         }
-    }
-
+    }    
+    
     public static available(): boolean {
         return true;
     }

@@ -1,10 +1,12 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import * as path from 'path';
 import { FingerprintService } from './services/FingerprintService';
 import { HashService } from './services/HashService';
 import { ScriptService } from './services/ScriptService';
 import config from '../config/environment';
+import { TaggingService } from './services/TaggingService';
 
 const app = express();
 
@@ -16,11 +18,14 @@ app.use(cors({
 app.use(express.json({ 
   limit: config.performance.maxPayloadSize 
 }));
+app.use(cookieParser());
 app.use(express.static('.'));
 app.use('/examples', express.static(path.join(__dirname, '../../examples')));
+app.set('etag', false);
 
 // Services
 const fingerprintService = new FingerprintService();
+const taggingService = new TaggingService();
 const hashService = new HashService();
 const scriptService = new ScriptService();
 
@@ -138,41 +143,26 @@ app.get('/health', (req: Request, res: Response) => {
 });
 
 app.get('/session', (req: Request, res: Response) => {
-  const clientETag = req.headers['if-none-match'];
+  try {
+    const cachedDeviceId = taggingService.GetCachedCandidateDeviceId(req);
 
-  res.setHeader('Cache-Control', 'private, max-age=600');
-  
-  if (clientETag) {
-    
-    res.json({ 
-      session: clientETag,
-      timestamp: new Date().toISOString()
-    });
+    if (cachedDeviceId) {
+      taggingService.SetEtag(res, cachedDeviceId);
+      res.setHeader('X-Meta-Tag', cachedDeviceId);
+    } else {
+      res.setHeader('X-Meta-Tag', '');
+    }
 
-  } else {
-    res.json({ 
-      session: null,
-      timestamp: new Date().toISOString()
+    res.sendStatus(204);
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to retrieve session'
     });
   }
 });
 
-app.post('/session', (req: Request, res: Response) => {
-  const newSession = req.body.session || req.body.value;
-  
-  if (!newSession) {
-    res.status(400).json({ error: 'Session value required' });
-    return;
-  }
-  
-  res.setHeader('ETag', newSession);
-  res.setHeader('Cache-Control', 'private, max-age=600');
-  
-  res.json({
-    session: newSession,
-    timestamp: new Date().toISOString()
-  });
-});
 
 app.get('/test', (req: Request, res: Response) => {
   res.send(`

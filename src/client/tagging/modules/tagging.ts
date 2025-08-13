@@ -20,7 +20,7 @@ export class TaggingHandler {
     public static async getDeviceId(): Promise<string> {
         const storageHandlers = [
             IndexedDBHandler,
-            // ETagHandler,
+            ETagHandler,
             CacheApiHandler,
             CookiesHandler,
             LocalStorageHandler
@@ -34,7 +34,7 @@ export class TaggingHandler {
             }
 
             // Check for new key
-            value = await handler.get('(global.c4)');
+            value = await handler.get('pwr_client_sync');
             if (value) {
                 return value;
             }
