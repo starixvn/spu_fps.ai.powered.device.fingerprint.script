@@ -1,9 +1,4 @@
-/**
- * Hash and encryption utilities for device fingerprinting
- * Implements RC4 encryption with Hex encoding similar to C# version
- */
-
-const DEVICE_ID_ENCRYPT_KEY = '&％#@?,:*!~^.';
+const ENCRYPT_KEY = '&％#@?,:*!~^.';
 
 export class RC4 {
     public static encrypt(key: string, value: string): string {
@@ -110,7 +105,7 @@ export class Hex {
 export class DeviceEncryption {
 
     public static Encrypt(plaintext: string): string {
-        const encryptedText = RC4.encrypt(DEVICE_ID_ENCRYPT_KEY, plaintext);
+        const encryptedText = RC4.encrypt(ENCRYPT_KEY, plaintext);
         return Hex.encode(encryptedText);
     }
 }

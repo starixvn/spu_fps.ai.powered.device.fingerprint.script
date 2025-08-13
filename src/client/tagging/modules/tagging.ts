@@ -1,9 +1,3 @@
-/**
- * Universal Storage Manager for Device Fingerprinting
- * Class-based storage with interface pattern
- * Priority Order: IndexedDB > Etag > WebRTC > Cookies > Cache API > Local Storage
- */
-
 import { DeviceEncryption } from '../utils/hash';
 import { CacheApiHandler } from './cacheApi';
 import { CookiesHandler } from './cookie';
@@ -13,11 +7,11 @@ import { LocalStorageHandler } from './localStorage';
 
 export class TaggingHandler {
 
-    public static NewGuid(): string {
+    public static newGuid(): string {
         return this.generateGuid();
     }
 
-    public static async getDeviceId(): Promise<string> {
+    public static async getTagValue(): Promise<string> {
         const storageHandlers = [
             IndexedDBHandler,
             ETagHandler,
@@ -40,7 +34,7 @@ export class TaggingHandler {
             }
         }
 
-        const guid = this.NewGuid();
+        const guid = this.newGuid();
         const encryptedText = DeviceEncryption.Encrypt(guid);
         return encryptedText;
     }

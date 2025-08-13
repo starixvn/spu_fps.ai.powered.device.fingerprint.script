@@ -4,17 +4,8 @@ export interface IStorageHandler {
     available(): boolean;
 }
 
-export interface IStorageData {
-    indexedDB: string | null;
-    etag: string | null;
-    cookies: string | null;
-    cacheAPI: string | null;
-    localStorage: string | null;
-}
-
 declare global {
   interface Window {
     Tagging: any;
-    TaggingStorage?: string;
   }
 }

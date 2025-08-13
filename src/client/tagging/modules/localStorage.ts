@@ -1,8 +1,3 @@
-/**
- * localStorage module for device fingerprinting
- * Handles getting and setting values in browser's localStorage
- */
-
 export class LocalStorageHandler {
 
     public static get(key: string): string | null {

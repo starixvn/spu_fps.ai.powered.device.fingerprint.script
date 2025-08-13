@@ -1,8 +1,3 @@
-/**
- * Cache API module for device fingerprinting
- * Uses browser Cache API to persist data across sessions
- */
-
 export class CacheApiHandler {
 
   public static async get(key: string): Promise<string | null> {

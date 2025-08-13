@@ -1,32 +1,32 @@
 
 import { Request, Response } from 'express';
-import { DeviceEncryption } from './HashService';
+import { DeviceEncryption } from './hashService';
 
 const cookieKey: string = process.env.CookieStorage || 'pwr_client_sync';
 
 export class TaggingService {
     private _etag: string | null = null;
 
-    public GetCachedCandidateDeviceId(req: Request): string | null {
-        const cachedDeviceId = this.GetEtag(req);
+    public getCachedCandidateValue(req: Request): string | null {
+        const etagValue = this.getEtag(req);
 
-        if (!cachedDeviceId) {
-            return this.GetDeviceIDFromCookie(req);
+        if (!etagValue) {
+            return this.getValueFromCookie(req);
         }
-        return cachedDeviceId;
+        return etagValue;
     }
     
-    private GetDeviceIDFromCookie(req: Request): string | null {
+    private getValueFromCookie(req: Request): string | null {
         const cookieValue = req.cookies?.[cookieKey];
 
-        return this.IsValidDeviceId(cookieValue) ? cookieValue : null;
+        return this.isValidTagValue(cookieValue) ? cookieValue : null;
     }
 
-    public GetEtag(req: Request): string | null {
+    public getEtag(req: Request): string | null {
         return this._etag || req.headers['if-none-match'] as string || null;
     }
 
-    public SetEtag(res: Response, etag: string): void {
+    public setEtag(res: Response, etag: string): void {
         if (this._etag === etag) {
             return;
         }
@@ -38,15 +38,15 @@ export class TaggingService {
         res.setHeader('Cache-Control', 'private, max-age=3600');
     }
 
-    public IsValidDeviceId(deviceId: string): boolean {
-        if (!deviceId || deviceId.trim() === '') {
+    public isValidTagValue(tagValue: string): boolean {
+        if (!tagValue || tagValue.trim() === '') {
             return false;
         }
 
         try {
-            const decryptedDeviceId = DeviceEncryption.Decrypt(deviceId);
+            const decryptedValue = DeviceEncryption.Decrypt(tagValue);
             
-            return this.isValidGuid(decryptedDeviceId);
+            return this.isValidGuid(decryptedValue);
         } catch (error) {
             return false;
         }

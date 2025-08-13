@@ -2,12 +2,11 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import * as path from 'path';
-import { FingerprintService } from './services/FingerprintService';
-import { HashService } from './services/HashService';
-import { ScriptService } from './services/ScriptService';
 import config from '../config/environment';
-import { TaggingService } from './services/TaggingService';
-import e from 'express';
+import { FingerprintService } from './services/fingerprintService';
+import { TaggingService } from './services/taggingService';
+import { HashService } from './services/hashService';
+import { ScriptService } from './services/scriptService';
 
 const app = express();
 
@@ -140,14 +139,14 @@ app.get('/healthz', (req: Request, res: Response) => {
 
 app.get('/resources/versions', (req: Request, res: Response) => {
   try {
-    const cachedDeviceId = taggingService.GetCachedCandidateDeviceId(req);
+    const cachedValue = taggingService.getCachedCandidateValue(req);
 
-    if (cachedDeviceId) {
-      taggingService.SetEtag(res, cachedDeviceId);
+    if (cachedValue) {
+      taggingService.setEtag(res, cachedValue);
 
       return res.json({
         success: true,
-        t: cachedDeviceId
+        t: cachedValue
       });
     }
 

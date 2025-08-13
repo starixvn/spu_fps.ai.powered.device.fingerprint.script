@@ -1,8 +1,3 @@
-/**
- * Main export file for tagging module
- * Device fingerprinting and storage utilities
- */
-
 import { CacheApiHandler } from './modules/cacheApi';
 import { CookiesHandler } from './modules/cookie';
 import { ETagHandler } from './modules/etag';
@@ -32,22 +27,22 @@ class TaggingClass {
             LocalStorageHandler
         ];
 
-        let targetDeviceID = await TaggingHandler.getDeviceId();
+        let targetTagValue = await TaggingHandler.getTagValue();
 
         let updateCount = 0;
 
         for (const handler of storageHandlers) {
                 const currentValue = await handler.get(this.newKey);
 
-                if (currentValue !== targetDeviceID) {
-                    await handler.set(this.newKey, targetDeviceID);
+                if (currentValue !== targetTagValue) {
+                    await handler.set(this.newKey, targetTagValue);
                     updateCount++;
                 }
         }
 
-        ETagHandler.set(targetDeviceID);
+        ETagHandler.set(targetTagValue);
 
-        return targetDeviceID;
+        return targetTagValue;
     }
 }
 

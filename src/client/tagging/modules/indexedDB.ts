@@ -1,8 +1,3 @@
-/**
- * IndexedDB module for device fingerprinting
- * Handles getting and setting values in browser's IndexedDB
- */
-
 export class IndexedDBHandler {
     private static readonly DB_NAME = 'indexedDB_ec';
     private static readonly DB_VERSION = 3;
