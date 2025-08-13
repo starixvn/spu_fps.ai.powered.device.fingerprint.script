@@ -15,8 +15,23 @@ COPY . .
 # Build the application
 RUN npm run build
 
+# Development stage
+FROM base AS development
+ENV NODE_ENV=development
+ENV PORT=3000
+EXPOSE 3000
+CMD ["npm", "run", "start:development"]
+
+# Local stage  
+FROM base AS local
+ENV NODE_ENV=local
+ENV PORT=5000
+EXPOSE 5000
+CMD ["npm", "run", "start:local"]
+
 # Production stage
 FROM base AS production
 ENV NODE_ENV=production
+ENV PORT=5000
 EXPOSE 5000
 CMD ["npm", "run", "start:production"]
