@@ -69,6 +69,13 @@ desktop.ini
 .env.test.local
 .env.production.local
 
+# Environment files (keep .env.example)
+.env
+.env.local
+.env.development
+.env.production
+.env.staging
+
 # Project specific
 reports/
 screenshots/

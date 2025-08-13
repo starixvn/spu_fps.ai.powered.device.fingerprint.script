@@ -10,6 +10,9 @@ COPY . .
 
 RUN npm run build
 
+# Set production environment
+ENV NODE_ENV=local
+
 EXPOSE 5000
 
-CMD ["node", "dist/server/index.js"]
+CMD ["npm", "run", "start:local"]

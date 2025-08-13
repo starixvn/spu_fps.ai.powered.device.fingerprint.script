@@ -4,13 +4,18 @@ import * as path from 'path';
 import { FingerprintService } from './services/FingerprintService';
 import { HashService } from './services/HashService';
 import { ScriptService } from './services/ScriptService';
+import config from '../config/environment';
 
 const app = express();
-const port = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// Middleware - Environment-aware configuration
+app.use(cors({
+  origin: config.security.corsOrigin,
+  credentials: true
+}));
+app.use(express.json({ 
+  limit: config.performance.maxPayloadSize 
+}));
 app.use(express.static('.'));
 app.use('/examples', express.static(path.join(__dirname, '../../examples')));
 
@@ -255,8 +260,11 @@ app.get('/login-demo.html', (req: Request, res: Response) => {
   `);
 });
 
-app.listen(port, () => {
-  console.log(`FPS API server running on port ${port}`);
+app.listen(config.port, () => {
+  console.log(`🚀 FPS API server running on port ${config.port}`);
+  console.log(`🌍 Environment: ${config.nodeEnv.toUpperCase()}`);
+  console.log(`📊 Debug mode: ${config.features.enableDebugMode ? 'ON' : 'OFF'}`);
+  console.log(`🔗 API endpoint: ${config.api.fpsEndpoint}`);
 });
 
 export default app;
