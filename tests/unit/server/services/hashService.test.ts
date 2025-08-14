@@ -1,4 +1,4 @@
-import { HashService, RC4, Hex, DeviceEncryption } from '../../../src/server/services/hashService';
+import { HashService, RC4, Hex, DeviceEncryption } from '../../../../src/server/services/hashService';
 
 describe('HashService', () => {
   let hashService: HashService;

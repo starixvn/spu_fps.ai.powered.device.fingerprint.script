@@ -1,4 +1,4 @@
-import { ScriptService } from '../../../src/server/services/scriptService';
+import { ScriptService } from '../../../../src/server/services/scriptService';
 import * as fs from 'fs';
 import * as path from 'path';
 

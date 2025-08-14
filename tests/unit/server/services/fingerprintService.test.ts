@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { FingerprintService } from '../../../src/server/services/fingerprintService';
+import { FingerprintService } from '../../../../src/server/services/fingerprintService';
 
 describe('FingerprintService', () => {
   let fingerprintService: FingerprintService;

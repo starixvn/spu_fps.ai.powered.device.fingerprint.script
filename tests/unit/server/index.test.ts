@@ -1,16 +1,16 @@
 import request from 'supertest';
-import app from '../../src/server/index';
-import { FingerprintService } from '../../src/server/services/fingerprintService';
-import { TaggingService } from '../../src/server/services/taggingService';
-import { HashService } from '../../src/server/services/hashService';
-import { ScriptService } from '../../src/server/services/scriptService';
+import app from '../../../src/server/index';
+import { FingerprintService } from '../../../src/server/services/fingerprintService';
+import { TaggingService } from '../../../src/server/services/taggingService';
+import { HashService } from '../../../src/server/services/hashService';
+import { ScriptService } from '../../../src/server/services/scriptService';
 
 // Mock all services
-jest.mock('../../src/server/services/fingerprintService');
-jest.mock('../../src/server/services/taggingService');
-jest.mock('../../src/server/services/hashService');
-jest.mock('../../src/server/services/scriptService');
-jest.mock('../../src/config/environment', () => ({
+jest.mock('../../../src/server/services/fingerprintService');
+jest.mock('../../../src/server/services/taggingService');
+jest.mock('../../../src/server/services/hashService');
+jest.mock('../../../src/server/services/scriptService');
+jest.mock('../../../src/config/environment', () => ({
   port: 3000,
   nodeEnv: 'test'
 }));

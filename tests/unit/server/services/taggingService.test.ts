@@ -4,11 +4,11 @@
  */
 
 import { Request, Response } from 'express';
-import { TaggingService } from '../../../src/server/services/taggingService';
-import { DeviceEncryption } from '../../../src/server/services/hashService';
+import { TaggingService } from '../../../../src/server/services/taggingService';
+import { DeviceEncryption } from '../../../../src/server/services/hashService';
 
 // Mock DeviceEncryption
-jest.mock('../../../src/server/services/hashService', () => ({
+jest.mock('../../../../src/server/services/hashService', () => ({
   DeviceEncryption: {
     Decrypt: jest.fn(),
     Encrypt: jest.fn()
