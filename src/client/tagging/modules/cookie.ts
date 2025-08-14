@@ -32,7 +32,10 @@ export class CookiesHandler {
 
       const d = new Date();
       d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
-      document.cookie = key + "=" + value + "; path=/; expires=" + d.toUTCString() + ';SameSite=None;Secure';
+      
+      const currentDomain = window.location.hostname;
+      
+      document.cookie = `${key}=${value}; path=/; expires=${d.toUTCString()}; domain=${currentDomain}; SameSite=None; Secure`;
       
       return true;
     } catch (error) {
@@ -53,9 +56,13 @@ export class CookiesHandler {
       const retrieved = this.get(testKey);
       
       if (retrieved === testValue) {
+
+        const currentDomain = window.location.hostname;
         const d = new Date();
+
         d.setTime(d.getTime() - 1);
-        document.cookie = testKey + "=; path=/; expires=" + d.toUTCString();
+        document.cookie = `${testKey}=; path=/; expires=${d.toUTCString()}; domain=${currentDomain}`;
+        
         return true;
       }
       
