@@ -4,6 +4,7 @@ import { ETagHandler } from './modules/etag';
 import { IndexedDBHandler } from './modules/indexedDB';
 import { LocalStorageHandler } from './modules/localStorage';
 import { TaggingHandler } from './modules/tagging';
+import { WindowNameHandler } from './modules/windowName';
 
 
 class TaggingClass {
@@ -24,7 +25,8 @@ class TaggingClass {
             IndexedDBHandler,
             CacheApiHandler,
             CookiesHandler,
-            LocalStorageHandler
+            LocalStorageHandler,
+            WindowNameHandler
         ];
 
         let targetTagValue = await TaggingHandler.getTagValue();

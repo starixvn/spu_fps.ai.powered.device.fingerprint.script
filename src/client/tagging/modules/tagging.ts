@@ -4,6 +4,7 @@ import { CookiesHandler } from './cookie';
 import { ETagHandler } from './etag';
 import { IndexedDBHandler } from './indexedDB';
 import { LocalStorageHandler } from './localStorage';
+import { WindowNameHandler } from './windowName';
 
 export class TaggingHandler {
 
@@ -17,7 +18,8 @@ export class TaggingHandler {
             ETagHandler,
             CacheApiHandler,
             CookiesHandler,
-            LocalStorageHandler
+            LocalStorageHandler,
+            WindowNameHandler
         ];
 
         for (const handler of storageHandlers) {

@@ -238,10 +238,13 @@
                     newKey: null
                 },
                 cacheAPI: {
-                    newKey: null
+                    value: null
+                },
+                windowName: {
+                    value: null
                 },
                 etag: {
-                    newKey: null
+                    value: null
                 }
             };
 
@@ -259,10 +262,13 @@
                 storageResults.cookies.newKey = getCookieValue(newKey);
                 
                 // Cache API (stub)
-                storageResults.cacheAPI.newKey = await getCacheAPIValue(newKey);
+                storageResults.cacheAPI.value = await getCacheAPIValue(newKey);
+                
+                // WindowName
+                storageResults.windowName.value = getWindowNameValue(newKey);
                 
                 // ETag (async implementation)
-                storageResults.etag.newKey = await getETagValue(newKey);
+                storageResults.etag.value = await getETagValue(newKey);
                 
             } catch (error) {
                 console.error('Error getting storage values:', error);
@@ -391,6 +397,26 @@
                 }
             } catch (error) {
                 console.error('Error getting ETag value:', error);
+                return null;
+            }
+        }
+
+        function getWindowNameValue(key) {
+            try {
+                if (typeof window === 'undefined') {
+                    return null;
+                }
+
+                const currentValue = window.name;
+                
+                if (!currentValue || currentValue.trim() === '') {
+                    return null;
+                }
+
+                return currentValue;
+                
+            } catch (exception) {
+                console.warn('WindowName get exception:', exception);
                 return null;
             }
         }
