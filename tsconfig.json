@@ -15,10 +15,11 @@
     "typeRoots": [
       "node_modules/@types"
     ],
-    "types": []
+    "types": ["jest", "node"]
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "tests/**/*"
   ],
   "exclude": [
     "node_modules",

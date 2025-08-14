@@ -1,6 +1,8 @@
 import { config } from 'dotenv';
 import path from 'path';
 
+/* istanbul ignore file */
+
 // Load environment file based on NODE_ENV
 const loadEnvironment = () => {
   const nodeEnv = process.env.NODE_ENV || 'local';

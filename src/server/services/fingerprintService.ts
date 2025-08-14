@@ -29,8 +29,8 @@ export class FingerprintService {
       ip,
       headers: this.getRelevantHeaders(req),
       connection: {
-        remoteAddress: req.connection.remoteAddress || 'unknown',
-        remotePort: req.connection.remotePort || 0
+        remoteAddress: req.connection?.remoteAddress || 'unknown',
+        remotePort: req.connection?.remotePort || 0
       },
       platform: this.extractPlatform(userAgent),
       timestamp: new Date().toISOString()
@@ -79,8 +79,8 @@ export class FingerprintService {
     }
     
     // Fallback to connection remote address
-    return req.connection.remoteAddress || 
-           req.socket.remoteAddress || 
+    return req.connection?.remoteAddress || 
+           req.socket?.remoteAddress || 
            'unknown';
   }
   
