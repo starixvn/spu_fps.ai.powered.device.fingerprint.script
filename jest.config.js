@@ -16,6 +16,22 @@ module.exports = {
           tsconfig: 'tsconfig.json'
         }
       }
+    },
+    {
+      displayName: 'client',
+      testEnvironment: 'node',
+      testMatch: ['<rootDir>/tests/unit/client/**/*.+(ts|tsx|js)'],
+      moduleNameMapping: {
+        '^@/(.*)$': '<rootDir>/src/$1'
+      },
+      transform: {
+        '^.+\\.(ts|tsx)$': 'ts-jest'
+      },
+      globals: {
+        'ts-jest': {
+          tsconfig: 'tsconfig.json'
+        }
+      }
     }
   ],
   collectCoverageFrom: [

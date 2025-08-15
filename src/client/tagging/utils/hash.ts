@@ -110,3 +110,32 @@ export class DeviceEncryption {
     }
 }
 
+export class GuidGenerator {
+    
+    public static generateGuid(): string {
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+            return crypto.randomUUID().replace(/-/g, '');
+        }
+        
+        if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+            const buffer = new Uint8Array(16);
+            crypto.getRandomValues(buffer);
+            
+            buffer[6] = (buffer[6] & 0x0f) | 0x40; 
+            buffer[8] = (buffer[8] & 0x3f) | 0x80; 
+            
+            const hex = Array.from(buffer)
+                .map(b => b.toString(16).padStart(2, '0'))
+                .join('');
+            
+            return hex; 
+        }
+        
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        }).replace(/-/g, '');
+    }
+}
+

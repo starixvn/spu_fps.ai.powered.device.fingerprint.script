@@ -1,18 +1,28 @@
-export class IndexedDBHandler {
-    private static readonly DB_NAME = 'indexedDB_ec';
-    private static readonly DB_VERSION = 3;
-    private static readonly STORE_NAME = 'ec';
+import { IStorageHandler } from "../types";
 
-    public static async get(key: string): Promise<string | null> {
+export class IndexedDBHandler implements IStorageHandler {
+    private readonly DB_NAME = 'indexedDB_ec';
+    private readonly DB_VERSION = 3;
+    private readonly STORE_NAME = 'ec';
+    private readonly indexedDbObj: IDBFactory | null;
+
+    constructor() {
+        this.indexedDbObj = (window as any).indexedDB ||
+            (window as any).mozIndexedDB ||
+            (window as any).webkitIndexedDB ||
+            (window as any).msIndexedDB ||
+            (window as any).shimIndexedDB;
+    }
+
+    public async get(key: string): Promise<string | null> {
         return new Promise((resolve) => {
             try {
-                const indexedDbObj = 
-                    (window as any).indexedDB ||
-                    (window as any).mozIndexedDB ||
-                    (window as any).webkitIndexedDB ||
-                    (window as any).msIndexedDB ||
-                    (window as any).shimIndexedDB;
+                const indexedDbObj = this.indexedDbObj;
 
+                if (!indexedDbObj || !key) {
+                    resolve(null);
+                    return;
+                }
                 if (indexedDbObj) {
                     const request = indexedDbObj.open(this.DB_NAME, this.DB_VERSION);
 
@@ -88,15 +98,15 @@ export class IndexedDBHandler {
         });
     }
 
-    public static async set(key: string, value: string): Promise<boolean> {
+    public async set(key: string, value: string): Promise<boolean> {
         return new Promise((resolve) => {
             try {
-                const indexedDbObj = 
-                    (window as any).indexedDB ||
-                    (window as any).mozIndexedDB ||
-                    (window as any).webkitIndexedDB ||
-                    (window as any).msIndexedDB ||
-                    (window as any).shimIndexedDB;
+                const indexedDbObj = this.indexedDbObj;
+
+                if (!indexedDbObj || !key || !value) {
+                    resolve(false);
+                    return;
+                }
 
                 if (indexedDbObj) {
                     const request = indexedDbObj.open(this.DB_NAME, this.DB_VERSION);
@@ -172,13 +182,7 @@ export class IndexedDBHandler {
         });
     }
 
-    public static available(): boolean {
-        try {
-            return !!(window.indexedDB && 
-                     window.IDBTransaction && 
-                     window.IDBKeyRange);
-        } catch {
-            return false;
-        }
+    public available(): boolean {
+        return this.indexedDbObj !== null;
     }
 }

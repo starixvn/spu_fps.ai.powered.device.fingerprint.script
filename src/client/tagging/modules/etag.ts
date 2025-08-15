@@ -1,13 +1,14 @@
+import { IStorageHandler } from "../types";
 
-export class ETagHandler {
-    private static _baseUrl: string = '';
-    private static _etag: string | null = null;
-    
-    public static setBaseUrl(url: string): void {
+export class ETagHandler implements IStorageHandler {
+    private _baseUrl: string = '';
+    private _etag: string | null = null;
+
+    public setBaseUrl(url: string): void {
         this._baseUrl = url;
     }
 
-    public static async get(key: string): Promise<string | null> {
+    public async get(key: string): Promise<string | null> {
         try {
             if (!this._baseUrl) {
                 return null;
@@ -36,7 +37,7 @@ export class ETagHandler {
         }
     }
 
-    public static async set(value: string): Promise<boolean> {
+    public async set(key: string, value: string): Promise<boolean> {
         try {
             if (!this._baseUrl || !value) {
                 return false;
@@ -63,9 +64,9 @@ export class ETagHandler {
         } catch (error) {
             return false;
         }
-    }    
-    
-    public static available(): boolean {
-        return Boolean(this._baseUrl);
+    }
+
+    public available(): boolean {
+       return this._baseUrl !== '';
     }
 }

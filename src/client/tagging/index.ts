@@ -3,48 +3,54 @@ import { CookiesHandler } from './modules/cookie';
 import { ETagHandler } from './modules/etag';
 import { IndexedDBHandler } from './modules/indexedDB';
 import { LocalStorageHandler } from './modules/localStorage';
-import { TaggingHandler } from './modules/tagging';
+import { TaggingHandler } from './tagging';
 import { WindowNameHandler } from './modules/windowName';
+import { IStorageHandler } from './types';
 
 
 class TaggingClass {
     private newKey = 'pwr_client_sync';
+    private readonly storageHandlers: IStorageHandler[];
+    private readonly etagHandler: ETagHandler;
 
     constructor() {
-        
+        this.etagHandler = new ETagHandler();
+
+        this.storageHandlers = [
+            new IndexedDBHandler(),
+            this.etagHandler,
+            new CacheApiHandler(),
+            new CookiesHandler(),
+            new LocalStorageHandler(),
+            new WindowNameHandler()
+        ];
+
         if (typeof window !== 'undefined') {
             const protocol = window.location.protocol;
             const hostname = window.location.hostname;
             const port = window.location.port ? `:${window.location.port}` : '';
-            ETagHandler.setBaseUrl(`${protocol}//${hostname}${port}`);
+            this.etagHandler.setBaseUrl(`${protocol}//${hostname}${port}`);
         }
     }
 
     public async getStorage (): Promise<string> {
-        const storageHandlers = [
-            IndexedDBHandler,
-            CacheApiHandler,
-            CookiesHandler,
-            LocalStorageHandler,
-            WindowNameHandler
-        ];
+        const storageHandlers = this.storageHandlers;
 
-        let targetTagValue = await TaggingHandler.getTagValue();
+        let targetTaggingValue = await TaggingHandler.getTaggingValue();
 
-        let updateCount = 0;
-
-        for (const handler of storageHandlers) {
-                const currentValue = await handler.get(this.newKey);
-
-                if (currentValue !== targetTagValue) {
-                    await handler.set(this.newKey, targetTagValue);
-                    updateCount++;
-                }
+        if (!targetTaggingValue) {
+            targetTaggingValue = TaggingHandler.generateTagging();
         }
 
-        ETagHandler.set(targetTagValue);
+        await Promise.all(
+        storageHandlers.map(async (handler) => {
+            const currentValue = await handler.get(this.newKey);
+            if (currentValue !== targetTaggingValue) {
+                await handler.set(this.newKey, targetTaggingValue);
+            }
+        }));
 
-        return targetTagValue;
+        return targetTaggingValue;
     }
 }
 

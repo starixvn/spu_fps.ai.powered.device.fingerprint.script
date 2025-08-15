@@ -27,7 +27,7 @@ export class ScriptService {
         'tagging/modules/etag.js',
         'tagging/modules/indexedDB.js',
         'tagging/modules/localStorage.js',
-        'tagging/modules/tagging.js',
+        'tagging/tagging.js',
         'tagging/modules/windowName.js',
         'tagging/index.js',
         'tagging/utils/hash.js'

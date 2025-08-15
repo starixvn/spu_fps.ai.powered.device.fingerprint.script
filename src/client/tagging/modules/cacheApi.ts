@@ -1,9 +1,11 @@
-export class CacheApiHandler {
+import { IStorageHandler } from "../types";
 
-  public static async get(key: string): Promise<string | null> {
+export class CacheApiHandler implements IStorageHandler {
+
+  public async get(key: string): Promise<string | null> {
     try {
-      if ('caches' in window) {
-        
+      if (this.available() || !key) {
+
         const cache = await caches.open('pwr_client_sync');
         const response = await cache.match(new Request(`/cache/${key}`));
         
@@ -19,9 +21,9 @@ export class CacheApiHandler {
     }
   }
 
-  public static async set(key: string, value: string): Promise<boolean> {
+  public async set(key: string, value: string): Promise<boolean> {
     try {
-      if ('caches' in window) {
+      if (this.available() || !key || !value) {
         const cache = await caches.open('pwr_client_sync');
         const response = new Response(value, {
           headers: {
@@ -40,7 +42,7 @@ export class CacheApiHandler {
     }
   }
 
-  public static available(): boolean {
+  public available(): boolean {
     try {
       return 'caches' in window && typeof caches.open === 'function';
     } catch {

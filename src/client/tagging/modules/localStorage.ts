@@ -1,8 +1,11 @@
-export class LocalStorageHandler {
+import { IStorageHandler } from "../types";
 
-    public static get(key: string): string | null {
+export class LocalStorageHandler implements IStorageHandler {
+
+    public async get(key: string): Promise<string | null> {
         try {
             const localStorageObj = window.localStorage;
+
             if (localStorageObj) {
                 const value = localStorageObj.getItem(key);
                 return value;
@@ -14,7 +17,7 @@ export class LocalStorageHandler {
         }
     }
 
-    public static set(key: string, value: string): boolean {
+    public async set(key: string, value: string): Promise<boolean> {
         try {
             const localStorageObj = window.localStorage;
             if (localStorageObj) {
@@ -28,14 +31,7 @@ export class LocalStorageHandler {
         }
     }
 
-    public static available(): boolean {
-        try {
-            const test = '__localStorage_test__';
-            window.localStorage.setItem(test, test);
-            window.localStorage.removeItem(test);
-            return true;
-        } catch {
-            return false;
-        }
+    public available(): boolean {
+        return typeof window.localStorage !== "undefined";
     }
 }

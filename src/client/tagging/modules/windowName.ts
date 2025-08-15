@@ -1,8 +1,10 @@
-export class WindowNameHandler {
+import { IStorageHandler } from "../types";
 
-    public static get(key: string): string | null {
+export class WindowNameHandler implements IStorageHandler {
+
+    public async get(key: string): Promise<string | null> {
         try {
-            if (typeof window === 'undefined') {
+            if (this.available()) {
                 return null;
             }
 
@@ -18,9 +20,9 @@ export class WindowNameHandler {
         }
     }
 
-    public static set(key: string, value: string): boolean {
+    public async set(key: string, value: string): Promise<boolean> {
         try {
-            if (typeof window === 'undefined' || !value) {
+            if (this.available() || !value) {
                 return false;
             }
 
@@ -37,31 +39,19 @@ export class WindowNameHandler {
         }
     }
 
-    public static available(): boolean {
+    public available(): boolean {
         try {
-            if (typeof window === 'undefined') {
-                return false;
-            }
-
-            const testValue = window.name;
-            const originalValue = testValue;
-            
-            window.name = '__test_window_name__';
-            const canWrite = window.name === '__test_window_name__';
-            
-            window.name = originalValue;
-            
-            return canWrite;
+            return typeof window !== 'undefined' && typeof window.name !== 'undefined';
         } catch (exception) {
             return false;
         }
     }
 
-    private static isValidObject(value: any): boolean {
+    private isValidObject(value: any): boolean {
         return value !== null && value !== undefined && value !== '';
     }
 
-    private static isValidTagValue(value: string): boolean {
+    private isValidTagValue(value: string): boolean {
         if (!value || typeof value !== 'string') {
             return false;
         }

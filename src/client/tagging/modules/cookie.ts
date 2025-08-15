@@ -1,8 +1,10 @@
-export class CookiesHandler {
+import { IStorageHandler } from "../types";
 
-  public static get(key: string): string | null {
+export class CookiesHandler implements IStorageHandler {
+
+  public async get(key: string): Promise<string | null> {
     try {
-      if (typeof document === 'undefined') {
+      if (!this.available() || !key) {
         return null;
       }
 
@@ -24,9 +26,9 @@ export class CookiesHandler {
     }
   }
 
-  public static set(key: string, value: string, exdays: number = 365): boolean {
+  public async set(key: string, value: string, exdays: number = 365): Promise<boolean> {
     try {
-      if (typeof document === 'undefined') {
+      if (this.available() === false || !key || !value) {
         return false;
       }
 
@@ -43,31 +45,10 @@ export class CookiesHandler {
     }
   }
 
-  public static available(): boolean {
+  public available(): boolean {
     try {
-      if (typeof document === 'undefined') {
-        return false;
-      }
-
-      const testKey = '__test_cookie__';
-      const testValue = 'test';
-      
-      this.set(testKey, testValue, 1);
-      const retrieved = this.get(testKey);
-      
-      if (retrieved === testValue) {
-
-        const currentDomain = window.location.hostname;
-        const d = new Date();
-
-        d.setTime(d.getTime() - 1);
-        document.cookie = `${testKey}=; path=/; expires=${d.toUTCString()}; domain=${currentDomain}`;
-        
-        return true;
-      }
-      
-      return false;
-    } catch (error) {
+      return typeof document === 'undefined' ? false : true;
+    } catch {
       return false;
     }
   }
