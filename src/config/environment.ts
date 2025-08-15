@@ -21,8 +21,8 @@ const loadEnvironment = () => {
   
   if (fileExists) {
     // Load specific environment file
-    const result = config({ path: envPath });
-    
+    const result = config({ path: envPath, override: true });
+
     if (result.error) {
       console.warn(`⚠️ Failed to load ${envFile}:`, result.error.message);
     } else {
@@ -31,7 +31,6 @@ const loadEnvironment = () => {
     }
   } else {
     console.warn(`⚠️ Environment file not found: ${envPath}`);
-    console.log(`🔍 Available files in directory:`, fs.readdirSync(cwd).filter((f: string) => f.startsWith('.env')));
   }
   
   // Also load base .env if it exists (for shared variables)

@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import '../../config/environment';
 
 export class ScriptService {
   private bundledScript: string | null = null;
@@ -80,7 +81,7 @@ export class ScriptService {
           let fileContent = fs.readFileSync(filePath, 'utf8');
 
           fileContent = fileContent
-            .replace(/__SERVER_DOMAIN__/g, process.env.SERVER_DOMAIN || '')
+            .replace(/__SERVER_DOMAIN__/g, process.env.SERVER_DOMAIN || 'https://fps-pwr-dfp.nexdev.net')
             .replace(/__STORAGE_OLD_KEY__/g, process.env.STORAGE_OLD_KEY || '(global.c3)')
             .replace(/__STORAGE_NEW_KEY__/g, process.env.STORAGE_NEW_KEY || 'pwr_client_sync')
             .replace(/__COOKIE_STORAGE_KEY__/g, process.env.COOKIE_STORAGE_KEY || 'gfp');

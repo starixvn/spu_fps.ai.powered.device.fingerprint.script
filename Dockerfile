@@ -20,6 +20,7 @@ FROM base AS development
 ENV NODE_ENV=development
 ENV PORT=3000
 EXPOSE 3000
+
 CMD ["npm", "run", "start:development"]
 
 # Local stage  
