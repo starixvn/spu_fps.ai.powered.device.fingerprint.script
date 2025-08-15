@@ -17,10 +17,10 @@
     "start:production": "cross-env NODE_ENV=production node dist/server/index.js",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "test:unit": "jest tests/unit",
-    "test:integration": "jest tests/integration",
-    "test:e2e": "playwright test",
+    "test-coverage": "jest --coverage",
+    "test-unit": "jest tests/unit",
+    "test-integration": "jest tests/integration",
+    "test-e2e": "playwright test",
     "lint": "eslint src/**/*.ts",
     "clean": "rimraf dist",
     "migrate": "ts-node tools/migration/migrate.ts",
@@ -86,6 +86,7 @@
     "webpack": "^5.88.0",
     "webpack-cli": "^5.1.0"
   },
+  "private": true,
   "workspaces": [
     "src/*"
   ]
