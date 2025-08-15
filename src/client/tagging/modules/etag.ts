@@ -1,11 +1,13 @@
 import { IStorageHandler } from "../types";
 
-export class ETagHandler implements IStorageHandler {
-    private _baseUrl: string = '';
-    private _etag: string | null = null;
+const SERVER_DOMAIN = '__SERVER_DOMAIN__';
 
-    public setBaseUrl(url: string): void {
-        this._baseUrl = url;
+export class ETagHandler implements IStorageHandler {
+    private _etag: string | null = null;
+    private _baseUrl: string | '' = '';
+
+    constructor() {
+        this._baseUrl = SERVER_DOMAIN;
     }
 
     public async get(key: string): Promise<string | null> {
@@ -17,7 +19,7 @@ export class ETagHandler implements IStorageHandler {
             if (this._etag) {
                 return this._etag;
             }
-            
+
             const response = await fetch(`${this._baseUrl}/resources/versions`, {
                 method: 'GET'
             });
@@ -67,6 +69,6 @@ export class ETagHandler implements IStorageHandler {
     }
 
     public available(): boolean {
-       return this._baseUrl !== '';
+        return this._baseUrl !== '';
     }
 }

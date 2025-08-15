@@ -28,7 +28,7 @@ export class CookiesHandler implements IStorageHandler {
 
   public async set(key: string, value: string, exdays: number = 365): Promise<boolean> {
     try {
-      if (this.available() === false || !key || !value) {
+      if (!this.available() || !key || !value) {
         return false;
       }
 
@@ -47,7 +47,7 @@ export class CookiesHandler implements IStorageHandler {
 
   public available(): boolean {
     try {
-      return typeof document === 'undefined' ? false : true;
+      return typeof document !== 'undefined' ? true : false;
     } catch {
       return false;
     }

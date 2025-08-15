@@ -77,8 +77,14 @@ export class ScriptService {
       for (const fileName of clientFiles) {
         const filePath = path.join(basePath, fileName);
         if (fs.existsSync(filePath)) {
-          const fileContent = fs.readFileSync(filePath, 'utf8');
-          
+          let fileContent = fs.readFileSync(filePath, 'utf8');
+
+          fileContent = fileContent
+            .replace(/__SERVER_DOMAIN__/g, process.env.SERVER_DOMAIN || '')
+            .replace(/__STORAGE_OLD_KEY__/g, process.env.STORAGE_OLD_KEY || '(global.c3)')
+            .replace(/__STORAGE_NEW_KEY__/g, process.env.STORAGE_NEW_KEY || 'pwr_client_sync')
+            .replace(/__COOKIE_STORAGE_KEY__/g, process.env.COOKIE_STORAGE_KEY || 'gfp');
+
           // Process content for bundling - remove ES6 imports/exports
           let processedContent = fileContent
             // Remove import statements (all variations)

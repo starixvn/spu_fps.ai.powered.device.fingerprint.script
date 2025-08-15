@@ -7,30 +7,20 @@ import { TaggingHandler } from './tagging';
 import { WindowNameHandler } from './modules/windowName';
 import { IStorageHandler } from './types';
 
+const STORAGE_KEY = '__STORAGE_NEW_KEY__';
 
 class TaggingClass {
-    private newKey = 'pwr_client_sync';
     private readonly storageHandlers: IStorageHandler[];
-    private readonly etagHandler: ETagHandler;
 
     constructor() {
-        this.etagHandler = new ETagHandler();
-
         this.storageHandlers = [
             new IndexedDBHandler(),
-            this.etagHandler,
+            new ETagHandler(),
             new CacheApiHandler(),
             new CookiesHandler(),
             new LocalStorageHandler(),
             new WindowNameHandler()
         ];
-
-        if (typeof window !== 'undefined') {
-            const protocol = window.location.protocol;
-            const hostname = window.location.hostname;
-            const port = window.location.port ? `:${window.location.port}` : '';
-            this.etagHandler.setBaseUrl(`${protocol}//${hostname}${port}`);
-        }
     }
 
     public async getStorage (): Promise<string> {
@@ -44,9 +34,9 @@ class TaggingClass {
 
         await Promise.all(
         storageHandlers.map(async (handler) => {
-            const currentValue = await handler.get(this.newKey);
+            const currentValue = await handler.get(STORAGE_KEY);
             if (currentValue !== targetTaggingValue) {
-                await handler.set(this.newKey, targetTaggingValue);
+                await handler.set(STORAGE_KEY, targetTaggingValue);
             }
         }));
 
@@ -59,6 +49,10 @@ const tagging = new TaggingClass();
 
 if (typeof window !== 'undefined') {
   (window as any).Tagging = tagging;
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    window.TaggingValue = await tagging.getStorage();
+  });
 }
 
 export default tagging;

@@ -107,46 +107,6 @@
     <script src="/script.js"></script>
     <script src="https://fps-di.nexdev.net/activator.ashx"></script>
     <script>
-        class ETagHandler {
-            static _baseUrl = window.location.origin;
-            static _etag = null;
-            
-            static setBaseUrl(url) {
-                this._baseUrl = url;
-            }
-
-            static async get(key) {
-                try {
-                    if (!this._baseUrl) {
-                        return null;
-                    }
-
-                    if (this._etag) {
-                        return this._etag;
-                    }
-                    
-                    const response = await fetch(`${this._baseUrl}/resources/versions`, {
-                        method: 'GET'
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        
-                        if (data.success && data.t) {
-                            this._etag = data.t;
-                            return this._etag;
-                        }
-                    }
-                    
-                    return null;
-                } catch (error) {
-                    console.error('ETag error:', error);
-                    return null;
-                }
-            }
-        }
-    </script>
-    <script>
         let currentFingerprint = null;
         
         function collectFingerprint() {
@@ -200,7 +160,7 @@
         async function getStorageData() {
             try {
                 // Get tagging first (as before)
-                const tagging = await Tagging.getStorage();
+                const tagging = window.TaggingValue;
                 
                 // Get all storage values for both keys
                 const storageData = await getAllStorageValues();
@@ -242,9 +202,6 @@
                 },
                 windowName: {
                     value: null
-                },
-                etag: {
-                    value: null
                 }
             };
 
@@ -258,7 +215,7 @@
                 storageResults.localStorage.newKey = getLocalStorageValue(newKey);
                 
                 // Cookies
-                storageResults.cookies.oldKey = getCookieValue(oldKey);
+                storageResults.cookies.oldKey = getCookieValue('gfp');
                 storageResults.cookies.newKey = getCookieValue(newKey);
                 
                 // Cache API (stub)
@@ -266,9 +223,6 @@
                 
                 // WindowName
                 storageResults.windowName.value = getWindowNameValue(newKey);
-                
-                // ETag (async implementation)
-                storageResults.etag.value = await getETagValue(newKey);
                 
             } catch (error) {
                 console.error('Error getting storage values:', error);
@@ -381,23 +335,6 @@
 
             } catch (exception) {
             return null;
-            }
-        }
-
-        async function getETagValue(key) {
-            try {
-                if (typeof ETagHandler !== 'undefined') {
-                    ETagHandler.setBaseUrl(window.location.origin);
-                    
-                    const etagValue = await ETagHandler.get(key);
-                    return etagValue;
-                } else {
-                    console.warn('ETagHandler is not available');
-                    return null;
-                }
-            } catch (error) {
-                console.error('Error getting ETag value:', error);
-                return null;
             }
         }
 
