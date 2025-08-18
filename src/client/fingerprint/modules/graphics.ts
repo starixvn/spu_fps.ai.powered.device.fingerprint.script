@@ -27,6 +27,8 @@ export class GraphicsFingerprint {
    */
   private static getWebGLInfo(): WebGLInfo | null {
     try {
+      if (typeof document === 'undefined') return null;
+      
       const canvas = document.createElement('canvas');
       const gl = canvas.getContext('webgl') as WebGLRenderingContext || 
                  canvas.getContext('experimental-webgl') as WebGLRenderingContext;
@@ -57,6 +59,8 @@ export class GraphicsFingerprint {
    */
   private static getCanvasFingerprint(): string | null {
     try {
+      if (typeof document === 'undefined') return null;
+      
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       
@@ -97,38 +101,44 @@ export class GraphicsFingerprint {
    * Detect installed fonts
    */
   private static getFontList(): string[] {
-    const fonts = [
-      'Arial', 'Arial Black', 'Arial Narrow', 'Arial Rounded MT Bold',
-      'Avant Garde', 'Calibri', 'Candara', 'Century Gothic', 'Comic Sans MS',
-      'Courier', 'Courier New', 'Geneva', 'Georgia', 'Helvetica',
-      'Helvetica Neue', 'Impact', 'Lucida Console', 'Lucida Grande',
-      'Lucida Sans Unicode', 'Microsoft Sans Serif', 'Monaco', 'Palatino',
-      'Tahoma', 'Times', 'Times New Roman', 'Trebuchet MS', 'Verdana'
-    ];
-    
-    const availableFonts: string[] = [];
-    const testString = 'mmmmmmmmmmlli';
-    const testSize = '72px';
-    const baseline = 'serif';
-    
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    if (!context) return [];
-    
-    // Get baseline width
-    context.font = testSize + ' ' + baseline;
-    const baselineWidth = context.measureText(testString).width;
-    
-    // Test each font
-    for (let i = 0; i < fonts.length; i++) {
-      context.font = testSize + ' ' + fonts[i] + ', ' + baseline;
-      const width = context.measureText(testString).width;
+    try {
+      if (typeof document === 'undefined') return [];
       
-      if (width !== baselineWidth) {
-        availableFonts.push(fonts[i]);
+      const fonts = [
+        'Arial', 'Arial Black', 'Arial Narrow', 'Arial Rounded MT Bold',
+        'Avant Garde', 'Calibri', 'Candara', 'Century Gothic', 'Comic Sans MS',
+        'Courier', 'Courier New', 'Geneva', 'Georgia', 'Helvetica',
+        'Helvetica Neue', 'Impact', 'Lucida Console', 'Lucida Grande',
+        'Lucida Sans Unicode', 'Microsoft Sans Serif', 'Monaco', 'Palatino',
+        'Tahoma', 'Times', 'Times New Roman', 'Trebuchet MS', 'Verdana'
+      ];
+      
+      const availableFonts: string[] = [];
+      const testString = 'mmmmmmmmmmlli';
+      const testSize = '72px';
+      const baseline = 'serif';
+      
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      if (!context) return [];
+      
+      // Get baseline width
+      context.font = testSize + ' ' + baseline;
+      const baselineWidth = context.measureText(testString).width;
+      
+      // Test each font
+      for (let i = 0; i < fonts.length; i++) {
+        context.font = testSize + ' ' + fonts[i] + ', ' + baseline;
+        const width = context.measureText(testString).width;
+        
+        if (width !== baselineWidth) {
+          availableFonts.push(fonts[i]);
+        }
       }
+      
+      return availableFonts;
+    } catch (e) {
+      return [];
     }
-    
-    return availableFonts;
   }
 }

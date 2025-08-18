@@ -22,8 +22,8 @@ export class HardwareFingerprint {
     buildID: string;
   } {
     return {
-      deviceMemory: navigator.deviceMemory || -1,
-      hardwareConcurrency: navigator.hardwareConcurrency || -1,
+      deviceMemory: navigator.deviceMemory ?? -1,
+      hardwareConcurrency: navigator.hardwareConcurrency ?? -1,
       maxTouchPoints: navigator.maxTouchPoints || 0,
       colorDepth: screen.colorDepth,
       pixelDepth: screen.pixelDepth,

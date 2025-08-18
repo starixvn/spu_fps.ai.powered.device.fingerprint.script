@@ -1,8 +1,9 @@
 
 import { Request, Response } from 'express';
 import { DeviceEncryption } from './hashService';
+import config from '../../config/environment';
 
-const cookieKey: string = process.env.CookieStorage || 'pwr_client_sync';
+const cookieKey: string = config.storageNewKey || 'pwr_client_sync';
 
 export class TaggingService {
     private _etag: string | null = null;

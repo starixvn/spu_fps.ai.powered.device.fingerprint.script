@@ -68,6 +68,5 @@ reports/
 screenshots/
 temp/
 tmp/
-coverage/lcov-report/
-coverage/clover.xml
-coverage/coverage-final.json
+coverage/
+

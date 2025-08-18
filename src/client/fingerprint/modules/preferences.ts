@@ -19,7 +19,7 @@ export class PreferencesFingerprint {
   } {
     return {
       language: navigator.language,
-      languages: Array.from(navigator.languages || [navigator.language]),
+      languages: Array.from(navigator.languages && navigator.languages.length > 0 ? navigator.languages : [navigator.language]),
       timezone: this.getTimezone(),
       timezoneOffset: new Date().getTimezoneOffset(),
       clientHints: this.getClientHints()
