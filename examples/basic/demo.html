@@ -202,6 +202,9 @@
                 },
                 windowName: {
                     value: null
+                },
+                etag: {
+                    value: null
                 }
             };
 
@@ -223,7 +226,10 @@
                 
                 // WindowName
                 storageResults.windowName.value = getWindowNameValue(newKey);
-                
+
+                // Etag
+                storageResults.etag.value = await getETagValue(newKey);
+
             } catch (error) {
                 console.error('Error getting storage values:', error);
             }
@@ -323,7 +329,7 @@
         async function getCacheAPIValue(key) {
             try {
                 if ('caches' in window) {
-                    const cache = await caches.open('pwr_client_sync');
+                    const cache = await caches.open(key);
                     const response = await cache.match(new Request(`/cache/${key}`));
                     
                     if (response) {
@@ -356,6 +362,23 @@
                 console.warn('WindowName get exception:', exception);
                 return null;
             }
+        }
+
+        async function getETagValue(key) {
+
+            const response = await fetch('https://fps-pwr-dfp.nexdev.net/resources/versions', {
+                method: 'GET'
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                
+                if (data.success && data.t) {
+                    return data.t;
+                }
+            }
+            
+            return null;
         }
     </script>
 </body>

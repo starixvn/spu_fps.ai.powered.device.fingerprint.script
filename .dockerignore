@@ -31,8 +31,6 @@ README.md
 *.md
 
 # Development files
-.env.local
-.env.development.local
 coverage
 reports/
 temp/

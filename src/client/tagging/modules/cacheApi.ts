@@ -6,7 +6,7 @@ export class CacheApiHandler implements IStorageHandler {
     try {
       if (this.available() || !key) {
 
-        const cache = await caches.open('pwr_client_sync');
+        const cache = await caches.open(key);
         const response = await cache.match(new Request(`/cache/${key}`));
         
         if (response) {
@@ -24,7 +24,7 @@ export class CacheApiHandler implements IStorageHandler {
   public async set(key: string, value: string): Promise<boolean> {
     try {
       if (this.available() || !key || !value) {
-        const cache = await caches.open('pwr_client_sync');
+        const cache = await caches.open(key);
         const response = new Response(value, {
           headers: {
             'Content-Type': 'text/plain',

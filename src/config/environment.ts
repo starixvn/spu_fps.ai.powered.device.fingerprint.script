@@ -21,7 +21,7 @@ const loadEnvironment = () => {
   
   if (fileExists) {
     // Load specific environment file
-    const result = config({ path: envPath, override: true });
+    const result = config({ path: envPath });
 
     if (result.error) {
       console.warn(`⚠️ Failed to load ${envFile}:`, result.error.message);
@@ -50,11 +50,19 @@ interface EnvironmentConfig {
   // Server Configuration
   port: number;
   nodeEnv: string;
+  storageNewKey: string;
+  storageOldKey: string;
+  cookieOldKey: string;
+  serverDomain: string;
 }
 
 const environmentConfig: EnvironmentConfig = {
   port: parseInt(process.env.PORT || (process.env.NODE_ENV === 'production' ? '5000' : '3000'), 10),
   nodeEnv: process.env.NODE_ENV || 'local',
+  storageNewKey: process.env.STORAGE_NEW_KEY || 'pwr_client_sync',
+  storageOldKey: process.env.STORAGE_OLD_KEY || '(global.c3)',
+  cookieOldKey: process.env.COOKIE_OLD_KEY || 'gfp',
+  serverDomain: process.env.SERVER_DOMAIN || 'https://fps-pwr-dfp.nexdev.net',
 };
 
 // Environment-specific defaults

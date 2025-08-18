@@ -4,13 +4,13 @@ export class WindowNameHandler implements IStorageHandler {
 
     public async get(key: string): Promise<string | null> {
         try {
-            if (this.available()) {
+            if (!this.available()) {
                 return null;
             }
 
             const currentValue = window.name;
             
-            if (!this.isValidObject(currentValue) || !this.isValidTagValue(currentValue)) {
+            if (!this.isValidObject(currentValue)) {
                 return null;
             }
 
@@ -22,18 +22,14 @@ export class WindowNameHandler implements IStorageHandler {
 
     public async set(key: string, value: string): Promise<boolean> {
         try {
-            if (this.available() || !value) {
+            if (!this.available() || !value) {
                 return false;
             }
+           
+            window.name = value;
 
-            const currentValue = window.name;
-            
-            if (!this.isValidObject(currentValue) || this.isValidTagValue(currentValue)) {
-                window.name = value;
-                return true;
-            }
+            return true;
 
-            return false;
         } catch (exception) {
             return false;
         }
@@ -48,14 +44,6 @@ export class WindowNameHandler implements IStorageHandler {
     }
 
     private isValidObject(value: any): boolean {
-        return value !== null && value !== undefined && value !== '';
-    }
-
-    private isValidTagValue(value: string): boolean {
-        if (!value || typeof value !== 'string') {
-            return false;
-        }
-
-        return value.trim().length > 0 && value.length < 1000;
+        return value !== undefined && !!value;
     }
 }
