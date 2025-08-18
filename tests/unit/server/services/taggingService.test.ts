@@ -104,7 +104,7 @@ describe('TaggingService', () => {
       taggingService.setEtag(mockResponse as Response, testEtag);
 
       expect(mockResponse.setHeader).toHaveBeenCalledWith('Etag', testEtag);
-      expect(mockResponse.setHeader).toHaveBeenCalledWith('Cache-Control', 'private, max-age=3600');
+      expect(mockResponse.setHeader).toHaveBeenCalledWith('Cache-Control', 'private, max-age=600');
     });
 
     it('should not set headers when etag is same as current', () => {

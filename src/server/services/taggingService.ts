@@ -8,12 +8,12 @@ export class TaggingService {
     private _etag: string | null = null;
 
     public getCachedCandidateValue(req: Request): string | null {
-        const etagValue = this.getEtag(req);
+        const cookieValue = this.getValueFromCookie(req);
 
-        if (!etagValue) {
-            return this.getValueFromCookie(req);
+        if (!cookieValue) {
+            return this.getEtag(req);
         }
-        return etagValue;
+        return cookieValue;
     }
     
     private getValueFromCookie(req: Request): string | null {
@@ -35,7 +35,7 @@ export class TaggingService {
         
         res.setHeader('Etag', etag);
 
-        res.setHeader('Cache-Control', 'private, max-age=3600');
+        res.setHeader('Cache-Control', 'private, max-age=600');
     }
 
     public isValidTagValue(tagValue: string): boolean {
