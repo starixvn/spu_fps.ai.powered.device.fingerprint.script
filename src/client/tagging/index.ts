@@ -44,15 +44,20 @@ class TaggingClass {
     }
 }
 
-// Initialize and expose globally
 const tagging = new TaggingClass();
 
 if (typeof window !== 'undefined') {
   (window as any).Tagging = tagging;
 
-  document.addEventListener('DOMContentLoaded', async () => {
+  const initializeTagging = async () => {
     window.TaggingValue = await tagging.getStorage();
-  });
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeTagging);
+  } else {
+    initializeTagging();
+  }
 }
 
 export default tagging;

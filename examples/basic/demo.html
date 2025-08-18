@@ -104,10 +104,69 @@
         </div>
     </div>
 
-    <script src="https://fps-di.nexdev.net/activator.ashx"></script>
-    <script src="/script.js"></script>
     <script>
         let currentFingerprint = null;
+        let scriptsLoaded = false;
+        
+        function loadActivatorThenOthers() {
+            console.log('🚀 Starting script loading sequence...');
+            
+            const activatorScript = document.createElement('script');
+            activatorScript.src = 'https://fps-di.nexdev.net/activator.ashx';
+            
+            activatorScript.onload = function() {
+                console.log('✅ Activator script loaded successfully!');
+                
+                setTimeout(() => {
+                    const mainScript = document.createElement('script');
+                    mainScript.src = '/script.js';
+                    
+                    mainScript.onload = function() {
+                        console.log('🎉 All scripts loaded! Ready to collect fingerprint.');
+                        scriptsLoaded = true;
+                        
+                        const storageButton = document.querySelector('button[onclick="getStorageData()"]');
+                        if (storageButton) {
+                            storageButton.disabled = false;
+                            storageButton.style.opacity = '1';
+                            storageButton.style.cursor = 'pointer';
+                            storageButton.title = 'Ready to get storage data';
+                            console.log('🔓 Storage button enabled!');
+                        }
+                        
+                        setTimeout(() => {
+                            collectFingerprint();
+                        }, 1000);
+                    };
+                    
+                    mainScript.onerror = function() {
+                        console.error('❌ Failed to load main script');
+                    };
+                    
+                    document.head.appendChild(mainScript);
+                }, 500); 
+            };
+            
+            activatorScript.onerror = function() {
+                console.error('❌ Failed to load activator script');
+            };
+            
+            console.log('📥 Loading activator script...');
+            document.head.appendChild(activatorScript);
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            loadActivatorThenOthers();
+            
+            // Initially disable the Get Storage Data button until scripts are loaded
+            const storageButton = document.querySelector('button[onclick="getStorageData()"]');
+            if (storageButton) {
+                storageButton.disabled = true;
+                storageButton.style.opacity = '0.5';
+                storageButton.style.cursor = 'not-allowed';
+                storageButton.title = 'Waiting for scripts to load...';
+            }
+        });
         
         function collectFingerprint() {
             console.log('Collecting fingerprint...');
@@ -151,13 +210,19 @@
             });
         }
         
-        // Auto-collect on page load
-        window.addEventListener('load', function() {
-            setTimeout(collectFingerprint, 1000);
-        });
+        // Removed auto-collect since it's now handled in loadActivatorThenOthers
+        // window.addEventListener('load', function() {
+        //     setTimeout(collectFingerprint, 1000);
+        // });
 
         // Storage Management Functions
         async function getStorageData() {
+            // Check if scripts are loaded before proceeding
+            if (!scriptsLoaded) {
+                alert('⏳ Vui lòng đợi scripts load xong trước khi get storage data!');
+                return;
+            }
+            
             try {
                 // Get tagging first (as before)
                 const tagging = window.TaggingValue;
@@ -172,8 +237,9 @@
                 
                 document.getElementById('storageData').textContent = JSON.stringify(result, null, 2);
                 document.getElementById('storageDisplay').style.display = 'block';
+                
             } catch (error) {
-                console.error('Error getting storage data:', error);
+                console.error('❌ Error getting storage data:', error);
                 document.getElementById('storageData').textContent = 'Error: ' + error.message;
                 document.getElementById('storageDisplay').style.display = 'block';
             }
@@ -202,9 +268,6 @@
                 },
                 windowName: {
                     value: null
-                },
-                etag: {
-                    value: null
                 }
             };
 
@@ -226,9 +289,6 @@
                 
                 // WindowName
                 storageResults.windowName.value = getWindowNameValue(newKey);
-
-                // Etag
-                storageResults.etag.value = await getETagValue(newKey);
 
             } catch (error) {
                 console.error('Error getting storage values:', error);
@@ -362,23 +422,6 @@
                 console.warn('WindowName get exception:', exception);
                 return null;
             }
-        }
-
-        async function getETagValue(key) {
-
-            const response = await fetch('https://fps-pwr-dfp.nexdev.net/resources/versions', {
-                method: 'GET'
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                
-                if (data.success && data.t) {
-                    return data.t;
-                }
-            }
-            
-            return null;
         }
     </script>
 </body>
