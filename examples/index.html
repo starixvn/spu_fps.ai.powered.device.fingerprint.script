@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FPS Device Fingerprinting - Examples</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .example-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .example-card {
+            border: 2px solid #e0e7ff;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+        .example-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+        }
+        .example-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        .example-description {
+            color: #666;
+            line-height: 1.5;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .status.available {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .status.coming-soon {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .api-info {
+            background: #f8fafc;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .api-list {
+            list-style: none;
+            padding: 0;
+        }
+        .api-list li {
+            padding: 5px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .api-list li:last-child {
+            border-bottom: none;
+        }
+        .endpoint {
+            font-family: 'Courier New', monospace;
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #374151;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 FPS Device Fingerprinting Examples</h1>
+        
+        <div class="api-info">
+            <h3>Available API Endpoints:</h3>
+            <ul class="api-list">
+                <li><span class="endpoint">GET /script.js</span> - Main fingerprinting script</li>
+                <li><span class="endpoint">GET /api/fingerprint</span> - Server-side fingerprint</li>
+                <li><span class="endpoint">POST /api/fingerprint</span> - Combined fingerprint</li>
+                <li><span class="endpoint">GET /api/health</span> - Health check</li>
+                <li><span class="endpoint">GET /api/script-info</span> - Script information</li>
+            </ul>
+        </div>
+
+        <div class="example-grid">
+            <a href="/demo.html" class="example-card">
+                <div class="example-title">Basic Demo</div>
+                <div class="example-description">
+                    Interactive demonstration of device fingerprinting capabilities. 
+                    Shows real-time fingerprint collection, analysis, and visualization.
+                </div>
+                <div class="status available">✅ Available</div>
+            </a>
+
+            <a href="/examples/basic/demo.html" class="example-card">
+                <div class="example-title">Direct Basic Demo</div>
+                <div class="example-description">
+                    Same basic demo accessed via the full examples path. 
+                    Demonstrates static file serving.
+                </div>
+                <div class="status available">✅ Available</div>
+            </a>
+
+            <div class="example-card" style="opacity: 0.7; cursor: not-allowed;">
+                <div class="example-title">Advanced Integration</div>
+                <div class="example-description">
+                    Advanced examples showing integration with authentication systems, 
+                    fraud detection, and custom configurations.
+                </div>
+                <div class="status coming-soon">🚧 Coming Soon</div>
+            </div>
+
+            <div class="example-card" style="opacity: 0.7; cursor: not-allowed;">
+                <div class="example-title">Login Demo</div>
+                <div class="example-description">
+                    Demonstration of fingerprinting in login scenarios with 
+                    risk scoring and behavior analysis.
+                </div>
+                <div class="status coming-soon">🚧 Coming Soon</div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 40px; color: #666;">
+            <p>🔧 Server running on port 3000</p>
+            <p>📖 Check the <a href="https://github.com/fps-ai" style="color: #667eea;">documentation</a> for more details</p>
+        </div>
+    </div>
+</body>
+</html>
