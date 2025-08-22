@@ -7,6 +7,6 @@ export interface IStorageHandler {
 declare global {
   interface Window {
     Tagging: any;
-    TaggingValue: string;
+    TaggingReady: Promise<string>;
   }
 }

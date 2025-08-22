@@ -17,12 +17,7 @@ export class ScriptService {
     try {
       // Define all JavaScript files to bundle in order
       const clientFiles = [
-        'fingerprint/modules/hardware.js',
-        'fingerprint/modules/graphics.js',
-        'fingerprint/modules/audio.js',
-        'fingerprint/modules/browser.js',
-        'fingerprint/modules/preferences.js',
-        'fingerprint/index.js',
+        'tagging/utils/hash.js',
         'tagging/modules/cacheApi.js',
         'tagging/modules/cookie.js',
         'tagging/modules/etag.js',
@@ -31,7 +26,6 @@ export class ScriptService {
         'tagging/tagging.js',
         'tagging/modules/windowName.js',
         'tagging/index.js',
-        'tagging/utils/hash.js'
       ];
       
       const clientDistPath = path.join(__dirname, '..', '..', 'client');

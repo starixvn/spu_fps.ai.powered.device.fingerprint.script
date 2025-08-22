@@ -49,15 +49,9 @@ const tagging = new TaggingClass();
 if (typeof window !== 'undefined') {
   (window as any).Tagging = tagging;
 
-  const initializeTagging = async () => {
-    window.TaggingValue = await tagging.getStorage();
-  };
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeTagging);
-  } else {
-    initializeTagging();
-  }
+  (window as any).TaggingReady = (async () => {
+    return await tagging.getStorage();
+  })();
 }
 
 export default tagging;
