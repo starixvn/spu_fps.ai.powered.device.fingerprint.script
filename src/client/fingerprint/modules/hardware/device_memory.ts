@@ -1,22 +1,24 @@
-export function collectDeviceMemory(): {
+interface DeviceMemoryResult {
   deviceMemory: number | string;
-} {
-  const deviceMemory = getDeviceMemory();
-  console.log("DeviceMemory fingerprint collected:", {
-    deviceMemory,
-  });
-  return {
-    deviceMemory,
-  };
 }
 
-function getDeviceMemory(): number | string {
+export async function collectDeviceMemory(): Promise<DeviceMemoryResult> {
   try {
-    if (navigator.deviceMemory) {
-      return navigator.deviceMemory;
-    }
+    const deviceMemory = await getDeviceMemory();
+    console.log("DeviceMemory fingerprint collected:", { deviceMemory });
+
+    return { deviceMemory };
+  } catch (error) {
+    console.error("Error collecting device memory:", error);
+    return { deviceMemory: "unknown" };
+  }
+}
+
+async function getDeviceMemory(): Promise<number | string> {
+  try {
+    if (navigator.deviceMemory) return navigator.deviceMemory;
     return "unknown";
-  } catch (e) {
+  } catch {
     return "unknown";
   }
 }

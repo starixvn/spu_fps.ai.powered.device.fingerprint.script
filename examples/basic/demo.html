@@ -81,6 +81,12 @@
         <button class="button" onclick="collectFingerprint()">
           Collect Fingerprint
         </button>
+        <button class="button" onclick="collectHardwareFingerprint()">
+          Collect Hardware Fingerprint
+        </button>
+        <button class="button" onclick="collectAudioFingerprint()">
+          Collect Audio
+        </button>
         <button class="button" onclick="generateHash()">Generate Hash</button>
         <button class="button" onclick="sendToServer()">Send to Server</button>
         <button class="button" onclick="getStorageData()">
@@ -201,68 +207,79 @@
         document.getElementById("fingerprintDisplay").style.display = "block";
 
         console.log("Fingerprint collected:", currentFingerprint);
+      }
 
+      async function collectHardwareFingerprint() {
         try {
-          // Test platform
-          import("../dist/client/fingerprint/modules/hardware/platform.js")
-            .then((module) => {
-              const platformData = module.collectPlatform();
-            })
-            .catch((error) => {
-              console.error("Error importing platform module:", error);
-            });
+          const platformData = await import(
+            "../dist/client/fingerprint/modules/hardware/platform.js"
+          ).then((module) => module.collectPlatform());
 
-          // Test architecture
-          import("../dist/client/fingerprint/modules/hardware/architecture.js")
-            .then((module) => {
-              const architectureData = module.collectArchitecture();
-            })
-            .catch((error) => {
-              console.error("Error importing architecture module:", error);
-            });
+          const architectureData = await import(
+            "../dist/client/fingerprint/modules/hardware/architecture.js"
+          ).then((module) => module.collectArchitecture());
 
-          // Test os_cpu
-          import("../dist/client/fingerprint/modules/hardware/os_cpu.js")
-            .then((module) => {
-              const os_cpu = module.collectOSCpu();
-            })
-            .catch((error) => {
-              console.error("Error importing os_cpu module:", error);
-            });
+          const oscpuData = await import(
+            "../dist/client/fingerprint/modules/hardware/os_cpu.js"
+          ).then((module) => module.collectOSCpu());
 
-          // Test cpu_class
-          import("../dist/client/fingerprint/modules/hardware/cpu_class.js")
-            .then((module) => {
-              const cpu_class = module.collectCpuClass();
-            })
-            .catch((error) => {
-              console.error("Error importing cpu_class module:", error);
-            });
+          const cpuClassData = await import(
+            "../dist/client/fingerprint/modules/hardware/cpu_class.js"
+          ).then((module) => module.collectCpuClass());
 
-          // Test hardware_concurrency
-          import(
+          const hardwareConcurrencyData = await import(
             "../dist/client/fingerprint/modules/hardware/hardware_concurrency.js"
-          )
-            .then((module) => {
-              const hardware_concurrency = module.collectHardwareConcurrency();
-            })
-            .catch((error) => {
-              console.error(
-                "Error importing hardware_concurrency module:",
-                error
-              );
-            });
+          ).then((module) => module.collectHardwareConcurrency());
 
-          // Test device_memory
-          import("../dist/client/fingerprint/modules/hardware/device_memory.js")
-            .then((module) => {
-              const device_memory = module.collectDeviceMemory();
-            })
-            .catch((error) => {
-              console.error("Error importing device_memory module:", error);
-            });
+          const deviceMemoryData = await import(
+            "../dist/client/fingerprint/modules/hardware/device_memory.js"
+          ).then((module) => module.collectDeviceMemory());
+
+          // Group A: Hardware
+          currentFingerprint = {
+            platform: platformData.platform,
+            architecture: architectureData.architecture,
+            oscpu: oscpuData.oscpu,
+            cpuClass: cpuClassData.cpuClass,
+            hardwareConcurrency: hardwareConcurrencyData.hardwareConcurrency,
+            deviceMemory: deviceMemoryData.deviceMemory,
+          };
+
+          document.getElementById("fingerprintData").textContent =
+            JSON.stringify(currentFingerprint, null, 2);
+
+          document.getElementById("fingerprintDisplay").style.display = "block";
+
+          console.log("Group A (Hardware fingerprint):", audioFingerprint);
         } catch (error) {
-          console.error("Error testing platform:", error);
+          console.error("Error collecting hardware fingerprint:", error);
+        }
+      }
+
+      async function collectAudioFingerprint() {
+        try {
+          const audioData = await import(
+            "../dist/client/fingerprint/modules/audio/audio.js"
+          ).then((module) => module.collectAudio());
+
+          const audioBaseLatencyData = await import(
+            "../dist/client/fingerprint/modules/audio/audio_base_latency.js"
+          ).then((module) => module.collectAudioBaseLatency());
+
+          // Group C: Audio
+          const audioFingerprint = {
+            audio: audioData.audio,
+            audioBaseLatency: audioBaseLatencyData.audioBaseLatency,
+          };
+
+          document.getElementById("fingerprintData").textContent =
+            JSON.stringify(audioFingerprint, null, 2);
+
+          document.getElementById("fingerprintDisplay").style.display = "block";
+
+          console.log("Group C (Audio fingerprint):", audioFingerprint);
+        } catch (error) {
+          console.error("Error collecting audio data:", error);
         }
       }
 

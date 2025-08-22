@@ -1,18 +1,22 @@
-export function collectOSCpu(): {
+interface OSCpuResult {
   oscpu: string;
-} {
-  const oscpu = getOSCpu();
-  console.log("OSCPU fingerprint collected:", { oscpu });
-  return {
-    oscpu,
-  };
 }
 
-function getOSCpu(): string {
+export async function collectOSCpu(): Promise<OSCpuResult> {
   try {
-    if (navigator.oscpu) {
-      return navigator.oscpu;
-    }
+    const oscpu = await getOSCpu();
+    console.log("OSCPU fingerprint collected:", { oscpu });
+
+    return { oscpu };
+  } catch (error) {
+    console.error("Error collecting OSCPU:", error);
+    return { oscpu: "unknown" };
+  }
+}
+
+async function getOSCpu(): Promise<string> {
+  try {
+    if (navigator.oscpu) return navigator.oscpu;
 
     const userAgent = navigator.userAgent;
     let oscpu = "";
@@ -27,35 +31,26 @@ function getOSCpu(): string {
     else if (userAgent.includes("iOS")) oscpu = "iOS";
 
     if (oscpu.startsWith("Windows")) {
-      if (userAgent.includes("Win64") || userAgent.includes("x64")) {
+      if (userAgent.includes("Win64") || userAgent.includes("x64"))
         oscpu += "; Win64; x64";
-      } else if (userAgent.includes("Win32") || userAgent.includes("i686")) {
+      else if (userAgent.includes("Win32") || userAgent.includes("i686"))
         oscpu += "; Win32; x86";
-      }
     }
 
     if (oscpu === "Mac OS X") {
-      if (userAgent.includes("Intel")) {
-        oscpu += "; Intel";
-      } else if (userAgent.includes("PPC")) {
-        oscpu += "; PPC";
-      }
+      if (userAgent.includes("Intel")) oscpu += "; Intel";
+      else if (userAgent.includes("PPC")) oscpu += "; PPC";
     }
 
     if (oscpu === "Linux") {
-      if (userAgent.includes("x86_64")) {
-        oscpu += "; x86_64";
-      } else if (userAgent.includes("i686")) {
-        oscpu += "; i686";
-      } else if (userAgent.includes("armv7l")) {
-        oscpu += "; armv7l";
-      } else if (userAgent.includes("aarch64")) {
-        oscpu += "; aarch64";
-      }
+      if (userAgent.includes("x86_64")) oscpu += "; x86_64";
+      else if (userAgent.includes("i686")) oscpu += "; i686";
+      else if (userAgent.includes("armv7l")) oscpu += "; armv7l";
+      else if (userAgent.includes("aarch64")) oscpu += "; aarch64";
     }
 
     return oscpu || "unknown";
-  } catch (e) {
+  } catch {
     return "unknown";
   }
 }

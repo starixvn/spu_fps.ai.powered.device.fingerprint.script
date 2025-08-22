@@ -1,22 +1,26 @@
-export function collectHardwareConcurrency(): {
+interface HardwareConcurrencyResult {
   hardwareConcurrency: number | string;
-} {
-  const hardwareConcurrency = getHardwareConcurrency();
-  console.log("HardwareConcurrency fingerprint collected:", {
-    hardwareConcurrency,
-  });
-  return {
-    hardwareConcurrency,
-  };
 }
 
-function getHardwareConcurrency(): number | string {
+export async function collectHardwareConcurrency(): Promise<HardwareConcurrencyResult> {
   try {
-    if (navigator.hardwareConcurrency) {
-      return navigator.hardwareConcurrency;
-    }
+    const hardwareConcurrency = await getHardwareConcurrency();
+    console.log("HardwareConcurrency fingerprint collected:", {
+      hardwareConcurrency,
+    });
+
+    return { hardwareConcurrency };
+  } catch (error) {
+    console.error("Error collecting hardware concurrency:", error);
+    return { hardwareConcurrency: "unknown" };
+  }
+}
+
+async function getHardwareConcurrency(): Promise<number | string> {
+  try {
+    if (navigator.hardwareConcurrency) return navigator.hardwareConcurrency;
     return "unknown";
-  } catch (e) {
+  } catch {
     return "unknown";
   }
 }

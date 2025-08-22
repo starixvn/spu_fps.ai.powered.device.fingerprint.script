@@ -1,25 +1,28 @@
-export function collectPlatform(): {
+interface PlatformResult {
   platform: string;
-} {
-  const platform = getPlatform();
-  console.log("Platform fingerprint collected:", { platform });
-  return {
-    platform,
-  };
 }
 
-function getPlatform(): string {
+export async function collectPlatform(): Promise<PlatformResult> {
   try {
-    if (navigator.platform) {
-      return navigator.platform;
-    }
+    const platform = await getPlatform();
+    console.log("Platform fingerprint collected:", { platform });
 
-    if (navigator.userAgentData?.platform) {
+    return { platform };
+  } catch (error) {
+    console.error("Error collecting platform:", error);
+    return { platform: "unknown" };
+  }
+}
+
+async function getPlatform(): Promise<string> {
+  try {
+    if (navigator.platform) return navigator.platform;
+
+    if (navigator.userAgentData?.platform)
       return navigator.userAgentData.platform;
-    }
 
     return "unknown";
-  } catch (e) {
+  } catch {
     return "unknown";
   }
 }
