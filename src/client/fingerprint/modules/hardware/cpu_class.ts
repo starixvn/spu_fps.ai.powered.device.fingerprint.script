@@ -2,9 +2,9 @@ interface CpuClassResult {
   cpuClass: string;
 }
 
-export async function collectCpuClass(): Promise<CpuClassResult> {
+export function collectCpuClass(): CpuClassResult {
   try {
-    const cpuClass = await getCpuClass();
+    const cpuClass = getCpuClass();
     console.log("CPU Class fingerprint collected:", { cpuClass });
 
     return { cpuClass };
@@ -14,7 +14,7 @@ export async function collectCpuClass(): Promise<CpuClassResult> {
   }
 }
 
-async function getCpuClass(): Promise<string> {
+function getCpuClass(): string {
   try {
     if ((navigator as any).cpuClass) return (navigator as any).cpuClass;
 

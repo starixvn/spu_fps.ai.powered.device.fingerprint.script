@@ -2,9 +2,9 @@ interface OSCpuResult {
   oscpu: string;
 }
 
-export async function collectOSCpu(): Promise<OSCpuResult> {
+export function collectOSCpu(): OSCpuResult {
   try {
-    const oscpu = await getOSCpu();
+    const oscpu = getOSCpu();
     console.log("OSCPU fingerprint collected:", { oscpu });
 
     return { oscpu };
@@ -14,7 +14,7 @@ export async function collectOSCpu(): Promise<OSCpuResult> {
   }
 }
 
-async function getOSCpu(): Promise<string> {
+function getOSCpu(): string {
   try {
     if (navigator.oscpu) return navigator.oscpu;
 

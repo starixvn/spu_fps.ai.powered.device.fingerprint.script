@@ -2,9 +2,9 @@ interface DeviceMemoryResult {
   deviceMemory: number | string;
 }
 
-export async function collectDeviceMemory(): Promise<DeviceMemoryResult> {
+export function collectDeviceMemory(): DeviceMemoryResult {
   try {
-    const deviceMemory = await getDeviceMemory();
+    const deviceMemory = getDeviceMemory();
     console.log("DeviceMemory fingerprint collected:", { deviceMemory });
 
     return { deviceMemory };
@@ -14,7 +14,7 @@ export async function collectDeviceMemory(): Promise<DeviceMemoryResult> {
   }
 }
 
-async function getDeviceMemory(): Promise<number | string> {
+function getDeviceMemory(): number | string {
   try {
     if (navigator.deviceMemory) return navigator.deviceMemory;
     return "unknown";

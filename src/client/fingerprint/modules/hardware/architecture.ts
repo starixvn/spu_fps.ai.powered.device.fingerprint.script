@@ -2,9 +2,9 @@ interface ArchitectureResult {
   architecture: string;
 }
 
-export async function collectArchitecture(): Promise<ArchitectureResult> {
+export function collectArchitecture(): ArchitectureResult {
   try {
-    const architecture = await getArchitecture();
+    const architecture = getArchitecture();
     console.log("Architecture fingerprint collected:", { architecture });
 
     return { architecture };
@@ -14,17 +14,17 @@ export async function collectArchitecture(): Promise<ArchitectureResult> {
   }
 }
 
-async function getArchitecture(): Promise<string> {
+function getArchitecture(): string {
   try {
     if ((navigator.userAgentData as any)?.getHighEntropyValues) {
-      const data = await (navigator.userAgentData as any).getHighEntropyValues([
+      const data = (navigator.userAgentData as any).getHighEntropyValues([
         "architecture",
       ]);
 
       if (data?.architecture) return data.architecture;
     }
-
     const userAgent = navigator.userAgent;
+
     if (userAgent.includes("Win64") || userAgent.includes("x64"))
       return "x86_64";
 

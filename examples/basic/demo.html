@@ -76,13 +76,15 @@
   <body>
     <div class="container">
       <h1>🔍 FPS Device Fingerprinting Demo</h1>
-
       <div style="text-align: center">
         <button class="button" onclick="collectFingerprint()">
           Collect Fingerprint
         </button>
         <button class="button" onclick="collectHardwareFingerprint()">
-          Collect Hardware Fingerprint
+          Collect Hardware
+        </button>
+        <button class="button" onclick="collectBrowserFingerprint()">
+          Collect Browser
         </button>
         <button class="button" onclick="collectAudioFingerprint()">
           Collect Audio
@@ -209,6 +211,7 @@
         console.log("Fingerprint collected:", currentFingerprint);
       }
 
+      // Group A: Hardware
       async function collectHardwareFingerprint() {
         try {
           const platformData = await import(
@@ -235,7 +238,6 @@
             "../dist/client/fingerprint/modules/hardware/device_memory.js"
           ).then((module) => module.collectDeviceMemory());
 
-          // Group A: Hardware
           currentFingerprint = {
             platform: platformData.platform,
             architecture: architectureData.architecture,
@@ -250,12 +252,13 @@
 
           document.getElementById("fingerprintDisplay").style.display = "block";
 
-          console.log("Group A (Hardware fingerprint):", audioFingerprint);
+          console.log("Group A (Hardware fingerprint):", currentFingerprint);
         } catch (error) {
           console.error("Error collecting hardware fingerprint:", error);
         }
       }
 
+      // Group C: Audio
       async function collectAudioFingerprint() {
         try {
           const audioData = await import(
@@ -266,7 +269,6 @@
             "../dist/client/fingerprint/modules/audio/audio_base_latency.js"
           ).then((module) => module.collectAudioBaseLatency());
 
-          // Group C: Audio
           const audioFingerprint = {
             audio: audioData.audio,
             audioBaseLatency: audioBaseLatencyData.audioBaseLatency,
@@ -280,6 +282,58 @@
           console.log("Group C (Audio fingerprint):", audioFingerprint);
         } catch (error) {
           console.error("Error collecting audio data:", error);
+        }
+      }
+
+      // Group D: Browser
+      async function collectBrowserFingerprint() {
+        try {
+          const userAgentData = await import(
+            "../dist/client/fingerprint/modules/browser/user_agent.js"
+          ).then((module) => module.collectUserAgent());
+
+          const browserNameData = await import(
+            "../dist/client/fingerprint/modules/browser/browser_name.js"
+          ).then((module) => module.collectBrowserName());
+
+          const osNameData = await import(
+            "../dist/client/fingerprint/modules/browser/os_name.js"
+          ).then((module) => module.collectOSName());
+
+          const pluginsData = await import(
+            "../dist/client/fingerprint/modules/browser/plugins.js"
+          ).then((module) => module.collectPlugins());
+
+          const vendorData = await import(
+            "../dist/client/fingerprint/modules/browser/vendor.js"
+          ).then((module) => module.collectVendor());
+
+          const vendorFlavorsData = await import(
+            "../dist/client/fingerprint/modules/browser/vendor_flavors.js"
+          ).then((module) => module.collectVendorFlavors());
+
+          const pdfViewerEnabledData = await import(
+            "../dist/client/fingerprint/modules/browser/pdf_viewer_enabled.js"
+          ).then((module) => module.collectPdfViewerEnabled());
+
+          const browserFingerprint = {
+            userAgent: userAgentData.userAgent,
+            browserName: browserNameData.browserName,
+            osName: osNameData.osName,
+            plugins: pluginsData.plugins,
+            vendor: vendorData.vendor,
+            vendorFlavors: vendorFlavorsData.vendorFlavors,
+            pdfViewerEnabled: pdfViewerEnabledData.pdfViewerEnabled,
+          };
+
+          document.getElementById("fingerprintData").textContent =
+            JSON.stringify(browserFingerprint, null, 2);
+
+          document.getElementById("fingerprintDisplay").style.display = "block";
+
+          console.log("Browser fingerprint (Group D):", browserFingerprint);
+        } catch (error) {
+          console.error("Error collecting browser data:", error);
         }
       }
 

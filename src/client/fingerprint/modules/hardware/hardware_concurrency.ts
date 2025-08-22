@@ -2,9 +2,9 @@ interface HardwareConcurrencyResult {
   hardwareConcurrency: number | string;
 }
 
-export async function collectHardwareConcurrency(): Promise<HardwareConcurrencyResult> {
+export function collectHardwareConcurrency(): HardwareConcurrencyResult {
   try {
-    const hardwareConcurrency = await getHardwareConcurrency();
+    const hardwareConcurrency = getHardwareConcurrency();
     console.log("HardwareConcurrency fingerprint collected:", {
       hardwareConcurrency,
     });
@@ -16,7 +16,7 @@ export async function collectHardwareConcurrency(): Promise<HardwareConcurrencyR
   }
 }
 
-async function getHardwareConcurrency(): Promise<number | string> {
+function getHardwareConcurrency(): number | string {
   try {
     if (navigator.hardwareConcurrency) return navigator.hardwareConcurrency;
     return "unknown";

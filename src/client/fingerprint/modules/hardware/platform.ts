@@ -2,9 +2,9 @@ interface PlatformResult {
   platform: string;
 }
 
-export async function collectPlatform(): Promise<PlatformResult> {
+export function collectPlatform(): PlatformResult {
   try {
-    const platform = await getPlatform();
+    const platform = getPlatform();
     console.log("Platform fingerprint collected:", { platform });
 
     return { platform };
@@ -14,7 +14,7 @@ export async function collectPlatform(): Promise<PlatformResult> {
   }
 }
 
-async function getPlatform(): Promise<string> {
+function getPlatform(): string {
   try {
     if (navigator.platform) return navigator.platform;
 
