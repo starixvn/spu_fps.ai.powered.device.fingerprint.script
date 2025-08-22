@@ -1,428 +1,526 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FPS Device Fingerprinting - Basic Demo</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-        }
-        .container {
-            background: white;
-            border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-        h1 {
-            color: #333;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .fingerprint-display {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 5px;
-            padding: 20px;
-            margin: 20px 0;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        .button {
-            background: #007bff;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 10px 5px;
-            font-size: 16px;
-        }
-        .button:hover {
-            background: #0056b3;
-        }
-        .hash-display {
-            font-family: 'Courier New', monospace;
-            font-size: 18px;
-            font-weight: bold;
-            color: #28a745;
-            margin: 10px 0;
-        }
-        .storage-info {
-            background: #e3f2fd;
-            border-left: 4px solid #2196f3;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 4px;
-        }
-        .storage-item {
-            margin: 5px 0;
-            padding: 5px;
-            background: #f5f5f5;
-            border-radius: 3px;
-        }
-        .storage-item strong {
-            color: #1976d2;
-        }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+      }
+      .container {
+        background: white;
+        border-radius: 10px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      }
+      h1 {
+        color: #333;
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .fingerprint-display {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 20px;
+        margin: 20px 0;
+        font-family: "Courier New", monospace;
+        font-size: 14px;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+      .button {
+        background: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 10px 5px;
+        font-size: 16px;
+      }
+      .button:hover {
+        background: #0056b3;
+      }
+      .hash-display {
+        font-family: "Courier New", monospace;
+        font-size: 18px;
+        font-weight: bold;
+        color: #28a745;
+        margin: 10px 0;
+      }
+      .storage-info {
+        background: #e3f2fd;
+        border-left: 4px solid #2196f3;
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 4px;
+      }
+      .storage-item {
+        margin: 5px 0;
+        padding: 5px;
+        background: #f5f5f5;
+        border-radius: 3px;
+      }
+      .storage-item strong {
+        color: #1976d2;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <h1>🔍 FPS Device Fingerprinting Demo</h1>
-        
-        <div style="text-align: center;">
-            <button class="button" onclick="collectFingerprint()">Collect Fingerprint</button>
-            <button class="button" onclick="generateHash()">Generate Hash</button>
-            <button class="button" onclick="sendToServer()">Send to Server</button>
-            <button class="button" onclick="getStorageData()">Get Storage Data</button>
-        </div>
-        
-        <div id="hashDisplay" class="hash-display" style="display: none;">
-            <strong>Fingerprint Hash:</strong> <span id="hashValue"></span>
-        </div>
-        
-        <div id="fingerprintDisplay" class="fingerprint-display" style="display: none;">
-            <h3>Collected Fingerprint Data:</h3>
-            <pre id="fingerprintData"></pre>
-        </div>
-        
-        <div id="serverResponse" class="fingerprint-display" style="display: none;">
-            <h3>Server Response:</h3>
-            <pre id="serverData"></pre>
-        </div>
+      <h1>🔍 FPS Device Fingerprinting Demo</h1>
 
-        <div id="storageDisplay" class="fingerprint-display" style="display: none;">
-            <h3>Tagging:</h3>
-            <pre id="storageData"></pre>
-        </div>
+      <div style="text-align: center">
+        <button class="button" onclick="collectFingerprint()">
+          Collect Fingerprint
+        </button>
+        <button class="button" onclick="generateHash()">Generate Hash</button>
+        <button class="button" onclick="sendToServer()">Send to Server</button>
+        <button class="button" onclick="getStorageData()">
+          Get Storage Data
+        </button>
+      </div>
+
+      <div id="hashDisplay" class="hash-display" style="display: none">
+        <strong>Fingerprint Hash:</strong> <span id="hashValue"></span>
+      </div>
+
+      <div
+        id="fingerprintDisplay"
+        class="fingerprint-display"
+        style="display: none"
+      >
+        <h3>Collected Fingerprint Data:</h3>
+        <pre id="fingerprintData"></pre>
+      </div>
+
+      <div
+        id="serverResponse"
+        class="fingerprint-display"
+        style="display: none"
+      >
+        <h3>Server Response:</h3>
+        <pre id="serverData"></pre>
+      </div>
+
+      <div
+        id="storageDisplay"
+        class="fingerprint-display"
+        style="display: none"
+      >
+        <h3>Tagging:</h3>
+        <pre id="storageData"></pre>
+      </div>
     </div>
 
     <script>
-        let currentFingerprint = null;
-        let scriptsLoaded = false;
-        
-        function loadActivatorThenOthers() {
-            console.log('🚀 Starting script loading sequence...');
-            
-            const activatorScript = document.createElement('script');
-            activatorScript.src = 'https://fps-di.nexdev.net/activator.ashx';
-            
-            activatorScript.onload = function() {
-                console.log('✅ Activator script loaded successfully!');
-                
-                setTimeout(() => {
-                    const mainScript = document.createElement('script');
-                    mainScript.src = '/script.js';
-                    
-                    mainScript.onload = function() {
-                        console.log('🎉 All scripts loaded! Ready to collect fingerprint.');
-                        scriptsLoaded = true;
-                        
-                        const storageButton = document.querySelector('button[onclick="getStorageData()"]');
-                        if (storageButton) {
-                            storageButton.disabled = false;
-                            storageButton.style.opacity = '1';
-                            storageButton.style.cursor = 'pointer';
-                            storageButton.title = 'Ready to get storage data';
-                            console.log('🔓 Storage button enabled!');
-                        }
-                        
-                        setTimeout(() => {
-                            collectFingerprint();
-                        }, 1000);
-                    };
-                    
-                    mainScript.onerror = function() {
-                        console.error('❌ Failed to load main script');
-                    };
-                    
-                    document.head.appendChild(mainScript);
-                }, 500); 
+      let currentFingerprint = null;
+      let scriptsLoaded = false;
+
+      function loadActivatorThenOthers() {
+        console.log("🚀 Starting script loading sequence...");
+
+        const activatorScript = document.createElement("script");
+        activatorScript.src = "https://fps-di.nexdev.net/activator.ashx";
+
+        activatorScript.onload = function () {
+          console.log("✅ Activator script loaded successfully!");
+
+          setTimeout(() => {
+            const mainScript = document.createElement("script");
+            mainScript.src = "/script.js";
+
+            mainScript.onload = function () {
+              console.log(
+                "🎉 All scripts loaded! Ready to collect fingerprint."
+              );
+              scriptsLoaded = true;
+
+              const storageButton = document.querySelector(
+                'button[onclick="getStorageData()"]'
+              );
+              if (storageButton) {
+                storageButton.disabled = false;
+                storageButton.style.opacity = "1";
+                storageButton.style.cursor = "pointer";
+                storageButton.title = "Ready to get storage data";
+                console.log("🔓 Storage button enabled!");
+              }
+
+              setTimeout(() => {
+                collectFingerprint();
+              }, 1000);
             };
-            
-            activatorScript.onerror = function() {
-                console.error('❌ Failed to load activator script');
+
+            mainScript.onerror = function () {
+              console.error("❌ Failed to load main script");
             };
-            
-            console.log('📥 Loading activator script...');
-            document.head.appendChild(activatorScript);
+
+            document.head.appendChild(mainScript);
+          }, 500);
+        };
+
+        activatorScript.onerror = function () {
+          console.error("❌ Failed to load activator script");
+        };
+
+        console.log("📥 Loading activator script...");
+        document.head.appendChild(activatorScript);
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        loadActivatorThenOthers();
+
+        const storageButton = document.querySelector(
+          'button[onclick="getStorageData()"]'
+        );
+        if (storageButton) {
+          storageButton.disabled = true;
+          storageButton.style.opacity = "0.5";
+          storageButton.style.cursor = "not-allowed";
+          storageButton.title = "Waiting for scripts to load...";
         }
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            loadActivatorThenOthers();
-            
-            // Initially disable the Get Storage Data button until scripts are loaded
-            const storageButton = document.querySelector('button[onclick="getStorageData()"]');
-            if (storageButton) {
-                storageButton.disabled = true;
-                storageButton.style.opacity = '0.5';
-                storageButton.style.cursor = 'not-allowed';
-                storageButton.title = 'Waiting for scripts to load...';
-            }
-        });
-        
-        function collectFingerprint() {
-            console.log('Collecting fingerprint...');
-            currentFingerprint = FPSFingerprint.collect();
-            
-            document.getElementById('fingerprintData').textContent = JSON.stringify(currentFingerprint, null, 2);
-            document.getElementById('fingerprintDisplay').style.display = 'block';
-            
-            console.log('Fingerprint collected:', currentFingerprint);
-        }
-        
-        function generateHash() {
-            if (!currentFingerprint) {
-                currentFingerprint = FPSFingerprint.collect();
-            }
-            
-            const hash = FPSFingerprint.generateHash(currentFingerprint);
-            const groupHashes = FPSFingerprint.generateGroupHashes(currentFingerprint);
-            
-            document.getElementById('hashValue').textContent = hash;
-            document.getElementById('hashDisplay').style.display = 'block';
-            
-            console.log('Generated hash:', hash);
-            console.log('Group hashes:', groupHashes);
-        }
-        
-        function sendToServer() {
-            if (!currentFingerprint) {
-                currentFingerprint = FPSFingerprint.collect();
-            }
-            
-            FPSFingerprint.sendToServer('/api/fingerprint', currentFingerprint, function(error, response) {
-                if (error) {
-                    console.error('Error sending to server:', error);
-                    document.getElementById('serverData').textContent = 'Error: ' + error.message;
-                } else {
-                    console.log('Server response:', response);
-                    document.getElementById('serverData').textContent = JSON.stringify(response, null, 2);
-                }
-                document.getElementById('serverResponse').style.display = 'block';
+      });
+
+      function collectFingerprint() {
+        console.log("Collecting fingerprint...");
+        currentFingerprint = FPSFingerprint.collect();
+
+        document.getElementById("fingerprintData").textContent = JSON.stringify(
+          currentFingerprint,
+          null,
+          2
+        );
+        document.getElementById("fingerprintDisplay").style.display = "block";
+
+        console.log("Fingerprint collected:", currentFingerprint);
+
+        try {
+          // Test platform
+          import("../dist/client/fingerprint/modules/hardware/platform.js")
+            .then((module) => {
+              const platformData = module.collectPlatform();
+            })
+            .catch((error) => {
+              console.error("Error importing platform module:", error);
             });
-        }
-        
-        // Removed auto-collect since it's now handled in loadActivatorThenOthers
-        // window.addEventListener('load', function() {
-        //     setTimeout(collectFingerprint, 1000);
-        // });
 
-        // Storage Management Functions
-        async function getStorageData() {
-            // Check if scripts are loaded before proceeding
-            if (!scriptsLoaded) {
-                alert('⏳ Vui lòng đợi scripts load xong trước khi get storage data!');
-                return;
-            }
-            
-            try {
-                // Get tagging first (as before)
-                const tagging = window.TaggingValue;
-                
-                // Get all storage values for both keys
-                const storageData = await getAllStorageValues();
-                
-                const result = {
-                    tagging: tagging,
-                    storage: storageData
-                };
-                
-                document.getElementById('storageData').textContent = JSON.stringify(result, null, 2);
-                document.getElementById('storageDisplay').style.display = 'block';
-                
-            } catch (error) {
-                console.error('❌ Error getting storage data:', error);
-                document.getElementById('storageData').textContent = 'Error: ' + error.message;
-                document.getElementById('storageDisplay').style.display = 'block';
-            }
+          // Test architecture
+          import("../dist/client/fingerprint/modules/hardware/architecture.js")
+            .then((module) => {
+              const architectureData = module.collectArchitecture();
+            })
+            .catch((error) => {
+              console.error("Error importing architecture module:", error);
+            });
+
+          // Test os_cpu
+          import("../dist/client/fingerprint/modules/hardware/os_cpu.js")
+            .then((module) => {
+              const os_cpu = module.collectOSCpu();
+            })
+            .catch((error) => {
+              console.error("Error importing os_cpu module:", error);
+            });
+
+          // Test cpu_class
+          import("../dist/client/fingerprint/modules/hardware/cpu_class.js")
+            .then((module) => {
+              const cpu_class = module.collectCpuClass();
+            })
+            .catch((error) => {
+              console.error("Error importing cpu_class module:", error);
+            });
+
+          // Test hardware_concurrency
+          import(
+            "../dist/client/fingerprint/modules/hardware/hardware_concurrency.js"
+          )
+            .then((module) => {
+              const hardware_concurrency = module.collectHardwareConcurrency();
+            })
+            .catch((error) => {
+              console.error(
+                "Error importing hardware_concurrency module:",
+                error
+              );
+            });
+
+          // Test device_memory
+          import("../dist/client/fingerprint/modules/hardware/device_memory.js")
+            .then((module) => {
+              const device_memory = module.collectDeviceMemory();
+            })
+            .catch((error) => {
+              console.error("Error importing device_memory module:", error);
+            });
+        } catch (error) {
+          console.error("Error testing platform:", error);
+        }
+      }
+
+      function generateHash() {
+        if (!currentFingerprint) {
+          currentFingerprint = FPSFingerprint.collect();
         }
 
-        // Function to get all storage values for both old and new keys
-        async function getAllStorageValues() {
-            const oldKey = '(global.c3)';
-            const newKey = 'pwr_client_sync';
-            
-            const storageResults = {
-                indexedDB: {
-                    oldKey: null,
-                    newKey: null
-                },
-                localStorage: {
-                    oldKey: null,
-                    newKey: null
-                },
-                cookies: {
-                    oldKey: null,
-                    newKey: null
-                },
-                cacheAPI: {
-                    value: null
-                },
-                windowName: {
-                    value: null
-                }
+        const hash = FPSFingerprint.generateHash(currentFingerprint);
+        const groupHashes =
+          FPSFingerprint.generateGroupHashes(currentFingerprint);
+
+        document.getElementById("hashValue").textContent = hash;
+        document.getElementById("hashDisplay").style.display = "block";
+
+        console.log("Generated hash:", hash);
+        console.log("Group hashes:", groupHashes);
+      }
+
+      function sendToServer() {
+        if (!currentFingerprint) {
+          currentFingerprint = FPSFingerprint.collect();
+        }
+
+        FPSFingerprint.sendToServer(
+          "/api/fingerprint",
+          currentFingerprint,
+          function (error, response) {
+            if (error) {
+              console.error("Error sending to server:", error);
+              document.getElementById("serverData").textContent =
+                "Error: " + error.message;
+            } else {
+              console.log("Server response:", response);
+              document.getElementById("serverData").textContent =
+                JSON.stringify(response, null, 2);
+            }
+            document.getElementById("serverResponse").style.display = "block";
+          }
+        );
+      }
+
+      // Removed auto-collect since it's now handled in loadActivatorThenOthers
+      // window.addEventListener('load', function() {
+      //     setTimeout(collectFingerprint, 1000);
+      // });
+
+      // Storage Management Functions
+      async function getStorageData() {
+        // Check if scripts are loaded before proceeding
+        if (!scriptsLoaded) {
+          alert(
+            "⏳ Vui lòng đợi scripts load xong trước khi get storage data!"
+          );
+          return;
+        }
+
+        try {
+          // Get tagging first (as before)
+          const tagging = window.TaggingValue;
+
+          // Get all storage values for both keys
+          const storageData = await getAllStorageValues();
+
+          const result = {
+            tagging: tagging,
+            storage: storageData,
+          };
+
+          document.getElementById("storageData").textContent = JSON.stringify(
+            result,
+            null,
+            2
+          );
+          document.getElementById("storageDisplay").style.display = "block";
+        } catch (error) {
+          console.error("❌ Error getting storage data:", error);
+          document.getElementById("storageData").textContent =
+            "Error: " + error.message;
+          document.getElementById("storageDisplay").style.display = "block";
+        }
+      }
+
+      // Function to get all storage values for both old and new keys
+      async function getAllStorageValues() {
+        const oldKey = "(global.c3)";
+        const newKey = "pwr_client_sync";
+
+        const storageResults = {
+          indexedDB: {
+            oldKey: null,
+            newKey: null,
+          },
+          localStorage: {
+            oldKey: null,
+            newKey: null,
+          },
+          cookies: {
+            oldKey: null,
+            newKey: null,
+          },
+          cacheAPI: {
+            value: null,
+          },
+          windowName: {
+            value: null,
+          },
+        };
+
+        try {
+          // IndexedDB
+          storageResults.indexedDB.oldKey = await getIndexedDBValue(oldKey);
+          storageResults.indexedDB.newKey = await getIndexedDBValue(newKey);
+
+          // LocalStorage
+          storageResults.localStorage.oldKey = getLocalStorageValue(oldKey);
+          storageResults.localStorage.newKey = getLocalStorageValue(newKey);
+
+          // Cookies
+          storageResults.cookies.oldKey = getCookieValue("gfp");
+          storageResults.cookies.newKey = getCookieValue(newKey);
+
+          // Cache API (stub)
+          storageResults.cacheAPI.value = await getCacheAPIValue(newKey);
+
+          // WindowName
+          storageResults.windowName.value = getWindowNameValue(newKey);
+        } catch (error) {
+          console.error("Error getting storage values:", error);
+        }
+
+        return storageResults;
+      }
+
+      // IndexedDB getter
+      async function getIndexedDBValue(key) {
+        return new Promise((resolve) => {
+          try {
+            const indexedDbObj =
+              window.indexedDB ||
+              window.mozIndexedDB ||
+              window.webkitIndexedDB ||
+              window.msIndexedDB ||
+              window.shimIndexedDB;
+
+            if (!indexedDbObj) {
+              resolve(null);
+              return;
+            }
+
+            const request = indexedDbObj.open("indexedDB_ec", 3);
+
+            request.onerror = function () {
+              resolve(null);
             };
 
-            try {
-                // IndexedDB
-                storageResults.indexedDB.oldKey = await getIndexedDBValue(oldKey);
-                storageResults.indexedDB.newKey = await getIndexedDBValue(newKey);
-                
-                // LocalStorage
-                storageResults.localStorage.oldKey = getLocalStorageValue(oldKey);
-                storageResults.localStorage.newKey = getLocalStorageValue(newKey);
-                
-                // Cookies
-                storageResults.cookies.oldKey = getCookieValue('gfp');
-                storageResults.cookies.newKey = getCookieValue(newKey);
-                
-                // Cache API (stub)
-                storageResults.cacheAPI.value = await getCacheAPIValue(newKey);
-                
-                // WindowName
-                storageResults.windowName.value = getWindowNameValue(newKey);
+            request.onsuccess = function (event) {
+              try {
+                const db = event.target.result;
 
-            } catch (error) {
-                console.error('Error getting storage values:', error);
-            }
+                if (db && db.objectStoreNames.contains("ec")) {
+                  const transaction = db.transaction(["ec"], "readonly");
+                  const objectStore = transaction.objectStore("ec");
+                  const getRequest = objectStore.get(key);
 
-            return storageResults;
-        }
+                  getRequest.onsuccess = function () {
+                    resolve(getRequest.result ? getRequest.result.value : null);
+                  };
 
-        // IndexedDB getter
-        async function getIndexedDBValue(key) {
-            return new Promise((resolve) => {
-                try {
-                    const indexedDbObj = 
-                        window.indexedDB ||
-                        window.mozIndexedDB ||
-                        window.webkitIndexedDB ||
-                        window.msIndexedDB ||
-                        window.shimIndexedDB;
-
-                    if (!indexedDbObj) {
-                        resolve(null);
-                        return;
-                    }
-
-                    const request = indexedDbObj.open('indexedDB_ec', 3);
-
-                    request.onerror = function () {
-                        resolve(null);
-                    };
-
-                    request.onsuccess = function (event) {
-                        try {
-                            const db = event.target.result;
-                            
-                            if (db && db.objectStoreNames.contains('ec')) {
-                                const transaction = db.transaction(['ec'], 'readonly');
-                                const objectStore = transaction.objectStore('ec');
-                                const getRequest = objectStore.get(key);
-
-                                getRequest.onsuccess = function () {
-                                    resolve(getRequest.result ? getRequest.result.value : null);
-                                };
-
-                                getRequest.onerror = function () {
-                                    resolve(null);
-                                };
-                            } else {
-                                resolve(null);
-                            }
-                        } catch (exception) {
-                            resolve(null);
-                        }
-                    };
-
-                    request.onupgradeneeded = function () {
-                        resolve(null);
-                    };
-                } catch (exception) {
+                  getRequest.onerror = function () {
                     resolve(null);
+                  };
+                } else {
+                  resolve(null);
                 }
-            });
-        }
+              } catch (exception) {
+                resolve(null);
+              }
+            };
 
-        // LocalStorage getter
-        function getLocalStorageValue(key) {
-            try {
-                if (window.localStorage) {
-                    return window.localStorage.getItem(key);
-                }
-                return null;
-            } catch (exception) {
-                return null;
+            request.onupgradeneeded = function () {
+              resolve(null);
+            };
+          } catch (exception) {
+            resolve(null);
+          }
+        });
+      }
+
+      // LocalStorage getter
+      function getLocalStorageValue(key) {
+        try {
+          if (window.localStorage) {
+            return window.localStorage.getItem(key);
+          }
+          return null;
+        } catch (exception) {
+          return null;
+        }
+      }
+
+      // Cookie getter
+      function getCookieValue(key) {
+        try {
+          const name = key + "=";
+          const ca = document.cookie.split(";");
+
+          for (let i = 0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) === " ") {
+              c = c.substring(1);
             }
-        }
-
-        // Cookie getter
-        function getCookieValue(key) {
-            try {
-                const name = key + "=";
-                const ca = document.cookie.split(";");
-                
-                for (let i = 0; i < ca.length; i++) {
-                    let c = ca[i];
-                    while (c.charAt(0) === " ") {
-                        c = c.substring(1);
-                    }
-                    if (c.indexOf(name) === 0) {
-                        return c.substring(name.length, c.length);
-                    }
-                }
-                return null;
-            } catch (error) {
-                return null;
+            if (c.indexOf(name) === 0) {
+              return c.substring(name.length, c.length);
             }
+          }
+          return null;
+        } catch (error) {
+          return null;
         }
+      }
 
-        // Cache API getter (stub implementation)
-        async function getCacheAPIValue(key) {
-            try {
-                if ('caches' in window) {
-                    const cache = await caches.open(key);
-                    const response = await cache.match(new Request(`/cache/${key}`));
-                    
-                    if (response) {
-                    const data = await response.text();
-                    return data;
-                    }
-                }
-                return null;
+      // Cache API getter (stub implementation)
+      async function getCacheAPIValue(key) {
+        try {
+          if ("caches" in window) {
+            const cache = await caches.open(key);
+            const response = await cache.match(new Request(`/cache/${key}`));
 
-            } catch (exception) {
+            if (response) {
+              const data = await response.text();
+              return data;
+            }
+          }
+          return null;
+        } catch (exception) {
+          return null;
+        }
+      }
+
+      function getWindowNameValue(key) {
+        try {
+          if (typeof window === "undefined") {
             return null;
-            }
+          }
+
+          const currentValue = window.name;
+
+          if (!currentValue || currentValue.trim() === "") {
+            return null;
+          }
+
+          return currentValue;
+        } catch (exception) {
+          console.warn("WindowName get exception:", exception);
+          return null;
         }
-
-        function getWindowNameValue(key) {
-            try {
-                if (typeof window === 'undefined') {
-                    return null;
-                }
-
-                const currentValue = window.name;
-                
-                if (!currentValue || currentValue.trim() === '') {
-                    return null;
-                }
-
-                return currentValue;
-                
-            } catch (exception) {
-                console.warn('WindowName get exception:', exception);
-                return null;
-            }
-        }
+      }
     </script>
-</body>
+  </body>
 </html>
