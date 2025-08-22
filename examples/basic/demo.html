@@ -89,6 +89,9 @@
         <button class="button" onclick="collectAudioFingerprint()">
           Collect Audio
         </button>
+        <button class="button" onclick="collectPreferenceFingerprint()">
+          Collect Preference
+        </button>
         <button class="button" onclick="generateHash()">Generate Hash</button>
         <button class="button" onclick="sendToServer()">Send to Server</button>
         <button class="button" onclick="getStorageData()">
@@ -334,6 +337,66 @@
           console.log("Browser fingerprint (Group D):", browserFingerprint);
         } catch (error) {
           console.error("Error collecting browser data:", error);
+        }
+      }
+
+      // Group E: Preference
+      async function collectPreferenceFingerprint() {
+        try {
+          const languagesData = await import(
+            "../dist/client/fingerprint/modules/preference/languages.js"
+          ).then((module) => module.collectLanguages());
+
+          const timezoneData = await import(
+            "../dist/client/fingerprint/modules/preference/timezone.js"
+          ).then((module) => module.collectTimezone());
+
+          const touchSupportData = await import(
+            "../dist/client/fingerprint/modules/preference/touch_support.js"
+          ).then((module) => module.collectTouchSupport());
+
+          const cookiesEnabledData = await import(
+            "../dist/client/fingerprint/modules/preference/cookies_enabled.js"
+          ).then((module) => module.collectCookiesEnabled());
+
+          const localStorageData = await import(
+            "../dist/client/fingerprint/modules/preference/local_storage.js"
+          ).then((module) => module.collectLocalStorage());
+
+          const sessionStorageData = await import(
+            "../dist/client/fingerprint/modules/preference/session_storage.js"
+          ).then((module) => module.collectSessionStorage());
+
+          const openDatabaseData = await import(
+            "../dist/client/fingerprint/modules/preference/open_database.js"
+          ).then((module) => module.collectOpenDatabase());
+
+          const indexedDBData = await import(
+            "../dist/client/fingerprint/modules/preference/indexed_db.js"
+          ).then((module) => module.collectIndexedDB());
+
+          const preferenceFingerprint = {
+            languages: languagesData.languages,
+            timezone: timezoneData.timezone,
+            touchSupport: touchSupportData.touchSupport,
+            cookiesEnabled: cookiesEnabledData.cookiesEnabled,
+            localStorage: localStorageData.localStorage,
+            sessionStorage: sessionStorageData.sessionStorage,
+            openDatabase: openDatabaseData.openDatabase,
+            indexedDB: indexedDBData.indexedDB,
+          };
+
+          document.getElementById("fingerprintData").textContent =
+            JSON.stringify(preferenceFingerprint, null, 2);
+
+          document.getElementById("fingerprintDisplay").style.display = "block";
+
+          console.log(
+            "Group E (Preference fingerprint):",
+            preferenceFingerprint
+          );
+        } catch (error) {
+          console.error("Error collecting preference data:", error);
         }
       }
 
