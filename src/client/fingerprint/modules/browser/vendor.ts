@@ -17,8 +17,9 @@ export function collectVendor(): VendorResult {
 function getVendor(): string {
   try {
     const userAgent = navigator.userAgent.toLowerCase();
+    const vendor = (navigator as any).vendor as string | undefined;
 
-    if (navigator.vendor) return navigator.vendor;
+    if (vendor && vendor.trim() !== "") return vendor;
 
     if (userAgent.includes("google")) return "Google Inc.";
     if (userAgent.includes("mozilla")) return "Mozilla Foundation";

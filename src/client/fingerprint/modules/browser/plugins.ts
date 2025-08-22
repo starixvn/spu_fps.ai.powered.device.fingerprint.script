@@ -22,25 +22,17 @@ export function collectPlugins(): PluginsResult {
 
 function getPlugins(): Plugin[] {
   try {
-    const plugins: Plugin[] = [];
+    const rawPlugins = (navigator as any).plugins;
 
-    if (!navigator.plugins || navigator.plugins.length === 0) {
+    if (!rawPlugins || rawPlugins.length === 0) {
       return [];
     }
 
-    for (let i = 0; i < navigator.plugins.length; i++) {
-      const plugin = navigator.plugins[i];
-
-      if (plugin) {
-        plugins.push({
-          name: plugin.name || "Unknown",
-          description: plugin.description || "Unknown",
-          filename: plugin.filename || "Unknown",
-        });
-      }
-    }
-
-    return plugins;
+    return Array.from(rawPlugins).map((plugin: any) => ({
+      name: plugin.name || "Unknown",
+      description: plugin.description || "Unknown",
+      filename: plugin.filename || "Unknown",
+    }));
   } catch {
     return [];
   }
