@@ -5,8 +5,6 @@ interface LocalStorageResult {
 export function collectLocalStorage(): LocalStorageResult {
   try {
     const localStorage = getLocalStorage();
-    console.log("LocalStorage fingerprint collected:", { localStorage });
-
     return { localStorage };
   } catch (error) {
     console.error("Error collecting localStorage status:", error);

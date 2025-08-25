@@ -5,14 +5,10 @@ interface AudioBaseLatencyResult {
 export async function collectAudioBaseLatency(): Promise<AudioBaseLatencyResult> {
   try {
     const audioBaseLatency = await getAudioBaseLatency();
-    console.log("AudioBaseLatency fingerprint collected:", {
-      audioBaseLatency,
-    });
-
     return { audioBaseLatency };
   } catch (error) {
     console.error("Error collecting audio base latency:", error);
-    return { audioBaseLatency: "unknown" };
+    return { audioBaseLatency: "" };
   }
 }
 
@@ -56,6 +52,6 @@ async function getAudioBaseLatency(): Promise<number | string> {
     return Math.round(measuredLatency * 100) / 100;
   } catch (error) {
     console.error("Error in getAudioBaseLatency:", error);
-    return "error";
+    return "";
   }
 }

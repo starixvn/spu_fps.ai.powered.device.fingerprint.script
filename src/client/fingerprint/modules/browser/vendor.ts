@@ -5,30 +5,51 @@ interface VendorResult {
 export function collectVendor(): VendorResult {
   try {
     const vendor = getVendor();
-    console.log("Vendor fingerprint collected:", { vendor });
-
     return { vendor };
   } catch (error) {
     console.error("Error collecting vendor:", error);
-    return { vendor: "unknown" };
+    return { vendor: "" };
   }
 }
 
 function getVendor(): string {
   try {
     const userAgent = navigator.userAgent.toLowerCase();
-    const vendor = (navigator as any).vendor as string | undefined;
 
-    if (vendor && vendor.trim() !== "") return vendor;
+    if (navigator.vendor && navigator.vendor.trim() !== "") {
+      return navigator.vendor;
+    }
 
-    if (userAgent.includes("google")) return "Google Inc.";
-    if (userAgent.includes("mozilla")) return "Mozilla Foundation";
-    if (userAgent.includes("apple")) return "Apple Inc.";
-    if (userAgent.includes("microsoft")) return "Microsoft Corporation";
-    if (userAgent.includes("opera")) return "Opera Software ASA";
+    if (navigator.userAgentData?.brands) {
+      for (const brand of navigator.userAgentData.brands) {
+        const b = brand.brand.toLowerCase();
+        if (b.includes("google")) return "Google Inc.";
+        if (b.includes("edge")) return "Microsoft Corporation";
+        if (b.includes("opera")) return "Opera Software ASA";
+        if (b.includes("brave")) return "Brave Software Inc.";
+        if (b.includes("samsung")) return "Samsung Electronics";
+      }
+    }
 
-    return "unknown";
+    if (
+      userAgent.includes("applewebkit") &&
+      userAgent.includes("safari") &&
+      !userAgent.includes("chrome")
+    ) {
+      return "Apple Inc.";
+    }
+    if (userAgent.includes("firefox")) {
+      return "Mozilla Foundation";
+    }
+    if (userAgent.includes("edg/")) {
+      return "Microsoft Corporation";
+    }
+    if (userAgent.includes("opr") || userAgent.includes("opera")) {
+      return "Opera Software ASA";
+    }
+
+    return "";
   } catch {
-    return "unknown";
+    return "";
   }
 }

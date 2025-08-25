@@ -5,8 +5,6 @@ interface TouchSupportResult {
 export function collectTouchSupport(): TouchSupportResult {
   try {
     const touchSupport = getTouchSupport();
-    console.log("TouchSupport fingerprint collected:", { touchSupport });
-
     return { touchSupport };
   } catch (error) {
     console.error("Error collecting touch support:", error);

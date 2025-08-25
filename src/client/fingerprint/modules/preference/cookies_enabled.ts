@@ -5,8 +5,6 @@ interface CookiesEnabledResult {
 export function collectCookiesEnabled(): CookiesEnabledResult {
   try {
     const cookiesEnabled = getCookiesEnabled();
-    console.log("CookiesEnabled fingerprint collected:", { cookiesEnabled });
-
     return { cookiesEnabled };
   } catch (error) {
     console.error("Error collecting cookies enabled status:", error);
@@ -16,20 +14,20 @@ export function collectCookiesEnabled(): CookiesEnabledResult {
 
 function getCookiesEnabled(): boolean {
   try {
-    if (navigator.cookieEnabled !== undefined) {
+    if (typeof navigator.cookieEnabled === "boolean") {
       return navigator.cookieEnabled;
     }
 
-    const testKey = "fps_cookie_test";
-    const testValue = "test_value";
+    const key = `fps_cookie_test_${Math.random().toString(36).slice(2)}`;
+    document.cookie = `${key}=1; path=/`;
 
-    document.cookie = `${testKey}=${testValue}; path=/`;
+    const enabled = document.cookie
+      .split("; ")
+      .some((cookie) => cookie.startsWith(`${key}=`));
 
-    const hasCookie = document.cookie.indexOf(testKey) !== -1;
+    document.cookie = `${key}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
 
-    document.cookie = `${testKey}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
-
-    return hasCookie;
+    return enabled;
   } catch {
     return false;
   }

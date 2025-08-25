@@ -5,20 +5,18 @@ interface DeviceMemoryResult {
 export function collectDeviceMemory(): DeviceMemoryResult {
   try {
     const deviceMemory = getDeviceMemory();
-    console.log("DeviceMemory fingerprint collected:", { deviceMemory });
-
     return { deviceMemory };
   } catch (error) {
     console.error("Error collecting device memory:", error);
-    return { deviceMemory: "unknown" };
+    return { deviceMemory: "" };
   }
 }
 
 function getDeviceMemory(): number | string {
   try {
     if (navigator.deviceMemory) return navigator.deviceMemory;
-    return "unknown";
+    return "";
   } catch {
-    return "unknown";
+    return "";
   }
 }

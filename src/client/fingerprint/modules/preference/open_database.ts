@@ -5,8 +5,6 @@ interface OpenDatabaseResult {
 export function collectOpenDatabase(): OpenDatabaseResult {
   try {
     const openDatabase = getOpenDatabase();
-    console.log("OpenDatabase fingerprint collected:", { openDatabase });
-
     return { openDatabase };
   } catch (error) {
     console.error("Error collecting openDatabase status:", error);

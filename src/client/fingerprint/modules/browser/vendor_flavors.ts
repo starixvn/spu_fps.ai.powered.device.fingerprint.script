@@ -5,8 +5,6 @@ interface VendorFlavorsResult {
 export function collectVendorFlavors(): VendorFlavorsResult {
   try {
     const vendorFlavors = getVendorFlavors();
-    console.log("VendorFlavors fingerprint collected:", { vendorFlavors });
-
     return { vendorFlavors };
   } catch (error) {
     console.error("Error collecting vendor flavors:", error);
@@ -15,74 +13,60 @@ export function collectVendorFlavors(): VendorFlavorsResult {
 }
 
 function getVendorFlavors(): string[] {
-  try {
-    const flavors: string[] = [];
-    const userAgent = navigator.userAgent.toLowerCase();
+  const flavors: string[] = [];
 
-    const enginePatterns = [
-      { pattern: /webkit/, name: "WebKit-based" },
-      { pattern: /gecko/, name: "Gecko-based" },
-      { pattern: /blink/, name: "Blink-based" },
-      { pattern: /trident/, name: "Trident-based" },
-      { pattern: /edgehtml/, name: "EdgeHTML-based" },
-    ];
+  const brands = navigator.userAgentData?.brands ?? [];
+  const platform = navigator.userAgentData?.platform ?? "";
+  const ua = navigator.userAgent;
 
-    for (const engine of enginePatterns) {
-      if (engine.pattern.test(userAgent)) {
-        flavors.push(engine.name);
-        break;
-      }
+  for (const brand of brands) {
+    const name = brand.brand.trim();
+    if (name && !isGreaseBrand(name) && !flavors.includes(`Brand:${name}`)) {
+      flavors.push(`Brand:${name}`);
     }
-
-    const variantPatterns = [
-      { pattern: /chromium/, name: "Chromium-based" },
-      { pattern: /brave/, name: "Brave" },
-      { pattern: /vivaldi/, name: "Vivaldi" },
-      { pattern: /waterfox/, name: "Waterfox" },
-      { pattern: /pale moon/, name: "Pale Moon" },
-      { pattern: /iceweasel/, name: "Iceweasel" },
-      { pattern: /seamonkey/, name: "SeaMonkey" },
-      { pattern: /maxthon/, name: "Maxthon" },
-      { pattern: /360/, name: "360 Browser" },
-      { pattern: /qq/, name: "QQ Browser" },
-      { pattern: /ucbrowser/, name: "UC Browser" },
-      { pattern: /sogou/, name: "Sogou Browser" },
-    ];
-
-    for (const variant of variantPatterns) {
-      if (variant.pattern.test(userAgent)) {
-        flavors.push(variant.name);
-      }
-    }
-
-    const devicePatterns = [
-      { pattern: /mobile/, name: "Mobile" },
-      { pattern: /tablet/, name: "Tablet" },
-      { pattern: /touch/, name: "Touch-enabled" },
-    ];
-
-    for (const device of devicePatterns) {
-      if (device.pattern.test(userAgent)) {
-        flavors.push(device.name);
-      }
-    }
-
-    const customMatch = userAgent.match(/([a-z]+)(?:browser|browser\/[\d.]+)/i);
-
-    if (
-      customMatch &&
-      customMatch[1] &&
-      !flavors.some((f) => f.toLowerCase().includes(customMatch[1]))
-    ) {
-      flavors.push(
-        `${
-          customMatch[1].charAt(0).toUpperCase() + customMatch[1].slice(1)
-        }-based`
-      );
-    }
-
-    return flavors.length > 0 ? flavors : ["Standard"];
-  } catch {
-    return ["unknown"];
   }
+
+  if (platform) {
+    flavors.push(`Platform:${platform}`);
+  }
+
+  if (navigator.vendor) {
+    flavors.push(`Vendor:${navigator.vendor}`);
+  }
+
+  const engine = detectEngine(ua);
+  if (engine) {
+    flavors.push(`Engine:${engine}`);
+  }
+
+  if (ua) {
+    flavors.push(`UA:${ua}`);
+  }
+
+  return flavors.length > 0 ? flavors : ["Standard"];
+}
+
+function isGreaseBrand(brand: string): boolean {
+  return /;|Brand/i.test(brand) && brand !== "Chromium";
+}
+
+function detectEngine(userAgent: string): string | null {
+  const ua = userAgent.toLowerCase();
+
+  if (ua.includes("applewebkit") && ua.includes("chrome")) {
+    return "Blink";
+  }
+  if (ua.includes("applewebkit") && !ua.includes("chrome")) {
+    return "WebKit";
+  }
+  if (ua.includes("gecko") && ua.includes("firefox")) {
+    return "Gecko";
+  }
+  if (ua.includes("trident")) {
+    return "Trident";
+  }
+  if (ua.includes("edge") && ua.includes("edgehtml")) {
+    return "EdgeHTML";
+  }
+  return null;
 }

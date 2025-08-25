@@ -5,52 +5,57 @@ interface BrowserNameResult {
 export function collectBrowserName(): BrowserNameResult {
   try {
     const browserName = getBrowserName();
-    console.log("BrowserName fingerprint collected:", { browserName });
-
     return { browserName };
   } catch (error) {
     console.error("Error collecting browser name:", error);
-    return { browserName: "unknown" };
+    return { browserName: "" };
   }
 }
 
 function getBrowserName(): string {
   try {
-    const userAgent = navigator.userAgent.toLowerCase();
+    const brands = navigator.userAgentData?.brands;
 
-    const browserPatterns = [
-      { pattern: /edg\//i, name: "Edge" },
-      { pattern: /edgios/i, name: "Edge (iOS)" },
-      { pattern: /edga/i, name: "Edge (Android)" },
-
-      { pattern: /opr|opera/i, name: "Opera" },
-      { pattern: /brave/i, name: "Brave" },
-      { pattern: /chromium/i, name: "Chromium" },
-      { pattern: /chrome/i, name: "Chrome" },
-
-      { pattern: /firefox/i, name: "Firefox" },
-      { pattern: /safari(?!.*chrome)/i, name: "Safari" },
-      { pattern: /ie|trident/i, name: "Internet Explorer" },
-      { pattern: /maxthon/i, name: "Maxthon" },
-      { pattern: /seamonkey/i, name: "SeaMonkey" },
-      { pattern: /waterfox/i, name: "Waterfox" },
-      { pattern: /pale moon/i, name: "Pale Moon" },
-    ];
-
-    for (const browser of browserPatterns) {
-      if (browser.pattern.test(userAgent)) {
-        return browser.name;
-      }
+    if (brands?.length) {
+      const fromBrands = parseFromBrands(brands);
+      if (fromBrands !== "") return fromBrands;
     }
 
-    const browserMatch = userAgent.match(/([a-z]+)(?:\/[\d.]+)/);
+    const userAgent = (navigator.userAgent || "").toLowerCase();
+    if (!userAgent) return "";
 
-    if (browserMatch && browserMatch[1]) {
-      return browserMatch[1].charAt(0).toUpperCase() + browserMatch[1].slice(1);
-    }
+    if (/edgios/.test(userAgent)) return "Edge (iOS)";
+    if (/crios/.test(userAgent)) return "Chrome (iOS)";
+    if (/fxios/.test(userAgent)) return "Firefox (iOS)";
 
-    return "unknown";
+    if (/edga/.test(userAgent)) return "Edge (Android)";
+
+    if (/edg\//.test(userAgent)) return "Edge";
+    if (/opr|opera/.test(userAgent)) return "Opera";
+    if (/brave/.test(userAgent)) return "Brave";
+    if (/chrome/.test(userAgent)) return "Chrome";
+    if (/chromium/.test(userAgent)) return "Chromium";
+    if (/firefox/.test(userAgent)) return "Firefox";
+    if (/safari(?!.*chrome)/.test(userAgent)) return "Safari";
+    if (/msie|trident/.test(userAgent)) return "Internet Explorer";
+
+    return "";
   } catch {
-    return "unknown";
+    return "";
   }
+}
+
+function parseFromBrands(
+  brands: ReadonlyArray<{ brand: string; version: string }>
+): string {
+  const names = brands.map((b) => b.brand.toLowerCase());
+
+  if (names.some((n) => n.includes("edge"))) return "Edge";
+  if (names.some((n) => n.includes("opera") || n.includes("opr")))
+    return "Opera";
+  if (names.some((n) => n.includes("brave"))) return "Brave";
+  if (names.some((n) => n.includes("chrome"))) return "Chrome";
+  if (names.some((n) => n.includes("chromium"))) return "Chromium";
+
+  return "";
 }

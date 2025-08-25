@@ -59,10 +59,37 @@ export interface PluginInfo {
   version?: string;
 }
 
+export interface BrandsEntry {
+  brand: string;
+  version: string;
+}
+
 export interface ClientHints {
-  brands?: any[];
+  brands?: { brand: string; version: string }[];
+  fullVersionList?: BrandsEntry[];
   mobile?: boolean;
   platform?: string;
+  platformVersion?: string;
+  architecture?: string;
+  model?: string;
+  uaFullVersion?: string;
+  bitness?: string;
+  wow64?: boolean;
+}
+
+export interface BrowserGroupResult {
+  browserName: string;
+  osName: string;
+  userAgent: string;
+  vendor: string;
+  vendorFlavors: string[];
+  plugins: Array<{
+    name: string;
+    description: string;
+    filename: string;
+  }>;
+  pdfViewerEnabled: boolean;
+  clientHints?: ClientHints;
 }
 
 declare global {
@@ -72,11 +99,30 @@ declare global {
     FPSOnCollected?: (fingerprint: FingerprintData) => void;
     webkitAudioContext?: any;
   }
+
   interface Navigator {
     userAgentData?: {
       brands: any[];
       mobile: boolean;
       platform: string;
+      getHighEntropyValues: (hints: string[]) => Promise<{
+        architecture?: string;
+        bitness?: string;
+        brands?: Array<{
+          brand: string;
+          version: string;
+        }>;
+        fullVersionList?: Array<{
+          brand: string;
+          version: string;
+        }>;
+        mobile?: boolean;
+        model?: string;
+        platform?: string;
+        platformVersion?: string;
+        uaFullVersion?: string;
+        wow64?: boolean;
+      }>;
     };
     deviceMemory?: number;
     cpuClass?: string;

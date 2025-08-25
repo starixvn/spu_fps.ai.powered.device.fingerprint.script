@@ -5,37 +5,33 @@ interface OSNameResult {
 export function collectOSName(): OSNameResult {
   try {
     const osName = getOSName();
-    console.log("OSName fingerprint collected:", { osName });
-
     return { osName };
   } catch (error) {
     console.error("Error collecting OS name:", error);
-    return { osName: "unknown" };
+    return { osName: "" };
   }
 }
 
 function getOSName(): string {
   try {
+    if (navigator.userAgentData?.platform) {
+      return normalizePlatform(navigator.userAgentData.platform);
+    }
+
     const userAgent = navigator.userAgent;
 
     const osPatterns = [
-      {
-        pattern: /Windows NT (\d+\.\d+)/,
-        name: "Windows",
-        extractVersion: true,
-      },
+      { pattern: /Windows NT/, name: "Windows" },
       { pattern: /Windows/, name: "Windows" },
 
-      { pattern: /Mac OS X (\d+_\d+)/, name: "macOS", extractVersion: true },
       { pattern: /Mac OS X/, name: "macOS" },
+      { pattern: /Macintosh/, name: "macOS" },
 
       { pattern: /Linux/, name: "Linux" },
 
-      { pattern: /Android (\d+)/, name: "Android", extractVersion: true },
       { pattern: /Android/, name: "Android" },
 
-      { pattern: /iPhone OS (\d+)/, name: "iOS", extractVersion: true },
-      { pattern: /iPhone OS/, name: "iOS" },
+      { pattern: /iPhone|iPad|iPod/, name: "iOS" },
 
       { pattern: /BlackBerry/, name: "BlackBerry" },
       { pattern: /Symbian/, name: "Symbian" },
@@ -44,25 +40,27 @@ function getOSName(): string {
     ];
 
     for (const os of osPatterns) {
-      const match = userAgent.match(os.pattern);
-
-      if (match) {
-        if (os.extractVersion && match[1]) {
-          return `${os.name} ${match[1]}`;
-        }
-
+      if (os.pattern.test(userAgent)) {
         return os.name;
       }
     }
 
-    const osMatch = userAgent.match(/([A-Za-z]+)(?:\s|$)/);
-
-    if (osMatch && osMatch[1]) {
-      return osMatch[1];
-    }
-
-    return "unknown";
+    return "";
   } catch {
-    return "unknown";
+    return "";
   }
+}
+
+function normalizePlatform(platform: string): string {
+  const p = platform.toLowerCase();
+
+  if (p.includes("windows")) return "Windows";
+  if (p.includes("mac")) return "macOS";
+  if (p.includes("ios")) return "iOS";
+  if (p.includes("ipados")) return "iPadOS";
+  if (p.includes("android")) return "Android";
+  if (p.includes("cros")) return "Chrome OS";
+  if (p.includes("linux")) return "Linux";
+
+  return platform;
 }

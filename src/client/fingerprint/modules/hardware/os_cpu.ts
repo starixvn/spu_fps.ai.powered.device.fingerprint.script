@@ -5,12 +5,10 @@ interface OSCpuResult {
 export function collectOSCpu(): OSCpuResult {
   try {
     const oscpu = getOSCpu();
-    console.log("OSCPU fingerprint collected:", { oscpu });
-
     return { oscpu };
   } catch (error) {
     console.error("Error collecting OSCPU:", error);
-    return { oscpu: "unknown" };
+    return { oscpu: "" };
   }
 }
 
@@ -49,8 +47,8 @@ function getOSCpu(): string {
       else if (userAgent.includes("aarch64")) oscpu += "; aarch64";
     }
 
-    return oscpu || "unknown";
+    return oscpu || "";
   } catch {
-    return "unknown";
+    return "";
   }
 }

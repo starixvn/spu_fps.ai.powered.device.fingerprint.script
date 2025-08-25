@@ -5,29 +5,26 @@ interface LanguagesResult {
 export function collectLanguages(): LanguagesResult {
   try {
     const languages = getLanguages();
-    console.log("Languages fingerprint collected:", { languages });
-
     return { languages };
   } catch (error) {
     console.error("Error collecting languages:", error);
-    return { languages: ["unknown"] };
+    return { languages: [""] };
   }
 }
 
 function getLanguages(): string[] {
   try {
-    const languages: string[] = [];
-
-    if (navigator.language) {
-      languages.push(navigator.language);
-    }
-
     if (navigator.languages && navigator.languages.length > 0) {
-      languages.push(...navigator.languages);
+      return navigator.languages
+        .filter((lang): lang is string => Boolean(lang))
+        .filter((lang) => lang.trim().length > 0);
     }
 
-    return [...new Set(languages)].filter((lang) => lang && lang.trim() !== "");
+    if (navigator.language && navigator.language.trim()) {
+      return [navigator.language];
+    }
+    return [""];
   } catch {
-    return ["unknown"];
+    return [""];
   }
 }

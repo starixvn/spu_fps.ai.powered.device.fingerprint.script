@@ -1,24 +1,43 @@
-interface UserAgentResult {
+import { ClientHints } from "../../types";
+
+export interface UserAgentResult {
   userAgent: string;
+  clientHints?: ClientHints;
 }
 
-export function collectUserAgent(): UserAgentResult {
+export async function collectUserAgent(): Promise<UserAgentResult> {
   try {
-    const userAgent = getUserAgent();
-    console.log("UserAgent fingerprint collected:", { userAgent });
-
-    return { userAgent };
-  } catch (error) {
-    console.error("Error collecting user agent:", error);
-    return { userAgent: "unknown" };
-  }
-}
-
-function getUserAgent(): string {
-  try {
-    if (navigator.userAgent) return navigator.userAgent;
-    return "unknown";
+    const { userAgent, clientHints } = await getUserAgent();
+    return { userAgent, clientHints };
   } catch {
-    return "unknown";
+    return { userAgent: "" };
   }
+}
+
+async function getUserAgent(): Promise<UserAgentResult> {
+  const userAgent = navigator.userAgent || "";
+
+  if (navigator.userAgentData) {
+    const basicHints = {
+      brands: navigator.userAgentData.brands || [],
+      mobile: navigator.userAgentData.mobile || false,
+    };
+
+    try {
+      const highEntropyHints =
+        await navigator.userAgentData.getHighEntropyValues([
+          "platform",
+          "platformVersion",
+          "architecture",
+          "model",
+          "uaFullVersion",
+        ]);
+
+      return { userAgent, clientHints: { ...basicHints, ...highEntropyHints } };
+    } catch {
+      return { userAgent, clientHints: basicHints };
+    }
+  }
+
+  return { userAgent };
 }

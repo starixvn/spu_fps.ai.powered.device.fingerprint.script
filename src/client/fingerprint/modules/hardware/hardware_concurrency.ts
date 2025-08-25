@@ -5,22 +5,18 @@ interface HardwareConcurrencyResult {
 export function collectHardwareConcurrency(): HardwareConcurrencyResult {
   try {
     const hardwareConcurrency = getHardwareConcurrency();
-    console.log("HardwareConcurrency fingerprint collected:", {
-      hardwareConcurrency,
-    });
-
     return { hardwareConcurrency };
   } catch (error) {
     console.error("Error collecting hardware concurrency:", error);
-    return { hardwareConcurrency: "unknown" };
+    return { hardwareConcurrency: "" };
   }
 }
 
 function getHardwareConcurrency(): number | string {
   try {
     if (navigator.hardwareConcurrency) return navigator.hardwareConcurrency;
-    return "unknown";
+    return "";
   } catch {
-    return "unknown";
+    return "";
   }
 }

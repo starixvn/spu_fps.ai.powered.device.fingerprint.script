@@ -5,8 +5,6 @@ interface SessionStorageResult {
 export function collectSessionStorage(): SessionStorageResult {
   try {
     const sessionStorage = getSessionStorage();
-    console.log("SessionStorage fingerprint collected:", { sessionStorage });
-
     return { sessionStorage };
   } catch (error) {
     console.error("Error collecting sessionStorage status:", error);

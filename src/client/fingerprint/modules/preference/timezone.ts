@@ -5,12 +5,10 @@ interface TimezoneResult {
 export function collectTimezone(): TimezoneResult {
   try {
     const timezone = getTimezone();
-    console.log("Timezone fingerprint collected:", { timezone });
-
     return { timezone };
   } catch (error) {
     console.error("Error collecting timezone:", error);
-    return { timezone: "unknown" };
+    return { timezone: "" };
   }
 }
 
@@ -35,6 +33,6 @@ function getTimezone(): string {
       .toString()
       .padStart(2, "0")}`;
   } catch {
-    return "unknown";
+    return "";
   }
 }

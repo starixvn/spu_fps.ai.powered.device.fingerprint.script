@@ -11,8 +11,6 @@ interface PluginsResult {
 export function collectPlugins(): PluginsResult {
   try {
     const plugins = getPlugins();
-    console.log("Plugins fingerprint collected:", { plugins });
-
     return { plugins };
   } catch (error) {
     console.error("Error collecting plugins:", error);
@@ -29,9 +27,9 @@ function getPlugins(): Plugin[] {
     }
 
     return Array.from(rawPlugins).map((plugin: any) => ({
-      name: plugin.name || "Unknown",
-      description: plugin.description || "Unknown",
-      filename: plugin.filename || "Unknown",
+      name: plugin.name || "",
+      description: plugin.description || "",
+      filename: plugin.filename || "",
     }));
   } catch {
     return [];
