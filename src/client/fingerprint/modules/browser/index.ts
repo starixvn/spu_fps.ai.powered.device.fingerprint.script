@@ -3,7 +3,7 @@ import { collectOSName } from "./os_name";
 import { collectVendor } from "./vendor";
 import { collectVendorFlavors } from "./vendor_flavors";
 import { collectPlugins } from "./plugins";
-import type { ClientHints, BrowserGroupResult } from "../../types";
+import type { BrowserGroupResult } from "../../types";
 
 export class BrowserFingerprint {
   public static collect(): BrowserGroupResult {
@@ -24,7 +24,6 @@ export class BrowserFingerprint {
         vendorFlavors: vendorFlavorsResult.vendorFlavors,
         plugins: pluginsResult.plugins,
         pdfViewerEnabled: pdfViewerResult.pdfViewerEnabled,
-        clientHints: userAgentResult.clientHints,
       };
 
       return browserGroup;
@@ -46,20 +45,10 @@ export class BrowserFingerprint {
 
 function collectUserAgentSync(): {
   userAgent: string;
-  clientHints?: ClientHints;
 } {
   try {
     const userAgent = navigator.userAgent || "";
-    let clientHints: ClientHints | undefined;
-
-    if (navigator.userAgentData) {
-      clientHints = {
-        brands: navigator.userAgentData.brands || [],
-        mobile: navigator.userAgentData.mobile || false,
-      };
-    }
-
-    return { userAgent, clientHints };
+    return { userAgent };
   } catch {
     return { userAgent: "" };
   }

@@ -21,6 +21,12 @@ function getBrowserName(): string {
       if (fromBrands !== "") return fromBrands;
     }
 
+    const fromFeatures = detectBrowserByFeatures();
+    if (fromFeatures !== "") return fromFeatures;
+
+    const fromCSS = detectBrowserByCSS();
+    if (fromCSS !== "") return fromCSS;
+
     const userAgent = (navigator.userAgent || "").toLowerCase();
     if (!userAgent) return "";
 
@@ -38,6 +44,63 @@ function getBrowserName(): string {
     if (/firefox/.test(userAgent)) return "Firefox";
     if (/safari(?!.*chrome)/.test(userAgent)) return "Safari";
     if (/msie|trident/.test(userAgent)) return "Internet Explorer";
+
+    return "";
+  } catch {
+    return "";
+  }
+}
+
+function detectBrowserByFeatures(): string {
+  try {
+    if (window.chrome && !window.opr && !navigator.brave) {
+      return "Chrome";
+    }
+
+    if (window.opr || window.opera) {
+      return "Opera";
+    }
+
+    if (navigator.brave && navigator.brave.isBrave) {
+      return "Brave";
+    }
+
+    if (typeof window.InstallTrigger !== 'undefined') {
+      return "Firefox";
+    }
+
+    if (window.safari && window.safari.pushNotification) {
+      return "Safari";
+    }
+
+    if (window.StyleMedia || window.navigator.msLaunchUri) {
+      return "Edge";
+    }
+
+    return "";
+  } catch {
+    return "";
+  }
+}
+
+function detectBrowserByCSS(): string {
+  try {
+    const style = document.createElement('div').style;
+
+    // Firefox specific CSS properties
+    if ('MozAppearance' in style) {
+      return "Firefox";
+    }
+
+    // Safari/WebKit specific
+    if ('WebkitAppearance' in style && !window.chrome) {
+      return "Safari";
+    }
+
+    // Edge specific
+    if ('msScrollLimit' in style || 'msImeAlign' in style) {
+      return "Edge";
+    }
 
     return "";
   } catch {

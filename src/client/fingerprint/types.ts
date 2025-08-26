@@ -40,19 +40,6 @@ export interface BrandsEntry {
   version: string;
 }
 
-export interface ClientHints {
-  brands?: { brand: string; version: string }[];
-  fullVersionList?: BrandsEntry[];
-  mobile?: boolean;
-  platform?: string;
-  platformVersion?: string;
-  architecture?: string;
-  model?: string;
-  uaFullVersion?: string;
-  bitness?: string;
-  wow64?: boolean;
-}
-
 export interface BrowserGroupResult {
   browserName: string;
   osName: string;
@@ -65,7 +52,6 @@ export interface BrowserGroupResult {
     filename: string;
   }>;
   pdfViewerEnabled: boolean;
-  clientHints?: ClientHints;
 }
 
 export interface GraphicsGroupResult {
@@ -236,6 +222,12 @@ declare global {
     FPSOnCollected?: (fingerprint: FingerprintData) => void;
     webkitAudioContext?: any;
     webkitDevicePixelRatio?: number;
+    chrome: any;
+    opr: any;
+    opera: any;
+    safari: any;
+    StyleMedia: any;
+    InstallTrigger: any;
   }
 
   interface Navigator {
@@ -267,6 +259,9 @@ declare global {
     oscpu?: string;
     buildID?: string;
     pdfViewerEnabled?: boolean;
+    brave: any;
+    msLaunchUri: any;
+    standalone: boolean;
   }
 
   interface Screen {
