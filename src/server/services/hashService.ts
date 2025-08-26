@@ -149,16 +149,3 @@ export class Hex {
     }
 }
 
-export class DeviceEncryption {
-
-    public static Encrypt(plaintext: string): string {
-        const encryptedText = RC4.encrypt(DEVICE_ID_ENCRYPT_KEY, plaintext);
-        return Hex.encode(encryptedText);
-    }
-
-    public static Decrypt(ciphertext: string): string {
-        const decodedText = Hex.decode(ciphertext);
-        return RC4.decrypt(DEVICE_ID_ENCRYPT_KEY, decodedText);
-    }
-}
-

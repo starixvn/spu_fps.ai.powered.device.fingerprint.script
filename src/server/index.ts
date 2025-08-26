@@ -139,7 +139,11 @@ app.get('/healthz', (req: Request, res: Response) => {
 
 app.get('/resources/versions', (req: Request, res: Response) => {
   try {
-    const cachedValue = taggingService.getCachedCandidateValue(req);
+    const eTaggingValues = req.headers['res-ec-x'];
+
+    const etagValue = Array.isArray(eTaggingValues) ? eTaggingValues[0] : eTaggingValues;
+
+    const cachedValue = etagValue ?? taggingService.getEtag(req);
 
     if (cachedValue) {
       taggingService.setEtag(res, cachedValue);

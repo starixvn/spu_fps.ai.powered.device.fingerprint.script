@@ -41,7 +41,6 @@ describe('Express Server Routes', () => {
 
     mockFingerprintService.generateFingerprint = jest.fn();
     mockFingerprintService.combineFingerprints = jest.fn();
-    mockTaggingService.getCachedCandidateValue = jest.fn();
     mockTaggingService.setEtag = jest.fn();
     mockHashService.hashFingerprint = jest.fn();
     mockScriptService.getClientScript = jest.fn();

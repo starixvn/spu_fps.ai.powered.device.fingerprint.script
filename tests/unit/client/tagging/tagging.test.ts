@@ -1,11 +1,11 @@
 import { TaggingHandler } from '../../../../src/client/tagging/tagging';
-import { DeviceEncryption } from '../../../../src/client/tagging/utils/hash';
 import { CacheApiHandler } from '../../../../src/client/tagging/modules/cacheApi';
 import { CookiesHandler } from '../../../../src/client/tagging/modules/cookie';
 import { ETagHandler } from '../../../../src/client/tagging/modules/etag';
 import { IndexedDBHandler } from '../../../../src/client/tagging/modules/indexedDB';
 import { LocalStorageHandler } from '../../../../src/client/tagging/modules/localStorage';
 import { WindowNameHandler } from '../../../../src/client/tagging/modules/windowName';
+import { PacketTransformer } from '../../../../src/client/tagging/utils/hash';
 
 // Mock all the storage handlers
 jest.mock('../../../../src/client/tagging/modules/cacheApi');
@@ -29,6 +29,9 @@ describe('TaggingHandler', () => {
   let cacheApiHandler: jest.Mocked<CacheApiHandler>;
   let cookiesHandler: jest.Mocked<CookiesHandler>;
   let etagHandler: jest.Mocked<ETagHandler>;
+
+  // Mock the PacketTransformer module
+  const mockPacketTransformer = PacketTransformer as jest.Mocked<typeof PacketTransformer>;
 
   beforeAll(() => {
     // Create mock instances
@@ -70,6 +73,26 @@ describe('TaggingHandler', () => {
     (CacheApiHandler as jest.Mock).mockImplementation(() => cacheApiHandler);
     (CookiesHandler as jest.Mock).mockImplementation(() => cookiesHandler);
     (ETagHandler as jest.Mock).mockImplementation(() => etagHandler);
+
+    // Mock PacketTransformer to simulate valid device IDs
+    mockPacketTransformer.unwrapMessage = jest.fn().mockImplementation((value: string) => {
+      // Return a valid GUID format for our test values
+      if (value === 'valid-encrypted-value') return '12345678901234567890123456789012';
+      if (value === 'indexeddb-value') return '12345678901234567890123456789012';
+      if (value === 'indexeddb-new-value') return '12345678901234567890123456789012';
+      if (value === 'etag-value') return '12345678901234567890123456789012';
+      if (value === 'cache-value') return '12345678901234567890123456789012';
+      if (value === 'cookie-value') return '12345678901234567890123456789012';
+      if (value === 'localstorage-value') return '12345678901234567890123456789012';
+      if (value === 'windowname-value') return '12345678901234567890123456789012';
+      if (value === 'found-value') return '12345678901234567890123456789012';
+      if (value === 'old-key-value') return '12345678901234567890123456789012';
+      if (value === 'new-key-value') return '12345678901234567890123456789012';
+      if (value === 'mixed-handler-value') return '12345678901234567890123456789012';
+      
+      // For invalid values, return something that won't match GUID pattern
+      return 'invalid';
+    });
   });
 
   beforeEach(() => {
@@ -81,9 +104,9 @@ describe('TaggingHandler', () => {
     cookiesHandler.get.mockReset().mockResolvedValue(null);
     localStorageHandler.get.mockReset().mockResolvedValue(null);
     windowNameHandler.get.mockReset().mockResolvedValue(null);
-    // Reset crypto mock
-    mockCrypto.randomUUID.mockClear();
-    mockCrypto.getRandomValues.mockClear();
+
+    // Reset PacketTransformer mock
+    mockPacketTransformer.unwrapMessage.mockClear();
   });
 
   describe('getTagValue', () => {

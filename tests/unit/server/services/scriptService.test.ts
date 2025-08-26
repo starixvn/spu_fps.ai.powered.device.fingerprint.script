@@ -352,21 +352,4 @@ describe('ScriptService', () => {
       expect(script).toContain('TypeScript compilation failed');
     });
   });
-
-  describe('script content processing', () => {
-    beforeEach(() => {
-      mockFs.existsSync.mockReturnValue(true);
-      mockFs.statSync.mockReturnValue({ 
-        mtime: new Date(Date.now() - 1000) 
-      } as fs.Stats);
-    });
-
-    it('should add file separators', () => {
-      mockFs.readFileSync.mockReturnValue('console.log("file content");');
-      scriptService = new ScriptService();
-      const script = scriptService.getClientScript();
-
-      expect(script).toMatch(/=== .*\.js ===/);
-    });
-  });
 });

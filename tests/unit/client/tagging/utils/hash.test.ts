@@ -1,4 +1,4 @@
-import { RC4, Hex, DeviceEncryption } from '../../../../../src/client/tagging/utils/hash';
+import { RC4, Hex, PacketTransformer } from '../../../../../src/client/tagging/utils/hash';
 
 describe('RC4', () => {
   describe('encrypt', () => {
@@ -359,9 +359,9 @@ describe('DeviceEncryption', () => {
   describe('Encrypt', () => {
     it('should encrypt plaintext and return hex-encoded result', () => {
       const plaintext = 'hello world';
-      
-      const result = DeviceEncryption.Encrypt(plaintext);
-      
+
+      const result = PacketTransformer.wrapMessage(plaintext);
+
       expect(result).toBeDefined();
       expect(typeof result).toBe('string');
       expect(result).not.toBe(plaintext);
@@ -370,22 +370,22 @@ describe('DeviceEncryption', () => {
 
     it('should handle empty string', () => {
       const plaintext = '';
-      
-      const result = DeviceEncryption.Encrypt(plaintext);
-      
+
+      const result = PacketTransformer.wrapMessage(plaintext);
+
       expect(result).toBe('');
     });
 
     it('should handle null and undefined inputs', () => {
-      expect(DeviceEncryption.Encrypt(null as any)).toBe('');
-      expect(DeviceEncryption.Encrypt(undefined as any)).toBe('');
+      expect(PacketTransformer.wrapMessage(null as any)).toBe('');
+      expect(PacketTransformer.wrapMessage(undefined as any)).toBe('');
     });
 
     it('should produce consistent results for same input', () => {
       const plaintext = 'test string';
       
-      const result1 = DeviceEncryption.Encrypt(plaintext);
-      const result2 = DeviceEncryption.Encrypt(plaintext);
+      const result1 = PacketTransformer.wrapMessage(plaintext);
+      const result2 = PacketTransformer.wrapMessage(plaintext);
       
       expect(result1).toBe(result2);
     });
@@ -394,8 +394,8 @@ describe('DeviceEncryption', () => {
       const plaintext1 = 'test string 1';
       const plaintext2 = 'test string 2';
       
-      const result1 = DeviceEncryption.Encrypt(plaintext1);
-      const result2 = DeviceEncryption.Encrypt(plaintext2);
+      const result1 = PacketTransformer.wrapMessage(plaintext1);
+      const result2 = PacketTransformer.wrapMessage(plaintext2);
       
       expect(result1).not.toBe(result2);
     });
@@ -403,7 +403,7 @@ describe('DeviceEncryption', () => {
     it('should handle special characters', () => {
       const plaintext = 'héllo wörld!@#$%^&*()';
       
-      const result = DeviceEncryption.Encrypt(plaintext);
+      const result = PacketTransformer.wrapMessage(plaintext);
       
       expect(result).toBeDefined();
       expect(result).toMatch(/^[0-9a-f]*$/);
@@ -412,7 +412,7 @@ describe('DeviceEncryption', () => {
     it('should handle long strings', () => {
       const plaintext = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '.repeat(20);
       
-      const result = DeviceEncryption.Encrypt(plaintext);
+      const result = PacketTransformer.wrapMessage(plaintext);
       
       expect(result).toBeDefined();
       expect(result).toMatch(/^[0-9a-f]*$/);
@@ -422,7 +422,7 @@ describe('DeviceEncryption', () => {
     it('should handle GUIDs correctly', () => {
       const guid = '123e4567e89b12d3a456426614174000';
       
-      const result = DeviceEncryption.Encrypt(guid);
+      const result = PacketTransformer.wrapMessage(guid);
       
       expect(result).toBeDefined();
       expect(result).toMatch(/^[0-9a-f]*$/);
@@ -433,8 +433,8 @@ describe('DeviceEncryption', () => {
       const plaintext = 'test';
       
       // Since we can't directly test the key, we test that encryption works consistently
-      const result1 = DeviceEncryption.Encrypt(plaintext);
-      const result2 = DeviceEncryption.Encrypt(plaintext);
+      const result1 = PacketTransformer.wrapMessage(plaintext);
+      const result2 = PacketTransformer.wrapMessage(plaintext);
       
       expect(result1).toBe(result2);
       expect(result1).toMatch(/^[0-9a-f]*$/);
@@ -443,7 +443,7 @@ describe('DeviceEncryption', () => {
     it('should handle numbers as strings', () => {
       const plaintext = '1234567890';
       
-      const result = DeviceEncryption.Encrypt(plaintext);
+      const result = PacketTransformer.wrapMessage(plaintext);
       
       expect(result).toBeDefined();
       expect(result).toMatch(/^[0-9a-f]*$/);
@@ -453,7 +453,7 @@ describe('DeviceEncryption', () => {
     it('should handle single characters', () => {
       const plaintext = 'A';
       
-      const result = DeviceEncryption.Encrypt(plaintext);
+      const result = PacketTransformer.wrapMessage(plaintext);
       
       expect(result).toBeDefined();
       expect(result).toMatch(/^[0-9a-f]*$/);
@@ -467,7 +467,7 @@ describe('DeviceEncryption', () => {
       const encryptKey = '&％#@?,:*!~^.'; // The actual key used in DeviceEncryption
       
       // Encrypt using DeviceEncryption
-      const encrypted = DeviceEncryption.Encrypt(plaintext);
+      const encrypted = PacketTransformer.wrapMessage(plaintext);
       
       // Manually reverse the process
       const hexDecoded = Hex.decode(encrypted);
@@ -481,7 +481,7 @@ describe('DeviceEncryption', () => {
       const encryptKey = '&％#@?,:*!~^.';
       
       // Using DeviceEncryption
-      const deviceResult = DeviceEncryption.Encrypt(plaintext);
+      const deviceResult = PacketTransformer.wrapMessage(plaintext);
       
       // Manual process
       const rc4Encrypted = RC4.encrypt(encryptKey, plaintext);
@@ -495,7 +495,7 @@ describe('DeviceEncryption', () => {
     it('should handle very long strings', () => {
       const plaintext = 'a'.repeat(10000);
       
-      const result = DeviceEncryption.Encrypt(plaintext);
+      const result = PacketTransformer.wrapMessage(plaintext);
       
       expect(result).toBeDefined();
       expect(result.length).toBe(20000); // Hex encoding doubles the length
@@ -507,7 +507,7 @@ describe('DeviceEncryption', () => {
         plaintext += String.fromCharCode(i);
       }
       
-      const result = DeviceEncryption.Encrypt(plaintext);
+      const result = PacketTransformer.wrapMessage(plaintext);
       
       expect(result).toBeDefined();
       expect(result).toMatch(/^[0-9a-f]*$/);
@@ -516,7 +516,7 @@ describe('DeviceEncryption', () => {
     it('should handle whitespace characters', () => {
       const plaintext = ' \t\n\r';
       
-      const result = DeviceEncryption.Encrypt(plaintext);
+      const result = PacketTransformer.wrapMessage(plaintext);
       
       expect(result).toBeDefined();
       expect(result).toMatch(/^[0-9a-f]*$/);

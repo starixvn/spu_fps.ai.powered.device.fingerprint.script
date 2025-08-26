@@ -96,7 +96,7 @@ export class ScriptService {
             .replace(/^export\s*$/gm, '');
           
           // Add file content to bundle
-          combinedJsCode += `\n// === ${fileName} ===\n${processedContent}\n`;
+          combinedJsCode += `\n${processedContent}\n`;
           filesProcessed++;
         }
       }
