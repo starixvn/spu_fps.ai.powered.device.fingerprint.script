@@ -80,6 +80,7 @@
         <button class="button" onclick="collectFingerprint()">
           Collect Fingerprint
         </button>
+        <button class="button" onclick="collectIPs()">Collect IP</button>
         <button class="button" onclick="generateHash()">Generate Hash</button>
         <button class="button" onclick="sendToServer()">Send to Server</button>
         <button class="button" onclick="getStorageData()">
@@ -124,8 +125,6 @@
       let scriptsLoaded = false;
 
       function loadMainScript() {
-        console.log("🚀 Starting script loading sequence...");
-
         const mainScript = document.createElement("script");
         mainScript.src = "/script.js";
 
@@ -135,10 +134,6 @@
             scriptsLoaded = true;
 
             toggleStorageButton(true);
-
-            setTimeout(() => {
-              collectFingerprint();
-            }, 1000);
           } catch (error) {
             console.error("❌ Failed to import FPSFingerprint:", error);
           }
@@ -198,6 +193,31 @@
         loadMainScript();
         toggleStorageButton(false);
       });
+
+      async function collectIPs() {
+        if (!FPSFingerprint) {
+          console.error("FPSFingerprint not loaded yet");
+          document.getElementById("fingerprintData").textContent =
+            "Error: FPSFingerprint not loaded yet";
+          document.getElementById("fingerprintDisplay").style.display = "block";
+          return;
+        }
+
+        try {
+          const ips = await FPSFingerprint.collectIPs(2000);
+          const formattedOutput = ips;
+
+          document.getElementById("fingerprintData").textContent =
+            JSON.stringify(formattedOutput, null, 2);
+          document.getElementById("fingerprintDisplay").style.display = "block";
+        } catch (error) {
+          console.error("❌ Error collecting IPs:", error);
+
+          document.getElementById("fingerprintData").textContent =
+            "Error: " + error.message;
+          document.getElementById("fingerprintDisplay").style.display = "block";
+        }
+      }
 
       async function generateHash() {
         if (!FPSFingerprint) {

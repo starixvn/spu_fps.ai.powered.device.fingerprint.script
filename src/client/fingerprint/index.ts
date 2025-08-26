@@ -1,11 +1,12 @@
 /// <reference lib="dom" />
 
-import { FingerprintData } from "./types";
+import { FingerprintData, WebRTCGroupResult } from "./types";
 import { HardwareFingerprint } from "./modules/hardware/index";
 import { GraphicsFingerprint } from "./modules/graphics/index";
 import { AudioFingerprint } from "./modules/audio/index";
 import { BrowserFingerprint } from "./modules/browser/index";
 import { PreferencesFingerprint } from "./modules/preference/index";
+import { WebRTCFingerprint } from "./modules/webrtc/index";
 
 class FPSFingerprintClass {
   public readonly version: string = "1.9.0";
@@ -18,6 +19,7 @@ class FPSFingerprintClass {
     const audio = await AudioFingerprint.collect();
     const browser = BrowserFingerprint.collect();
     const preferences = await PreferencesFingerprint.collect();
+    const webrtc = await WebRTCFingerprint.collect();
 
     const fingerprint: FingerprintData = {
       HardwareFingerprint: hardware,
@@ -25,6 +27,7 @@ class FPSFingerprintClass {
       AudioFingerprint: audio,
       BrowserFingerprint: browser,
       PreferencesFingerprint: preferences,
+      WebRTCFingerprint: webrtc,
       timestamp: new Date().toISOString(),
     };
 
@@ -33,6 +36,27 @@ class FPSFingerprintClass {
     }
 
     return fingerprint;
+  }
+
+  public async collectIPs(timeout: number = 5000): Promise<WebRTCGroupResult> {
+    return await WebRTCFingerprint.collect(timeout);
+  }
+
+  public async collectLocalIPs(timeout: number = 5000): Promise<string[]> {
+    return await WebRTCFingerprint.getLocalIPs(timeout);
+  }
+
+  public async collectPublicIPs(timeout: number = 5000): Promise<string[]> {
+    return await WebRTCFingerprint.getPublicIPs(timeout);
+  }
+
+  /**
+   * Collect only relay IP addresses
+   * @param timeout - Timeout in milliseconds
+   * @returns Promise<string[]>
+   */
+  public async collectRelayIPs(timeout: number = 5000): Promise<string[]> {
+    return await WebRTCFingerprint.getRelayIPs(timeout);
   }
 
   /**
