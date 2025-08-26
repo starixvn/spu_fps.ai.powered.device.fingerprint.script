@@ -80,21 +80,6 @@
         <button class="button" onclick="collectFingerprint()">
           Collect Fingerprint
         </button>
-        <button class="button" onclick="collectHardwareFingerprint()">
-          Collect Hardware
-        </button>
-        <button class="button" onclick="collectBrowserFingerprint()">
-          Collect Browser
-        </button>
-        <button class="button" onclick="collectAudioFingerprint()">
-          Collect Audio
-        </button>
-        <button class="button" onclick="collectPreferenceFingerprint()">
-          Collect Preference
-        </button>
-        <button class="button" onclick="collectGraphicsFingerprint()">
-          Collect Graphics
-        </button>
         <button class="button" onclick="generateHash()">Generate Hash</button>
         <button class="button" onclick="sendToServer()">Send to Server</button>
         <button class="button" onclick="getStorageData()">
@@ -138,79 +123,42 @@
       let currentFingerprint = null;
       let scriptsLoaded = false;
 
-      function loadActivatorThenOthers() {
+      function loadMainScript() {
         console.log("🚀 Starting script loading sequence...");
 
-        const activatorScript = document.createElement("script");
-        activatorScript.src = "https://fps-di.nexdev.net/activator.ashx";
+        const mainScript = document.createElement("script");
+        mainScript.src = "/script.js";
 
-        activatorScript.onload = function () {
-          console.log("✅ Activator script loaded successfully!");
+        mainScript.onload = async () => {
+          try {
+            console.log("✅ FPSFingerprint loaded:", window.FPSFingerprint);
+            scriptsLoaded = true;
 
-          setTimeout(() => {
-            const mainScript = document.createElement("script");
-            mainScript.src = "/script.js";
+            toggleStorageButton(true);
 
-            mainScript.onload = function () {
-              console.log(
-                "🎉 All scripts loaded! Ready to collect fingerprint."
-              );
-              scriptsLoaded = true;
-
-              const storageButton = document.querySelector(
-                'button[onclick="getStorageData()"]'
-              );
-              if (storageButton) {
-                storageButton.disabled = false;
-                storageButton.style.opacity = "1";
-                storageButton.style.cursor = "pointer";
-                storageButton.title = "Ready to get storage data";
-                console.log("🔓 Storage button enabled!");
-              }
-
-              setTimeout(() => {
-                collectFingerprint();
-              }, 1000);
-            };
-
-            mainScript.onerror = function () {
-              console.error("❌ Failed to load main script");
-            };
-
-            document.head.appendChild(mainScript);
-          }, 500);
+            setTimeout(() => {
+              collectFingerprint();
+            }, 1000);
+          } catch (error) {
+            console.error("❌ Failed to import FPSFingerprint:", error);
+          }
         };
 
-        activatorScript.onerror = function () {
-          console.error("❌ Failed to load activator script");
+        mainScript.onerror = () => {
+          console.error("❌ Failed to load main script");
         };
 
-        console.log("📥 Loading activator script...");
-        document.head.appendChild(activatorScript);
+        document.head.appendChild(mainScript);
       }
 
-      document.addEventListener("DOMContentLoaded", function () {
-        loadActivatorThenOthers();
-
-        const storageButton = document.querySelector(
-          'button[onclick="getStorageData()"]'
-        );
-        if (storageButton) {
-          storageButton.disabled = true;
-          storageButton.style.opacity = "0.5";
-          storageButton.style.cursor = "not-allowed";
-          storageButton.title = "Waiting for scripts to load...";
-        }
-      });
-
       async function collectFingerprint() {
-        console.log("Collecting fingerprint...");
-
         if (!FPSFingerprint) {
           console.error("FPSFingerprint not loaded yet");
+
           document.getElementById("fingerprintData").textContent =
             "Error: FPSFingerprint not loaded yet";
           document.getElementById("fingerprintDisplay").style.display = "block";
+
           return;
         }
 
@@ -220,263 +168,36 @@
           document.getElementById("fingerprintData").textContent =
             JSON.stringify(currentFingerprint, null, 2);
           document.getElementById("fingerprintDisplay").style.display = "block";
-
-          console.log("Fingerprint collected:", currentFingerprint);
         } catch (error) {
-          console.error("Error collecting fingerprint:", error);
           document.getElementById("fingerprintData").textContent =
             "Error: " + error.message;
           document.getElementById("fingerprintDisplay").style.display = "block";
         }
       }
 
-      // Group A: Hardware
-      async function collectHardwareFingerprint() {
-        try {
-          const platformData = await import(
-            "../dist/client/fingerprint/modules/hardware/platform.js"
-          ).then((module) => module.collectPlatform());
+      function toggleStorageButton(enabled) {
+        const storageButton = document.querySelector(
+          'button[onclick="getStorageData()"]'
+        );
 
-          const architectureData = await import(
-            "../dist/client/fingerprint/modules/hardware/architecture.js"
-          ).then((module) => module.collectArchitecture());
+        if (!storageButton) return;
 
-          const oscpuData = await import(
-            "../dist/client/fingerprint/modules/hardware/os_cpu.js"
-          ).then((module) => module.collectOSCpu());
+        storageButton.disabled = !enabled;
+        storageButton.style.opacity = enabled ? "1" : "0.5";
+        storageButton.style.cursor = enabled ? "pointer" : "not-allowed";
+        storageButton.title = enabled
+          ? "Ready to get storage data"
+          : "Waiting for scripts to load...";
 
-          const cpuClassData = await import(
-            "../dist/client/fingerprint/modules/hardware/cpu_class.js"
-          ).then((module) => module.collectCpuClass());
-
-          const hardwareConcurrencyData = await import(
-            "../dist/client/fingerprint/modules/hardware/hardware_concurrency.js"
-          ).then((module) => module.collectHardwareConcurrency());
-
-          const deviceMemoryData = await import(
-            "../dist/client/fingerprint/modules/hardware/device_memory.js"
-          ).then((module) => module.collectDeviceMemory());
-
-          currentFingerprint = {
-            platform: platformData.platform,
-            architecture: architectureData.architecture,
-            oscpu: oscpuData.oscpu,
-            cpuClass: cpuClassData.cpuClass,
-            hardwareConcurrency: hardwareConcurrencyData.hardwareConcurrency,
-            deviceMemory: deviceMemoryData.deviceMemory,
-          };
-
-          document.getElementById("fingerprintData").textContent =
-            JSON.stringify(currentFingerprint, null, 2);
-
-          document.getElementById("fingerprintDisplay").style.display = "block";
-
-          console.log("Group A (Hardware fingerprint):", currentFingerprint);
-        } catch (error) {
-          console.error("Error collecting hardware fingerprint:", error);
+        if (enabled) {
+          console.log("🔓 Storage button enabled!");
         }
       }
 
-      // Group B: Graphics
-      async function collectGraphicsFingerprint() {
-        try {
-          const canvasData = await import(
-            "../dist/client/fingerprint/modules/graphics/canvas.js"
-          ).then((module) => module.collectCanvas());
-
-          const webglBasicsData = await import(
-            "../dist/client/fingerprint/modules/graphics/webgl_basics.js"
-          ).then((module) => module.collectWebGLBasics());
-
-          const webglExtensionsData = await import(
-            "../dist/client/fingerprint/modules/graphics/webgl_extensions.js"
-          ).then((module) => module.collectWebGLExtensions());
-
-          const fontsData = await import(
-            "../dist/client/fingerprint/modules/graphics/fonts.js"
-          ).then((module) => module.collectFonts());
-
-          const fontPreferencesData = await import(
-            "../dist/client/fingerprint/modules/graphics/font_preferences.js"
-          ).then((module) => module.collectFontPreferences());
-
-          const screenResolutionData = await import(
-            "../dist/client/fingerprint/modules/graphics/screen_resolution.js"
-          ).then((module) => module.collectScreenResolution());
-
-          const screenFrameData = await import(
-            "../dist/client/fingerprint/modules/graphics/screen_frame.js"
-          ).then((module) => module.collectScreenFrame());
-
-          const colorDepthData = await import(
-            "../dist/client/fingerprint/modules/graphics/color_depth.js"
-          ).then((module) => module.collectColorDepth());
-
-          const colorGamutData = await import(
-            "../dist/client/fingerprint/modules/graphics/color_gamut.js"
-          ).then((module) => module.collectColorGamut());
-
-          const graphicsFingerprint = {
-            canvas: canvasData,
-            webglBasics: webglBasicsData,
-            webglExtensions: webglExtensionsData,
-            fonts: fontsData,
-            fontPreferences: fontPreferencesData,
-            screenResolution: screenResolutionData,
-            screenFrame: screenFrameData,
-            colorDepth: colorDepthData,
-            colorGamut: colorGamutData,
-          };
-
-          document.getElementById("fingerprintData").textContent =
-            JSON.stringify(graphicsFingerprint, null, 2);
-
-          document.getElementById("fingerprintDisplay").style.display = "block";
-
-          console.log("Group B (Graphics fingerprint):", graphicsFingerprint);
-        } catch (error) {
-          console.error("Error collecting graphics data:", error);
-        }
-      }
-
-      // Group C: Audio
-      async function collectAudioFingerprint() {
-        try {
-          const audioData = await import(
-            "../dist/client/fingerprint/modules/audio/audio.js"
-          ).then((module) => module.collectAudio());
-
-          const audioBaseLatencyData = await import(
-            "../dist/client/fingerprint/modules/audio/audio_base_latency.js"
-          ).then((module) => module.collectAudioBaseLatency());
-
-          const audioFingerprint = {
-            audio: audioData.audio,
-            audioBaseLatency: audioBaseLatencyData.audioBaseLatency,
-          };
-
-          document.getElementById("fingerprintData").textContent =
-            JSON.stringify(audioFingerprint, null, 2);
-
-          document.getElementById("fingerprintDisplay").style.display = "block";
-
-          console.log("Group C (Audio fingerprint):", audioFingerprint);
-        } catch (error) {
-          console.error("Error collecting audio data:", error);
-        }
-      }
-
-      // Group D: Browser
-      async function collectBrowserFingerprint() {
-        try {
-          const userAgentData = await import(
-            "../dist/client/fingerprint/modules/browser/user_agent.js"
-          ).then((module) => module.collectUserAgent());
-
-          const browserNameData = await import(
-            "../dist/client/fingerprint/modules/browser/browser_name.js"
-          ).then((module) => module.collectBrowserName());
-
-          const osNameData = await import(
-            "../dist/client/fingerprint/modules/browser/os_name.js"
-          ).then((module) => module.collectOSName());
-
-          const pluginsData = await import(
-            "../dist/client/fingerprint/modules/browser/plugins.js"
-          ).then((module) => module.collectPlugins());
-
-          const vendorData = await import(
-            "../dist/client/fingerprint/modules/browser/vendor.js"
-          ).then((module) => module.collectVendor());
-
-          const vendorFlavorsData = await import(
-            "../dist/client/fingerprint/modules/browser/vendor_flavors.js"
-          ).then((module) => module.collectVendorFlavors());
-
-          const pdfViewerEnabledData = await import(
-            "../dist/client/fingerprint/modules/browser/pdf_viewer_enabled.js"
-          ).then((module) => module.collectPdfViewerEnabled());
-
-          const browserFingerprint = {
-            userAgent: userAgentData.userAgent,
-            browserName: browserNameData.browserName,
-            osName: osNameData.osName,
-            plugins: pluginsData.plugins,
-            vendor: vendorData.vendor,
-            vendorFlavors: vendorFlavorsData.vendorFlavors,
-            pdfViewerEnabled: pdfViewerEnabledData.pdfViewerEnabled,
-          };
-
-          document.getElementById("fingerprintData").textContent =
-            JSON.stringify(browserFingerprint, null, 2);
-
-          document.getElementById("fingerprintDisplay").style.display = "block";
-
-          console.log("Browser fingerprint (Group D):", browserFingerprint);
-        } catch (error) {
-          console.error("Error collecting browser data:", error);
-        }
-      }
-
-      // Group E: Preference
-      async function collectPreferenceFingerprint() {
-        try {
-          const languagesData = await import(
-            "../dist/client/fingerprint/modules/preference/languages.js"
-          ).then((module) => module.collectLanguages());
-
-          const timezoneData = await import(
-            "../dist/client/fingerprint/modules/preference/timezone.js"
-          ).then((module) => module.collectTimezone());
-
-          const touchSupportData = await import(
-            "../dist/client/fingerprint/modules/preference/touch_support.js"
-          ).then((module) => module.collectTouchSupport());
-
-          const cookiesEnabledData = await import(
-            "../dist/client/fingerprint/modules/preference/cookies_enabled.js"
-          ).then((module) => module.collectCookiesEnabled());
-
-          const localStorageData = await import(
-            "../dist/client/fingerprint/modules/preference/local_storage.js"
-          ).then((module) => module.collectLocalStorage());
-
-          const sessionStorageData = await import(
-            "../dist/client/fingerprint/modules/preference/session_storage.js"
-          ).then((module) => module.collectSessionStorage());
-
-          const openDatabaseData = await import(
-            "../dist/client/fingerprint/modules/preference/open_database.js"
-          ).then((module) => module.collectOpenDatabase());
-
-          const indexedDBData = await import(
-            "../dist/client/fingerprint/modules/preference/indexed_db.js"
-          ).then((module) => module.collectIndexedDB());
-
-          const preferenceFingerprint = {
-            languages: languagesData.languages,
-            timezone: timezoneData.timezone,
-            touchSupport: touchSupportData.touchSupport,
-            cookiesEnabled: cookiesEnabledData.cookiesEnabled,
-            localStorage: localStorageData.localStorage,
-            sessionStorage: sessionStorageData.sessionStorage,
-            openDatabase: openDatabaseData.openDatabase,
-            indexedDB: indexedDBData.indexedDB,
-          };
-
-          document.getElementById("fingerprintData").textContent =
-            JSON.stringify(preferenceFingerprint, null, 2);
-
-          document.getElementById("fingerprintDisplay").style.display = "block";
-
-          console.log(
-            "Group E (Preference fingerprint):",
-            preferenceFingerprint
-          );
-        } catch (error) {
-          console.error("Error collecting preference data:", error);
-        }
-      }
+      document.addEventListener("DOMContentLoaded", () => {
+        loadMainScript();
+        toggleStorageButton(false);
+      });
 
       async function generateHash() {
         if (!FPSFingerprint) {

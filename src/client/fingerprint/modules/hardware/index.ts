@@ -9,8 +9,6 @@ import type { HardwareGroupResult } from "../../types";
 export class HardwareFingerprint {
   public static async collect(): Promise<HardwareGroupResult> {
     try {
-      console.log("Starting hardware fingerprint collection...");
-
       const platformResult = collectPlatform();
       const cpuClassResult = collectCpuClass();
       const architectureResult = await collectArchitecture();
@@ -27,7 +25,6 @@ export class HardwareFingerprint {
         deviceMemory: deviceMemoryResult.deviceMemory,
       };
 
-      console.log("Hardware fingerprint collected:", hardwareGroup);
       return hardwareGroup;
     } catch (error) {
       console.error("Error collecting hardware fingerprint:", error);
@@ -43,12 +40,3 @@ export class HardwareFingerprint {
     }
   }
 }
-
-export {
-  collectPlatform,
-  collectCpuClass,
-  collectArchitecture,
-  collectOSCpu,
-  collectHardwareConcurrency,
-  collectDeviceMemory,
-};

@@ -1,13 +1,3 @@
-// Export all collect functions from graphics module attributes
-export { collectCanvas } from "./canvas";
-export { collectFonts } from "./fonts";
-export { collectFontPreferences } from "./font_preferences";
-export { collectScreenResolution } from "./screen_resolution";
-export { collectScreenFrame } from "./screen_frame";
-export { collectColorDepth } from "./color_depth";
-export { collectColorGamut } from "./color_gamut";
-
-// Main graphics fingerprint collection class
 import { collectCanvas } from "./canvas";
 import { collectFonts } from "./fonts";
 import { collectFontPreferences } from "./font_preferences";
@@ -20,14 +10,12 @@ import type { GraphicsGroupResult } from "../../types";
 export class GraphicsFingerprint {
   public static async collect(): Promise<GraphicsGroupResult> {
     try {
-      console.log("Starting graphics fingerprint collection...");
-
       const canvasResult = await collectCanvas();
       const fontsResult = await collectFonts();
-      const fontPreferencesResult = await collectFontPreferences();
-      const screenResolutionResult = await collectScreenResolution();
-      const screenFrameResult = await collectScreenFrame();
-      const colorDepthResult = await collectColorDepth();
+      const fontPreferencesResult = collectFontPreferences();
+      const screenResolutionResult = collectScreenResolution();
+      const screenFrameResult = collectScreenFrame();
+      const colorDepthResult = collectColorDepth();
       const colorGamutResult = await collectColorGamut();
 
       const graphicsGroup: GraphicsGroupResult = {
@@ -63,7 +51,6 @@ export class GraphicsFingerprint {
         colorGamut: colorGamutResult,
       };
 
-      console.log("Graphics fingerprint collected:", graphicsGroup);
       return graphicsGroup;
     } catch (error) {
       console.error("Error collecting graphics fingerprint:", error);

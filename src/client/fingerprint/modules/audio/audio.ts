@@ -5,8 +5,6 @@ interface AudioFingerprintResult {
 export async function collectAudio(): Promise<AudioFingerprintResult> {
   try {
     const audio = await getAudioFingerprint();
-    console.log("Audio fingerprint collected:", { audio });
-
     return { audio };
   } catch (error) {
     console.error("Error collecting audio:", error);

@@ -4,14 +4,8 @@ import { FingerprintData } from "./types";
 import { HardwareFingerprint } from "./modules/hardware/index";
 import { GraphicsFingerprint } from "./modules/graphics/index";
 import { AudioFingerprint } from "./modules/audio/index";
+import { BrowserFingerprint } from "./modules/browser/index";
 import { PreferencesFingerprint } from "./modules/preference/index";
-
-import { collectBrowserName } from "./modules/browser/browser_name";
-import { collectOSName } from "./modules/browser/os_name";
-import { collectVendor } from "./modules/browser/vendor";
-import { collectVendorFlavors } from "./modules/browser/vendor_flavors";
-import { collectPlugins } from "./modules/browser/plugins";
-import { collectPdfViewerEnabled } from "./modules/browser/pdf_viewer_enabled";
 
 class FPSFingerprintClass {
   public readonly version: string = "1.9.0";
@@ -19,17 +13,17 @@ class FPSFingerprintClass {
   public async collect(
     callback?: (fingerprint: FingerprintData) => void
   ): Promise<FingerprintData> {
-    const browser = await this.collectBrowserData();
+    const hardware = await HardwareFingerprint.collect();
     const graphics = await GraphicsFingerprint.collect();
     const audio = await AudioFingerprint.collect();
-    const hardware = await HardwareFingerprint.collect();
+    const browser = BrowserFingerprint.collect();
     const preferences = await PreferencesFingerprint.collect();
 
     const fingerprint: FingerprintData = {
-      BrowserFingerprint: browser,
+      HardwareFingerprint: hardware,
       GraphicsFingerprint: graphics,
       AudioFingerprint: audio,
-      HardwareFingerprint: hardware,
+      BrowserFingerprint: browser,
       PreferencesFingerprint: preferences,
       timestamp: new Date().toISOString(),
     };
@@ -39,83 +33,6 @@ class FPSFingerprintClass {
     }
 
     return fingerprint;
-  }
-
-  private async collectBrowserData() {
-    try {
-      console.log("Starting browser fingerprint collection...");
-
-      const browserNameResult = collectBrowserName();
-      const osNameResult = collectOSName();
-      const userAgentResult = this.collectUserAgentSync();
-      const vendorResult = collectVendor();
-      const vendorFlavorsResult = collectVendorFlavors();
-      const pluginsResult = collectPlugins();
-      const pdfViewerResult = await collectPdfViewerEnabled();
-
-      const browserGroup = {
-        browserName: browserNameResult.browserName,
-        osName: osNameResult.osName,
-        userAgent: userAgentResult.userAgent,
-        vendor: vendorResult.vendor,
-        vendorFlavors: vendorFlavorsResult.vendorFlavors,
-        plugins: pluginsResult.plugins,
-        pdfViewerEnabled: pdfViewerResult.pdfViewerEnabled,
-        clientHints: userAgentResult.clientHints,
-      };
-
-      console.log("Browser fingerprint collected:", browserGroup);
-      return browserGroup;
-    } catch (error) {
-      console.error("Error collecting browser fingerprint:", error);
-
-      return {
-        browserName: "",
-        osName: "",
-        userAgent: "",
-        vendor: "",
-        vendorFlavors: [],
-        plugins: [],
-        pdfViewerEnabled: false,
-      };
-    }
-  }
-
-  /**
-   * Collect user agent data synchronously
-   */
-  private collectUserAgentSync(): {
-    userAgent: string;
-    clientHints?: any;
-  } {
-    try {
-      const userAgent = navigator.userAgent || "";
-      let clientHints: any;
-
-      if (navigator.userAgentData) {
-        clientHints = {
-          brands: navigator.userAgentData.brands || [],
-          mobile: navigator.userAgentData.mobile || false,
-        };
-      }
-
-      return { userAgent, clientHints };
-    } catch {
-      return { userAgent: "" };
-    }
-  }
-
-  /**
-   * Collect PDF viewer status synchronously
-   */
-  private collectPdfViewerEnabledSync(): { pdfViewerEnabled: boolean } {
-    try {
-      const pdfViewerEnabled = (navigator as any).pdfViewerEnabled ?? false;
-      return { pdfViewerEnabled };
-    } catch (error) {
-      console.error("Error collecting PDF viewer status:", error);
-      return { pdfViewerEnabled: false };
-    }
   }
 
   /**
@@ -315,10 +232,10 @@ if (typeof window !== "undefined") {
   }
 }
 
-// Export all modules for direct access
+export { HardwareFingerprint } from "./modules/hardware/index";
 export { GraphicsFingerprint } from "./modules/graphics/index";
 export { AudioFingerprint } from "./modules/audio/index";
-export { HardwareFingerprint } from "./modules/hardware/index";
+export { BrowserFingerprint } from "./modules/browser/index";
 export { PreferencesFingerprint } from "./modules/preference/index";
 export { FPSFingerprintClass };
 

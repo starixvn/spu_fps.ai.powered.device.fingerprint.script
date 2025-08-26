@@ -1,44 +1,11 @@
 /**
  * Local types for fingerprint modules
  */
-
-// export interface FingerprintData {
-//   userAgent: string;
-//   language: string;
-//   languages: string[];
-//   platform: string;
-//   cookieEnabled: boolean;
-//   doNotTrack: string | null;
-//   onLine: boolean;
-//   screen: ScreenInfo;
-//   deviceMemory: number;
-//   hardwareConcurrency: number;
-//   maxTouchPoints: number;
-//   colorDepth: number;
-//   pixelDepth: number;
-//   timezone: string;
-//   timezoneOffset: number;
-//   webgl: WebGLInfo | null;
-//   canvas: string | null;
-//   audio: string | null;
-//   fonts: string[];
-//   plugins: PluginInfo[];
-//   localStorage: boolean;
-//   sessionStorage: boolean;
-//   indexedDB: boolean;
-//   webSQL: boolean;
-//   cpuClass: string;
-//   oscpu: string;
-//   buildID: string;
-//   clientHints: ClientHints | null;
-//   timestamp: string;
-// }
-
 export interface FingerprintData {
-  BrowserFingerprint: BrowserGroupResult;
+  HardwareFingerprint: HardwareGroupResult;
   GraphicsFingerprint: GraphicsGroupResult;
   AudioFingerprint: AudioGroupResult;
-  HardwareFingerprint: HardwareGroupResult;
+  BrowserFingerprint: BrowserGroupResult;
   PreferencesFingerprint: PreferencesGroupResult;
   timestamp: string;
 }

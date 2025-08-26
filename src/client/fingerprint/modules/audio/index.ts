@@ -5,17 +5,14 @@ import type { AudioGroupResult } from "../../types";
 export class AudioFingerprint {
   public static async collect(): Promise<AudioGroupResult> {
     try {
-      console.log("Starting audio fingerprint collection...");
-
-      const audioBaseLatencyResult = await collectAudioBaseLatency();
       const audioResult = await collectAudio();
+      const audioBaseLatencyResult = await collectAudioBaseLatency();
 
       const audioGroup: AudioGroupResult = {
         audio: audioResult.audio,
         audioBaseLatency: audioBaseLatencyResult.audioBaseLatency,
       };
 
-      console.log("Audio fingerprint collected:", audioGroup);
       return audioGroup;
     } catch (error) {
       console.error("Error collecting audio fingerprint:", error);
@@ -27,5 +24,3 @@ export class AudioFingerprint {
     }
   }
 }
-
-export { collectAudioBaseLatency, collectAudio };

@@ -11,8 +11,6 @@ import type { PreferencesGroupResult } from "../../types";
 export class PreferencesFingerprint {
   public static async collect(): Promise<PreferencesGroupResult> {
     try {
-      console.log("Starting preferences fingerprint collection...");
-
       const languagesResult = collectLanguages();
       const timezoneResult = collectTimezone();
       const touchSupportResult = collectTouchSupport();
@@ -33,7 +31,6 @@ export class PreferencesFingerprint {
         cookiesEnabled: cookiesEnabledResult.cookiesEnabled,
       };
 
-      console.log("Preferences fingerprint collected:", preferencesGroup);
       return preferencesGroup;
     } catch (error) {
       console.error("Error collecting preferences fingerprint:", error);
@@ -51,14 +48,3 @@ export class PreferencesFingerprint {
     }
   }
 }
-
-export {
-  collectLanguages,
-  collectTimezone,
-  collectTouchSupport,
-  collectSessionStorage,
-  collectOpenDatabase,
-  collectLocalStorage,
-  collectIndexedDB,
-  collectCookiesEnabled,
-};

@@ -6,14 +6,61 @@ import config from '../../config/environment';
 export class ScriptService {
   private bundledScript: string | null = null;
   private lastBuildTime: number = 0;
-  
+
   constructor() {
     this.generateBundledScript();
   }
-  
+
   private generateBundledScript(): void {
     try {
       const clientFiles = [
+        "fingerprint/modules/hardware/platform.js",
+        "fingerprint/modules/hardware/architecture.js",
+        "fingerprint/modules/hardware/os_cpu.js",
+        "fingerprint/modules/hardware/cpu_class.js",
+        "fingerprint/modules/hardware/hardware_concurrency.js",
+        "fingerprint/modules/hardware/device_memory.js",
+        "fingerprint/modules/hardware/index.js",
+        "fingerprint/modules/graphics/canvas.js",
+        "fingerprint/modules/graphics/webgl_basics.js",
+        "fingerprint/modules/graphics/webgl_extensions.js",
+        "fingerprint/modules/graphics/fonts.js",
+        "fingerprint/modules/graphics/font_preferences.js",
+        "fingerprint/modules/graphics/screen_resolution.js",
+        "fingerprint/modules/graphics/screen_frame.js",
+        "fingerprint/modules/graphics/color_depth.js",
+        "fingerprint/modules/graphics/color_gamut.js",
+        "fingerprint/modules/graphics/index.js",
+        "fingerprint/modules/audio/audio.js",
+        "fingerprint/modules/audio/audio_base_latency.js",
+        "fingerprint/modules/audio/index.js",
+        "fingerprint/modules/browser/browser_name.js",
+        "fingerprint/modules/browser/os_name.js",
+        "fingerprint/modules/browser/user_agent.js",
+        "fingerprint/modules/browser/vendor.js",
+        "fingerprint/modules/browser/vendor_flavors.js",
+        "fingerprint/modules/browser/plugins.js",
+        "fingerprint/modules/browser/pdf_viewer_enabled.js",
+        "fingerprint/modules/browser/index.js",
+        "fingerprint/modules/preference/languages.js",
+        "fingerprint/modules/preference/timezone.js",
+        "fingerprint/modules/preference/touch_support.js",
+        "fingerprint/modules/preference/cookies_enabled.js",
+        "fingerprint/modules/preference/local_storage.js",
+        "fingerprint/modules/preference/session_storage.js",
+        "fingerprint/modules/preference/open_database.js",
+        "fingerprint/modules/preference/indexed_db.js",
+        "fingerprint/modules/preference/index.js",
+        "fingerprint/index.js",
+        "tagging/modules/cacheApi.js",
+        "tagging/modules/cookie.js",
+        "tagging/modules/etag.js",
+        "tagging/modules/indexedDB.js",
+        "tagging/modules/localStorage.js",
+        "tagging/tagging.js",
+        "tagging/modules/windowName.js",
+        "tagging/index.js",
+        "tagging/utils/hash.js",
         'tagging/utils/hash.js',
         'tagging/modules/cacheApi.js',
         'tagging/modules/cookie.js',
@@ -24,10 +71,10 @@ export class ScriptService {
         'tagging/modules/windowName.js',
         'tagging/index.js',
       ];
-      
-      const clientDistPath = path.join(__dirname, '..', '..', 'client');
-      const fallbackDistPath = path.join(__dirname, '..', 'client');
-      
+
+      const clientDistPath = path.join(__dirname, "..", "..", "client");
+      const fallbackDistPath = path.join(__dirname, "..", "client");
+
       let basePath: string;
       if (fs.existsSync(clientDistPath)) {
         basePath = clientDistPath;
@@ -37,7 +84,7 @@ export class ScriptService {
         this.bundledScript = this.generateFallbackScript();
         return;
       }
-      
+
       let needsRebuild = !this.bundledScript;
       if (!needsRebuild) {
         for (const fileName of clientFiles) {
@@ -51,18 +98,18 @@ export class ScriptService {
           }
         }
       }
-      
+
       if (!needsRebuild) {
         return;
       }
       
       let combinedJsCode = '';
       let filesProcessed = 0;
-      
+
       for (const fileName of clientFiles) {
         const filePath = path.join(basePath, fileName);
         if (fs.existsSync(filePath)) {
-          let fileContent = fs.readFileSync(filePath, 'utf8');
+          let fileContent = fs.readFileSync(filePath, "utf8");
 
           fileContent = fileContent
             .replace(/__SERVER_DOMAIN__/g, config.serverDomain)
@@ -86,9 +133,9 @@ export class ScriptService {
           filesProcessed++;
         }
       }
-      
+
       if (filesProcessed === 0) {
-        throw new Error('No compiled client files found to bundle');
+        throw new Error("No compiled client files found to bundle");
       }
       
       this.bundledScript = this.wrapInIIFE(combinedJsCode);
@@ -109,7 +156,7 @@ export class ScriptService {
 })(typeof window !== 'undefined' ? window : global);
 `.trim();
   }
-  
+
   /**
    * Get the bundled client script
    */
@@ -117,18 +164,30 @@ export class ScriptService {
     if (!this.bundledScript || this.needsRebuild()) {
       this.generateBundledScript();
     }
-    
+
     return this.bundledScript || this.generateFallbackScript();
   }
-  
+
   /**
    * Check if script needs rebuilding (in development)
    */
   private needsRebuild(): boolean {
     try {
-      const clientTsPath = path.join(__dirname, '..', 'client', 'FingerprintClient.ts');
-      const fallbackTsPath = path.join(__dirname, '..', '..', 'src', 'client', 'FingerprintClient.ts');
-      
+      const clientTsPath = path.join(
+        __dirname,
+        "..",
+        "client",
+        "FingerprintClient.ts"
+      );
+      const fallbackTsPath = path.join(
+        __dirname,
+        "..",
+        "..",
+        "src",
+        "client",
+        "FingerprintClient.ts"
+      );
+
       let tsPath: string;
       if (fs.existsSync(clientTsPath)) {
         tsPath = clientTsPath;
@@ -137,7 +196,7 @@ export class ScriptService {
       } else {
         return false;
       }
-      
+
       const fileStats = fs.statSync(tsPath);
       return fileStats.mtime.getTime() > this.lastBuildTime;
     } catch {
@@ -222,10 +281,10 @@ export class ScriptService {
     debug?: boolean;
   } = {}): string {
     const baseScript = this.getClientScript();
-    
+
     const configScript = `
 window.FPSConfig = {
-  apiEndpoint: '${config.apiEndpoint || '/api/fingerprint'}',
+  apiEndpoint: '${config.apiEndpoint || "/api/fingerprint"}',
   autoCollect: ${config.autoCollect || false},
   debug: ${config.debug || false}
 };
@@ -238,10 +297,10 @@ if (window.FPSConfig.debug) {
   console.log('🔍 FPS Fingerprint Client loaded with config:', window.FPSConfig);
 }
 `;
-    
-    return configScript + '\n' + baseScript;
+
+    return configScript + "\n" + baseScript;
   }
-  
+
   /**
    * Force rebuild of the script (useful for development)
    */
@@ -250,7 +309,7 @@ if (window.FPSConfig.debug) {
     this.lastBuildTime = 0;
     this.generateBundledScript();
   }
-  
+
   /**
    * Get script info for debugging
    */
@@ -267,7 +326,7 @@ if (window.FPSConfig.debug) {
       size: script.length,
       minifiedSize: minified.length,
       lastBuilt: new Date(this.lastBuildTime).toISOString(),
-      source: 'TypeScript bundle'
+      source: "TypeScript bundle",
     };
   }
   

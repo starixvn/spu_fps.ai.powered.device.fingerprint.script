@@ -1,29 +1,13 @@
 import { collectBrowserName } from "./browser_name";
 import { collectOSName } from "./os_name";
-import { collectUserAgent } from "./user_agent";
 import { collectVendor } from "./vendor";
 import { collectVendorFlavors } from "./vendor_flavors";
 import { collectPlugins } from "./plugins";
-import { collectPdfViewerEnabled } from "./pdf_viewer_enabled";
 import type { ClientHints, BrowserGroupResult } from "../../types";
-
-export type { UserAgentResult } from "./user_agent";
-export type { PdfViewerEnabledResult } from "./pdf_viewer_enabled";
-export {
-  collectBrowserName,
-  collectOSName,
-  collectUserAgent,
-  collectVendor,
-  collectVendorFlavors,
-  collectPlugins,
-  collectPdfViewerEnabled,
-};
 
 export class BrowserFingerprint {
   public static collect(): BrowserGroupResult {
     try {
-      console.log("Starting browser fingerprint collection...");
-
       const browserNameResult = collectBrowserName();
       const osNameResult = collectOSName();
       const userAgentResult = collectUserAgentSync();
@@ -43,7 +27,6 @@ export class BrowserFingerprint {
         clientHints: userAgentResult.clientHints,
       };
 
-      console.log("Browser fingerprint collected:", browserGroup);
       return browserGroup;
     } catch (error) {
       console.error("Error collecting browser fingerprint:", error);
