@@ -7,6 +7,18 @@ import { collectPlugins } from "./plugins";
 import { collectPdfViewerEnabled } from "./pdf_viewer_enabled";
 import type { ClientHints, BrowserGroupResult } from "../../types";
 
+export type { UserAgentResult } from "./user_agent";
+export type { PdfViewerEnabledResult } from "./pdf_viewer_enabled";
+export {
+  collectBrowserName,
+  collectOSName,
+  collectUserAgent,
+  collectVendor,
+  collectVendorFlavors,
+  collectPlugins,
+  collectPdfViewerEnabled,
+};
+
 export class BrowserFingerprint {
   public static collect(): BrowserGroupResult {
     try {
@@ -79,13 +91,3 @@ function collectPdfViewerEnabledSync(): { pdfViewerEnabled: boolean } {
     return { pdfViewerEnabled: false };
   }
 }
-
-export {
-  collectBrowserName,
-  collectOSName,
-  collectUserAgent,
-  collectVendor,
-  collectVendorFlavors,
-  collectPlugins,
-  collectPdfViewerEnabled,
-};

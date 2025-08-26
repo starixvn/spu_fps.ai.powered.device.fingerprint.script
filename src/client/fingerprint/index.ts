@@ -1,319 +1,325 @@
-/**
- * FPS Device Fingerprinting Client Library
- * Main coordinator that combines all fingerprinting modules
- */
 /// <reference lib="dom" />
 
 import { FingerprintData } from "./types";
-// import { HardwareFingerprint } from "./modules/hardware";
-// import { GraphicsFingerprint } from "./modules/graphics";
-// import { AudioFingerprint } from "./modules/audio";
-import { BrowserFingerprint } from "./modules/browser/index";
-// import { PreferencesFingerprint } from "./modules/preferences";
+import { HardwareFingerprint } from "./modules/hardware/index";
+import { GraphicsFingerprint } from "./modules/graphics/index";
+import { AudioFingerprint } from "./modules/audio/index";
+import { PreferencesFingerprint } from "./modules/preference/index";
+
+import { collectBrowserName } from "./modules/browser/browser_name";
+import { collectOSName } from "./modules/browser/os_name";
+import { collectVendor } from "./modules/browser/vendor";
+import { collectVendorFlavors } from "./modules/browser/vendor_flavors";
+import { collectPlugins } from "./modules/browser/plugins";
+import { collectPdfViewerEnabled } from "./modules/browser/pdf_viewer_enabled";
 
 class FPSFingerprintClass {
   public readonly version: string = "1.9.0";
 
-  /**
-   * Collect comprehensive device fingerprint
-   */
-  // public collect(
-  //   callback?: (fingerprint: FingerprintData) => void
-  // ): FingerprintData {
-  //   // Collect data from all modules
-  //   const hardware = HardwareFingerprint.collect();
-  //   const graphics = GraphicsFingerprint.collect();
-  //   const audio = AudioFingerprint.collect();
-  //   const browser = BrowserFingerprint.collect();
-  //   const preferences = PreferencesFingerprint.collect();
+  public async collect(
+    callback?: (fingerprint: FingerprintData) => void
+  ): Promise<FingerprintData> {
+    const browser = await this.collectBrowserData();
+    const graphics = await GraphicsFingerprint.collect();
+    const audio = await AudioFingerprint.collect();
+    const hardware = await HardwareFingerprint.collect();
+    const preferences = await PreferencesFingerprint.collect();
 
-  //   const fingerprint: FingerprintData = {
-  //     // Browser data
-  //     ...browser,
-
-  //     // Hardware data
-  //     ...hardware,
-
-  //     // Graphics data
-  //     ...graphics,
-
-  //     // Audio data
-  //     ...audio,
-
-  //     // Preferences data
-  //     ...preferences,
-
-  //     // Timestamp
-  //     timestamp: new Date().toISOString(),
-  //   };
-
-  //   if (callback && typeof callback === "function") {
-  //     callback(fingerprint);
-  //   }
-
-  //   return fingerprint;
-  // }
-
-  // /**
-  //  * Generate hash from fingerprint data
-  //  */
-  // public generateHash(fingerprint?: FingerprintData): string {
-  //   const data = fingerprint || this.collect();
-
-  //   // Create a string representation of key fingerprint attributes
-  //   const hashString = [
-  //     data.userAgent,
-  //     data.platform,
-  //     data.language,
-  //     data.screen
-  //       ? `${data.screen.width}x${data.screen.height}x${data.screen.colorDepth}`
-  //       : "",
-  //     data.timezone,
-  //     data.hardwareConcurrency,
-  //     data.deviceMemory,
-  //     data.webgl ? `${data.webgl.vendor}-${data.webgl.renderer}` : "",
-  //     data.canvas ? data.canvas.substring(0, 50) : "",
-  //     data.audio ? data.audio.substring(0, 30) : "",
-  //     data.fonts ? data.fonts.slice(0, 10).join(",") : "",
-  //   ].join("|");
-
-  //   // Simple hash function (djb2)
-  //   let hash = 5381;
-  //   for (let i = 0; i < hashString.length; i++) {
-  //     hash = (hash << 5) + hash + hashString.charCodeAt(i);
-  //     hash = hash & hash; // Convert to 32-bit integer
-  //   }
-
-  //   return Math.abs(hash).toString(16).padStart(8, "0");
-  // }
-
-  // /**
-  //  * Generate hashes for each fingerprint group
-  //  */
-  // public generateGroupHashes(fingerprint?: FingerprintData): {
-  //   hardware: string;
-  //   graphics: string;
-  //   audio: string;
-  //   browser: string;
-  //   preferences: string;
-  //   combined: string;
-  // } {
-  //   const data = fingerprint || this.collect();
-
-  //   // Hardware hash
-  //   const hardwareString = [
-  //     data.deviceMemory,
-  //     data.hardwareConcurrency,
-  //     data.maxTouchPoints,
-  //     data.colorDepth,
-  //     data.pixelDepth,
-  //     data.screen
-  //       ? `${data.screen.width}x${data.screen.height}x${data.screen.availWidth}x${data.screen.availHeight}`
-  //       : "",
-  //     data.cpuClass,
-  //     data.oscpu,
-  //     data.buildID,
-  //   ].join("|");
-
-  //   // Graphics hash
-  //   const graphicsString = [
-  //     data.webgl
-  //       ? `${data.webgl.vendor}-${data.webgl.renderer}-${data.webgl.version}`
-  //       : "",
-  //     data.webgl && data.webgl.unmaskedVendor
-  //       ? `${data.webgl.unmaskedVendor}-${data.webgl.unmaskedRenderer}`
-  //       : "",
-  //     data.canvas ? data.canvas.substring(0, 100) : "",
-  //     data.fonts ? data.fonts.slice(0, 15).join(",") : "",
-  //   ].join("|");
-
-  //   // Audio hash
-  //   const audioString = [data.audio || ""].join("|");
-
-  //   // Browser hash
-  //   const browserString = [
-  //     data.userAgent,
-  //     data.platform,
-  //     data.cookieEnabled,
-  //     data.doNotTrack,
-  //     data.onLine,
-  //     data.plugins
-  //       ? data.plugins
-  //           .map((p) => `${p.name}-${p.filename}`)
-  //           .slice(0, 10)
-  //           .join(",")
-  //       : "",
-  //     data.localStorage,
-  //     data.sessionStorage,
-  //     data.indexedDB,
-  //     data.webSQL,
-  //   ].join("|");
-
-  //   // Preferences hash
-  //   const preferencesString = [
-  //     data.language,
-  //     data.languages ? data.languages.join(",") : "",
-  //     data.timezone,
-  //     data.timezoneOffset,
-  //     data.clientHints ? JSON.stringify(data.clientHints) : "",
-  //   ].join("|");
-
-  //   // Combined hash (all groups)
-  //   const combinedString = [
-  //     hardwareString,
-  //     graphicsString,
-  //     audioString,
-  //     browserString,
-  //     preferencesString,
-  //   ].join("||");
-
-  //   return {
-  //     hardware: this.hashString(hardwareString),
-  //     graphics: this.hashString(graphicsString),
-  //     audio: this.hashString(audioString),
-  //     browser: this.hashString(browserString),
-  //     preferences: this.hashString(preferencesString),
-  //     combined: this.hashString(combinedString),
-  //   };
-  // }
-
-  // /**
-  //  * Internal hash function (DJB2)
-  //  */
-  // private hashString(input: string): string {
-  //   let hash = 5381;
-  //   for (let i = 0; i < input.length; i++) {
-  //     hash = (hash << 5) + hash + input.charCodeAt(i);
-  //     hash = hash & hash; // Convert to 32-bit integer
-  //   }
-  //   return Math.abs(hash).toString(16).padStart(8, "0");
-  // }
-
-  /**
-   * Collect comprehensive device fingerprint
-   */
-  public collect(): any {
-    // Collect data from browser module
-    const browser = BrowserFingerprint.collect();
-
-    const fingerprint = {
-      // Browser data
-      ...browser,
-
-      // Timestamp
+    const fingerprint: FingerprintData = {
+      BrowserFingerprint: browser,
+      GraphicsFingerprint: graphics,
+      AudioFingerprint: audio,
+      HardwareFingerprint: hardware,
+      PreferencesFingerprint: preferences,
       timestamp: new Date().toISOString(),
     };
+
+    if (callback && typeof callback === "function") {
+      callback(fingerprint);
+    }
 
     return fingerprint;
   }
 
-  public collectBrowser() {
-    return BrowserFingerprint.collect();
+  private async collectBrowserData() {
+    try {
+      console.log("Starting browser fingerprint collection...");
+
+      const browserNameResult = collectBrowserName();
+      const osNameResult = collectOSName();
+      const userAgentResult = this.collectUserAgentSync();
+      const vendorResult = collectVendor();
+      const vendorFlavorsResult = collectVendorFlavors();
+      const pluginsResult = collectPlugins();
+      const pdfViewerResult = await collectPdfViewerEnabled();
+
+      const browserGroup = {
+        browserName: browserNameResult.browserName,
+        osName: osNameResult.osName,
+        userAgent: userAgentResult.userAgent,
+        vendor: vendorResult.vendor,
+        vendorFlavors: vendorFlavorsResult.vendorFlavors,
+        plugins: pluginsResult.plugins,
+        pdfViewerEnabled: pdfViewerResult.pdfViewerEnabled,
+        clientHints: userAgentResult.clientHints,
+      };
+
+      console.log("Browser fingerprint collected:", browserGroup);
+      return browserGroup;
+    } catch (error) {
+      console.error("Error collecting browser fingerprint:", error);
+
+      return {
+        browserName: "",
+        osName: "",
+        userAgent: "",
+        vendor: "",
+        vendorFlavors: [],
+        plugins: [],
+        pdfViewerEnabled: false,
+      };
+    }
   }
 
-  // public collectHardware() {
-  //   return HardwareFingerprint.collect();
-  // }
+  /**
+   * Collect user agent data synchronously
+   */
+  private collectUserAgentSync(): {
+    userAgent: string;
+    clientHints?: any;
+  } {
+    try {
+      const userAgent = navigator.userAgent || "";
+      let clientHints: any;
 
-  // public collectGraphics() {
-  //   return GraphicsFingerprint.collect();
-  // }
+      if (navigator.userAgentData) {
+        clientHints = {
+          brands: navigator.userAgentData.brands || [],
+          mobile: navigator.userAgentData.mobile || false,
+        };
+      }
 
-  // public collectAudio() {
-  //   return AudioFingerprint.collect();
-  // }
+      return { userAgent, clientHints };
+    } catch {
+      return { userAgent: "" };
+    }
+  }
 
-  // public collectPreferences() {
-  //   return PreferencesFingerprint.collect();
-  // }
+  /**
+   * Collect PDF viewer status synchronously
+   */
+  private collectPdfViewerEnabledSync(): { pdfViewerEnabled: boolean } {
+    try {
+      const pdfViewerEnabled = (navigator as any).pdfViewerEnabled ?? false;
+      return { pdfViewerEnabled };
+    } catch (error) {
+      console.error("Error collecting PDF viewer status:", error);
+      return { pdfViewerEnabled: false };
+    }
+  }
+
+  /**
+   * Generate hash from fingerprint data
+   */
+  public async generateHash(fingerprint?: FingerprintData): Promise<string> {
+    const data = fingerprint || (await this.collect());
+
+    // Create a string representation of key fingerprint attributes
+    const hashString = [
+      data.BrowserFingerprint?.userAgent || "",
+      data.BrowserFingerprint?.osName || "",
+      data.BrowserFingerprint?.browserName || "",
+      data.GraphicsFingerprint?.screenResolution?.width || "",
+      data.GraphicsFingerprint?.screenResolution?.height || "",
+      data.GraphicsFingerprint?.colorDepth?.colorDepth || "",
+      data.HardwareFingerprint?.hardwareConcurrency || "",
+      data.HardwareFingerprint?.deviceMemory || "",
+      data.PreferencesFingerprint?.timezone || "",
+      data.PreferencesFingerprint?.languages?.join(",") || "",
+    ].join("|");
+
+    // Simple hash function (djb2)
+    let hash = 5381;
+    for (let i = 0; i < hashString.length; i++) {
+      hash = (hash << 5) + hash + hashString.charCodeAt(i);
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+
+    return Math.abs(hash).toString(16).padStart(8, "0");
+  }
+
+  /**
+   * Generate hashes for each fingerprint group
+   */
+  public async generateGroupHashes(fingerprint?: FingerprintData): Promise<{
+    hardware: string;
+    graphics: string;
+    audio: string;
+    browser: string;
+    preferences: string;
+    combined: string;
+  }> {
+    const data = fingerprint || (await this.collect());
+
+    // Hardware hash
+    const hardwareString = [
+      data.HardwareFingerprint?.hardwareConcurrency || "",
+      data.HardwareFingerprint?.deviceMemory || "",
+      data.HardwareFingerprint?.platform || "",
+      data.HardwareFingerprint?.architecture || "",
+    ].join("|");
+
+    // Graphics hash
+    const graphicsString = [
+      data.GraphicsFingerprint?.screenResolution?.width || "",
+      data.GraphicsFingerprint?.screenResolution?.height || "",
+      data.GraphicsFingerprint?.colorDepth?.colorDepth || "",
+      data.GraphicsFingerprint?.canvas?.fingerprint || "",
+    ].join("|");
+
+    // Audio hash
+    const audioString = [
+      data.AudioFingerprint?.audio || "",
+      data.AudioFingerprint?.audioBaseLatency || "",
+    ].join("|");
+
+    // Browser hash
+    const browserString = [
+      data.BrowserFingerprint?.userAgent || "",
+      data.BrowserFingerprint?.browserName || "",
+      data.BrowserFingerprint?.osName || "",
+      data.BrowserFingerprint?.vendor || "",
+      data.BrowserFingerprint?.plugins?.length || "",
+    ].join("|");
+
+    // Preferences hash
+    const preferencesString = [
+      data.PreferencesFingerprint?.languages?.join(",") || "",
+      data.PreferencesFingerprint?.timezone || "",
+      data.PreferencesFingerprint?.cookiesEnabled || "",
+    ].join("|");
+
+    // Combined hash (all groups)
+    const combinedString = [
+      hardwareString,
+      graphicsString,
+      audioString,
+      browserString,
+      preferencesString,
+    ].join("||");
+
+    return {
+      hardware: this.hashString(hardwareString),
+      graphics: this.hashString(graphicsString),
+      audio: this.hashString(audioString),
+      browser: this.hashString(browserString),
+      preferences: this.hashString(preferencesString),
+      combined: this.hashString(combinedString),
+    };
+  }
+
+  /**
+   * Internal hash function (DJB2)
+   */
+  private hashString(input: string): string {
+    let hash = 5381;
+    for (let i = 0; i < input.length; i++) {
+      hash = (hash << 5) + hash + input.charCodeAt(i);
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash).toString(16).padStart(8, "0");
+  }
 
   /**
    * Send fingerprint to server
    */
-  // public sendToServer(
-  //   endpoint: string = "/api/fingerprint",
-  //   fingerprint?: FingerprintData,
-  //   callback?: (error: Error | null, response?: any) => void
-  // ): void {
-  //   const data = {
-  //     fingerprint: fingerprint || this.collect(),
-  //     timestamp: new Date().toISOString(),
-  //   };
+  public sendToServer(
+    endpoint: string = "/api/fingerprint",
+    fingerprint?: FingerprintData,
+    callback?: (error: Error | null, response?: any) => void
+  ): void {
+    const data = {
+      fingerprint: fingerprint || this.collect(),
+      timestamp: new Date().toISOString(),
+    };
 
-  //   if (typeof fetch !== "undefined") {
-  //     // Modern browsers
-  //     fetch(endpoint, {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify(data),
-  //     })
-  //       .then((response) => response.json())
-  //       .then((result) => {
-  //         if (callback && typeof callback === "function") {
-  //           callback(null, result);
-  //         }
-  //       })
-  //       .catch((error) => {
-  //         if (callback && typeof callback === "function") {
-  //           callback(error, null);
-  //         }
-  //       });
-  //   } else {
-  //     // Fallback for older browsers
-  //     const xhr = new XMLHttpRequest();
-  //     xhr.open("POST", endpoint, true);
-  //     xhr.setRequestHeader("Content-Type", "application/json");
+    if (typeof fetch !== "undefined") {
+      // Modern browsers
+      fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      })
+        .then((response) => response.json())
+        .then((result) => {
+          if (callback && typeof callback === "function") {
+            callback(null, result);
+          }
+        })
+        .catch((error) => {
+          if (callback && typeof callback === "function") {
+            callback(error, null);
+          }
+        });
+    } else {
+      // Fallback for older browsers
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", endpoint, true);
+      xhr.setRequestHeader("Content-Type", "application/json");
 
-  //     xhr.onreadystatechange = function () {
-  //       if (xhr.readyState === 4) {
-  //         if (xhr.status === 200) {
-  //           try {
-  //             const result = JSON.parse(xhr.responseText);
-  //             if (callback && typeof callback === "function") {
-  //               callback(null, result);
-  //             }
-  //           } catch (e) {
-  //             if (callback && typeof callback === "function") {
-  //               callback(e as Error, null);
-  //             }
-  //           }
-  //         } else {
-  //           if (callback && typeof callback === "function") {
-  //             callback(new Error("HTTP " + xhr.status), null);
-  //           }
-  //         }
-  //       }
-  //     };
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
+            try {
+              const result = JSON.parse(xhr.responseText);
+              if (callback && typeof callback === "function") {
+                callback(null, result);
+              }
+            } catch (e) {
+              if (callback && typeof callback === "function") {
+                callback(e as Error, null);
+              }
+            }
+          } else {
+            if (callback && typeof callback === "function") {
+              callback(new Error("HTTP " + xhr.status), null);
+            }
+          }
+        }
+      };
 
-  //     xhr.send(JSON.stringify(data));
-  //   }
-  // }
+      xhr.send(JSON.stringify(data));
+    }
+  }
 }
 
-// Initialize and expose globally
 const fpsFingerprint = new FPSFingerprintClass();
 
-// Export for different environments
 if (typeof window !== "undefined") {
   window.FPSFingerprint = fpsFingerprint;
 
-  // Auto-initialize if requested
   if (window.FPSAutoCollect) {
     document.addEventListener("DOMContentLoaded", function () {
-      // fpsFingerprint.collect(function (fingerprint) {
-      //   console.log("FPS Fingerprint collected:", fingerprint);
-      //   if (
-      //     window.FPSOnCollected &&
-      //     typeof window.FPSOnCollected === "function"
-      //   ) {
-      //     window.FPSOnCollected(fingerprint);
-      //   }
-      // });
+      fpsFingerprint.collect(function (fingerprint) {
+        console.log("FPS Fingerprint collected:", fingerprint);
+        if (
+          window.FPSOnCollected &&
+          typeof window.FPSOnCollected === "function"
+        ) {
+          window.FPSOnCollected(fingerprint);
+        }
+      });
     });
   }
 }
 
-export { BrowserFingerprint };
+// Export all modules for direct access
+export { GraphicsFingerprint } from "./modules/graphics/index";
+export { AudioFingerprint } from "./modules/audio/index";
+export { HardwareFingerprint } from "./modules/hardware/index";
+export { PreferencesFingerprint } from "./modules/preference/index";
+export { FPSFingerprintClass };
+
 export default fpsFingerprint;

@@ -65,18 +65,61 @@ export interface ClientHints {
   platform?: string;
 }
 
+// declare global {
+//   interface Window {
+//     FPSFingerprint: any;
+//     FPSAutoCollect?: boolean;
+//     FPSOnCollected?: (fingerprint: FingerprintData) => void;
+//     webkitAudioContext?: any;
+//   }
+//   interface Navigator {
+//     userAgentData?: {
+//       brands: any[];
+//       mobile: boolean;
+//       platform: string;
+//     };
+//     deviceMemory?: number;
+//     cpuClass?: string;
+//     oscpu?: string;
+//     buildID?: string;
+//   }
+// }
+
 declare global {
   interface Window {
     FPSFingerprint: any;
+    BrowserFingerprint: any;
+    HardwareFingerprint: any;
+    AudioFingerprint: any;
+    PreferencesFingerprint: any;
     FPSAutoCollect?: boolean;
-    FPSOnCollected?: (fingerprint: FingerprintData) => void;
+    // FPSOnCollected?: (fingerprint: FingerprintData) => void;
     webkitAudioContext?: any;
   }
+
   interface Navigator {
     userAgentData?: {
       brands: any[];
       mobile: boolean;
       platform: string;
+      getHighEntropyValues: (hints: string[]) => Promise<{
+        architecture?: string;
+        bitness?: string;
+        brands?: Array<{
+          brand: string;
+          version: string;
+        }>;
+        fullVersionList?: Array<{
+          brand: string;
+          version: string;
+        }>;
+        mobile?: boolean;
+        model?: string;
+        platform?: string;
+        platformVersion?: string;
+        uaFullVersion?: string;
+        wow64?: boolean;
+      }>;
     };
     deviceMemory?: number;
     cpuClass?: string;

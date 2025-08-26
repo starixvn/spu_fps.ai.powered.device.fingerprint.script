@@ -92,6 +92,9 @@
         <button class="button" onclick="collectPreferenceFingerprint()">
           Collect Preference
         </button>
+        <button class="button" onclick="collectGraphicsFingerprint()">
+          Collect Graphics
+        </button>
         <button class="button" onclick="generateHash()">Generate Hash</button>
         <button class="button" onclick="sendToServer()">Send to Server</button>
         <button class="button" onclick="getStorageData()">
@@ -200,18 +203,31 @@
         }
       });
 
-      function collectFingerprint() {
+      async function collectFingerprint() {
         console.log("Collecting fingerprint...");
-        currentFingerprint = FPSFingerprint.collect();
 
-        document.getElementById("fingerprintData").textContent = JSON.stringify(
-          currentFingerprint,
-          null,
-          2
-        );
-        document.getElementById("fingerprintDisplay").style.display = "block";
+        if (!FPSFingerprint) {
+          console.error("FPSFingerprint not loaded yet");
+          document.getElementById("fingerprintData").textContent =
+            "Error: FPSFingerprint not loaded yet";
+          document.getElementById("fingerprintDisplay").style.display = "block";
+          return;
+        }
 
-        console.log("Fingerprint collected:", currentFingerprint);
+        try {
+          currentFingerprint = await FPSFingerprint.collect();
+
+          document.getElementById("fingerprintData").textContent =
+            JSON.stringify(currentFingerprint, null, 2);
+          document.getElementById("fingerprintDisplay").style.display = "block";
+
+          console.log("Fingerprint collected:", currentFingerprint);
+        } catch (error) {
+          console.error("Error collecting fingerprint:", error);
+          document.getElementById("fingerprintData").textContent =
+            "Error: " + error.message;
+          document.getElementById("fingerprintDisplay").style.display = "block";
+        }
       }
 
       // Group A: Hardware
@@ -258,6 +274,68 @@
           console.log("Group A (Hardware fingerprint):", currentFingerprint);
         } catch (error) {
           console.error("Error collecting hardware fingerprint:", error);
+        }
+      }
+
+      // Group B: Graphics
+      async function collectGraphicsFingerprint() {
+        try {
+          const canvasData = await import(
+            "../dist/client/fingerprint/modules/graphics/canvas.js"
+          ).then((module) => module.collectCanvas());
+
+          const webglBasicsData = await import(
+            "../dist/client/fingerprint/modules/graphics/webgl_basics.js"
+          ).then((module) => module.collectWebGLBasics());
+
+          const webglExtensionsData = await import(
+            "../dist/client/fingerprint/modules/graphics/webgl_extensions.js"
+          ).then((module) => module.collectWebGLExtensions());
+
+          const fontsData = await import(
+            "../dist/client/fingerprint/modules/graphics/fonts.js"
+          ).then((module) => module.collectFonts());
+
+          const fontPreferencesData = await import(
+            "../dist/client/fingerprint/modules/graphics/font_preferences.js"
+          ).then((module) => module.collectFontPreferences());
+
+          const screenResolutionData = await import(
+            "../dist/client/fingerprint/modules/graphics/screen_resolution.js"
+          ).then((module) => module.collectScreenResolution());
+
+          const screenFrameData = await import(
+            "../dist/client/fingerprint/modules/graphics/screen_frame.js"
+          ).then((module) => module.collectScreenFrame());
+
+          const colorDepthData = await import(
+            "../dist/client/fingerprint/modules/graphics/color_depth.js"
+          ).then((module) => module.collectColorDepth());
+
+          const colorGamutData = await import(
+            "../dist/client/fingerprint/modules/graphics/color_gamut.js"
+          ).then((module) => module.collectColorGamut());
+
+          const graphicsFingerprint = {
+            canvas: canvasData,
+            webglBasics: webglBasicsData,
+            webglExtensions: webglExtensionsData,
+            fonts: fontsData,
+            fontPreferences: fontPreferencesData,
+            screenResolution: screenResolutionData,
+            screenFrame: screenFrameData,
+            colorDepth: colorDepthData,
+            colorGamut: colorGamutData,
+          };
+
+          document.getElementById("fingerprintData").textContent =
+            JSON.stringify(graphicsFingerprint, null, 2);
+
+          document.getElementById("fingerprintDisplay").style.display = "block";
+
+          console.log("Group B (Graphics fingerprint):", graphicsFingerprint);
+        } catch (error) {
+          console.error("Error collecting graphics data:", error);
         }
       }
 
@@ -400,43 +478,74 @@
         }
       }
 
-      function generateHash() {
-        if (!currentFingerprint) {
-          currentFingerprint = FPSFingerprint.collect();
+      async function generateHash() {
+        if (!FPSFingerprint) {
+          console.error("FPSFingerprint not loaded yet");
+          document.getElementById("hashValue").textContent =
+            "Error: FPSFingerprint not loaded yet";
+          document.getElementById("hashDisplay").style.display = "block";
+          return;
         }
 
-        const hash = FPSFingerprint.generateHash(currentFingerprint);
-        const groupHashes =
-          FPSFingerprint.generateGroupHashes(currentFingerprint);
+        if (!currentFingerprint) {
+          currentFingerprint = await FPSFingerprint.collect();
+        }
 
-        document.getElementById("hashValue").textContent = hash;
-        document.getElementById("hashDisplay").style.display = "block";
+        try {
+          const hash = await FPSFingerprint.generateHash(currentFingerprint);
+          const groupHashes = await FPSFingerprint.generateGroupHashes(
+            currentFingerprint
+          );
 
-        console.log("Generated hash:", hash);
-        console.log("Group hashes:", groupHashes);
+          document.getElementById("hashValue").textContent = hash;
+          document.getElementById("hashDisplay").style.display = "block";
+
+          console.log("Generated hash:", hash);
+          console.log("Group hashes:", groupHashes);
+        } catch (error) {
+          console.error("Error generating hash:", error);
+          document.getElementById("hashValue").textContent =
+            "Error: " + error.message;
+          document.getElementById("hashDisplay").style.display = "block";
+        }
       }
 
-      function sendToServer() {
-        if (!currentFingerprint) {
-          currentFingerprint = FPSFingerprint.collect();
+      async function sendToServer() {
+        if (!FPSFingerprint) {
+          console.error("FPSFingerprint not loaded yet");
+          document.getElementById("serverData").textContent =
+            "Error: FPSFingerprint not loaded yet";
+          document.getElementById("serverResponse").style.display = "block";
+          return;
         }
 
-        FPSFingerprint.sendToServer(
-          "/api/fingerprint",
-          currentFingerprint,
-          function (error, response) {
-            if (error) {
-              console.error("Error sending to server:", error);
-              document.getElementById("serverData").textContent =
-                "Error: " + error.message;
-            } else {
-              console.log("Server response:", response);
-              document.getElementById("serverData").textContent =
-                JSON.stringify(response, null, 2);
+        if (!currentFingerprint) {
+          currentFingerprint = await FPSFingerprint.collect();
+        }
+
+        try {
+          FPSFingerprint.sendToServer(
+            "/api/fingerprint",
+            currentFingerprint,
+            function (error, response) {
+              if (error) {
+                console.error("Error sending to server:", error);
+                document.getElementById("serverData").textContent =
+                  "Error: " + error.message;
+              } else {
+                console.log("Server response:", response);
+                document.getElementById("serverData").textContent =
+                  JSON.stringify(response, null, 2);
+              }
+              document.getElementById("serverResponse").style.display = "block";
             }
-            document.getElementById("serverResponse").style.display = "block";
-          }
-        );
+          );
+        } catch (error) {
+          console.error("Error in sendToServer:", error);
+          document.getElementById("serverData").textContent =
+            "Error: " + error.message;
+          document.getElementById("serverResponse").style.display = "block";
+        }
       }
 
       // Removed auto-collect since it's now handled in loadActivatorThenOthers

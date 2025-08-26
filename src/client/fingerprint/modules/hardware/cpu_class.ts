@@ -1,5 +1,5 @@
 interface CpuClassResult {
-  cpuClass?: string;
+  cpuClass: string;
 }
 
 export function collectCpuClass(): CpuClassResult {
@@ -12,10 +12,15 @@ export function collectCpuClass(): CpuClassResult {
   }
 }
 
-function getCpuClass(): string | undefined {
+function getCpuClass(): string {
   try {
-    const rawCpuClass = (navigator as any).cpuClass as string | undefined;
-    return rawCpuClass?.trim() ?? "";
+    const rawCpuClass = (navigator as any)?.cpuClass;
+
+    if (typeof rawCpuClass === "string") {
+      return rawCpuClass.trim();
+    }
+
+    return "";
   } catch {
     return "";
   }
