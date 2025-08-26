@@ -3,29 +3,28 @@ import { CookiesHandler } from './modules/cookie';
 import { ETagHandler } from './modules/etag';
 import { IndexedDBHandler } from './modules/indexedDB';
 import { LocalStorageHandler } from './modules/localStorage';
-import { TaggingHandler } from './tagging';
+import { TaggingHandler, STORAGE_KEYS } from './tagging';
 import { WindowNameHandler } from './modules/windowName';
 import { IStorageHandler } from './types';
 
-const STORAGE_KEY = '__STORAGE_NEW_KEY__';
-
 class TaggingClass {
-    private readonly storageHandlers: IStorageHandler[];
+    private readonly storageHandlers: Array<{
+        handler: IStorageHandler;
+        key: string;
+    }>;
 
     constructor() {
         this.storageHandlers = [
-            new IndexedDBHandler(),
-            new ETagHandler(),
-            new CacheApiHandler(),
-            new CookiesHandler(),
-            new LocalStorageHandler(),
-            new WindowNameHandler()
+            { handler: new IndexedDBHandler(), key: STORAGE_KEYS.indexedDB },
+            { handler: new ETagHandler(), key: STORAGE_KEYS.etag },
+            { handler: new CacheApiHandler(), key: STORAGE_KEYS.cache },
+            { handler: new CookiesHandler(), key: STORAGE_KEYS.cookies },
+            { handler: new LocalStorageHandler(), key: STORAGE_KEYS.localStorage },
+            { handler: new WindowNameHandler(), key: STORAGE_KEYS.windowName }
         ];
     }
 
-    public async getStorage (): Promise<string> {
-        const storageHandlers = this.storageHandlers;
-
+    public async getStorage(): Promise<string> {
         let targetTaggingValue = await TaggingHandler.getTaggingValue();
 
         if (!targetTaggingValue) {
@@ -33,12 +32,13 @@ class TaggingClass {
         }
 
         await Promise.all(
-        storageHandlers.map(async (handler) => {
-            const currentValue = await handler.get(STORAGE_KEY);
-            if (currentValue !== targetTaggingValue) {
-                await handler.set(STORAGE_KEY, targetTaggingValue);
-            }
-        }));
+            this.storageHandlers.map(async (handlerConfig) => {
+                const currentValue = await handlerConfig.handler.get(handlerConfig.key);
+                if (currentValue !== targetTaggingValue) {
+                    await handlerConfig.handler.set(handlerConfig.key, targetTaggingValue);
+                }
+            })
+        );
 
         return targetTaggingValue;
     }
@@ -47,9 +47,7 @@ class TaggingClass {
 const tagging = new TaggingClass();
 
 if (typeof window !== 'undefined') {
-  (window as any).Tagging = tagging;
-
-  (window as any).TaggingReady = (async () => {
+  (window as any).taggingReady = (async () => {
     return await tagging.getStorage();
   })();
 }

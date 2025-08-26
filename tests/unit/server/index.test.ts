@@ -129,20 +129,6 @@ describe('Express Server Routes', () => {
     });
   }); 
 
-  describe('GET /test', () => {
-    it('should return test HTML page', async () => {
-      const response = await request(app)
-        .get('/test')
-        .expect(200);
-
-      expect(response.text).toContain('<!DOCTYPE html>');
-      expect(response.text).toContain('FPS Fingerprint Test');
-      expect(response.text).toContain('testFPS()');
-      expect(response.text).toContain('/script.js');
-      expect(response.header['content-type']).toBe('text/html; charset=utf-8');
-    });
-  });
-
   describe('GET /', () => {
     it('should redirect to examples page', async () => {
       const response = await request(app)
@@ -235,7 +221,7 @@ describe('Express Server Routes', () => {
       mockScriptService.getClientScript.mockReturnValue('console.log("test");');
 
       const response = await request(app)
-        .get('/script.js')
+        .get('/libs/apd-express.js')
         .expect(200);
 
       expect(response.header['content-type']).toBe('application/javascript');
@@ -245,8 +231,8 @@ describe('Express Server Routes', () => {
       mockScriptService.getClientScript.mockReturnValue('console.log("test");');
       mockScriptService.getMinifiedScript.mockReturnValue('console.log("min");');
 
-      const scriptResponse = await request(app).get('/script.js');
-      const minifiedResponse = await request(app).get('/script.min.js');
+      const scriptResponse = await request(app).get('/libs/apd-express.js');
+      const minifiedResponse = await request(app).get('/libs/apd-express.min.js');
 
       expect(scriptResponse.header['cache-control']).toBe('public, max-age=3600');
       expect(minifiedResponse.header['cache-control']).toBe('public, max-age=86400');

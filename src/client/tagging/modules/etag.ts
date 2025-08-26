@@ -15,7 +15,7 @@ export class ETagHandler implements IStorageHandler {
                 return null;
             }
 
-            const response = await fetch(`${this._baseUrl}/resources/versions`, {
+            const response = await fetch(`${this._baseUrl}/resources/vers`, {
                 method: 'GET'
             });
 
@@ -39,7 +39,7 @@ export class ETagHandler implements IStorageHandler {
                 return false;
             }
 
-            const response = await fetch(`${this._baseUrl}/resources/versions`, {
+            const response = await fetch(`${this._baseUrl}/resources/vers`, {
                 method: 'GET',
                 headers: {
                     'Res-Ec-X': value

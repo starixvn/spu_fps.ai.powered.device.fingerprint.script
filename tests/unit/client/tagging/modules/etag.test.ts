@@ -62,7 +62,7 @@ describe('ETagHandler', () => {
       const result = await etagHandler.get(testKey);
       
       expect(result).toBe(etagValue);
-      expect(mockFetch).toHaveBeenCalledWith('__SERVER_DOMAIN__/resources/versions', {
+      expect(mockFetch).toHaveBeenCalledWith('__SERVER_DOMAIN__/resources/vers', {
         method: 'GET'
       });
     });
@@ -164,7 +164,7 @@ describe('ETagHandler', () => {
       const result = await etagHandler.set('testKey', newValue);
       
       expect(result).toBe(true);
-      expect(mockFetch).toHaveBeenCalledWith('__SERVER_DOMAIN__/resources/versions', {
+      expect(mockFetch).toHaveBeenCalledWith('__SERVER_DOMAIN__/resources/vers', {
         method: 'GET',
         headers: {
           'Res-Ec-X': newValue
@@ -303,7 +303,7 @@ describe('ETagHandler', () => {
       expect(setResult).toBe(true);
       
       // Verify the correct headers were sent
-      expect(mockFetch).toHaveBeenCalledWith('__SERVER_DOMAIN__/resources/versions', {
+      expect(mockFetch).toHaveBeenCalledWith('__SERVER_DOMAIN__/resources/vers', {
         method: 'GET',
         headers: {
           'Res-Ec-X': setValue

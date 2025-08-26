@@ -73,18 +73,10 @@ app.post('/api/fingerprint', async (req: Request, res: Response) => {
   }
 });
 
-app.get('/script.js', (req: Request, res: Response) => {
+app.get('/libs/apd-express.js', (req: Request, res: Response) => {
   try {
-    const config = {
-      apiEndpoint: req.query.endpoint as string,
-      autoCollect: req.query.autoCollect === 'true',
-      debug: req.query.debug === 'true'
-    };
-    
-    const script = Object.keys(config).some(key => config[key as keyof typeof config] !== undefined)
-      ? scriptService.getWrappedScript(config)
-      : scriptService.getClientScript();
-    
+    const script = scriptService.getClientScript();
+
     res.setHeader('Content-Type', 'application/javascript');
     res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
     res.send(script);
@@ -98,16 +90,8 @@ app.get('/script.js', (req: Request, res: Response) => {
 
 app.get('/api/script', (req: Request, res: Response) => {
   try {
-    const config = {
-      apiEndpoint: req.query.endpoint as string,
-      autoCollect: req.query.autoCollect === 'true',
-      debug: req.query.debug === 'true'
-    };
-    
-    const script = Object.keys(config).some(key => config[key as keyof typeof config] !== undefined)
-      ? scriptService.getWrappedScript(config)
-      : scriptService.getClientScript();
-    
+    const script = scriptService.getClientScript();
+
     res.setHeader('Content-Type', 'application/javascript');
     res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
     res.send(script);
@@ -119,7 +103,7 @@ app.get('/api/script', (req: Request, res: Response) => {
   }
 });
 
-app.get('/script.min.js', (req: Request, res: Response) => {
+app.get('/libs/apd-express.min.js', (req: Request, res: Response) => {
   try {
     const script = scriptService.getMinifiedScript();
     res.setHeader('Content-Type', 'application/javascript');
@@ -137,7 +121,7 @@ app.get('/healthz', (req: Request, res: Response) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-app.get('/resources/versions', (req: Request, res: Response) => {
+app.get('/resources/vers', (req: Request, res: Response) => {
   try {
     const eTaggingValues = req.headers['res-ec-x'];
 

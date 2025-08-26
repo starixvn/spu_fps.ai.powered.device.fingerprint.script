@@ -6,30 +6,32 @@ import { IndexedDBHandler } from './modules/indexedDB';
 import { LocalStorageHandler } from './modules/localStorage';
 import { WindowNameHandler } from './modules/windowName';
 
-const STORAGE_OLD_KEY = "__STORAGE_OLD_KEY__";
-const STORAGE_NEW_KEY = "__STORAGE_NEW_KEY__";
-const COOKIE_STORAGE_OLD_KEY = "__COOKIE_STORAGE_KEY__";
+export const STORAGE_KEYS = {
+    localStorage: "__localStorage_key__",
+    cookies: "__cookies_key__",
+    indexedDB: "__indexedDB_key__",
+    cache: "__cache_key__",
+    windowName: "__window_key__",
+    etag: "__etag_key__"
+};
 
 export class TaggingHandler {
 
     public static async getTaggingValue(): Promise<string | null> {
         const storageHandlers = [
-            new IndexedDBHandler(),
-            new ETagHandler(),
-            new CacheApiHandler(),
-            new CookiesHandler(),
-            new LocalStorageHandler(),
-            new WindowNameHandler()
+            { handler: new IndexedDBHandler(), oldKey: "(global.c3)", newKey: STORAGE_KEYS.indexedDB },
+            { handler: new ETagHandler(), oldKey: "(global.c3)", newKey: STORAGE_KEYS.etag },
+            { handler: new CacheApiHandler(), oldKey: "(global.c3)", newKey: STORAGE_KEYS.cache },
+            { handler: new CookiesHandler(), oldKey: "gfp", newKey: STORAGE_KEYS.cookies },
+            { handler: new LocalStorageHandler(), oldKey: "(global.c3)", newKey: STORAGE_KEYS.localStorage },
+            { handler: new WindowNameHandler(), oldKey: "(global.c3)", newKey: STORAGE_KEYS.windowName }
         ];
 
-        for (const handler of storageHandlers) {
-            const keys =
-                handler instanceof CookiesHandler
-                    ? [COOKIE_STORAGE_OLD_KEY, STORAGE_NEW_KEY]
-                    : [STORAGE_OLD_KEY, STORAGE_NEW_KEY];
-
+        for (const handlerConfig of storageHandlers) {
+            const keys = [handlerConfig.oldKey, handlerConfig.newKey];
+            
             for (const key of keys) {
-                let value = await this.getStoredValue(key, handler);
+                let value = await this.getStoredValue(key, handlerConfig.handler);
 
                 if (value && this.isValidTagging(value)) {
                     return value;

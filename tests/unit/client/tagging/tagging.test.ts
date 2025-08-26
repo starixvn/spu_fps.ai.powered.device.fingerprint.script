@@ -116,7 +116,7 @@ describe('TaggingHandler', () => {
 
       const result = await TaggingHandler.getTaggingValue();
 
-      expect(indexedDBHandler.get).toHaveBeenCalledWith('__STORAGE_OLD_KEY__');
+      expect(indexedDBHandler.get).toHaveBeenCalledWith('(global.c3)');
       expect(result).toBe(testValue);
     });
 
@@ -128,8 +128,8 @@ describe('TaggingHandler', () => {
 
       const result = await TaggingHandler.getTaggingValue();
 
-      expect(indexedDBHandler.get).toHaveBeenCalledWith('__STORAGE_OLD_KEY__');
-      expect(indexedDBHandler.get).toHaveBeenCalledWith('__STORAGE_NEW_KEY__');
+      expect(indexedDBHandler.get).toHaveBeenCalledWith('(global.c3)');
+      expect(indexedDBHandler.get).toHaveBeenCalledWith('__indexedDB_key__');
       expect(result).toBe(testValue);
     });
 
@@ -140,7 +140,7 @@ describe('TaggingHandler', () => {
 
       const result = await TaggingHandler.getTaggingValue();
 
-      expect(etagHandler.get).toHaveBeenCalledWith('__STORAGE_OLD_KEY__');
+      expect(etagHandler.get).toHaveBeenCalledWith('(global.c3)');
       expect(result).toBe(testValue);
     });
 
@@ -152,7 +152,7 @@ describe('TaggingHandler', () => {
 
       const result = await TaggingHandler.getTaggingValue();
 
-      expect(cacheApiHandler.get).toHaveBeenCalledWith('__STORAGE_OLD_KEY__');
+      expect(cacheApiHandler.get).toHaveBeenCalledWith('(global.c3)');
       expect(result).toBe(testValue);
     });
 
@@ -165,8 +165,8 @@ describe('TaggingHandler', () => {
 
       const result = await TaggingHandler.getTaggingValue();
 
-      // Due to mocking, instanceof check might not work, so it uses STORAGE_OLD_KEY
-      expect(cookiesHandler.get).toHaveBeenCalledWith('__STORAGE_OLD_KEY__');
+      // Cookies handler uses different old key
+      expect(cookiesHandler.get).toHaveBeenCalledWith('gfp');
       expect(result).toBe(testValue);
     });
 
@@ -180,7 +180,7 @@ describe('TaggingHandler', () => {
 
       const result = await TaggingHandler.getTaggingValue();
 
-      expect(localStorageHandler.get).toHaveBeenCalledWith('__STORAGE_OLD_KEY__');
+      expect(localStorageHandler.get).toHaveBeenCalledWith('(global.c3)');
       expect(result).toBe(testValue);
     });
 
@@ -195,7 +195,7 @@ describe('TaggingHandler', () => {
 
       const result = await TaggingHandler.getTaggingValue();
 
-      expect(windowNameHandler.get).toHaveBeenCalledWith('__STORAGE_OLD_KEY__');
+      expect(windowNameHandler.get).toHaveBeenCalledWith('(global.c3)');
       expect(result).toBe(testValue);
     });
 
@@ -225,18 +225,18 @@ describe('TaggingHandler', () => {
       await TaggingHandler.getTaggingValue();
 
       // Verify each handler was called with both keys
-      expect(indexedDBHandler.get).toHaveBeenCalledWith('__STORAGE_OLD_KEY__');
-      expect(indexedDBHandler.get).toHaveBeenCalledWith('__STORAGE_NEW_KEY__');
-      expect(etagHandler.get).toHaveBeenCalledWith('__STORAGE_OLD_KEY__');
-      expect(etagHandler.get).toHaveBeenCalledWith('__STORAGE_NEW_KEY__');
-      expect(cacheApiHandler.get).toHaveBeenCalledWith('__STORAGE_OLD_KEY__');
-      expect(cacheApiHandler.get).toHaveBeenCalledWith('__STORAGE_NEW_KEY__');
-      expect(cookiesHandler.get).toHaveBeenCalledWith('__STORAGE_OLD_KEY__');
-      expect(cookiesHandler.get).toHaveBeenCalledWith('__STORAGE_NEW_KEY__');
-      expect(localStorageHandler.get).toHaveBeenCalledWith('__STORAGE_OLD_KEY__');
-      expect(localStorageHandler.get).toHaveBeenCalledWith('__STORAGE_NEW_KEY__');
-      expect(windowNameHandler.get).toHaveBeenCalledWith('__STORAGE_OLD_KEY__');
-      expect(windowNameHandler.get).toHaveBeenCalledWith('__STORAGE_NEW_KEY__');
+      expect(indexedDBHandler.get).toHaveBeenCalledWith('(global.c3)');
+      expect(indexedDBHandler.get).toHaveBeenCalledWith('__indexedDB_key__');
+      expect(etagHandler.get).toHaveBeenCalledWith('(global.c3)');
+      expect(etagHandler.get).toHaveBeenCalledWith('__etag_key__');
+      expect(cacheApiHandler.get).toHaveBeenCalledWith('(global.c3)');
+      expect(cacheApiHandler.get).toHaveBeenCalledWith('__cache_key__');
+      expect(cookiesHandler.get).toHaveBeenCalledWith('gfp');
+      expect(cookiesHandler.get).toHaveBeenCalledWith('__cookies_key__');
+      expect(localStorageHandler.get).toHaveBeenCalledWith('(global.c3)');
+      expect(localStorageHandler.get).toHaveBeenCalledWith('__localStorage_key__');
+      expect(windowNameHandler.get).toHaveBeenCalledWith('(global.c3)');
+      expect(windowNameHandler.get).toHaveBeenCalledWith('__window_key__');
     });
 
     it('should stop searching when a value is found', async () => {
@@ -276,6 +276,7 @@ describe('TaggingHandler', () => {
 
       expect(result).toBe(oldKeyValue);
       expect(indexedDBHandler.get).toHaveBeenCalledTimes(1); // Only old key checked
+      expect(indexedDBHandler.get).toHaveBeenCalledWith('(global.c3)');
     });
   });
 
