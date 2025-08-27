@@ -1,7 +1,5 @@
-import { collectLocalIPs } from "./localIps";
-import { collectPublicIPs } from "./publicIps";
-import { collectRelayIPs } from "./relayIps";
 import type { WebRTCGroupResult } from "../../types";
+import { collectAllIPTypes } from "./ipCollector";
 
 export class WebRTCFingerprint {
   public static async collect(
@@ -24,46 +22,7 @@ export class WebRTCFingerprint {
         };
       }
 
-      const localPromise = this.createIPPromise(
-        collectLocalIPs,
-        Math.min(timeout, 1500)
-      );
-
-      const publicPromise = this.createIPPromise(
-        collectPublicIPs,
-        Math.min(timeout, 1500)
-      );
-
-      const relayPromise = this.createIPPromise(
-        collectRelayIPs,
-        Math.min(timeout, 1500)
-      );
-
-      const result = await Promise.race([
-        Promise.allSettled([localPromise, publicPromise, relayPromise]),
-        new Promise<PromiseSettledResult<string[]>[]>((resolve) =>
-          setTimeout(
-            () =>
-              resolve([
-                { status: "fulfilled", value: [] } as PromiseFulfilledResult<
-                  string[]
-                >,
-                { status: "fulfilled", value: [] } as PromiseFulfilledResult<
-                  string[]
-                >,
-                { status: "fulfilled", value: [] } as PromiseFulfilledResult<
-                  string[]
-                >,
-              ]),
-            timeout
-          )
-        ),
-      ]);
-
-      const [localIPs, publicIPs, relayIPs] = result.map((r) =>
-        r.status === "fulfilled" ? r.value : []
-      );
-
+      const { localIPs, publicIPs, relayIPs } = await collectAllIPTypes(timeout);
       const flags = this.analyzeFlags(localIPs, publicIPs, relayIPs);
 
       return {
@@ -75,7 +34,6 @@ export class WebRTCFingerprint {
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
-      console.error("Error collecting WebRTC fingerprint:", error);
       return {
         localIPs: [],
         publicIPs: [],
@@ -91,38 +49,6 @@ export class WebRTCFingerprint {
         timestamp: new Date().toISOString(),
       };
     }
-  }
-
-  private static createIPPromise(
-    collector: () => Promise<string[]>,
-    timeout: number
-  ): Promise<string[]> {
-    return new Promise((resolve) => {
-      let resolved = false;
-
-      const fallbackTimeout = setTimeout(() => {
-        if (!resolved) {
-          resolved = true;
-          resolve([]);
-        }
-      }, timeout);
-
-      collector()
-        .then((ips) => {
-          if (!resolved) {
-            resolved = true;
-            clearTimeout(fallbackTimeout);
-            resolve(ips);
-          }
-        })
-        .catch(() => {
-          if (!resolved) {
-            resolved = true;
-            clearTimeout(fallbackTimeout);
-            resolve([]);
-          }
-        });
-    });
   }
 
   private static analyzeFlags(
@@ -177,7 +103,8 @@ export class WebRTCFingerprint {
         return [];
       }
 
-      return await this.createIPPromise(collectLocalIPs, timeout);
+      const { localIPs } = await collectAllIPTypes(timeout);
+      return localIPs;
     } catch (error) {
       return [];
     }
@@ -189,7 +116,8 @@ export class WebRTCFingerprint {
         return [];
       }
 
-      return await this.createIPPromise(collectPublicIPs, timeout);
+      const { publicIPs } = await collectAllIPTypes(timeout);
+      return publicIPs;
     } catch (error) {
       return [];
     }
@@ -201,7 +129,8 @@ export class WebRTCFingerprint {
         return [];
       }
 
-      return await this.createIPPromise(collectRelayIPs, timeout);
+      const { relayIPs } = await collectAllIPTypes(timeout);
+      return relayIPs;
     } catch (error) {
       return [];
     }
