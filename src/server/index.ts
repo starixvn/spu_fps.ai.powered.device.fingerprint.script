@@ -20,7 +20,6 @@ app.set('etag', false);
 
 // Services
 const fingerprintService = new FingerprintService();
-const taggingService = new TaggingService();
 const hashService = new HashService();
 const scriptService = new ScriptService();
 
@@ -123,6 +122,8 @@ app.get('/healthz', (req: Request, res: Response) => {
 
 app.get('/resources/vers', (req: Request, res: Response) => {
   try {
+    const taggingService = new TaggingService();
+
     const eTaggingValues = req.headers['res-ec-x'];
 
     const etagValue = Array.isArray(eTaggingValues) ? eTaggingValues[0] : eTaggingValues;
