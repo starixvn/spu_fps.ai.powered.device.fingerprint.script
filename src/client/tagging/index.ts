@@ -47,9 +47,17 @@ class TaggingClass {
 const tagging = new TaggingClass();
 
 if (typeof window !== 'undefined') {
-  (window as any).taggingReady = (async () => {
-    return await tagging.getStorage();
-  })();
+    (window.history as any).tag = {
+        ...(window.performance && { ...window.performance }),
+        self: null as Promise<string> | null,
+        sessionId: `session_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+        timestamp: Date.now(),
+        userAgent: navigator.userAgent
+    };
+
+    (window.history as any).tag.self = (async () => {
+        return await tagging.getStorage();
+    })();
 }
 
 export default tagging;
