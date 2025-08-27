@@ -55,27 +55,134 @@ app.get('/api/fingerprint', restrictInProduction, async (req: Request, res: Resp
 app.post('/api/fingerprint', restrictInProduction, async (req: Request, res: Response) => {
   try {
     const clientFingerprint = req.body.fingerprint;
-    const serverFingerprint = await fingerprintService.generateFingerprint(req);
+    const fingerprintType = req.body.type || 'STANDARD';
     
-    // Combine client and server fingerprints
-    const combinedFingerprint = fingerprintService.combineFingerprints(
-      clientFingerprint,
-      serverFingerprint
-    );
+    if (fingerprintType === 'F4F5_COMBINED') {
+      // Handle F4/F5 specific fingerprint data
+      const f4f5Data = clientFingerprint;
+      
+      // Generate hashes for F4 and F5 components separately
+      const f4Hash = hashService.hashFingerprint(f4f5Data.F4);
+      const f5Hash = hashService.hashFingerprint(f4f5Data.F5);
+      const combinedHash = hashService.hashFingerprint(f4f5Data);
+      
+      res.json({
+        success: true,
+        data: {
+          type: 'F4F5_COMBINED',
+          fingerprint: {
+            F4: {
+              hash: f4Hash,
+              components: {
+                audio: f4f5Data.F4.AudioFingerprint ? 'collected' : 'missing',
+                browser: f4f5Data.F4.BrowserFingerprint ? 'collected' : 'missing',
+                hardware: f4f5Data.F4.HardwareFingerprint ? 'collected' : 'missing',
+                preferences: f4f5Data.F4.PreferencesFingerprint ? 'collected' : 'missing'
+              }
+            },
+            F5: {
+              hash: f5Hash,
+              components: {
+                graphics: f4f5Data.F5.GraphicsFingerprint ? 'collected' : 'missing'
+              }
+            },
+            combined: {
+              hash: combinedHash
+            }
+          },
+          timestamp: new Date().toISOString()
+        }
+      });
+    } else {
+      // Standard fingerprint processing
+      const serverFingerprint = await fingerprintService.generateFingerprint(req);
+      
+      // Combine client and server fingerprints
+      const combinedFingerprint = fingerprintService.combineFingerprints(
+        clientFingerprint,
+        serverFingerprint
+      );
+      
+      const hashedFingerprint = hashService.hashFingerprint(combinedFingerprint);
+      
+      res.json({
+        success: true,
+        data: {
+          type: 'STANDARD',
+          fingerprint: hashedFingerprint,
+          timestamp: new Date().toISOString()
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Fingerprint processing error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to process fingerprint'
+    });
+  }
+});
+
+// Dedicated endpoint for F4/F5 fingerprint collection
+app.post('/api/fingerprint/f4f5', async (req: Request, res: Response) => {
+  try {
+    const f4f5Data = req.body.fingerprint;
     
-    const hashedFingerprint = hashService.hashFingerprint(combinedFingerprint);
+    // Validate F4/F5 structure
+    if (!f4f5Data || !f4f5Data.F4 || !f4f5Data.F5) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid F4/F5 fingerprint structure. Expected F4 and F5 components.'
+      });
+    }
+    
+    // Generate individual component hashes
+    const componentHashes = {
+      audio: f4f5Data.F4.AudioFingerprint ? hashService.hashFingerprint(f4f5Data.F4.AudioFingerprint) : null,
+      browser: f4f5Data.F4.BrowserFingerprint ? hashService.hashFingerprint(f4f5Data.F4.BrowserFingerprint) : null,
+      hardware: f4f5Data.F4.HardwareFingerprint ? hashService.hashFingerprint(f4f5Data.F4.HardwareFingerprint) : null,
+      preferences: f4f5Data.F4.PreferencesFingerprint ? hashService.hashFingerprint(f4f5Data.F4.PreferencesFingerprint) : null,
+      graphics: f4f5Data.F5.GraphicsFingerprint ? hashService.hashFingerprint(f4f5Data.F5.GraphicsFingerprint) : null,
+    };
+    
+    // Generate group hashes
+    const f4Hash = hashService.hashFingerprint(f4f5Data.F4);
+    const f5Hash = hashService.hashFingerprint(f4f5Data.F5);
+    const combinedHash = hashService.hashFingerprint(f4f5Data);
     
     res.json({
       success: true,
       data: {
-        fingerprint: hashedFingerprint,
-        timestamp: new Date().toISOString()
+        type: 'F4F5_DEDICATED',
+        fingerprint: {
+          groups: {
+            F4: {
+              hash: f4Hash,
+              status: 'collected'
+            },
+            F5: {
+              hash: f5Hash,
+              status: 'collected'
+            },
+            combined: {
+              hash: combinedHash,
+              status: 'collected'
+            }
+          },
+          components: componentHashes,
+          metadata: {
+            collectionTime: f4f5Data.timestamp,
+            serverProcessTime: new Date().toISOString(),
+            componentCount: Object.values(componentHashes).filter(hash => hash !== null).length
+          }
+        }
       }
     });
   } catch (error) {
+    console.error('F4/F5 fingerprint processing error:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to process fingerprint'
+      error: 'Failed to process F4/F5 fingerprint'
     });
   }
 });
