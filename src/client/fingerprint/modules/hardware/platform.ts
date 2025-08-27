@@ -7,7 +7,6 @@ export function collectPlatform(): PlatformResult {
     const platform = getPlatform();
     return { platform };
   } catch (error) {
-    console.error("Error collecting platform:", error);
     return { platform: "" };
   }
 }

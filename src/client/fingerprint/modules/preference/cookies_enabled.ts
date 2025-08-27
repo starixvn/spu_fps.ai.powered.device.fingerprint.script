@@ -7,7 +7,6 @@ export function collectCookiesEnabled(): CookiesEnabledResult {
     const cookiesEnabled = getCookiesEnabled();
     return { cookiesEnabled };
   } catch (error) {
-    console.error("Error collecting cookies enabled status:", error);
     return { cookiesEnabled: false };
   }
 }

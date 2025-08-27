@@ -7,7 +7,6 @@ export function collectVendor(): VendorResult {
     const vendor = getVendor();
     return { vendor };
   } catch (error) {
-    console.error("Error collecting vendor:", error);
     return { vendor: "" };
   }
 }

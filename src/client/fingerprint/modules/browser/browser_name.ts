@@ -7,7 +7,6 @@ export function collectBrowserName(): BrowserNameResult {
     const browserName = getBrowserName();
     return { browserName };
   } catch (error) {
-    console.error("Error collecting browser name:", error);
     return { browserName: "" };
   }
 }
@@ -15,19 +14,20 @@ export function collectBrowserName(): BrowserNameResult {
 function getBrowserName(): string {
   try {
     const brands = navigator.userAgentData?.brands;
+    const fromFeatures = detectBrowserByFeatures();
+    const fromCSS = detectBrowserByCSS();
+    const userAgent = (navigator.userAgent || "").toLowerCase();
 
     if (brands?.length) {
       const fromBrands = parseFromBrands(brands);
+
       if (fromBrands !== "") return fromBrands;
     }
 
-    const fromFeatures = detectBrowserByFeatures();
     if (fromFeatures !== "") return fromFeatures;
 
-    const fromCSS = detectBrowserByCSS();
     if (fromCSS !== "") return fromCSS;
 
-    const userAgent = (navigator.userAgent || "").toLowerCase();
     if (!userAgent) return "";
 
     if (/edgios/.test(userAgent)) return "Edge (iOS)";
@@ -65,7 +65,7 @@ function detectBrowserByFeatures(): string {
       return "Brave";
     }
 
-    if (typeof window.InstallTrigger !== 'undefined') {
+    if (typeof window.InstallTrigger !== "undefined") {
       return "Firefox";
     }
 
@@ -85,20 +85,20 @@ function detectBrowserByFeatures(): string {
 
 function detectBrowserByCSS(): string {
   try {
-    const style = document.createElement('div').style;
+    const style = document.createElement("div").style;
 
     // Firefox specific CSS properties
-    if ('MozAppearance' in style) {
+    if ("MozAppearance" in style) {
       return "Firefox";
     }
 
     // Safari/WebKit specific
-    if ('WebkitAppearance' in style && !window.chrome) {
+    if ("WebkitAppearance" in style && !window.chrome) {
       return "Safari";
     }
 
     // Edge specific
-    if ('msScrollLimit' in style || 'msImeAlign' in style) {
+    if ("msScrollLimit" in style || "msImeAlign" in style) {
       return "Edge";
     }
 

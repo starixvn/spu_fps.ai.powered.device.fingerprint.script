@@ -7,20 +7,20 @@ export function collectVendorFlavors(): VendorFlavorsResult {
     const vendorFlavors = getVendorFlavors();
     return { vendorFlavors };
   } catch (error) {
-    console.error("Error collecting vendor flavors:", error);
     return { vendorFlavors: [] };
   }
 }
 
 function getVendorFlavors(): string[] {
   const flavors: string[] = [];
-
   const brands = navigator.userAgentData?.brands ?? [];
   const platform = navigator.userAgentData?.platform ?? "";
   const ua = navigator.userAgent;
+  const engine = detectEngine(ua);
 
   for (const brand of brands) {
     const name = brand.brand.trim();
+
     if (name && !isGreaseBrand(name) && !flavors.includes(`Brand:${name}`)) {
       flavors.push(`Brand:${name}`);
     }
@@ -34,7 +34,6 @@ function getVendorFlavors(): string[] {
     flavors.push(`Vendor:${navigator.vendor}`);
   }
 
-  const engine = detectEngine(ua);
   if (engine) {
     flavors.push(`Engine:${engine}`);
   }

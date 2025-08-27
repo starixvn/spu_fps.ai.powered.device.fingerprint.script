@@ -7,7 +7,6 @@ export function collectOpenDatabase(): OpenDatabaseResult {
     const openDatabase = getOpenDatabase();
     return { openDatabase };
   } catch (error) {
-    console.error("Error collecting openDatabase status:", error);
     return { openDatabase: false };
   }
 }

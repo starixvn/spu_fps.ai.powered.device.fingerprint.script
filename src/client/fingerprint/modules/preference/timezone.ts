@@ -7,7 +7,6 @@ export function collectTimezone(): TimezoneResult {
     const timezone = getTimezone();
     return { timezone };
   } catch (error) {
-    console.error("Error collecting timezone:", error);
     return { timezone: "" };
   }
 }

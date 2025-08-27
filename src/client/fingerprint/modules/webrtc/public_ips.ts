@@ -86,7 +86,6 @@ export async function collectPublicIPs(): Promise<string[]> {
       pc.createOffer()
         .then((offer) => pc.setLocalDescription(offer))
         .catch((error) => {
-          console.error("❌ Error creating WebRTC offer:", error);
           pc.close();
           clearTimeout(timeoutId);
           resolve([]);
@@ -107,7 +106,6 @@ export async function collectPublicIPs(): Promise<string[]> {
         }
       }, 2000);
     } catch (error) {
-      console.error("❌ Error in collectPublicIPs:", error);
       resolve([]);
     }
   });

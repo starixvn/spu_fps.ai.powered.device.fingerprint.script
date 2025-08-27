@@ -71,7 +71,6 @@ export async function collectLocalIPs(): Promise<string[]> {
         }
       };
     } catch (error) {
-      console.error("Error in collectLocalIPs:", error);
       resolve([]);
     }
   });

@@ -7,7 +7,6 @@ export async function collectAudio(): Promise<AudioFingerprintResult> {
     const audio = await getAudioFingerprint();
     return { audio };
   } catch (error) {
-    console.error("Error collecting audio:", error);
     return { audio: null };
   }
 }
@@ -48,7 +47,6 @@ async function getAudioFingerprint(): Promise<string | null> {
 
     return Array.from(audioData).slice(0, 30).join(",");
   } catch (e) {
-    console.error("Audio fingerprint error:", e);
     return null;
   }
 }

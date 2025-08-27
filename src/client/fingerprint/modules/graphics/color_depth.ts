@@ -4,17 +4,14 @@ export function collectColorDepth(): ColorDepthInfo {
   try {
     return getColorDepthInfo();
   } catch (error) {
-    console.error("Error collecting color depth fingerprint:", error);
     return getFallbackColorDepthInfo();
   }
 }
 
 function getColorDepthInfo(): ColorDepthInfo {
   const screen = window.screen;
-
   const colorDepth = screen.colorDepth || 0;
   const pixelDepth = screen.pixelDepth || 0;
-
   const bitsPerChannel = calculateBitsPerChannel(colorDepth);
   const totalBits = colorDepth || pixelDepth || 24;
 
@@ -53,9 +50,11 @@ function checkAlphaChannelSupport(): boolean {
   try {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
+
     if (!ctx) return false;
 
     const imageData = ctx.createImageData(1, 1);
+
     return imageData.data.length === 4; // RGBA
   } catch {
     return true;
@@ -70,7 +69,9 @@ function checkTransparencySupport(): boolean {
     testElement.style.backgroundColor = "rgba(255, 0, 0, 0.5)";
 
     document.body.appendChild(testElement);
+
     const computedStyle = window.getComputedStyle(testElement).backgroundColor;
+
     document.body.removeChild(testElement);
 
     return computedStyle.includes("rgba") || computedStyle.includes("hsla");

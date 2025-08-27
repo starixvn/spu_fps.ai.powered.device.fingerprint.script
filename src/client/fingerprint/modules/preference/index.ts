@@ -34,7 +34,6 @@ export class PreferencesFingerprint {
       return preferencesGroup;
     } catch (error) {
       console.error("Error collecting preferences fingerprint:", error);
-
       return {
         languages: [],
         timezone: "",

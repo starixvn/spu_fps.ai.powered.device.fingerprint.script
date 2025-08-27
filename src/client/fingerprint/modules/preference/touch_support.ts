@@ -7,7 +7,6 @@ export function collectTouchSupport(): TouchSupportResult {
     const touchSupport = getTouchSupport();
     return { touchSupport };
   } catch (error) {
-    console.error("Error collecting touch support:", error);
     return { touchSupport: false };
   }
 }

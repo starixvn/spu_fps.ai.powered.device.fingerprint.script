@@ -4,7 +4,6 @@ export function collectScreenFrame(): ScreenFrameInfo {
   try {
     return getScreenFrame();
   } catch (error) {
-    console.error("Error collecting screen frame fingerprint:", error);
     return getDefaultScreenFrame();
   }
 }

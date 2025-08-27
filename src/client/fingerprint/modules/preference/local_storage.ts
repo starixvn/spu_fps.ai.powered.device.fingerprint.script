@@ -7,7 +7,6 @@ export function collectLocalStorage(): LocalStorageResult {
     const localStorage = getLocalStorage();
     return { localStorage };
   } catch (error) {
-    console.error("Error collecting localStorage status:", error);
     return { localStorage: false };
   }
 }

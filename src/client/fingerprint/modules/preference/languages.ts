@@ -7,7 +7,6 @@ export function collectLanguages(): LanguagesResult {
     const languages = getLanguages();
     return { languages };
   } catch (error) {
-    console.error("Error collecting languages:", error);
     return { languages: [""] };
   }
 }
@@ -23,6 +22,7 @@ function getLanguages(): string[] {
     if (navigator.language && navigator.language.trim()) {
       return [navigator.language];
     }
+
     return [""];
   } catch {
     return [""];

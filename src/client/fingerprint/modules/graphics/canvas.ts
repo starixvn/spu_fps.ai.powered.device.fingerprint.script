@@ -4,7 +4,6 @@ export async function collectCanvas(): Promise<CanvasInfo> {
   try {
     return getCanvasInfo();
   } catch (error) {
-    console.error("Error collecting canvas fingerprint:", error);
     return getEmptyCanvasInfo();
   }
 }
@@ -12,6 +11,7 @@ export async function collectCanvas(): Promise<CanvasInfo> {
 function getCanvasInfo(): CanvasInfo {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
+
   if (!ctx) throw new Error("Canvas 2D context not available");
 
   canvas.width = 200;

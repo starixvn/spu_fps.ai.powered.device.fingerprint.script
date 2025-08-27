@@ -7,7 +7,6 @@ export async function collectAudioBaseLatency(): Promise<AudioBaseLatencyResult>
     const audioBaseLatency = await getAudioBaseLatency();
     return { audioBaseLatency };
   } catch (error) {
-    console.error("Error collecting audio base latency:", error);
     return { audioBaseLatency: "" };
   }
 }
@@ -51,7 +50,6 @@ async function getAudioBaseLatency(): Promise<number | string> {
 
     return Math.round(measuredLatency * 100) / 100;
   } catch (error) {
-    console.error("Error in getAudioBaseLatency:", error);
     return "";
   }
 }

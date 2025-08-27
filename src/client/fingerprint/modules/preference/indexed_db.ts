@@ -7,7 +7,6 @@ export async function collectIndexedDB(): Promise<IndexedDBResult> {
     const indexedDB = await getIndexedDB();
     return { indexedDB };
   } catch (error) {
-    console.error("Error collecting IndexedDB status:", error);
     return { indexedDB: false };
   }
 }
@@ -24,7 +23,6 @@ async function getIndexedDB(): Promise<boolean> {
 
     return new Promise((resolve) => {
       const timeout = setTimeout(() => resolve(false), 5000);
-
       const request = window.indexedDB.open(testDBName, 1);
 
       request.onerror = () => {
@@ -43,6 +41,7 @@ async function getIndexedDB(): Promise<boolean> {
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
+
         if (!db.objectStoreNames.contains("test")) {
           db.createObjectStore("test", { keyPath: "id" });
         }

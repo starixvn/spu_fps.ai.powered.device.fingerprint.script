@@ -4,7 +4,6 @@ export async function collectWebGLExtensions(): Promise<WebGLExtensionsInfo> {
   try {
     return await getWebGLExtensions();
   } catch (error) {
-    console.error("Error collecting WebGL extensions fingerprint:", error);
     return {
       extensions: [],
       supportedExtensions: [],
@@ -39,7 +38,6 @@ async function getWebGLExtensions(): Promise<WebGLExtensionsInfo> {
   }
 
   const supportedExtensions = gl.getSupportedExtensions() || [];
-
   const extensions = supportedExtensions.filter((ext) => {
     try {
       return !!gl.getExtension(ext);
@@ -49,10 +47,12 @@ async function getWebGLExtensions(): Promise<WebGLExtensionsInfo> {
   });
 
   let compressedTextureFormats: string[] = [];
+
   try {
     const formats = gl.getParameter(gl.COMPRESSED_TEXTURE_FORMATS) as
       | number[]
       | null;
+
     if (formats && Array.isArray(formats)) {
       compressedTextureFormats = formats.map(String);
     }
@@ -70,6 +70,7 @@ async function getWebGLExtensions(): Promise<WebGLExtensionsInfo> {
   let maxDrawBuffers = 0;
   let maxColorAttachments = 0;
   const drawBuffersExt = gl.getExtension("WEBGL_draw_buffers");
+
   if (drawBuffersExt) {
     maxDrawBuffers =
       gl.getParameter(drawBuffersExt.MAX_DRAW_BUFFERS_WEBGL) || 0;

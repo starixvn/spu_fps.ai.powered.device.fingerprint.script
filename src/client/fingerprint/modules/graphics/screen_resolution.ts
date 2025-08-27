@@ -4,7 +4,6 @@ export function collectScreenResolution(): ScreenResolutionInfo {
   try {
     return getScreenResolution();
   } catch (error) {
-    console.error("Error collecting screen resolution fingerprint:", error);
     return getDefaultScreenResolution();
   }
 }
@@ -40,6 +39,7 @@ function calculateEffectivePixelRatio(): number {
 
     if ("webkitDevicePixelRatio" in window) {
       const webkitRatio = (window as any).webkitDevicePixelRatio;
+
       if (typeof webkitRatio === "number") {
         pixelRatio = Math.max(pixelRatio, webkitRatio);
       }
@@ -49,6 +49,7 @@ function calculateEffectivePixelRatio(): number {
       if (window.matchMedia("(-webkit-min-device-pixel-ratio: 2)").matches) {
         pixelRatio = Math.max(pixelRatio, 2);
       }
+
       if (window.matchMedia("(-webkit-min-device-pixel-ratio: 3)").matches) {
         pixelRatio = Math.max(pixelRatio, 3);
       }

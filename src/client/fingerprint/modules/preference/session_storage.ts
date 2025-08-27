@@ -7,7 +7,6 @@ export function collectSessionStorage(): SessionStorageResult {
     const sessionStorage = getSessionStorage();
     return { sessionStorage };
   } catch (error) {
-    console.error("Error collecting sessionStorage status:", error);
     return { sessionStorage: false };
   }
 }

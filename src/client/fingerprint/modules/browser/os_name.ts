@@ -7,7 +7,6 @@ export function collectOSName(): OSNameResult {
     const osName = getOSName();
     return { osName };
   } catch (error) {
-    console.error("Error collecting OS name:", error);
     return { osName: "" };
   }
 }
@@ -19,18 +18,11 @@ function getOSName(): string {
     }
 
     const fromPlatform = detectOSByPlatform();
-    if (fromPlatform !== "") return fromPlatform;
-
     const fromFeatures = detectOSByFeatures();
-    if (fromFeatures !== "") return fromFeatures;
-
     const fromHardware = detectOSByHardware();
-    if (fromHardware !== "") return fromHardware;
-
     const fromInput = detectOSByInput();
-    if (fromInput !== "") return fromInput;
-
     const userAgent = navigator.userAgent;
+
     const osPatterns = [
       { pattern: /Windows NT/, name: "Windows" },
       { pattern: /Windows/, name: "Windows" },
@@ -44,6 +36,14 @@ function getOSName(): string {
       { pattern: /webOS/, name: "webOS" },
       { pattern: /Windows Phone/, name: "Windows Phone" },
     ];
+
+    if (fromPlatform !== "") return fromPlatform;
+
+    if (fromFeatures !== "") return fromFeatures;
+
+    if (fromHardware !== "") return fromHardware;
+
+    if (fromInput !== "") return fromInput;
 
     for (const os of osPatterns) {
       if (os.pattern.test(userAgent)) {
@@ -60,11 +60,18 @@ function getOSName(): string {
 function detectOSByPlatform(): string {
   try {
     const platform = navigator.platform?.toLowerCase() || "";
+
     if (platform.includes("win")) return "Windows";
     if (platform.includes("mac")) return "macOS";
-    if (platform.includes("iphone") || platform.includes("ipad") || platform.includes("ipod")) return "iOS";
+    if (
+      platform.includes("iphone") ||
+      platform.includes("ipad") ||
+      platform.includes("ipod")
+    )
+      return "iOS";
     if (platform.includes("linux")) return "Linux";
     if (platform.includes("android")) return "Android";
+
     return "";
   } catch {
     return "";
@@ -73,26 +80,35 @@ function detectOSByPlatform(): string {
 
 function detectOSByFeatures(): string {
   try {
-    if ((navigator as any).msMaxTouchPoints !== undefined ||
-        (navigator as any).msSaveBlob !== undefined ||
-        'MSInputMethodContext' in window) {
+    if (
+      (navigator as any).msMaxTouchPoints !== undefined ||
+      (navigator as any).msSaveBlob !== undefined ||
+      "MSInputMethodContext" in window
+    ) {
       return "Windows";
     }
 
-    if ((window as any).safari && (window as any).safari.pushNotification &&
-        !navigator.userAgent.includes('iPhone') &&
-        !navigator.userAgent.includes('iPad')) {
+    if (
+      (window as any).safari &&
+      (window as any).safari.pushNotification &&
+      !navigator.userAgent.includes("iPhone") &&
+      !navigator.userAgent.includes("iPad")
+    ) {
       return "macOS";
     }
 
-    if ((window as any).DeviceMotionEvent &&
-        typeof (window as any).DeviceMotionEvent.requestPermission === 'function') {
+    if (
+      (window as any).DeviceMotionEvent &&
+      typeof (window as any).DeviceMotionEvent.requestPermission === "function"
+    ) {
       return "iOS";
     }
 
-    if ((window as any).orientation !== undefined &&
-        'ontouchstart' in window &&
-        navigator.userAgent.includes('Mobile')) {
+    if (
+      (window as any).orientation !== undefined &&
+      "ontouchstart" in window &&
+      navigator.userAgent.includes("Mobile")
+    ) {
       return "Android";
     }
 
@@ -111,20 +127,35 @@ function detectOSByHardware(): string {
     const height = screen.height * ratio;
 
     const iosResolutions = [
-      [320, 568], [375, 667], [375, 812], [390, 844], [393, 852],
-      [414, 736], [414, 896], [428, 926],
-      [768, 1024], [820, 1180], [834, 1194], [1024, 1366]
+      [320, 568],
+      [375, 667],
+      [375, 812],
+      [390, 844],
+      [393, 852],
+      [414, 736],
+      [414, 896],
+      [428, 926],
+      [768, 1024],
+      [820, 1180],
+      [834, 1194],
+      [1024, 1366],
     ];
 
-    if (iosResolutions.some(([w, h]) =>
-        (width === w && height === h) || (width === h && height === w))) {
+    if (
+      iosResolutions.some(
+        ([w, h]) =>
+          (width === w && height === h) || (width === h && height === w)
+      )
+    ) {
       return "iOS";
     }
 
-    if (ratio > 2 && 'ontouchstart' in window) {
+    if (ratio > 2 && "ontouchstart" in window) {
       if (navigator.maxTouchPoints > 0) {
-        return navigator.userAgent.includes('iPhone') ||
-               navigator.userAgent.includes('iPad') ? "iOS" : "Android";
+        return navigator.userAgent.includes("iPhone") ||
+          navigator.userAgent.includes("iPad")
+          ? "iOS"
+          : "Android";
       }
     }
 
@@ -136,9 +167,10 @@ function detectOSByHardware(): string {
 
 function detectOSByInput(): string {
   try {
-    const hasTouch = 'ontouchstart' in window ||
-                    navigator.maxTouchPoints > 0 ||
-                    (navigator as any).msMaxTouchPoints > 0;
+    const hasTouch =
+      "ontouchstart" in window ||
+      navigator.maxTouchPoints > 0 ||
+      (navigator as any).msMaxTouchPoints > 0;
 
     if (hasTouch) {
       if ((window as any).orientation !== undefined) {
@@ -148,7 +180,7 @@ function detectOSByInput(): string {
         return "Android";
       }
 
-      if (navigator.userAgent.includes('Windows')) {
+      if (navigator.userAgent.includes("Windows")) {
         return "Windows";
       }
     }
@@ -178,5 +210,3 @@ function normalizePlatform(platform: string): string {
 
   return platform;
 }
-
-

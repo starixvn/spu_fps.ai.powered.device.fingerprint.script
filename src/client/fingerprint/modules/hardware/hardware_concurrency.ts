@@ -7,7 +7,6 @@ export function collectHardwareConcurrency(): HardwareConcurrencyResult {
     const hardwareConcurrency = getHardwareConcurrency();
     return { hardwareConcurrency };
   } catch (error) {
-    console.error("Error collecting hardware concurrency:", error);
     return { hardwareConcurrency: "" };
   }
 }

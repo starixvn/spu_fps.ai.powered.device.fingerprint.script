@@ -52,7 +52,6 @@ export function collectWebGLBasics(): WebGLBasicsInfo {
 
     return info;
   } catch (error) {
-    console.error("Error collecting WebGL basics fingerprint:", error);
     return getEmptyWebGLBasics();
   }
 }

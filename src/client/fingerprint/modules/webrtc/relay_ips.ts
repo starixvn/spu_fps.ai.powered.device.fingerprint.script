@@ -78,7 +78,6 @@ export async function collectRelayIPs(): Promise<string[]> {
       pc.createOffer()
         .then((offer) => pc.setLocalDescription(offer))
         .catch((error) => {
-          console.error("❌ Error creating WebRTC offer:", error);
           pc.close();
           clearTimeout(timeoutId);
           resolve([]);
@@ -99,7 +98,6 @@ export async function collectRelayIPs(): Promise<string[]> {
         }
       }, 2000);
     } catch (error) {
-      console.error("❌ Error in collectRelayIPs:", error);
       resolve([]);
     }
   });

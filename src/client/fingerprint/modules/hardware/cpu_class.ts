@@ -7,7 +7,6 @@ export function collectCpuClass(): CpuClassResult {
     const cpuClass = getCpuClass();
     return { cpuClass };
   } catch (error) {
-    console.error("Error collecting CPU class:", error);
     return { cpuClass: "" };
   }
 }

@@ -7,7 +7,6 @@ export function collectDeviceMemory(): DeviceMemoryResult {
     const deviceMemory = getDeviceMemory();
     return { deviceMemory };
   } catch (error) {
-    console.error("Error collecting device memory:", error);
     return { deviceMemory: "" };
   }
 }

@@ -29,7 +29,6 @@ export class BrowserFingerprint {
       return browserGroup;
     } catch (error) {
       console.error("Error collecting browser fingerprint:", error);
-
       return {
         browserName: "",
         osName: "",
@@ -59,7 +58,6 @@ function collectPdfViewerEnabledSync(): { pdfViewerEnabled: boolean } {
     const pdfViewerEnabled = navigator.pdfViewerEnabled ?? false;
     return { pdfViewerEnabled };
   } catch (error) {
-    console.error("Error collecting PDF viewer status:", error);
     return { pdfViewerEnabled: false };
   }
 }

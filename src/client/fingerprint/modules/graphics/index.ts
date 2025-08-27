@@ -5,12 +5,16 @@ import { collectScreenResolution } from "./screen_resolution";
 import { collectScreenFrame } from "./screen_frame";
 import { collectColorDepth } from "./color_depth";
 import { collectColorGamut } from "./color_gamut";
+import { collectWebGLBasics } from "./webgl_basics";
+import { collectWebGLExtensions } from "./webgl_extensions";
 import type { GraphicsGroupResult } from "../../types";
 
 export class GraphicsFingerprint {
   public static async collect(): Promise<GraphicsGroupResult> {
     try {
       const canvasResult = await collectCanvas();
+      const webglBasicsResult = collectWebGLBasics();
+      const webglExtensionsResult = await collectWebGLExtensions();
       const fontsResult = await collectFonts();
       const fontPreferencesResult = collectFontPreferences();
       const screenResolutionResult = collectScreenResolution();
@@ -20,29 +24,8 @@ export class GraphicsFingerprint {
 
       const graphicsGroup: GraphicsGroupResult = {
         canvas: canvasResult,
-        webglBasics: {
-          vendor: "",
-          renderer: "",
-          version: "",
-          shadingLanguageVersion: "",
-          maxTextureSize: 0,
-          maxViewportDims: [0, 0],
-          maxRenderbufferSize: 0,
-          aliasedLineWidthRange: [0, 0],
-          aliasedPointSizeRange: [0, 0],
-          maxAnisotropy: 0,
-        },
-        webglExtensions: {
-          extensions: [],
-          supportedExtensions: [],
-          compressedTextureFormats: [],
-          maxDrawBuffers: 0,
-          maxColorAttachments: 0,
-          maxVertexAttribs: 0,
-          maxVertexUniformVectors: 0,
-          maxFragmentUniformVectors: 0,
-          maxVaryingVectors: 0,
-        },
+        webglBasics: webglBasicsResult,
+        webglExtensions: webglExtensionsResult,
         fonts: fontsResult,
         fontPreferences: fontPreferencesResult,
         screenResolution: screenResolutionResult,
@@ -54,7 +37,6 @@ export class GraphicsFingerprint {
       return graphicsGroup;
     } catch (error) {
       console.error("Error collecting graphics fingerprint:", error);
-
       return {
         canvas: {
           fingerprint: "",

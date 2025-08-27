@@ -76,7 +76,6 @@ export class WebRTCFingerprint {
       };
     } catch (error) {
       console.error("Error collecting WebRTC fingerprint:", error);
-
       return {
         localIPs: [],
         publicIPs: [],
@@ -180,7 +179,6 @@ export class WebRTCFingerprint {
 
       return await this.createIPPromise(collectLocalIPs, timeout);
     } catch (error) {
-      console.error("Error collecting local IPs:", error);
       return [];
     }
   }
@@ -193,7 +191,6 @@ export class WebRTCFingerprint {
 
       return await this.createIPPromise(collectPublicIPs, timeout);
     } catch (error) {
-      console.error("Error collecting public IPs:", error);
       return [];
     }
   }
@@ -206,7 +203,6 @@ export class WebRTCFingerprint {
 
       return await this.createIPPromise(collectRelayIPs, timeout);
     } catch (error) {
-      console.error("Error collecting relay IPs:", error);
       return [];
     }
   }

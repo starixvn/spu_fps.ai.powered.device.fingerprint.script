@@ -13,7 +13,6 @@ export function collectPlugins(): PluginsResult {
     const plugins = getPlugins();
     return { plugins };
   } catch (error) {
-    console.error("Error collecting plugins:", error);
     return { plugins: [] };
   }
 }

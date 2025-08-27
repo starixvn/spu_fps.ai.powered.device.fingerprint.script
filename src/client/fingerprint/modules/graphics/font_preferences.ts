@@ -4,13 +4,13 @@ export function collectFontPreferences(): FontPreferencesInfo {
   try {
     return getFontPreferences();
   } catch (error) {
-    console.error("Error collecting font preferences fingerprint:", error);
     return getDefaultFontPreferences();
   }
 }
 
 function getFontPreferences(): FontPreferencesInfo {
   const testElement = document.createElement("div");
+
   testElement.style.position = "absolute";
   testElement.style.visibility = "hidden";
   testElement.style.fontSize = "16px";
@@ -19,7 +19,6 @@ function getFontPreferences(): FontPreferencesInfo {
   document.body.appendChild(testElement);
 
   const computedStyle = window.getComputedStyle(testElement);
-
   const fontFamily = computedStyle.fontFamily || "";
   const fontSize = computedStyle.fontSize || "";
   const fontWeight = computedStyle.fontWeight || "";
@@ -52,46 +51,53 @@ function getFontPreferences(): FontPreferencesInfo {
 function testFontPreferences(): Partial<FontPreferencesInfo> {
   const preferences: Partial<FontPreferencesInfo> = {};
   const testElement = document.createElement("div");
+
+  const computedSize = window.getComputedStyle(testElement).fontSize;
+  const computedWeight = window.getComputedStyle(testElement).fontWeight;
+  const computedStyle = window.getComputedStyle(testElement).fontStyle;
+  const computedAlign = window.getComputedStyle(testElement).textAlign;
+
+  const testSizes = ["12px", "14px", "16px", "18px", "20px"];
+  const testWeights = ["normal", "bold", "100", "300", "700"];
+  const testStyles = ["normal", "italic", "oblique"];
+  const testAligns = ["left", "center", "right", "justify"];
+
   testElement.style.position = "absolute";
   testElement.style.visibility = "hidden";
   testElement.textContent = "Test";
 
   document.body.appendChild(testElement);
 
-  const testSizes = ["12px", "14px", "16px", "18px", "20px"];
   for (const size of testSizes) {
     testElement.style.fontSize = size;
-    const computedSize = window.getComputedStyle(testElement).fontSize;
+
     if (computedSize && computedSize !== "16px") {
       preferences.fontSize = computedSize;
       break;
     }
   }
 
-  const testWeights = ["normal", "bold", "100", "300", "700"];
   for (const weight of testWeights) {
     testElement.style.fontWeight = weight;
-    const computedWeight = window.getComputedStyle(testElement).fontWeight;
+
     if (computedWeight && computedWeight !== "400") {
       preferences.fontWeight = computedWeight;
       break;
     }
   }
 
-  const testStyles = ["normal", "italic", "oblique"];
   for (const style of testStyles) {
     testElement.style.fontStyle = style;
-    const computedStyle = window.getComputedStyle(testElement).fontStyle;
+
     if (computedStyle && computedStyle !== "normal") {
       preferences.fontStyle = computedStyle;
       break;
     }
   }
 
-  const testAligns = ["left", "center", "right", "justify"];
   for (const align of testAligns) {
     testElement.style.textAlign = align;
-    const computedAlign = window.getComputedStyle(testElement).textAlign;
+
     if (computedAlign && computedAlign !== "start") {
       preferences.textAlign = computedAlign;
       break;
@@ -99,6 +105,7 @@ function testFontPreferences(): Partial<FontPreferencesInfo> {
   }
 
   document.body.removeChild(testElement);
+
   return preferences;
 }
 

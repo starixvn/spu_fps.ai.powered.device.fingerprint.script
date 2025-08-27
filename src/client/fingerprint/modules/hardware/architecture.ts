@@ -7,7 +7,6 @@ export async function collectArchitecture(): Promise<ArchitectureResult> {
     const architecture = await getArchitecture();
     return { architecture };
   } catch (error) {
-    console.error("Error collecting architecture:", error);
     return { architecture: "" };
   }
 }
@@ -21,9 +20,7 @@ async function getArchitecture(): Promise<string> {
         ]);
 
         if (data?.architecture) return data.architecture;
-      } catch (err) {
-        console.warn("High-entropy Client Hints not available:", err);
-      }
+      } catch (err) {}
     }
 
     const userAgent = navigator.userAgent.toLowerCase();

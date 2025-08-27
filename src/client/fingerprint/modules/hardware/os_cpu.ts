@@ -7,7 +7,6 @@ export function collectOSCpu(): OSCpuResult {
     const oscpu = getOSCpu();
     return { oscpu };
   } catch (error) {
-    console.error("Error collecting OSCPU:", error);
     return { oscpu: "" };
   }
 }

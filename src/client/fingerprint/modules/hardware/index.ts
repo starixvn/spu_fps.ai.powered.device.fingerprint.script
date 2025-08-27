@@ -28,14 +28,13 @@ export class HardwareFingerprint {
       return hardwareGroup;
     } catch (error) {
       console.error("Error collecting hardware fingerprint:", error);
-
       return {
         platform: "",
         cpuClass: "",
         architecture: "",
         oscpu: "",
-        hardwareConcurrency: 0,
-        deviceMemory: 0,
+        hardwareConcurrency: "",
+        deviceMemory: "",
       };
     }
   }
