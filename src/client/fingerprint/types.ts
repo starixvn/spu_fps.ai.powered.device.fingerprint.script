@@ -202,8 +202,17 @@ export interface ColorGamutInfo {
   displayP3Support: boolean;
 }
 
+export interface AudioInfo {
+  fingerprint: string; // hash hoặc checksum
+  raw: number[];       // full waveform
+  entropy: number;
+  noiseType: "ok" | "blocked" | "spoofed" | "randomized";
+  sampleRate: number;
+  length: number;
+}
+
 export interface AudioGroupResult {
-  audio: string | null;
+  audio: AudioInfo;
   audioBaseLatency: number | string;
 }
 

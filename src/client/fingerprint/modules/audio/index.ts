@@ -9,7 +9,7 @@ export class AudioFingerprint {
       const audioBaseLatencyResult = await collectAudioBaseLatency();
 
       const audioGroup: AudioGroupResult = {
-        audio: audioResult.audio,
+        audio: audioResult,
         audioBaseLatency: audioBaseLatencyResult.audioBaseLatency,
       };
 
@@ -17,7 +17,14 @@ export class AudioFingerprint {
     } catch (error) {
       console.error("Error collecting audio fingerprint:", error);
       return {
-        audio: "",
+        audio: {
+          fingerprint: "",
+          raw: [],
+          entropy: 0,
+          noiseType: "blocked",
+          sampleRate: 0,
+          length: 0,
+        },
         audioBaseLatency: 0,
       };
     }
