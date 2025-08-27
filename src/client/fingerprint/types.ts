@@ -83,6 +83,7 @@ export interface GraphicsGroupResult {
 
 export interface CanvasInfo {
   fingerprint: string;
+  noiseType: "ok" | "blocked" | "spoofed" | "randomized";
   width: number;
   height: number;
   textRendering: string;

@@ -40,6 +40,7 @@ export class GraphicsFingerprint {
       return {
         canvas: {
           fingerprint: "",
+          noiseType: "blocked",
           width: 0,
           height: 0,
           textRendering: "",
