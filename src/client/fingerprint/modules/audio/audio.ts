@@ -1,7 +1,7 @@
 import type { AudioInfo } from "../../types";
 
-const SESSION_CACHE_KEY = "__audio_fp_session__";
-const LOCAL_CACHE_KEY = "__audio_fp_local__";
+const AUDIO_SESSION_CACHE_KEY = "__audio_fp_session__";
+const AUDIO_LOCAL_CACHE_KEY = "__audio_fp_local__";
 
 export async function collectAudio(): Promise<AudioInfo> {
   try {
@@ -46,20 +46,20 @@ async function getAudioInfo(): Promise<AudioInfo> {
   } else if (entropy < 0.5) {
     noiseType = "spoofed";
   } else {
-    const cachedSession = sessionStorage.getItem(SESSION_CACHE_KEY);
-    const cachedLocal = localStorage.getItem(LOCAL_CACHE_KEY);
+    const cachedSession = sessionStorage.getItem(AUDIO_SESSION_CACHE_KEY);
+    const cachedLocal = localStorage.getItem(AUDIO_LOCAL_CACHE_KEY);
 
     if (cachedSession && cachedSession !== fingerprint) {
       noiseType = "randomized";
     }
 
-    sessionStorage.setItem(SESSION_CACHE_KEY, fingerprint);
+    sessionStorage.setItem(AUDIO_SESSION_CACHE_KEY, fingerprint);
 
     if (cachedLocal && cachedLocal !== fingerprint) {
       noiseType = "randomized";
     }
 
-    localStorage.setItem(LOCAL_CACHE_KEY, fingerprint);
+    localStorage.setItem(AUDIO_LOCAL_CACHE_KEY, fingerprint);
   }
 
   return {

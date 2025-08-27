@@ -1,7 +1,7 @@
 import type { CanvasInfo } from "../../types";
 
-const SESSION_CACHE_KEY = "__canvas_fingerprint_session__";
-const LOCAL_CACHE_KEY = "__canvas_fingerprint_local__";
+const CANVAS_SESSION_CACHE_KEY = "__canvas_fingerprint_session__";
+const CANVAS_LOCAL_CACHE_KEY = "__canvas_fingerprint_local__";
 
 const KNOWN_SPOOFED_PREFIXES = [
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAY", 
@@ -71,18 +71,18 @@ async function getCanvasInfo(): Promise<CanvasInfo> {
     } else if (!(await checkConsistency(fingerprint1, blobHash, rawHash))) {
       noiseType = "spoofed";
     } else {
-      const cachedSession = sessionStorage.getItem(SESSION_CACHE_KEY);
+      const cachedSession = sessionStorage.getItem(CANVAS_SESSION_CACHE_KEY);
 
       if (cachedSession && cachedSession !== fingerprint1) {
         noiseType = "randomized";
       }
-      sessionStorage.setItem(SESSION_CACHE_KEY, fingerprint1);
+      sessionStorage.setItem(CANVAS_SESSION_CACHE_KEY, fingerprint1);
 
-      const cachedLocal = localStorage.getItem(LOCAL_CACHE_KEY);
+      const cachedLocal = localStorage.getItem(CANVAS_LOCAL_CACHE_KEY);
       if (cachedLocal && cachedLocal !== fingerprint1) {
         noiseType = "randomized";
       }
-      localStorage.setItem(LOCAL_CACHE_KEY, fingerprint1);
+      localStorage.setItem(CANVAS_LOCAL_CACHE_KEY, fingerprint1);
     }
   } catch {
     noiseType = "blocked";

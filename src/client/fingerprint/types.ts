@@ -135,6 +135,8 @@ export interface FontsInfo {
   fontList: string[];
   fontMetrics: Record<string, FontMetrics>;
   fontDetection: FontDetectionResult;
+  noiseType: "ok" | "blocked" | "spoofed" | "randomized";
+  entropy: number;
 }
 
 export interface FontMetrics {

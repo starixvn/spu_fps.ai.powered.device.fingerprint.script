@@ -36,7 +36,6 @@ export class GraphicsFingerprint {
 
       return graphicsGroup;
     } catch (error) {
-      console.error("Error collecting graphics fingerprint:", error);
       return {
         canvas: {
           fingerprint: "",
@@ -91,6 +90,8 @@ export class GraphicsFingerprint {
             fallbackFonts: [],
             systemFonts: [],
           },
+          noiseType: "blocked",
+          entropy: 0,
         },
         fontPreferences: {
           fontFamily: "",
