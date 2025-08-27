@@ -1,12 +1,12 @@
 import { collectCanvas } from "./canvas";
 import { collectFonts } from "./fonts";
-import { collectFontPreferences } from "./font_preferences";
-import { collectScreenResolution } from "./screen_resolution";
-import { collectScreenFrame } from "./screen_frame";
-import { collectColorDepth } from "./color_depth";
-import { collectColorGamut } from "./color_gamut";
-import { collectWebGLBasics } from "./webgl_basics";
-import { collectWebGLExtensions } from "./webgl_extensions";
+import { collectFontPreferences } from "./fontPreferences";
+import { collectScreenResolution } from "./screenResolution";
+import { collectScreenFrame } from "./screenFrame";
+import { collectColorDepth } from "./colorDepth";
+import { collectColorGamut } from "./colorGamut";
+import { collectWebGLBasics } from "./webglBasics";
+import { collectWebGLExtensions } from "./webglExtensions";
 import type { GraphicsGroupResult } from "../../types";
 
 export class GraphicsFingerprint {

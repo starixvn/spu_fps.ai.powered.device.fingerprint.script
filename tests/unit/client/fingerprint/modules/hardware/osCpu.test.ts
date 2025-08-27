@@ -1,4 +1,4 @@
-import { collectOSCpu } from '../../../../../../src/client/fingerprint/modules/hardware/os_cpu';
+import { collectOSCpu } from '../../../../../../src/client/fingerprint/modules/hardware/osCpu';
 
 // Mock navigator object
 const mockNavigator: any = {

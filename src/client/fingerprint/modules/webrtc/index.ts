@@ -1,6 +1,6 @@
-import { collectLocalIPs } from "./local_ips";
-import { collectPublicIPs } from "./public_ips";
-import { collectRelayIPs } from "./relay_ips";
+import { collectLocalIPs } from "./localIps";
+import { collectPublicIPs } from "./publicIps";
+import { collectRelayIPs } from "./relayIps";
 import type { WebRTCGroupResult } from "../../types";
 
 export class WebRTCFingerprint {

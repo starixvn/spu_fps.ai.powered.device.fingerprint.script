@@ -1,7 +1,7 @@
-import { collectBrowserName } from "./browser_name";
-import { collectOSName } from "./os_name";
+import { collectBrowserName } from "./browserName";
+import { collectOSName } from "./osName";
 import { collectVendor } from "./vendor";
-import { collectVendorFlavors } from "./vendor_flavors";
+import { collectVendorFlavors } from "./vendorFlavors";
 import { collectPlugins } from "./plugins";
 import type { BrowserGroupResult } from "../../types";
 

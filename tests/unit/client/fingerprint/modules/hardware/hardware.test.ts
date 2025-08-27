@@ -1,10 +1,10 @@
 import { HardwareFingerprint } from '../../../../../../src/client/fingerprint/modules/hardware';
 import { collectPlatform } from '../../../../../../src/client/fingerprint/modules/hardware/platform';
-import { collectCpuClass } from '../../../../../../src/client/fingerprint/modules/hardware/cpu_class';
+import { collectCpuClass } from '../../../../../../src/client/fingerprint/modules/hardware/cpuClass';
 import { collectArchitecture } from '../../../../../../src/client/fingerprint/modules/hardware/architecture';
-import { collectOSCpu } from '../../../../../../src/client/fingerprint/modules/hardware/os_cpu';
-import { collectHardwareConcurrency } from '../../../../../../src/client/fingerprint/modules/hardware/hardware_concurrency';
-import { collectDeviceMemory } from '../../../../../../src/client/fingerprint/modules/hardware/device_memory';
+import { collectOSCpu } from '../../../../../../src/client/fingerprint/modules/hardware/osCpu';
+import { collectHardwareConcurrency } from '../../../../../../src/client/fingerprint/modules/hardware/hardwareConcurrency';
+import { collectDeviceMemory } from '../../../../../../src/client/fingerprint/modules/hardware/deviceMemory';
 
 // Mock navigator object for all tests
 const mockNavigator: any = {

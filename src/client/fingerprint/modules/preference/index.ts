@@ -1,11 +1,11 @@
 import { collectLanguages } from "./languages";
 import { collectTimezone } from "./timezone";
-import { collectTouchSupport } from "./touch_support";
-import { collectSessionStorage } from "./session_storage";
-import { collectOpenDatabase } from "./open_database";
-import { collectLocalStorage } from "./local_storage";
-import { collectIndexedDB } from "./indexed_db";
-import { collectCookiesEnabled } from "./cookies_enabled";
+import { collectTouchSupport } from "./touchSupport";
+import { collectSessionStorage } from "./sessionStorage";
+import { collectOpenDatabase } from "./openDatabase";
+import { collectLocalStorage } from "./localStorage";
+import { collectIndexedDB } from "./indexedDb";
+import { collectCookiesEnabled } from "./cookiesEnabled";
 import type { PreferencesGroupResult } from "../../types";
 
 export class PreferencesFingerprint {

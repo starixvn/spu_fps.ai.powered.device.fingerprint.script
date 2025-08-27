@@ -2,18 +2,18 @@ import { HardwareFingerprint } from '../../../../../../src/client/fingerprint/mo
 
 // Mock all hardware modules
 jest.mock('../../../../../../src/client/fingerprint/modules/hardware/platform');
-jest.mock('../../../../../../src/client/fingerprint/modules/hardware/cpu_class');
+jest.mock('../../../../../../src/client/fingerprint/modules/hardware/cpuClass');
 jest.mock('../../../../../../src/client/fingerprint/modules/hardware/architecture');
-jest.mock('../../../../../../src/client/fingerprint/modules/hardware/os_cpu');
-jest.mock('../../../../../../src/client/fingerprint/modules/hardware/hardware_concurrency');
-jest.mock('../../../../../../src/client/fingerprint/modules/hardware/device_memory');
+jest.mock('../../../../../../src/client/fingerprint/modules/hardware/osCpu');
+jest.mock('../../../../../../src/client/fingerprint/modules/hardware/hardwareConcurrency');
+jest.mock('../../../../../../src/client/fingerprint/modules/hardware/deviceMemory');
 
 const mockCollectPlatform = jest.mocked(require('../../../../../../src/client/fingerprint/modules/hardware/platform').collectPlatform);
-const mockCollectCpuClass = jest.mocked(require('../../../../../../src/client/fingerprint/modules/hardware/cpu_class').collectCpuClass);
+const mockCollectCpuClass = jest.mocked(require('../../../../../../src/client/fingerprint/modules/hardware/cpuClass').collectCpuClass);
 const mockCollectArchitecture = jest.mocked(require('../../../../../../src/client/fingerprint/modules/hardware/architecture').collectArchitecture);
-const mockCollectOSCpu = jest.mocked(require('../../../../../../src/client/fingerprint/modules/hardware/os_cpu').collectOSCpu);
-const mockCollectHardwareConcurrency = jest.mocked(require('../../../../../../src/client/fingerprint/modules/hardware/hardware_concurrency').collectHardwareConcurrency);
-const mockCollectDeviceMemory = jest.mocked(require('../../../../../../src/client/fingerprint/modules/hardware/device_memory').collectDeviceMemory);
+const mockCollectOSCpu = jest.mocked(require('../../../../../../src/client/fingerprint/modules/hardware/osCpu').collectOSCpu);
+const mockCollectHardwareConcurrency = jest.mocked(require('../../../../../../src/client/fingerprint/modules/hardware/hardwareConcurrency').collectHardwareConcurrency);
+const mockCollectDeviceMemory = jest.mocked(require('../../../../../../src/client/fingerprint/modules/hardware/deviceMemory').collectDeviceMemory);
 
 describe('Hardware Fingerprint Module', () => {
   beforeEach(() => {

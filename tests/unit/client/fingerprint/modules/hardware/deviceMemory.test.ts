@@ -1,4 +1,4 @@
-import { collectDeviceMemory } from '../../../../../../src/client/fingerprint/modules/hardware/device_memory';
+import { collectDeviceMemory } from '../../../../../../src/client/fingerprint/modules/hardware/deviceMemory';
 
 // Mock navigator object
 const mockNavigator: any = {

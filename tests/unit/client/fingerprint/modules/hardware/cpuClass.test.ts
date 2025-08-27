@@ -1,4 +1,4 @@
-import { collectCpuClass } from '../../../../../../src/client/fingerprint/modules/hardware/cpu_class';
+import { collectCpuClass } from '../../../../../../src/client/fingerprint/modules/hardware/cpuClass';
 
 // Mock navigator object
 const mockNavigator: any = {

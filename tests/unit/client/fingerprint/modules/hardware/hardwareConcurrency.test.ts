@@ -1,4 +1,4 @@
-import { collectHardwareConcurrency } from '../../../../../../src/client/fingerprint/modules/hardware/hardware_concurrency';
+import { collectHardwareConcurrency } from '../../../../../../src/client/fingerprint/modules/hardware/hardwareConcurrency';
 
 // Mock navigator object
 const mockNavigator: any = {

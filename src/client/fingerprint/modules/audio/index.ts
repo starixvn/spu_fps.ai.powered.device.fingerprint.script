@@ -1,4 +1,4 @@
-import { collectAudioBaseLatency } from "./audio_base_latency";
+import { collectAudioBaseLatency } from "./audioBaseLatency";
 import { collectAudio } from "./audio";
 import type { AudioGroupResult } from "../../types";
 

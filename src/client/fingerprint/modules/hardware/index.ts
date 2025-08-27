@@ -1,9 +1,9 @@
 import { collectPlatform } from "./platform";
-import { collectCpuClass } from "./cpu_class";
+import { collectCpuClass } from "./cpuClass";
 import { collectArchitecture } from "./architecture";
-import { collectOSCpu } from "./os_cpu";
-import { collectHardwareConcurrency } from "./hardware_concurrency";
-import { collectDeviceMemory } from "./device_memory";
+import { collectOSCpu } from "./osCpu";
+import { collectHardwareConcurrency } from "./hardwareConcurrency";
+import { collectDeviceMemory } from "./deviceMemory";
 import type { HardwareGroupResult } from "../../types";
 
 export class HardwareFingerprint {
