@@ -17,7 +17,7 @@ async function getIndexedDB(): Promise<boolean> {
       return false;
     }
 
-    const testDBName = `fps_test_${Date.now()}_${Math.random()
+    const testDBName = `test_${Date.now()}_${Math.random()
       .toString(36)
       .slice(2)}`;
 

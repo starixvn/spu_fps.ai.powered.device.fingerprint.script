@@ -17,7 +17,7 @@ function getCookiesEnabled(): boolean {
       return navigator.cookieEnabled;
     }
 
-    const key = `fps_cookie_test_${Math.random().toString(36).slice(2)}`;
+    const key = `cookie_test_${Math.random().toString(36).slice(2)}`;
     document.cookie = `${key}=1; path=/`;
 
     const enabled = document.cookie

@@ -130,17 +130,9 @@
 
         mainScript.onload = async () => {
           try {
-            console.log("✅ FPSFingerprint loaded:", window.FPSFingerprint);
             scriptsLoaded = true;
-
             toggleStorageButton(true);
-          } catch (error) {
-            console.error("❌ Failed to import FPSFingerprint:", error);
-          }
-        };
-
-        mainScript.onerror = () => {
-          console.error("❌ Failed to load main script");
+          } catch (error) {}
         };
 
         document.head.appendChild(mainScript);
@@ -148,8 +140,6 @@
 
       async function collectFingerprint() {
         if (!FPSFingerprint) {
-          console.error("FPSFingerprint not loaded yet");
-
           document.getElementById("fingerprintData").textContent =
             "Error: FPSFingerprint not loaded yet";
           document.getElementById("fingerprintDisplay").style.display = "block";
@@ -196,7 +186,6 @@
 
       async function collectIPs() {
         if (!FPSFingerprint) {
-          console.error("FPSFingerprint not loaded yet");
           document.getElementById("fingerprintData").textContent =
             "Error: FPSFingerprint not loaded yet";
           document.getElementById("fingerprintDisplay").style.display = "block";
@@ -211,8 +200,6 @@
             JSON.stringify(formattedOutput, null, 2);
           document.getElementById("fingerprintDisplay").style.display = "block";
         } catch (error) {
-          console.error("❌ Error collecting IPs:", error);
-
           document.getElementById("fingerprintData").textContent =
             "Error: " + error.message;
           document.getElementById("fingerprintDisplay").style.display = "block";
@@ -221,7 +208,6 @@
 
       async function generateHash() {
         if (!FPSFingerprint) {
-          console.error("FPSFingerprint not loaded yet");
           document.getElementById("hashValue").textContent =
             "Error: FPSFingerprint not loaded yet";
           document.getElementById("hashDisplay").style.display = "block";
@@ -244,7 +230,6 @@
           console.log("Generated hash:", hash);
           console.log("Group hashes:", groupHashes);
         } catch (error) {
-          console.error("Error generating hash:", error);
           document.getElementById("hashValue").textContent =
             "Error: " + error.message;
           document.getElementById("hashDisplay").style.display = "block";
@@ -253,7 +238,6 @@
 
       async function sendToServer() {
         if (!FPSFingerprint) {
-          console.error("FPSFingerprint not loaded yet");
           document.getElementById("serverData").textContent =
             "Error: FPSFingerprint not loaded yet";
           document.getElementById("serverResponse").style.display = "block";
@@ -270,7 +254,6 @@
             currentFingerprint,
             function (error, response) {
               if (error) {
-                console.error("Error sending to server:", error);
                 document.getElementById("serverData").textContent =
                   "Error: " + error.message;
               } else {
@@ -282,7 +265,6 @@
             }
           );
         } catch (error) {
-          console.error("Error in sendToServer:", error);
           document.getElementById("serverData").textContent =
             "Error: " + error.message;
           document.getElementById("serverResponse").style.display = "block";
@@ -323,7 +305,6 @@
           );
           document.getElementById("storageDisplay").style.display = "block";
         } catch (error) {
-          console.error("❌ Error getting storage data:", error);
           document.getElementById("storageData").textContent =
             "Error: " + error.message;
           document.getElementById("storageDisplay").style.display = "block";
@@ -374,9 +355,7 @@
 
           // WindowName
           storageResults.windowName.value = getWindowNameValue(newKey);
-        } catch (error) {
-          console.error("Error getting storage values:", error);
-        }
+        } catch (error) {}
 
         return storageResults;
       }

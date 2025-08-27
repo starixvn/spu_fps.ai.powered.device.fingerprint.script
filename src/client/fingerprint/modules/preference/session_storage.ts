@@ -14,7 +14,7 @@ export function collectSessionStorage(): SessionStorageResult {
 function getSessionStorage(): boolean {
   try {
     if (typeof window !== "undefined" && window.sessionStorage) {
-      const testKey = "fps_sessionstorage_test";
+      const testKey = "sessionstorage_test";
       const testValue = "test_value";
 
       window.sessionStorage.setItem(testKey, testValue);

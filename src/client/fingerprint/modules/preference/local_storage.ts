@@ -14,7 +14,7 @@ export function collectLocalStorage(): LocalStorageResult {
 function getLocalStorage(): boolean {
   try {
     if (typeof window !== "undefined" && window.localStorage) {
-      const testKey = "fps_localstorage_test";
+      const testKey = "localstorage_test";
       const testValue = "test_value";
 
       window.localStorage.setItem(testKey, testValue);
