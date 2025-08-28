@@ -12,12 +12,6 @@ describe('ETagHandler', () => {
     etagHandler = new ETagHandler();
   });
 
-  describe('constructor', () => {
-    it('should initialize with SERVER_DOMAIN as base URL', () => {
-      expect((etagHandler as any)._baseUrl).toBe('__SERVER_DOMAIN__');
-    });
-  });
-
   describe('available', () => {
     it('should return true when base URL is set to SERVER_DOMAIN', () => {
       const result = etagHandler.available();

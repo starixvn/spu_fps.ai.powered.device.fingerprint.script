@@ -6,7 +6,7 @@ export class ETagHandler implements IStorageHandler {
     private _baseUrl: string | '';
 
     constructor() {
-        this._baseUrl = SERVER_DOMAIN;
+        this._baseUrl = `${SERVER_DOMAIN}/resources/vers`;
     }
 
     public async get(key: string): Promise<string | null> {
@@ -15,7 +15,7 @@ export class ETagHandler implements IStorageHandler {
                 return null;
             }
 
-            const response = await fetch(`${this._baseUrl}/resources/vers`, {
+            const response = await fetch(this._baseUrl, {
                 method: 'GET'
             });
 
@@ -39,7 +39,7 @@ export class ETagHandler implements IStorageHandler {
                 return false;
             }
 
-            const response = await fetch(`${this._baseUrl}/resources/vers`, {
+            const response = await fetch(this._baseUrl, {
                 method: 'GET',
                 headers: {
                     'Res-Ec-X': value

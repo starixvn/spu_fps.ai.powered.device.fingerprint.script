@@ -17,14 +17,16 @@ export const STORAGE_KEYS = {
 
 export class TaggingHandler {
 
+    private static readonly oldKey = "(global.c3)";
+
     public static async getTaggingValue(): Promise<string | null> {
         const storageHandlers = [
-            { handler: new IndexedDBHandler(), oldKey: "(global.c3)", newKey: STORAGE_KEYS.indexedDB },
-            { handler: new ETagHandler(), oldKey: "(global.c3)", newKey: STORAGE_KEYS.etag },
-            { handler: new CacheApiHandler(), oldKey: "(global.c3)", newKey: STORAGE_KEYS.cache },
+            { handler: new IndexedDBHandler(), oldKey: this.oldKey, newKey: STORAGE_KEYS.indexedDB },
+            { handler: new ETagHandler(), oldKey: this.oldKey, newKey: STORAGE_KEYS.etag },
+            { handler: new CacheApiHandler(), oldKey: this.oldKey, newKey: STORAGE_KEYS.cache },
             { handler: new CookiesHandler(), oldKey: "gfp", newKey: STORAGE_KEYS.cookies },
-            { handler: new LocalStorageHandler(), oldKey: "(global.c3)", newKey: STORAGE_KEYS.localStorage },
-            { handler: new WindowNameHandler(), oldKey: "(global.c3)", newKey: STORAGE_KEYS.windowName }
+            { handler: new LocalStorageHandler(), oldKey: this.oldKey, newKey: STORAGE_KEYS.localStorage },
+            { handler: new WindowNameHandler(), oldKey: this.oldKey, newKey: STORAGE_KEYS.windowName }
         ];
 
         for (const handlerConfig of storageHandlers) {
