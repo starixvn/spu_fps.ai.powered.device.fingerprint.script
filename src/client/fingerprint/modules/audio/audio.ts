@@ -18,7 +18,6 @@ export async function collectAudio(): Promise<AudioInfo> {
   try {
     if (audioCache) return audioCache;
 
-    const start = performance.now();
     const samples: (number | null)[] = [];
 
     for (let i = 0; i < 3; i++) {
@@ -26,7 +25,7 @@ export async function collectAudio(): Promise<AudioInfo> {
     }
 
     if (samples.every((v) => v === null)) {
-      return { audio: null, duration: 0, noiseType: "block" };
+      return { audio: null, noiseType: "block" };
     }
 
     const cleanSamples = samples
@@ -39,8 +38,7 @@ export async function collectAudio(): Promise<AudioInfo> {
         : (cleanSamples[0] + cleanSamples[1]) / 2;
 
     let noiseType: AudioInfo["noiseType"] = detectNoise(cleanSamples, median);
-    const duration = performance.now() - start;
-    const result: AudioInfo = { audio: median, duration, noiseType };
+    const result: AudioInfo = { audio: median, noiseType };
 
     if (noiseType !== "randomize") {
       audioCache = result;
@@ -48,7 +46,7 @@ export async function collectAudio(): Promise<AudioInfo> {
 
     return result;
   } catch {
-    return { audio: null, duration: 0, noiseType: "block" };
+    return { audio: null, noiseType: "block" };
   }
 }
 

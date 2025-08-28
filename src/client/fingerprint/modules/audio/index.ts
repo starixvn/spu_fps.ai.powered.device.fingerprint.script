@@ -18,7 +18,6 @@ export class AudioFingerprint {
       return {
         audio: {
           audio: null,
-          duration: 0,
           noiseType: "block",
         },
         audioBaseLatency: 0,

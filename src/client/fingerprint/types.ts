@@ -154,16 +154,13 @@ export interface FontDetectionResult {
 }
 
 export interface FontPreferencesInfo {
-  fontFamily: string;
-  fontSize: string;
-  fontWeight: string;
-  fontStyle: string;
-  fontVariant: string;
-  lineHeight: string;
-  letterSpacing: string;
-  textAlign: string;
-  textDecoration: string;
-  textTransform: string;
+  default: number;
+  apple: number;
+  serif: number;
+  sans: number;
+  mono: number;
+  min: number;
+  system: number;
 }
 
 export interface ScreenResolutionInfo {
@@ -206,7 +203,6 @@ export interface ColorGamutInfo {
 
 export interface AudioInfo {
   audio: number | null;
-  duration: number;
   noiseType: "clean" | "block" | "spoof" | "randomize";
 }
 
