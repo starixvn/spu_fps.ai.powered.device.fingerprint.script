@@ -147,18 +147,45 @@ export class ScriptService {
   getMinifiedScript(): string {
     const script = this.getClientScript();
     
-    return script
-      .replace(/\/\*[\s\S]*?\*\//g, '')
-      .replace(/\/\/.*$/gm, '')
-      .replace(/^\s+/gm, '')
-      .replace(/\s+$/gm, '')
-      .replace(/\n\s*\n/g, '\n')
-      .replace(/\s*{\s*/g, '{')
+    const protectedContent: string[] = [];
+    let protectedScript = script;
+    
+    protectedScript = protectedScript.replace(/(["'])(?:(?=(\\?))\2.)*?\1/g, (match) => {
+      const index = protectedContent.length;
+      protectedContent.push(match);
+      return `__PROTECTED_${index}__`;
+    });
+    
+    protectedScript = protectedScript.replace(/__[A-Z_]+__/g, (match) => {
+      const index = protectedContent.length;
+      protectedContent.push(match);
+      return `__PROTECTED_${index}__`;
+    });
+    
+    protectedScript = protectedScript.replace(/`(?:[^`\\]|\\.)*`/g, (match) => {
+      const index = protectedContent.length;
+      protectedContent.push(match);
+      return `__PROTECTED_${index}__`;
+    });
+    
+    let minified = protectedScript
+      .replace(/\/\*[\s\S]*?\*\//g, '') 
+      .replace(/\/\/.*$/gm, '') 
+      .replace(/^\s+/gm, '') 
+      .replace(/\s+$/gm, '') 
+      .replace(/\n\s*\n/g, '\n') 
+      .replace(/\s*{\s*/g, '{') 
       .replace(/\s*}\s*/g, '}')
-      .replace(/\s*;\s*/g, ';')
+      .replace(/\s*;\s*/g, ';') 
       .replace(/\s*,\s*/g, ',')
       .replace(/\s+/g, ' ')
       .trim();
+    
+    protectedContent.forEach((content, index) => {
+      minified = minified.replace(`__PROTECTED_${index}__`, content);
+    });
+    
+    return minified;
   }
   
   getWrappedScript(config: {
