@@ -5,9 +5,13 @@ import * as path from 'path';
 // Mock fs module
 jest.mock('fs');
 jest.mock('path');
+jest.mock('terser', () => ({
+  minify: jest.fn()
+}));
 
 const mockFs = fs as jest.Mocked<typeof fs>;
 const mockPath = path as jest.Mocked<typeof path>;
+const mockTerser = require('terser');
 
 describe('ScriptService', () => {
   let scriptService: ScriptService;
@@ -20,6 +24,11 @@ describe('ScriptService', () => {
     
     // Mock path.join to return predictable paths
     mockPath.join.mockImplementation((...segments) => segments.join('/'));
+    
+    // Mock Terser to return minified code
+    mockTerser.minify.mockResolvedValue({
+      code: 'function test(){console.log("minified");}' // Minified version
+    });
     
     // Mock console methods to reduce noise and track calls
     consoleSpy = jest.spyOn(console, 'log').mockImplementation();
@@ -135,9 +144,18 @@ describe('ScriptService', () => {
       scriptService = new ScriptService();
     });
 
-    it('should return minified version of the script', () => {
+    it('should return minified version of the script (async)', async () => {
       const original = scriptService.getClientScript();
-      const minified = scriptService.getMinifiedScript();
+      const minified = await scriptService.getMinifiedScript();
+
+      expect(minified.length).toBeLessThanOrEqual(original.length);
+      expect(typeof minified).toBe('string');
+      expect(minified.length).toBeGreaterThan(0);
+    });
+
+    it('should return minified version of the script (sync)', () => {
+      const original = scriptService.getClientScript();
+      const minified = scriptService.getMinifiedScriptSync();
 
       expect(minified.length).toBeLessThan(original.length);
       expect(minified).not.toContain('// This is a comment');
@@ -145,12 +163,19 @@ describe('ScriptService', () => {
       expect(minified).not.toContain('\n\n'); // No double newlines
     });
 
-    it('should remove comments and compress whitespace', () => {
-      const minified = scriptService.getMinifiedScript();
+    it('should remove comments and compress whitespace (sync)', () => {
+      const minified = scriptService.getMinifiedScriptSync();
 
       expect(minified).not.toMatch(/\/\*[\s\S]*?\*\//); // No block comments
       expect(minified).not.toMatch(/\/\/.*$/m); // No line comments
       expect(minified).not.toMatch(/^\s+/m); // No leading whitespace
+    });
+
+    it('should use Terser when successful', async () => {
+      const minified = await scriptService.getMinifiedScript();
+      
+      expect(mockTerser.minify).toHaveBeenCalled();
+      expect(minified).toBe('function test(){console.log("minified");}');
     });
   });
 
@@ -237,8 +262,8 @@ describe('ScriptService', () => {
       scriptService = new ScriptService();
     });
 
-    it('should return script information', () => {
-      const info = scriptService.getScriptInfo();
+    it('should return script information', async () => {
+      const info = await scriptService.getScriptInfo();
 
       expect(info).toHaveProperty('size');
       expect(info).toHaveProperty('minifiedSize');
@@ -251,14 +276,14 @@ describe('ScriptService', () => {
       expect(info.source).toBe('TypeScript bundle');
     });
 
-    it('should show minified script is smaller', () => {
-      const info = scriptService.getScriptInfo();
+    it('should show minified script is smaller or equal', async () => {
+      const info = await scriptService.getScriptInfo();
 
       expect(info.minifiedSize).toBeLessThanOrEqual(info.size);
     });
 
-    it('should return valid ISO date string for lastBuilt', () => {
-      const info = scriptService.getScriptInfo();
+    it('should return valid ISO date string for lastBuilt', async () => {
+      const info = await scriptService.getScriptInfo();
 
       expect(() => new Date(info.lastBuilt)).not.toThrow();
       expect(new Date(info.lastBuilt).toISOString()).toBe(info.lastBuilt);

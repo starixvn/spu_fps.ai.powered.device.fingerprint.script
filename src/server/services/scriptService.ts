@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { minify } from 'terser';
 import config from '../../config/environment';
 
 export class ScriptService {
@@ -144,9 +145,42 @@ export class ScriptService {
     }
   }
   
-  getMinifiedScript(): string {
-    const script = this.getClientScript();
-    
+  async getMinifiedScript(): Promise<string> {
+    try {
+      const script = this.getClientScript();
+      
+      const result = await minify(script, {
+        compress: {
+          keep_fargs: false,
+          drop_console: false,
+          drop_debugger: true,
+          pure_funcs: [],
+          passes: 2
+        },
+        mangle: {
+          reserved: ['window', 'document', 'global', 'self'],
+          keep_fnames: false
+        },
+        format: {
+          comments: false,
+          beautify: false,
+          indent_level: 0
+        },
+        sourceMap: false,
+        ecma: 2015 
+      });
+
+      return result.code || script;
+    } catch (error) {
+      return this.fallbackMinify(this.getClientScript());
+    }
+  }
+
+  getMinifiedScriptSync(): string {
+    return this.fallbackMinify(this.getClientScript());
+  }
+
+  private fallbackMinify(script: string): string {
     const protectedContent: string[] = [];
     let protectedScript = script;
     
@@ -157,12 +191,6 @@ export class ScriptService {
     });
     
     protectedScript = protectedScript.replace(/__[A-Z_]+__/g, (match) => {
-      const index = protectedContent.length;
-      protectedContent.push(match);
-      return `__PROTECTED_${index}__`;
-    });
-    
-    protectedScript = protectedScript.replace(/`(?:[^`\\]|\\.)*`/g, (match) => {
       const index = protectedContent.length;
       protectedContent.push(match);
       return `__PROTECTED_${index}__`;
@@ -226,14 +254,14 @@ if (window.FPSConfig.debug) {
   /**
    * Get script info for debugging
    */
-  getScriptInfo(): {
+  async getScriptInfo(): Promise<{
     size: number;
     minifiedSize: number;
     lastBuilt: string;
     source: string;
-  } {
+  }> {
     const script = this.getClientScript();
-    const minified = this.getMinifiedScript();
+    const minified = await this.getMinifiedScript();
     
     return {
       size: script.length,

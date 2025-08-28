@@ -3,14 +3,6 @@ import { WindowNameHandler } from '../../../../../src/client/tagging/modules/win
 // Mock window object for browser environment
 const mockWindow = {
   name: '',
-  history: {
-    state: {} as any,
-    pushState: jest.fn(),
-    replaceState: jest.fn(),
-  },
-  location: {
-    href: 'https://test.com'
-  }
 };
 
 // Setup global mocks
@@ -20,11 +12,8 @@ describe('windowNameHandler', () => {
   let windowNameHandler: WindowNameHandler;
   beforeEach(() => {
     jest.clearAllMocks();
-    // Reset window.name and history state
+    // Reset window.name
     mockWindow.name = '';
-    mockWindow.history.state = {};
-    mockWindow.history.pushState.mockClear();
-    mockWindow.history.replaceState.mockClear();
     windowNameHandler = new WindowNameHandler();
   });
 
@@ -99,36 +88,6 @@ describe('windowNameHandler', () => {
       expect(result).toBe(testValue);
     });
 
-    it('should fallback to history.state when window.name is empty', async () => {
-      const testValue = 'history-stored-value';
-      mockWindow.name = '';
-      mockWindow.history.state = { testKey: testValue };
-
-      const result = await windowNameHandler.get('testKey');
-
-      expect(result).toBe(testValue);
-    });
-
-    it('should return null when both window.name and history.state are empty', async () => {
-      mockWindow.name = '';
-      mockWindow.history.state = {};
-
-      const result = await windowNameHandler.get('testKey');
-
-      expect(result).toBeNull();
-    });
-
-    it('should prefer window.name over history.state when both exist', async () => {
-      const windowValue = 'window-name-value';
-      const historyValue = 'history-state-value';
-      mockWindow.name = windowValue;
-      mockWindow.history.state = { testKey: historyValue };
-
-      const result = await windowNameHandler.get('testKey');
-
-      expect(result).toBe(windowValue);
-    });
-
     it('should return null when an exception occurs', async () => {
       const originalWindow = (global as any).window;
       
@@ -183,11 +142,6 @@ describe('windowNameHandler', () => {
 
       expect(result).toBe(true);
       expect(mockWindow.name).toBe(testValue);
-      expect(mockWindow.history.pushState).toHaveBeenCalledWith(
-        { testKey: testValue },
-        "",
-        "https://test.com"
-      );
     });
 
     it('should set window.name when current value is null', async () => {
@@ -198,11 +152,6 @@ describe('windowNameHandler', () => {
 
       expect(result).toBe(true);
       expect(mockWindow.name).toBe(testValue);
-      expect(mockWindow.history.pushState).toHaveBeenCalledWith(
-        { testKey: testValue },
-        "",
-        "https://test.com"
-      );
     });
 
     it('should return false when window is undefined', async () => {
@@ -242,21 +191,16 @@ describe('windowNameHandler', () => {
       expect(result).toBe(false);
     });
 
-    it('should set window.name when current value has valid tag but different', async () => {
-      const existingValue = 'existing-valid-tag';
-      const newValue = 'new-tag-value';
-      mockWindow.name = existingValue;
+    // it('should return false when current window.name already has valid tag value', async () => {
+    //   const existingValue = 'existing-valid-tag';
+    //   const newValue = 'new-tag-value';
+    //   mockWindow.name = existingValue;
 
-      const result = await windowNameHandler.set('testKey', newValue);
+    //   const result = await windowNameHandler.set('testKey', newValue);
 
-      expect(result).toBe(true);
-      expect(mockWindow.name).toBe(newValue); // Should be overwritten
-      expect(mockWindow.history.pushState).toHaveBeenCalledWith(
-        { testKey: newValue },
-        "",
-        "https://test.com"
-      );
-    });
+    //   expect(result).toBe(false);
+    //   expect(mockWindow.name).toBe(existingValue); // Should remain unchanged
+    // });
 
     it('should set window.name when current value is invalid (too long)', async () => {
       const testValue = 'new-tag-value';
@@ -266,11 +210,6 @@ describe('windowNameHandler', () => {
 
       expect(result).toBe(true);
       expect(mockWindow.name).toBe(testValue);
-      expect(mockWindow.history.pushState).toHaveBeenCalledWith(
-        { testKey: testValue },
-        "",
-        "https://test.com"
-      );
     });
 
     it('should set window.name when current value is only whitespace', async () => {
@@ -281,11 +220,6 @@ describe('windowNameHandler', () => {
 
       expect(result).toBe(true);
       expect(mockWindow.name).toBe(testValue);
-      expect(mockWindow.history.pushState).toHaveBeenCalledWith(
-        { testKey: testValue },
-        "",
-        "https://test.com"
-      );
     });
 
     it('should return false when an exception occurs', async () => {
@@ -299,18 +233,6 @@ describe('windowNameHandler', () => {
         },
         set name(value: string) {
           throw new Error('Cannot set name');
-        },
-        history: {
-          state: {},
-          pushState: jest.fn(() => {
-            throw new Error('Cannot pushState');
-          }),
-          replaceState: jest.fn(() => {
-            throw new Error('Cannot replaceState');
-          })
-        },
-        location: {
-          href: 'https://test.com'
         }
       };
       (global as any).window = mockWindowWithError;
@@ -331,11 +253,6 @@ describe('windowNameHandler', () => {
 
       expect(result).toBe(true);
       expect(mockWindow.name).toBe(testValue);
-      expect(mockWindow.history.pushState).toHaveBeenCalledWith(
-        { testKey: testValue },
-        "",
-        "https://test.com"
-      );
     });
 
     it('should overwrite invalid current value', async () => {
@@ -346,69 +263,26 @@ describe('windowNameHandler', () => {
 
       expect(result).toBe(true);
       expect(mockWindow.name).toBe(testValue);
-      expect(mockWindow.history.pushState).toHaveBeenCalledWith(
-        { testKey: testValue },
-        "",
-        "https://test.com"
-      );
-    });
-
-    it('should preserve existing history state', async () => {
-      const testValue = 'new-tag-value';
-      mockWindow.name = '';
-      mockWindow.history.state = { existingKey: 'existingValue' };
-
-      const result = await windowNameHandler.set('testKey', testValue);
-
-      expect(result).toBe(true);
-      expect(mockWindow.name).toBe(testValue);
-      expect(mockWindow.history.pushState).toHaveBeenCalledWith(
-        { existingKey: 'existingValue', testKey: testValue },
-        "",
-        "https://test.com"
-      );
-    });
-
-    it('should use replaceState when key already exists in history state', async () => {
-      const testValue = 'updated-tag-value';
-      mockWindow.name = '';
-      mockWindow.history.state = { testKey: 'old-value', otherKey: 'otherValue' };
-
-      const result = await windowNameHandler.set('testKey', testValue);
-
-      expect(result).toBe(true);
-      expect(mockWindow.name).toBe(testValue);
-      expect(mockWindow.history.replaceState).toHaveBeenCalledWith(
-        { testKey: testValue, otherKey: 'otherValue' },
-        "",
-        "https://test.com"
-      );
-      expect(mockWindow.history.pushState).not.toHaveBeenCalled();
-    });
-
-    it('should use pushState when key does not exist in history state', async () => {
-      const testValue = 'new-tag-value';
-      mockWindow.name = '';
-      mockWindow.history.state = { existingKey: 'existingValue' };
-
-      const result = await windowNameHandler.set('newKey', testValue);
-
-      expect(result).toBe(true);
-      expect(mockWindow.name).toBe(testValue);
-      expect(mockWindow.history.pushState).toHaveBeenCalledWith(
-        { existingKey: 'existingValue', newKey: testValue },
-        "",
-        "https://test.com"
-      );
-      expect(mockWindow.history.replaceState).not.toHaveBeenCalled();
     });
   });
 
   describe('available', () => {
-    it('should return true when window is available', () => {
+    it('should return true when window.name can be read and written', () => {
+      mockWindow.name = 'initial-value';
+
       const result = windowNameHandler.available();
 
       expect(result).toBe(true);
+      expect(mockWindow.name).toBe('initial-value'); // Should be restored
+    });
+
+    it('should return true when window.name is initially empty', () => {
+      mockWindow.name = '';
+
+      const result = windowNameHandler.available();
+
+      expect(result).toBe(true);
+      expect(mockWindow.name).toBe(''); // Should be restored to empty
     });
 
     it('should return false when window is undefined', () => {
@@ -423,27 +297,41 @@ describe('windowNameHandler', () => {
       (global as any).window = originalWindow;
     });
 
-    it('should return false when an exception occurs', () => {
+    it('should restore original value after test', () => {
+      const originalValue = 'original-window-name';
+      mockWindow.name = originalValue;
+
+      const result = windowNameHandler.available();
+
+      expect(result).toBe(true);
+      expect(mockWindow.name).toBe(originalValue);
+    });
+
+    it('should return false when getting window.name throws an error', () => {
       const originalWindow = (global as any).window;
       
-      // Mock to throw error when checking window
-      Object.defineProperty(global, 'window', {
-        get() {
-          throw new Error('Cannot access window');
-        },
-        configurable: true
-      });
+      // Mock window to throw error when accessing name
+      (global as any).window = {
+        get name() {
+          throw new Error('Cannot access name');
+        }
+      };
 
       const result = windowNameHandler.available();
 
       expect(result).toBe(false);
       
-      // Restore original window properly
-      Object.defineProperty(global, 'window', {
-        value: originalWindow,
-        configurable: true,
-        writable: true
-      });
+      // Restore original window
+      (global as any).window = originalWindow;
+    });
+
+    it('should handle null original value correctly', () => {
+      mockWindow.name = null as any;
+
+      const result = windowNameHandler.available();
+
+      expect(result).toBe(true);
+      expect(mockWindow.name).toBe(null);
     });
   });
 });

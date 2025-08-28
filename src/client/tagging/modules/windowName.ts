@@ -8,18 +8,13 @@ export class WindowNameHandler implements IStorageHandler {
                 return null;
             }
 
-            const windowNameValue = window.name;
+            const currentValue = window.name;
             
-            if (this.isValidValue(windowNameValue)) {
-                return windowNameValue;
+            if (!this.isValidValue(currentValue)) {
+                return null;
             }
 
-            const historyState = window.history.state;
-            if (historyState && historyState[key]) {
-                return historyState[key];
-            }
-
-            return null;
+            return currentValue || null;
         } catch (exception) {
             return null;
         }
@@ -30,23 +25,11 @@ export class WindowNameHandler implements IStorageHandler {
             if (!this.available() || !value) {
                 return false;
             }
-
+           
             window.name = value;
-            
-            const currentState = window.history.state || {};
 
-            const newState = {
-                ...currentState,
-                [key]: value
-            };
-            
-            if (currentState[key]) {
-                window.history.replaceState(newState, "", window.location.href);
-            } else {
-                window.history.pushState(newState, "", window.location.href);
-            }
-            
             return true;
+
         } catch (exception) {
             return false;
         }
@@ -54,7 +37,7 @@ export class WindowNameHandler implements IStorageHandler {
 
     public available(): boolean {
         try {
-            return typeof window !== 'undefined';
+            return typeof window !== 'undefined' && typeof window.name !== 'undefined';
         } catch (exception) {
             return false;
         }

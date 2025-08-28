@@ -102,11 +102,12 @@ app.get('/api/script', (req: Request, res: Response) => {
   }
 });
 
-app.get('/libs/apd-express.min.js', (req: Request, res: Response) => {
+app.get('/libs/apd-express.min.js', async (req: Request, res: Response) => {
   try {
-    const script = scriptService.getMinifiedScript();
+    const script = await scriptService.getMinifiedScript();
+
     res.setHeader('Content-Type', 'application/javascript');
-    res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
+    res.setHeader('Cache-Control', 'public, max-age=86400');
     res.send(script);
   } catch (error) {
     res.status(500).json({
@@ -185,17 +186,58 @@ app.get('/', (req: Request, res: Response) => {
   res.redirect('/examples.html');
 });
 
-app.get('/api/script-info', (req: Request, res: Response) => {
+app.get('/api/script-info', async (req: Request, res: Response) => {
   try {
-    const info = scriptService.getScriptInfo();
+    const info = await scriptService.getScriptInfo();
     res.json({
       success: true,
       data: info
     });
   } catch (error) {
+    console.error('Error getting script info:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to get script info'
+    });
+  }
+});
+
+// Compare async vs sync minification
+app.get('/api/minify-compare', async (req: Request, res: Response) => {
+  try {
+    const originalScript = scriptService.getClientScript();
+    const [asyncMinified, syncMinified] = await Promise.all([
+      scriptService.getMinifiedScript(),
+      Promise.resolve(scriptService.getMinifiedScriptSync())
+    ]);
+
+    const comparison = {
+      original: {
+        size: originalScript.length,
+        lines: originalScript.split('\n').length
+      },
+      async: {
+        size: asyncMinified.length,
+        compression: ((originalScript.length - asyncMinified.length) / originalScript.length * 100).toFixed(2) + '%',
+        method: 'Terser'
+      },
+      sync: {
+        size: syncMinified.length,
+        compression: ((originalScript.length - syncMinified.length) / originalScript.length * 100).toFixed(2) + '%',
+        method: 'Fallback regex'
+      },
+      recommendation: asyncMinified.length < syncMinified.length ? 'async' : 'sync'
+    };
+
+    res.json({
+      success: true,
+      data: comparison
+    });
+  } catch (error) {
+    console.error('Error comparing minification:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to compare minification methods'
     });
   }
 });

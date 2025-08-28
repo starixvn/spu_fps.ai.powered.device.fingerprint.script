@@ -229,7 +229,6 @@ describe('Express Server Routes', () => {
 
     it('should set cache headers for script endpoints', async () => {
       mockScriptService.getClientScript.mockReturnValue('console.log("test");');
-      mockScriptService.getMinifiedScript.mockReturnValue('console.log("min");');
 
       const scriptResponse = await request(app).get('/libs/apd-express.js');
       const minifiedResponse = await request(app).get('/libs/apd-express.min.js');
