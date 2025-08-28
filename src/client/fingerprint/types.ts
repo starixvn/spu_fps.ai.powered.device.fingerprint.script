@@ -205,12 +205,9 @@ export interface ColorGamutInfo {
 }
 
 export interface AudioInfo {
-  fingerprint: string; // hash hoặc checksum
-  raw: number[];       // full waveform
-  entropy: number;
-  noiseType: "ok" | "blocked" | "spoofed" | "randomized";
-  sampleRate: number;
-  length: number;
+  audio: number | null;
+  duration: number;
+  noiseType: "clean" | "block" | "spoof" | "randomize";
 }
 
 export interface AudioGroupResult {

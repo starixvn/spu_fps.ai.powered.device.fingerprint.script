@@ -17,12 +17,9 @@ export class AudioFingerprint {
     } catch (error) {
       return {
         audio: {
-          fingerprint: "",
-          raw: [],
-          entropy: 0,
-          noiseType: "blocked",
-          sampleRate: 0,
-          length: 0,
+          audio: null,
+          duration: 0,
+          noiseType: "block",
         },
         audioBaseLatency: 0,
       };

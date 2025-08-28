@@ -1,116 +1,116 @@
 import type { AudioInfo } from "../../types";
 
-const AUDIO_SESSION_CACHE_KEY = "__audio_fp_session__";
-const AUDIO_LOCAL_CACHE_KEY = "__audio_fp_local__";
+let audioCache: AudioInfo | null = null;
+let lastMedian: number | null = null;
+
+const OSC_FREQUENCY = 10000; // 10kHz
+const SAMPLE_RATE = 44100; // 44.1kHz
+const DURATION = 0.5; // 0.5s
+const SPOOF_VALUES = [-100, -120, 0];
+const SPOOF_RANGES = [
+  [-101, -99], // Brave
+  [-121, -119], // Tor
+];
+const VARIANCE_THRESHOLD = 25;
+const MEDIAN_DIFF_THRESHOLD = 5;
 
 export async function collectAudio(): Promise<AudioInfo> {
   try {
-    return await getAudioInfo();
+    if (audioCache) return audioCache;
+
+    const start = performance.now();
+    const samples: (number | null)[] = [];
+
+    for (let i = 0; i < 3; i++) {
+      samples.push(await getAudioSample());
+    }
+
+    if (samples.every((v) => v === null)) {
+      return { audio: null, duration: 0, noiseType: "block" };
+    }
+
+    const cleanSamples = samples
+      .filter((v): v is number => v !== null)
+      .sort((a, b) => a - b);
+
+    const median =
+      cleanSamples.length % 2 === 1
+        ? cleanSamples[(cleanSamples.length - 1) / 2]
+        : (cleanSamples[0] + cleanSamples[1]) / 2;
+
+    let noiseType: AudioInfo["noiseType"] = detectNoise(cleanSamples, median);
+    const duration = performance.now() - start;
+    const result: AudioInfo = { audio: median, duration, noiseType };
+
+    if (noiseType !== "randomize") {
+      audioCache = result;
+    }
+
+    return result;
   } catch {
-    return getEmptyAudioInfo();
+    return { audio: null, duration: 0, noiseType: "block" };
   }
 }
 
-async function getAudioInfo(): Promise<AudioInfo> {
-  const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-  const sampleRate = ctx.sampleRate;
+async function getAudioSample(): Promise<number | null> {
+  try {
+    const ctx = new OfflineAudioContext(1, SAMPLE_RATE * DURATION, SAMPLE_RATE);
+    const oscillator = ctx.createOscillator();
+    const startIndex = 4500;
+    const endIndex = 5000;
+    let sum = 0;
 
-  const oscillator = ctx.createOscillator();
-  oscillator.type = "triangle";
-  oscillator.frequency.value = 1000;
+    oscillator.type = "triangle";
+    oscillator.frequency.value = OSC_FREQUENCY;
 
-  const analyser = ctx.createAnalyser();
-  analyser.fftSize = 2048;
-  const bufferLength = analyser.fftSize;
-  const data = new Float32Array(bufferLength);
+    const compressor = ctx.createDynamicsCompressor();
 
-  oscillator.connect(analyser);
-  analyser.connect(ctx.destination);
-  oscillator.start();
+    compressor.threshold.setValueAtTime(-50, ctx.currentTime);
+    compressor.knee.setValueAtTime(40, ctx.currentTime);
+    compressor.ratio.setValueAtTime(12, ctx.currentTime);
+    compressor.attack.setValueAtTime(0, ctx.currentTime);
+    compressor.release.setValueAtTime(0.25, ctx.currentTime);
 
-  await new Promise((resolve) => setTimeout(resolve, 100));
-  analyser.getFloatTimeDomainData(data);
-  oscillator.stop();
-  ctx.close();
+    oscillator.connect(compressor);
+    compressor.connect(ctx.destination);
 
-  const rawSamples = Array.from(data);
+    oscillator.start(0);
+    oscillator.stop(DURATION);
 
-  const entropy = computeEntropy(rawSamples);
+    const buffer = await ctx.startRendering();
+    const channelData = buffer.getChannelData(0);
 
-  const fingerprint = simpleChecksum(rawSamples);
-
-  let noiseType: "ok" | "blocked" | "spoofed" | "randomized" = "ok";
-
-  if (!rawSamples.length || rawSamples.every((v) => v === 0)) {
-    noiseType = "blocked";
-  } else if (entropy < 0.5) {
-    noiseType = "spoofed";
-  } else {
-    const cachedSession = sessionStorage.getItem(AUDIO_SESSION_CACHE_KEY);
-    const cachedLocal = localStorage.getItem(AUDIO_LOCAL_CACHE_KEY);
-
-    if (cachedSession && cachedSession !== fingerprint) {
-      noiseType = "randomized";
+    for (let i = startIndex; i < endIndex; i++) {
+      sum += Math.abs(channelData[i]);
     }
 
-    sessionStorage.setItem(AUDIO_SESSION_CACHE_KEY, fingerprint);
-
-    if (cachedLocal && cachedLocal !== fingerprint) {
-      noiseType = "randomized";
-    }
-
-    localStorage.setItem(AUDIO_LOCAL_CACHE_KEY, fingerprint);
+    return sum;
+  } catch {
+    return null;
   }
-
-  return {
-    fingerprint,
-    raw: rawSamples,
-    entropy,
-    noiseType,
-    sampleRate,
-    length: rawSamples.length,
-  };
 }
 
-function computeEntropy(arr: number[]): number {
-  if (!arr.length) return 0;
+function detectNoise(
+  cleanSamples: number[],
+  median: number
+): AudioInfo["noiseType"] {
+  if (SPOOF_VALUES.includes(Math.round(median))) return "spoof";
+  if (SPOOF_RANGES.some(([min, max]) => median >= min && median <= max))
+    return "spoof";
 
-  const hist = new Map<number, number>();
+  const variance =
+    cleanSamples.reduce((acc, v) => acc + Math.pow(v - median, 2), 0) /
+    cleanSamples.length;
 
-  for (const v of arr) {
-    const bucket = Math.round((v + 1) * 100); // map -1..1 → 0..200
-    hist.set(bucket, (hist.get(bucket) || 0) + 1);
+  if (variance > VARIANCE_THRESHOLD) return "randomize";
+
+  if (
+    lastMedian !== null &&
+    Math.abs(median - lastMedian) > MEDIAN_DIFF_THRESHOLD
+  ) {
+    return "randomize";
   }
 
-  const total = arr.length;
-
-  let entropy = 0;
-
-  for (const count of hist.values()) {
-    const p = count / total;
-    entropy -= p * Math.log2(p);
-  }
-
-  return entropy;
-}
-
-function simpleChecksum(arr: number[]): string {
-  let hash = 0;
-
-  for (let i = 0; i < arr.length; i++) {
-    hash = (hash * 31 + Math.floor(arr[i] * 1e6)) >>> 0;
-  }
-
-  return hash.toString(16);
-}
-
-function getEmptyAudioInfo(): AudioInfo {
-  return {
-    fingerprint: "",
-    raw: [],
-    entropy: 0,
-    noiseType: "blocked",
-    sampleRate: 0,
-    length: 0,
-  };
+  lastMedian = median;
+  return "clean";
 }
