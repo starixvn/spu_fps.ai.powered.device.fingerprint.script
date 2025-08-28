@@ -14,6 +14,7 @@ export class ScriptService {
   private generateBundledScript(): void {
     try {
       const clientFiles = [
+        "fingerprint/utils/hash.js",
         "fingerprint/modules/hardware/platform.js",
         "fingerprint/modules/hardware/architecture.js",
         "fingerprint/modules/hardware/osCpu.js",
@@ -118,7 +119,9 @@ export class ScriptService {
             .replace(/__localStorage_key__/g, config.localStorageKey)
             .replace(/__indexedDB_key__/g, config.indexedDBKey)
             .replace(/__cookies_key__/g, config.cookiesKey)
-            .replace(/__cache_key__/g, config.cacheKey);
+            .replace(/__cache_key__/g, config.cacheKey)
+            .replace(/__GATEWAY_URL__/g, config.gatewayUrl)
+            .replace(/__ENCODE_KEY__/g, config.encodeKey);
 
           let processedContent = fileContent
             .replace(/^import\s+.*?from\s+['"].*?['"];?\s*$/gm, '')

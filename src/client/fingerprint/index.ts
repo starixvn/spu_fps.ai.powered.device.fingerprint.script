@@ -9,8 +9,8 @@ import { PreferencesFingerprint } from "./modules/preference/index";
 import { WebRTCFingerprint } from "./modules/webrtc/index";
 import { FingerprintHasher, Base64Encoder } from "./utils/hash";
 
-const ENCODING_KEY = "__ENCODING_KEY__";
-const GATE_WAY_URL = "__GATE_WAY_URL__";
+const ENCODING_KEY = "__ENCODE_KEY__";
+const GATEWAY_URL = "__GATEWAY_URL__";
 
 class FPSFingerprintClass {
   public readonly version: string = "1.9.0";
@@ -93,20 +93,21 @@ class FPSFingerprintClass {
   }
 
   public async sendF4ToServer(
-    endpoint: string = `${GATE_WAY_URL}/InsertFP4`,
+    endpoint: string
   ): Promise<boolean> {
     try {
       const f4Data = await this.collectF4();
-      
+      console.log("f4Data", f4Data);
       
       const payload = {
         groupA: Base64Encoder.encodeBase64(JSON.stringify(f4Data.AudioFingerprint), ENCODING_KEY),
+        groupB: Base64Encoder.encodeBase64(JSON.stringify(f4Data.BrowserFingerprint), ENCODING_KEY),
         groupC: Base64Encoder.encodeBase64(JSON.stringify(f4Data.HardwareFingerprint), ENCODING_KEY),
         groupD: Base64Encoder.encodeBase64(JSON.stringify(f4Data.PreferencesFingerprint), ENCODING_KEY),
-        groupE: Base64Encoder.encodeBase64(FingerprintHasher.hashFingerprint(f4Data), ENCODING_KEY)
       };
 
       if (navigator.sendBeacon) {
+        console.log("sendBeacon", payload);
         const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
         return navigator.sendBeacon(endpoint, blob);
       } else {
@@ -121,12 +122,13 @@ class FPSFingerprintClass {
         return response.ok;
       }
     } catch (error) {
+      console.log(error);
       return false;
     }
   }
 
   public async sendF5ToServer(
-    endpoint: string = `${GATE_WAY_URL}/InsertFP5`,
+    endpoint: string
   ): Promise<boolean> {
     try {
       const f5Data = await this.collectF5();
@@ -138,6 +140,7 @@ class FPSFingerprintClass {
       };
 
       if (navigator.sendBeacon) {
+        console.log("sendBeacon", payload);
         const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
 
         return navigator.sendBeacon(endpoint, blob);
@@ -153,29 +156,40 @@ class FPSFingerprintClass {
         return response.ok;
       }
     } catch (error) {
+      console.log(error); 
       return false;
+    }
+  }
+
+  public async start(
+    f4Endpoint: string = `${GATEWAY_URL}/InsertFP4`,
+    f5Endpoint: string = `${GATEWAY_URL}/InsertFP5`
+  ): Promise<{ f4Success: boolean; f5Success: boolean; }> {
+    try {
+      // Send F4 first
+      const f4Result = await this.sendF4ToServer(f4Endpoint);
+      
+      // Then send F5
+      const f5Result = await this.sendF5ToServer(f5Endpoint);
+
+      return {
+        f4Success: f4Result,
+        f5Success: f5Result
+      };
+    } catch (error) {
+      console.error('Error in start function:', error);
+      return {
+        f4Success: false,
+        f5Success: false
+      };
     }
   }
 }
 
 const fpsFingerprint = new FPSFingerprintClass();
 
-// if (typeof window !== "undefined") {
-//   window.FPSFingerprint = fpsFingerprint;
-
-//   if (window.FPSAutoCollect) {
-//     document.addEventListener("DOMContentLoaded", function () {
-//       fpsFingerprint.collect(function (fingerprint) {
-//         console.log("FPS Fingerprint collected:", fingerprint);
-//         if (
-//           window.FPSOnCollected &&
-//           typeof window.FPSOnCollected === "function"
-//         ) {
-//           window.FPSOnCollected(fingerprint);
-//         }
-//       });
-//     });
-//   }
-// }
+if (typeof window !== "undefined") {
+  window.FPSFingerprint = fpsFingerprint;
+}
 
 export default fpsFingerprint;
