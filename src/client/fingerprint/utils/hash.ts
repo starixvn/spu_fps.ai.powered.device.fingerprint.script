@@ -1,57 +1,32 @@
+import * as murmurhash from 'murmurhash3js';
+
 export class MurmurHash3 {
   public static hash32(data: string, seed: number = 0): string {
-    const c1 = 0xcc9e2d51;
-    const c2 = 0x1b873593;
-    const r1 = 15;
-    const r2 = 13;
-    const m = 5;
-    const n = 0xe6546b64;
+    const hash = murmurhash.x86.hash32(data);
+    return hash as string;
+  }
+}
 
-    let hash = seed;
-    const len = data.length;
-    const nblocks = len >>> 2;
+export class MurmurHash128 {
+  public static hash128(data: string, seed: number = 0): string {
+    const hash = murmurhash.x86.hash128(data);
+    return hash;
+  }
+}
 
-    for (let i = 0; i < nblocks; i++) {
-      let k = (data.charCodeAt(i * 4) & 0xff) |
-             ((data.charCodeAt(i * 4 + 1) & 0xff) << 8) |
-             ((data.charCodeAt(i * 4 + 2) & 0xff) << 16) |
-             ((data.charCodeAt(i * 4 + 3) & 0xff) << 24);
+export class SHA256 {
+  public static async hash(message: string): Promise<string> {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
 
-      k = Math.imul(k, c1);
-      k = (k << r1) | (k >>> (32 - r1));
-      k = Math.imul(k, c2);
-
-      hash ^= k;
-      hash = (hash << r2) | (hash >>> (32 - r2));
-      hash = Math.imul(hash, m) + n;
-    }
-
-    let k1 = 0;
-    const tail = len & 3;
-    const index = nblocks * 4;
-
-    switch (tail) {
-      case 3:
-        k1 ^= (data.charCodeAt(index + 2) & 0xff) << 16;
-      case 2:
-        k1 ^= (data.charCodeAt(index + 1) & 0xff) << 8;
-      case 1:
-        k1 ^= data.charCodeAt(index) & 0xff;
-
-        k1 = Math.imul(k1, c1);
-        k1 = (k1 << r1) | (k1 >>> (32 - r1));
-        k1 = Math.imul(k1, c2);
-        hash ^= k1;
-    }
-
-    hash ^= len;
-    hash ^= hash >>> 16;
-    hash = Math.imul(hash, 0x85ebca6b);
-    hash ^= hash >>> 13;
-    hash = Math.imul(hash, 0xc2b2ae35);
-    hash ^= hash >>> 16;
-
-    return (hash >>> 0).toString(16).padStart(8, '0');
+  public static hashSync(message: string): string {
+    let result = '';
+    this.hash(message).then(hash => result = hash);
+    return result || 'pending...';
   }
 }
 
@@ -61,6 +36,24 @@ export class FingerprintHasher {
     const fingerprintString = JSON.stringify(fingerprintData);
     
     return MurmurHash3.hash32(fingerprintString);
+  }
+
+  public static hashFingerprintMurmur128(fingerprintData: any): string {
+    const fingerprintString = JSON.stringify(fingerprintData);
+    
+    return MurmurHash128.hash128(fingerprintString);
+  }
+
+  public static async hashFingerprintSHA256(fingerprintData: any): Promise<string> {
+    const fingerprintString = JSON.stringify(fingerprintData);
+    
+    return await SHA256.hash(fingerprintString);
+  }
+
+  public static hashFingerprintSHA256Sync(fingerprintData: any): string {
+    const fingerprintString = JSON.stringify(fingerprintData);
+    
+    return SHA256.hashSync(fingerprintString);
   }
 }
 
