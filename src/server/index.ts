@@ -3,9 +3,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import * as path from 'path';
 import config from '../config/environment';
-import { FingerprintService } from './services/fingerprintService';
 import { TaggingService } from './services/taggingService';
-import { HashService } from './services/hashService';
 import { ScriptService } from './services/scriptService';
 
 const app = express();

@@ -14,6 +14,15 @@ export class ScriptService {
   private generateBundledScript(): void {
     try {
       const clientFiles = [
+        "tagging/modules/cacheApi.js",
+        "tagging/modules/cookie.js",
+        "tagging/modules/etag.js",
+        "tagging/modules/indexedDB.js",
+        "tagging/modules/localStorage.js",
+        "tagging/tagging.js",
+        "tagging/modules/windowName.js",
+        "tagging/index.js",
+        "tagging/utils/hash.js",
         "fingerprint/utils/hash.js",
         "fingerprint/modules/hardware/platform.js",
         "fingerprint/modules/hardware/architecture.js",
@@ -54,25 +63,7 @@ export class ScriptService {
         "fingerprint/modules/preference/index.js",
         "fingerprint/modules/webrtc/ipCollector.js",
         "fingerprint/modules/webrtc/index.js",
-        "fingerprint/index.js",
-        "tagging/modules/cacheApi.js",
-        "tagging/modules/cookie.js",
-        "tagging/modules/etag.js",
-        "tagging/modules/indexedDB.js",
-        "tagging/modules/localStorage.js",
-        "tagging/tagging.js",
-        "tagging/modules/windowName.js",
-        "tagging/index.js",
-        "tagging/utils/hash.js",
-        'tagging/utils/hash.js',
-        'tagging/modules/cacheApi.js',
-        'tagging/modules/cookie.js',
-        'tagging/modules/etag.js',
-        'tagging/modules/indexedDB.js',
-        'tagging/modules/localStorage.js',
-        'tagging/tagging.js',
-        'tagging/modules/windowName.js',
-        'tagging/index.js',
+        "fingerprint/index.js"
       ];
 
       const clientDistPath = path.join(__dirname, "..", "..", "client");

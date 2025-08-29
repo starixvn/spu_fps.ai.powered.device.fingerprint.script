@@ -1,59 +1,9 @@
 import * as murmurhash from 'murmurhash3js';
 
-export class MurmurHash3 {
-  public static hash32(data: string, seed: number = 0): string {
-    const hash = murmurhash.x86.hash32(data);
-    return hash as string;
-  }
-}
-
 export class MurmurHash128 {
   public static hash128(data: string, seed: number = 0): string {
     const hash = murmurhash.x86.hash128(data);
     return hash;
-  }
-}
-
-export class SHA256 {
-  public static async hash(message: string): Promise<string> {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(message);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  }
-
-  public static hashSync(message: string): string {
-    let result = '';
-    this.hash(message).then(hash => result = hash);
-    return result || 'pending...';
-  }
-}
-
-export class FingerprintHasher {
-
-  public static hashFingerprint(fingerprintData: any): string {
-    const fingerprintString = JSON.stringify(fingerprintData);
-    
-    return MurmurHash3.hash32(fingerprintString);
-  }
-
-  public static hashFingerprintMurmur128(fingerprintData: any): string {
-    const fingerprintString = JSON.stringify(fingerprintData);
-    
-    return MurmurHash128.hash128(fingerprintString);
-  }
-
-  public static async hashFingerprintSHA256(fingerprintData: any): Promise<string> {
-    const fingerprintString = JSON.stringify(fingerprintData);
-    
-    return await SHA256.hash(fingerprintString);
-  }
-
-  public static hashFingerprintSHA256Sync(fingerprintData: any): string {
-    const fingerprintString = JSON.stringify(fingerprintData);
-    
-    return SHA256.hashSync(fingerprintString);
   }
 }
 
