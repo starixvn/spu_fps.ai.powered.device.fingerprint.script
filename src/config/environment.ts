@@ -5,7 +5,7 @@ import path from 'path';
 
 // Load environment file based on NODE_ENV
 const loadEnvironment = () => {
-  const nodeEnv = process.env.NODE_ENV || 'local';
+  const nodeEnv = process.env.NODE_ENV || 'development';
   const envFile = `.env.${nodeEnv}`;
   const cwd = process.cwd();
   const envPath = path.resolve(cwd, envFile);

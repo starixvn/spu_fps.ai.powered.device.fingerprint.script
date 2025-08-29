@@ -299,6 +299,7 @@ export interface CollectedDeviceInfo {
   sessionKey: string;
   f4Hashed?: string;
   f5Hashed?: string;
+  webrtc?: WebRTCGroupInfo;
 }
 
 declare global {

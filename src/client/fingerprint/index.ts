@@ -1,12 +1,11 @@
 /// <reference lib="dom" />
 
 import { 
-  WebRTCGroupResult, 
-  AudioGroupResult, 
-  BrowserGroupResult, 
-  HardwareGroupResult, 
-  PreferencesGroupResult, 
-  GraphicsGroupResult, 
+  AudioGroupInfo, 
+  BrowserGroupInfo, 
+  HardwareGroupInfo, 
+  PreferencesGroupInfo, 
+  GraphicsGroupInfo, 
   CollectedDeviceInfo
 } from "./types";
 import { HardwareFingerprint } from "./modules/hardware/index";
@@ -23,8 +22,8 @@ const CONFIG = {
   ENCODING_KEY: "__ENCODE_KEY__",
   GATEWAY_URL: "__GATEWAY_URL__",
   ENDPOINTS: {
-    F4: "/InsertFP4",
-    F5: "/InsertFP5"
+    F4: "/CheckFP4",
+    F5: "/CheckFP5"
   },
   TIMEOUTS: {
     DEFAULT: 5000
@@ -37,40 +36,16 @@ const CONFIG = {
 class FPSFingerprintClass {
   public readonly version: string = "1.9.0";
 
-  // // WebRTC Methods
-  // public async collectIPs(timeout: number = CONFIG.TIMEOUTS.DEFAULT): Promise<WebRTCGroupResult> {
-  //   try {
-  //     return await WebRTCFingerprint.collect(timeout);
-  //   } catch (error) {
-  //     throw new FingerprintError(`Failed to collect IPs: ${error}`, ErrorCodes.IP_COLLECTION_FAILED);
-  //   }
-  // }
+  private async collectWebRTC(): Promise<any> {
+    try {
+      return await WebRTCFingerprint.collect();
+    } catch (error) {
+      // console.error('Failed to collect WebRTC:', error);
+      return { webrtc: {} };
+    }
+  }
 
-  // public async collectLocalIPs(timeout: number = CONFIG.TIMEOUTS.DEFAULT): Promise<string[]> {
-  //   try {
-  //     return await WebRTCFingerprint.getLocalIPs(timeout);
-  //   } catch (error) {
-  //     throw new FingerprintError(`Failed to collect local IPs: ${error}`, ErrorCodes.LOCAL_IP_COLLECTION_FAILED);
-  //   }
-  // }
-
-  // public async collectPublicIPs(timeout: number = CONFIG.TIMEOUTS.DEFAULT): Promise<string[]> {
-  //   try {
-  //     return await WebRTCFingerprint.getPublicIPs(timeout);
-  //   } catch (error) {
-  //     throw new FingerprintError(`Failed to collect public IPs: ${error}`, ErrorCodes.PUBLIC_IP_COLLECTION_FAILED);
-  //   }
-  // }
-
-  // public async collectRelayIPs(timeout: number = CONFIG.TIMEOUTS.DEFAULT): Promise<string[]> {
-  //   try {
-  //     return await WebRTCFingerprint.getRelayIPs(timeout);
-  //   } catch (error) {
-  //     throw new FingerprintError(`Failed to collect relay IPs: ${error}`, ErrorCodes.RELAY_IP_COLLECTION_FAILED);
-  //   }
-  // }
-
-  public generateGroupHashes(fingerprint: any): string {
+  private generateGroupHashes(fingerprint: any): string {
     try {
       return MurmurHash128.hash128(JSON.stringify(fingerprint));
     } catch (error) {
@@ -80,13 +55,14 @@ class FPSFingerprintClass {
     }
   }
 
-  public async collectF4(): Promise<{
-    AudioFingerprint: AudioGroupResult;
-    BrowserFingerprint: BrowserGroupResult;
-    HardwareFingerprint: HardwareGroupResult;
-    PreferencesFingerprint: PreferencesGroupResult;
+  private async collectF4(): Promise<{
+    audio: AudioGroupInfo;
+    browser: BrowserGroupInfo;
+    hardware: HardwareGroupInfo;
+    preferences: PreferencesGroupInfo;
   }> {
-    const [audio,browser, hardware, preferences] = await Promise.all([
+
+    const [audio, browser, hardware, preferences] = await Promise.all([
       AudioFingerprint.collect(),
       BrowserFingerprint.collect(),
       HardwareFingerprint.collect(),
@@ -94,24 +70,23 @@ class FPSFingerprintClass {
     ]);
 
     return {
-      AudioFingerprint: audio,
-      BrowserFingerprint: browser,
-      HardwareFingerprint: hardware,
-      PreferencesFingerprint: preferences,
+      audio,
+      browser,
+      hardware,
+      preferences,
     };
-    
   }
 
-  public async collectF5(): Promise<{
-    GraphicsFingerprint: GraphicsGroupResult;
+  private async collectF5(): Promise<{
+    graphics: GraphicsGroupInfo;
   }> {
     const graphics = await GraphicsFingerprint.collect();
     return {
-      GraphicsFingerprint: graphics,
+      graphics,
     };
   }
 
-  public async sendToServer(endpoint: string, payload: any): Promise<boolean> {
+  private async sendToServer(endpoint: string, payload: any): Promise<boolean> {
     try {
       if (navigator.sendBeacon) {
         const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
@@ -128,7 +103,7 @@ class FPSFingerprintClass {
         return response.ok;
       }
     } catch (error) {
-      // console.error('Failed to send data to server:', error);
+      console.error('Failed to send data to server:', error);
       return false;
     }
   }
@@ -141,20 +116,20 @@ class FPSFingerprintClass {
     const fingerprint: any = {};
 
     if (type === 'F4') {
-      fingerprint.audio = this.encodeData(fingerprintData.AudioFingerprint);
-      fingerprint.browser = this.encodeData(fingerprintData.BrowserFingerprint);
-      fingerprint.hardware = this.encodeData(fingerprintData.HardwareFingerprint);
-      fingerprint.preferences = this.encodeData(fingerprintData.PreferencesFingerprint);
+      fingerprint.audio = this.encodeData(fingerprintData.audio);
+      fingerprint.browser = this.encodeData(fingerprintData.browser);
+      fingerprint.hardware = this.encodeData(fingerprintData.hardware);
+      fingerprint.preferences = this.encodeData(fingerprintData.preferences);
     }
   
     if (type === 'F5') {
-      fingerprint.graphics = this.encodeData(fingerprintData.GraphicsFingerprint);
+      fingerprint.graphics = this.encodeData(fingerprintData.graphics);
     }
   
     return { sessionKey, fingerprint, hashed };
   }
 
-  public injectValueIntoHiddenField(fieldName: string, value: string): void {
+  private injectValueIntoHiddenField(fieldName: string, value: string): void {
     try {
       DOMUtils.injectValueIntoHiddenField(fieldName, value);
     } catch (error) {
@@ -162,54 +137,66 @@ class FPSFingerprintClass {
     }
   }
 
-  private async processF4Data(sessionKey: string, collectedDeviceInfo: CollectedDeviceInfo): Promise<boolean> {
-    const f4Data = await this.collectF4();
-    collectedDeviceInfo.f4Hashed = this.generateGroupHashes(f4Data);
-    
-    const f4Payload = this.buildPayload('F4', sessionKey, f4Data, collectedDeviceInfo.f4Hashed);
-    const f4Result = await this.sendToServer(`${CONFIG.GATEWAY_URL}${CONFIG.ENDPOINTS.F4}`, f4Payload);
-
-    this.injectValueIntoHiddenField(CONFIG.FIELD_NAMES.DEVICE_INFO, this.encodeData(collectedDeviceInfo));
-    
-    return f4Result;
-  }
-
-  private async processF5Data(sessionKey: string, collectedDeviceInfo: CollectedDeviceInfo): Promise<boolean> {
-    const f5Data = await this.collectF5();
-    collectedDeviceInfo.f5Hashed = this.generateGroupHashes(f5Data);
-
-    const f5Payload = this.buildPayload('F5', sessionKey, f5Data, collectedDeviceInfo.f5Hashed);
-    const f5Result = await this.sendToServer(`${CONFIG.GATEWAY_URL}${CONFIG.ENDPOINTS.F5}`, f5Payload);
-
-    this.injectValueIntoHiddenField(CONFIG.FIELD_NAMES.DEVICE_INFO, this.encodeData(collectedDeviceInfo));
-    
-    return f5Result;
-  }
-
-  public async start(): Promise<{ f4Success: boolean; f5Success: boolean; }> {
+  private async processF4Data(sessionKey: string, collectedDeviceInfo: CollectedDeviceInfo): Promise<any> {
     try {
-      console.log('start');
-      const tagging = new TaggingClass();
+      const f4Data = await this.collectF4();
+      const attributes = {
+        ...f4Data.audio,
+        ...f4Data.browser,
+        ...f4Data.hardware,
+        ...f4Data.preferences
+      }
+      collectedDeviceInfo.f4Hashed = this.generateGroupHashes(attributes);
+  
+      const f4Payload = this.buildPayload('F4', sessionKey, f4Data, collectedDeviceInfo.f4Hashed);
+      await this.sendToServer(`${CONFIG.GATEWAY_URL}${CONFIG.ENDPOINTS.F4}`, f4Payload);
+  
+      this.injectValueIntoHiddenField(CONFIG.FIELD_NAMES.DEVICE_INFO, this.encodeData(collectedDeviceInfo));
+      
+      return attributes;
+    } catch (error) {
+      // console.error('F4 data collection failed:', error);
+    }
+  }
 
+  private async processF5Data(sessionKey: string, collectedDeviceInfo: CollectedDeviceInfo, f4Attributes: any): Promise<void> {
+    try {
+      const f5Data = await this.collectF5();
+
+      const attributes = {
+        ...f4Attributes, 
+        ...f5Data.graphics               
+      };
+
+      collectedDeviceInfo.f5Hashed = this.generateGroupHashes(attributes);
+
+      const f5Payload = this.buildPayload('F5', sessionKey, f5Data, collectedDeviceInfo.f5Hashed);
+      await this.sendToServer(`${CONFIG.GATEWAY_URL}${CONFIG.ENDPOINTS.F5}`, f5Payload);
+
+      this.injectValueIntoHiddenField(CONFIG.FIELD_NAMES.DEVICE_INFO, this.encodeData(collectedDeviceInfo));
+
+    } catch (error) {
+      // console.error('F5 data collection failed:', error);
+    }
+  }
+
+  public async start(): Promise<void> {
+    try {
+      const tagging = new TaggingClass();
       const sessionKey = await tagging.getStorage();
 
       const collectedDeviceInfo: CollectedDeviceInfo = { sessionKey };
-      console.log('collectedDeviceInfo', collectedDeviceInfo);
-      const f4Result = await this.processF4Data(sessionKey, collectedDeviceInfo);
-      console.log('f4Result', f4Result);
-      
-      const f5Result = await this.processF5Data(sessionKey, collectedDeviceInfo);
-      console.log('f5Result', f5Result);
-      return {
-        f4Success: f4Result,
-        f5Success: f5Result
-      };
+
+      const f4Attributes = await this.processF4Data(sessionKey, collectedDeviceInfo);
+      await this.processF5Data(sessionKey, collectedDeviceInfo, f4Attributes);
+
+      const webrtc = await this.collectWebRTC();
+      collectedDeviceInfo.webrtc = webrtc;
+
+      this.injectValueIntoHiddenField(CONFIG.FIELD_NAMES.DEVICE_INFO, this.encodeData(collectedDeviceInfo));
+
     } catch (error) {
       // console.error('Fingerprint collection failed:', error);
-      return {
-        f4Success: false,
-        f5Success: false
-      };
     }
   }
 }
