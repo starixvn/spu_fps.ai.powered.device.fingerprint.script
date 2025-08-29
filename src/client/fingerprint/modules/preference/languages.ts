@@ -1,8 +1,6 @@
-interface LanguagesResult {
-  languages: string[];
-}
+import type { LanguagesInfo } from "../../types";
 
-export function collectLanguages(): LanguagesResult {
+export function collectLanguages(): LanguagesInfo {
   try {
     const languages = getLanguages();
     return { languages };

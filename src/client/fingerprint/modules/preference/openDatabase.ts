@@ -1,8 +1,6 @@
-interface OpenDatabaseResult {
-  openDatabase: boolean;
-}
+import type { OpenDatabaseInfo } from "../../types";
 
-export function collectOpenDatabase(): OpenDatabaseResult {
+export function collectOpenDatabase(): OpenDatabaseInfo {
   try {
     const openDatabase = getOpenDatabase();
     return { openDatabase };

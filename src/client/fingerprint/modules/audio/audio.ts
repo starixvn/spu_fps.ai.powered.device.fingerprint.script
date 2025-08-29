@@ -29,13 +29,18 @@ export async function collectAudio(): Promise<AudioInfo> {
     }
 
     const cleanSamples = samples
-      .filter((v): v is number => v !== null)
+      .filter((v): v is number => v !== null && !isNaN(v) && isFinite(v))
       .sort((a, b) => a - b);
+
+    if (cleanSamples.length === 0) {
+      return { audio: null, noiseType: "block" };
+    }
 
     const median =
       cleanSamples.length % 2 === 1
         ? cleanSamples[(cleanSamples.length - 1) / 2]
-        : (cleanSamples[0] + cleanSamples[1]) / 2;
+        : (cleanSamples[Math.floor(cleanSamples.length / 2) - 1] + 
+           cleanSamples[Math.floor(cleanSamples.length / 2)]) / 2;
 
     let noiseType: AudioInfo["noiseType"] = detectNoise(cleanSamples, median);
     const result: AudioInfo = { audio: median, noiseType };

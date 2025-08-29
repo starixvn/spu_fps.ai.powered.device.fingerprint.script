@@ -1,8 +1,6 @@
-interface IndexedDBResult {
-  indexedDB: boolean;
-}
+import type { IndexedDBInfo } from "../../types";
 
-export async function collectIndexedDB(): Promise<IndexedDBResult> {
+export async function collectIndexedDB(): Promise<IndexedDBInfo> {
   try {
     const indexedDB = await getIndexedDB();
     return { indexedDB };

@@ -1,8 +1,6 @@
-interface OSCpuResult {
-  oscpu: string;
-}
+import type { OSCpuInfo } from "../../types";
 
-export function collectOSCpu(): OSCpuResult {
+export function collectOSCpu(): OSCpuInfo {
   try {
     const oscpu = getOSCpu();
     return { oscpu };

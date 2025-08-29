@@ -1,10 +1,10 @@
-import type { WebRTCGroupResult } from "../../types";
+import type { WebRTCGroupInfo } from "../../types";
 import { collectAllIPTypes } from "./ipCollector";
 
 export class WebRTCFingerprint {
   public static async collect(
     timeout: number = 2000
-  ): Promise<WebRTCGroupResult> {
+  ): Promise<WebRTCGroupInfo> {
     try {
       if (!this.isWebRTCSupported()) {
         return {

@@ -1,8 +1,6 @@
-interface TouchSupportResult {
-  touchSupport: boolean;
-}
+import type { TouchSupportInfo } from "../../types";
 
-export function collectTouchSupport(): TouchSupportResult {
+export function collectTouchSupport(): TouchSupportInfo {
   try {
     const touchSupport = getTouchSupport();
     return { touchSupport };

@@ -1,8 +1,6 @@
-export interface UserAgentResult {
-  userAgent: string;
-}
+import type { UserAgentInfo } from "../../types";
 
-export async function collectUserAgent(): Promise<UserAgentResult> {
+export async function collectUserAgent(): Promise<UserAgentInfo> {
   try {
     const { userAgent } = await getUserAgent();
     return { userAgent };
@@ -11,7 +9,7 @@ export async function collectUserAgent(): Promise<UserAgentResult> {
   }
 }
 
-async function getUserAgent(): Promise<UserAgentResult> {
+async function getUserAgent(): Promise<UserAgentInfo> {
   const userAgent = navigator.userAgent || "";
   return { userAgent };
 }

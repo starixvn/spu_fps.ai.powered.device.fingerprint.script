@@ -1,8 +1,6 @@
-interface VendorResult {
-  vendor: string;
-}
+import type { VendorInfo } from "../../types";
 
-export function collectVendor(): VendorResult {
+export function collectVendor(): VendorInfo {
   try {
     const vendor = getVendor();
     return { vendor };

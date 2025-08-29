@@ -7,10 +7,10 @@ import { collectColorDepth } from "./colorDepth";
 import { collectColorGamut } from "./colorGamut";
 import { collectWebGLBasics } from "./webglBasics";
 import { collectWebGLExtensions } from "./webglExtensions";
-import type { GraphicsGroupResult } from "../../types";
+import type { GraphicsGroupInfo } from "../../types";
 
 export class GraphicsFingerprint {
-  public static async collect(): Promise<GraphicsGroupResult> {
+  public static async collect(): Promise<GraphicsGroupInfo> {
     try {
       const canvasResult = await collectCanvas();
       const webglBasicsResult = collectWebGLBasics();
@@ -22,7 +22,7 @@ export class GraphicsFingerprint {
       const colorDepthResult = collectColorDepth();
       const colorGamutResult = await collectColorGamut();
 
-      const graphicsGroup: GraphicsGroupResult = {
+      const graphicsGroup: GraphicsGroupInfo = {
         canvas: canvasResult,
         webglBasics: webglBasicsResult,
         webglExtensions: webglExtensionsResult,

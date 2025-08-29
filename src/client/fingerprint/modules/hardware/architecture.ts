@@ -1,8 +1,6 @@
-interface ArchitectureResult {
-  architecture: string;
-}
+import type { ArchitectureInfo } from "../../types";
 
-export async function collectArchitecture(): Promise<ArchitectureResult> {
+export async function collectArchitecture(): Promise<ArchitectureInfo> {
   try {
     const architecture = await getArchitecture();
     return { architecture };

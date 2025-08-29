@@ -1,8 +1,6 @@
-interface AudioBaseLatencyResult {
-  audioBaseLatency: number | string;
-}
+import type { AudioBaseLatencyInfo } from "../../types";
 
-export async function collectAudioBaseLatency(): Promise<AudioBaseLatencyResult> {
+export async function collectAudioBaseLatency(): Promise<AudioBaseLatencyInfo> {
   try {
     const audioBaseLatency = await getAudioBaseLatency();
     return { audioBaseLatency };
@@ -15,9 +13,10 @@ async function getAudioBaseLatency(): Promise<number | string> {
   try {
     const AudioContextClass =
       (window as any).AudioContext || (window as any).webkitAudioContext;
-    const audioContext: AudioContext = new AudioContextClass();
 
     if (!AudioContextClass) return "not_supported";
+
+    const audioContext: AudioContext = new AudioContextClass();
 
     if (audioContext.state === "suspended") {
       await audioContext.resume();
@@ -46,7 +45,9 @@ async function getAudioBaseLatency(): Promise<number | string> {
     const endTime = performance.now();
     const measuredLatency = endTime - startTime;
 
-    audioContext.close();
+    try {
+      await audioContext.close();
+    } catch (closeError) {}
 
     return Math.round(measuredLatency * 100) / 100;
   } catch (error) {

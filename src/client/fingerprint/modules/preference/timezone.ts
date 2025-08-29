@@ -1,8 +1,6 @@
-interface TimezoneResult {
-  timezone: string;
-}
+import type { TimezoneInfo } from "../../types";
 
-export function collectTimezone(): TimezoneResult {
+export function collectTimezone(): TimezoneInfo {
   try {
     const timezone = getTimezone();
     return { timezone };

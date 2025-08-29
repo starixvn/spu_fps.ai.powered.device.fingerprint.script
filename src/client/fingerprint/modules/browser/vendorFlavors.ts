@@ -1,8 +1,6 @@
-interface VendorFlavorsResult {
-  vendorFlavors: string[];
-}
+import type { VendorFlavorsInfo } from "../../types";
 
-export function collectVendorFlavors(): VendorFlavorsResult {
+export function collectVendorFlavors(): VendorFlavorsInfo {
   try {
     const vendorFlavors = getVendorFlavors();
     return { vendorFlavors };

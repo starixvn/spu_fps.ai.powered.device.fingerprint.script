@@ -1,8 +1,6 @@
-interface CookiesEnabledResult {
-  cookiesEnabled: boolean;
-}
+import type { CookiesEnabledInfo } from "../../types";
 
-export function collectCookiesEnabled(): CookiesEnabledResult {
+export function collectCookiesEnabled(): CookiesEnabledInfo {
   try {
     const cookiesEnabled = getCookiesEnabled();
     return { cookiesEnabled };

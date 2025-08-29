@@ -1,8 +1,6 @@
-interface LocalStorageResult {
-  localStorage: boolean;
-}
+import type { LocalStorageInfo } from "../../types";
 
-export function collectLocalStorage(): LocalStorageResult {
+export function collectLocalStorage(): LocalStorageInfo {
   try {
     const localStorage = getLocalStorage();
     return { localStorage };

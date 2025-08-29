@@ -1,14 +1,12 @@
+import type { PluginsInfo } from "../../types";
+
 interface Plugin {
   name: string;
   description: string;
   filename: string;
 }
 
-interface PluginsResult {
-  plugins: Plugin[];
-}
-
-export function collectPlugins(): PluginsResult {
+export function collectPlugins(): PluginsInfo {
   try {
     const plugins = getPlugins();
     return { plugins };

@@ -1,8 +1,6 @@
-interface SessionStorageResult {
-  sessionStorage: boolean;
-}
+import type { SessionStorageInfo } from "../../types";
 
-export function collectSessionStorage(): SessionStorageResult {
+export function collectSessionStorage(): SessionStorageInfo {
   try {
     const sessionStorage = getSessionStorage();
     return { sessionStorage };

@@ -1,8 +1,6 @@
-interface CpuClassResult {
-  cpuClass: string;
-}
+import type { CpuClassInfo } from "../../types";
 
-export function collectCpuClass(): CpuClassResult {
+export function collectCpuClass(): CpuClassInfo {
   try {
     const cpuClass = getCpuClass();
     return { cpuClass };
@@ -13,13 +11,11 @@ export function collectCpuClass(): CpuClassResult {
 
 function getCpuClass(): string {
   try {
-    const rawCpuClass = (navigator as any)?.cpuClass;
+    if (!("cpuClass" in navigator)) return "";
 
-    if (typeof rawCpuClass === "string") {
-      return rawCpuClass.trim();
-    }
+    const rawCpuClass = (navigator as any).cpuClass;
 
-    return "";
+    return typeof rawCpuClass === "string" ? rawCpuClass.trim() : "";
   } catch {
     return "";
   }

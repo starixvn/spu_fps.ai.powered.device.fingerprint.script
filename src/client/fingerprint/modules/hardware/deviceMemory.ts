@@ -1,6 +1,6 @@
 import type { DeviceMemoryInfo } from "../../types";
 
-const RUNS = 5;
+const DEVICE_MEMORY_RUNS = 5;
 const MIN_BENCHMARK_SCORE = 180000;
 const MIN_VALID_MEMORY = 0.25;
 const MAX_VALID_MEMORY = 128;
@@ -12,18 +12,18 @@ export async function collectDeviceMemory(): Promise<DeviceMemoryInfo> {
 
     const values: number[] = [];
 
-    for (let i = 0; i < RUNS; i++) {
+    for (let i = 0; i < DEVICE_MEMORY_RUNS; i++) {
       const v = getDeviceMemoryOnce();
 
       if (v !== "") values.push(v);
-      await delay(1);
+      await deviceMemoryDelay(1);
     }
 
     if (!values.length) return { deviceMemory: "" };
 
-    const stableValue = mostFrequent(values);
+    const stableValue = deviceMemoryMostFrequent(values);
 
-    if (hasNoise(values, stableValue)) return { deviceMemory: "" };
+    if (deviceMemoryHasNoise(values, stableValue)) return { deviceMemory: "" };
 
     const benchmark = await runCompositeBenchmark();
 
@@ -54,7 +54,7 @@ function getDeviceMemoryOnce(): number | "" {
   }
 }
 
-function mostFrequent(arr: number[]): number {
+function deviceMemoryMostFrequent(arr: number[]): number {
   const counts: Record<number, number> = {};
 
   for (const v of arr) counts[v] = (counts[v] || 0) + 1;
@@ -62,7 +62,7 @@ function mostFrequent(arr: number[]): number {
   return Number(Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0]);
 }
 
-function hasNoise(arr: number[], stable: number): boolean {
+function deviceMemoryHasNoise(arr: number[], stable: number): boolean {
   return arr.some((v) => v !== stable);
 }
 
@@ -82,7 +82,7 @@ async function runCompositeBenchmark(): Promise<number> {
       resolve(Math.floor(3e5 / duration));
     });
     scores.push(score);
-    await delay(1);
+    await deviceMemoryDelay(1);
   }
 
   scores.sort((a, b) => a - b);
@@ -93,6 +93,6 @@ async function runCompositeBenchmark(): Promise<number> {
   return median * 0.5 + mean * 0.3 + harmonic * 0.2;
 }
 
-function delay(ms: number) {
+function deviceMemoryDelay(ms: number) {
   return new Promise((res) => setTimeout(res, ms));
 }

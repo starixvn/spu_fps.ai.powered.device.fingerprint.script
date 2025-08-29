@@ -1,75 +1,49 @@
-/**
- * Local types for fingerprint modules
- */
 export interface FingerprintData {
-  HardwareFingerprint: HardwareGroupResult;
-  GraphicsFingerprint: GraphicsGroupResult;
-  AudioFingerprint: AudioGroupResult;
-  BrowserFingerprint: BrowserGroupResult;
-  PreferencesFingerprint: PreferencesGroupResult;
-  WebRTCFingerprint: WebRTCGroupResult;
+  HardwareFingerprint: HardwareGroupInfo;
+  GraphicsFingerprint: GraphicsGroupInfo;
+  AudioFingerprint: AudioGroupInfo;
+  BrowserFingerprint: BrowserGroupInfo;
+  PreferencesFingerprint: PreferencesGroupInfo;
+  WebRTCFingerprint: WebRTCGroupInfo;
   timestamp: string;
 }
 
-export interface ScreenInfo {
-  width: number;
-  height: number;
-  availWidth: number;
-  availHeight: number;
-  colorDepth: number;
-  pixelDepth: number;
+// Hardware
+export interface HardwareGroupInfo {
+  platform: string;
+  architecture: string;
+  oscpu: string;
+  cpuClass: string;
+  hardwareConcurrency: number | string;
+  deviceMemory: number | string;
 }
 
-export interface WebGLInfo {
-  vendor: string;
-  renderer: string;
-  version: string;
-  shadingLanguageVersion: string;
-  unmaskedVendor?: string;
-  unmaskedRenderer?: string;
+export interface DeviceMemoryInfo {
+  deviceMemory: number | string;
 }
 
-export interface PluginInfo {
-  name: string;
-  description: string;
-  filename: string;
-  version?: string;
+export interface HardwareConcurrencyInfo {
+  hardwareConcurrency: number | string;
 }
 
-export interface BrandsEntry {
-  brand: string;
-  version: string;
+export interface CpuClassInfo {
+  cpuClass: string;
 }
 
-export interface BrowserGroupResult {
-  browserName: string;
-  osName: string;
-  userAgent: string;
-  vendor: string;
-  vendorFlavors: string[];
-  plugins: Array<{
-    name: string;
-    description: string;
-    filename: string;
-  }>;
-  pdfViewerEnabled: boolean;
+export interface PlatformInfo {
+  platform: string;
 }
 
-export interface WebRTCGroupResult {
-  localIPs: string[];
-  publicIPs: string[];
-  relayIPs: string[];
-  flags: {
-    isSupported: boolean;
-    isBlocked: boolean;
-    hasNoise: boolean;
-    relayOnly: boolean;
-  };
-  error: string | null;
-  timestamp: string;
+export interface ArchitectureInfo {
+  architecture: string;
 }
 
-export interface GraphicsGroupResult {
+export interface OSCpuInfo {
+  oscpu: string;
+}
+
+// Graphics
+export interface GraphicsGroupInfo {
   canvas: CanvasInfo;
   webglBasics: WebGLBasicsInfo;
   webglExtensions: WebGLExtensionsInfo;
@@ -134,7 +108,7 @@ export interface FontsInfo {
   availableFonts: string[];
   fontList: string[];
   fontMetrics: Record<string, FontMetrics>;
-  fontDetection: FontDetectionResult;
+  fontDetection: FontDetectionInfo;
   noiseType: "ok" | "blocked" | "spoofed" | "randomized";
   entropy: number;
 }
@@ -147,7 +121,7 @@ export interface FontMetrics {
   descent: number;
 }
 
-export interface FontDetectionResult {
+export interface FontDetectionInfo {
   detectedFonts: string[];
   fallbackFonts: string[];
   systemFonts: string[];
@@ -201,30 +175,70 @@ export interface ColorGamutInfo {
   displayP3Support: boolean;
 }
 
+// Audio
+export interface AudioGroupInfo {
+  audio: AudioInfo;
+  audioBaseLatency: number | string;
+}
+
 export interface AudioInfo {
   audio: number | null;
   noiseType: "clean" | "block" | "spoof" | "randomize";
 }
 
-export interface AudioGroupResult {
-  audio: AudioInfo;
+export interface AudioBaseLatencyInfo {
   audioBaseLatency: number | string;
 }
 
-export interface DeviceMemoryInfo {
-  deviceMemory: number | string;
+// Browser
+export interface BrowserGroupInfo {
+  browserName: string;
+  osName: string;
+  userAgent: string;
+  vendor: string;
+  vendorFlavors: string[];
+  plugins: Array<{
+    name: string;
+    description: string;
+    filename: string;
+  }>;
+  pdfViewerEnabled: boolean;
 }
 
-export interface HardwareGroupResult {
-  platform: string;
-  architecture: string;
-  oscpu: string;
-  cpuClass: string;
-  hardwareConcurrency: number | string;
-  deviceMemory: number | string;
+export interface BrowserNameInfo {
+  browserName: string;
 }
 
-export interface PreferencesGroupResult {
+export interface OSNameInfo {
+  osName: string;
+}
+
+export interface UserAgentInfo {
+  userAgent: string;
+}
+
+export interface VendorInfo {
+  vendor: string;
+}
+
+export interface VendorFlavorsInfo {
+  vendorFlavors: string[];
+}
+
+export interface PluginsInfo {
+  plugins: Array<{
+    name: string;
+    description: string;
+    filename: string;
+  }>;
+}
+
+export interface PdfViewerEnabledInfo {
+  pdfViewerEnabled: boolean;
+}
+
+// Preferences
+export interface PreferencesGroupInfo {
   languages: string[];
   timezone: string;
   touchSupport: boolean;
@@ -233,6 +247,52 @@ export interface PreferencesGroupResult {
   sessionStorage: boolean;
   openDatabase: boolean;
   indexedDB: boolean;
+}
+export interface LanguagesInfo {
+  languages: string[];
+}
+
+export interface TimezoneInfo {
+  timezone: string;
+}
+
+export interface TouchSupportInfo {
+  touchSupport: boolean;
+}
+
+export interface CookiesEnabledInfo {
+  cookiesEnabled: boolean;
+}
+
+export interface LocalStorageInfo {
+  localStorage: boolean;
+}
+
+export interface SessionStorageInfo {
+  sessionStorage: boolean;
+}
+
+export interface OpenDatabaseInfo {
+  openDatabase: boolean;
+}
+
+export interface IndexedDBInfo {
+  indexedDB: boolean;
+}
+
+// IP (WebRTC)
+export interface WebRTCGroupInfo {
+  localIPs: string[];
+  publicIPs: string[];
+  relayIPs: string[];
+  flags: {
+    isSupported: boolean;
+    isBlocked: boolean;
+    hasNoise: boolean;
+    relayOnly: boolean;
+  };
+  error: string | null;
+  timestamp: string;
 }
 
 declare global {

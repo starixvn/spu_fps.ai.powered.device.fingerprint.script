@@ -1,4 +1,4 @@
-import type { FontsInfo, FontMetrics, FontDetectionResult } from "../../types";
+import type { FontsInfo, FontMetrics, FontDetectionInfo } from "../../types";
 
 const FONT_SESSION_CACHE_KEY = "__font_fp_session__";
 const FONT_LOCAL_CACHE_KEY = "__font_fp_local__";
@@ -100,7 +100,7 @@ function getFontsInfo(): FontsInfo {
   };
 }
 
-function detectFontsUsingCSS(): FontDetectionResult {
+function detectFontsUsingCSS(): FontDetectionInfo {
   const systemStacks = [
     "system-ui",
     "-apple-system",

@@ -1,8 +1,6 @@
-interface PlatformResult {
-  platform: string;
-}
+import type { PlatformInfo } from "../../types";
 
-export function collectPlatform(): PlatformResult {
+export function collectPlatform(): PlatformInfo {
   try {
     const platform = getPlatform();
     return { platform };

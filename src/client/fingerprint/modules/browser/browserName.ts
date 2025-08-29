@@ -1,8 +1,6 @@
-interface BrowserNameResult {
-  browserName: string;
-}
+import type { BrowserNameInfo } from "../../types";
 
-export function collectBrowserName(): BrowserNameResult {
+export function collectBrowserName(): BrowserNameInfo {
   try {
     const browserName = getBrowserName();
     return { browserName };

@@ -3,10 +3,10 @@ import { collectOSName } from "./osName";
 import { collectVendor } from "./vendor";
 import { collectVendorFlavors } from "./vendorFlavors";
 import { collectPlugins } from "./plugins";
-import type { BrowserGroupResult } from "../../types";
+import type { BrowserGroupInfo } from "../../types";
 
 export class BrowserFingerprint {
-  public static collect(): BrowserGroupResult {
+  public static collect(): BrowserGroupInfo {
     try {
       const browserNameResult = collectBrowserName();
       const osNameResult = collectOSName();
@@ -16,7 +16,7 @@ export class BrowserFingerprint {
       const pluginsResult = collectPlugins();
       const pdfViewerResult = collectPdfViewerEnabledSync();
 
-      const browserGroup: BrowserGroupResult = {
+      const browserGroup: BrowserGroupInfo = {
         browserName: browserNameResult.browserName,
         osName: osNameResult.osName,
         userAgent: userAgentResult.userAgent,

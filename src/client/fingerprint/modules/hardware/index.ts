@@ -4,10 +4,10 @@ import { collectArchitecture } from "./architecture";
 import { collectOSCpu } from "./osCpu";
 import { collectHardwareConcurrency } from "./hardwareConcurrency";
 import { collectDeviceMemory } from "./deviceMemory";
-import type { HardwareGroupResult } from "../../types";
+import type { HardwareGroupInfo } from "../../types";
 
 export class HardwareFingerprint {
-  public static async collect(): Promise<HardwareGroupResult> {
+  public static async collect(): Promise<HardwareGroupInfo> {
     let platformResult, cpuClassResult, architectureResult, osCpuResult, hardwareConcurrencyResult, deviceMemoryResult;
 
     try {
@@ -35,7 +35,7 @@ export class HardwareFingerprint {
     }
 
     try {
-      hardwareConcurrencyResult = collectHardwareConcurrency();
+      hardwareConcurrencyResult = await collectHardwareConcurrency();
     } catch (error) {
       hardwareConcurrencyResult = { hardwareConcurrency: "" };
     }
@@ -46,7 +46,7 @@ export class HardwareFingerprint {
       deviceMemoryResult = { deviceMemory: "" };
     }
 
-    const hardwareGroup: HardwareGroupResult = {
+    const hardwareGroup: HardwareGroupInfo = {
       platform: platformResult.platform || "",
       cpuClass: cpuClassResult.cpuClass || "",
       architecture: architectureResult.architecture || "",

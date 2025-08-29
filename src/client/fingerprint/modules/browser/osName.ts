@@ -1,8 +1,6 @@
-interface OSNameResult {
-  osName: string;
-}
+import type { OSNameInfo } from "../../types";
 
-export function collectOSName(): OSNameResult {
+export function collectOSName(): OSNameInfo {
   try {
     const osName = getOSName();
     return { osName };

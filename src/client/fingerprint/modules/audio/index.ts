@@ -1,16 +1,26 @@
 import { collectAudioBaseLatency } from "./audioBaseLatency";
 import { collectAudio } from "./audio";
-import type { AudioGroupResult } from "../../types";
+import type { AudioGroupInfo } from "../../types";
 
 export class AudioFingerprint {
-  public static async collect(): Promise<AudioGroupResult> {
+  public static async collect(): Promise<AudioGroupInfo> {
     try {
-      const audioResult = await collectAudio();
-      const audioBaseLatencyResult = await collectAudioBaseLatency();
+      const [audioResult, audioBaseLatencyResult] = await Promise.allSettled([
+        collectAudio(),
+        collectAudioBaseLatency()
+      ]);
 
-      const audioGroup: AudioGroupResult = {
-        audio: audioResult,
-        audioBaseLatency: audioBaseLatencyResult.audioBaseLatency,
+      const audio = audioResult.status === "fulfilled" 
+        ? audioResult.value 
+        : { audio: null, noiseType: "block" as const };
+
+      const audioBaseLatency = audioBaseLatencyResult.status === "fulfilled"
+        ? audioBaseLatencyResult.value.audioBaseLatency
+        : "";
+
+      const audioGroup: AudioGroupInfo = {
+        audio,
+        audioBaseLatency,
       };
 
       return audioGroup;
@@ -20,7 +30,7 @@ export class AudioFingerprint {
           audio: null,
           noiseType: "block",
         },
-        audioBaseLatency: 0,
+        audioBaseLatency: "",
       };
     }
   }

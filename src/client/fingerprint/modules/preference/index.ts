@@ -6,10 +6,10 @@ import { collectOpenDatabase } from "./openDatabase";
 import { collectLocalStorage } from "./localStorage";
 import { collectIndexedDB } from "./indexedDb";
 import { collectCookiesEnabled } from "./cookiesEnabled";
-import type { PreferencesGroupResult } from "../../types";
+import type { PreferencesGroupInfo } from "../../types";
 
 export class PreferencesFingerprint {
-  public static async collect(): Promise<PreferencesGroupResult> {
+  public static async collect(): Promise<PreferencesGroupInfo> {
     try {
       const languagesResult = collectLanguages();
       const timezoneResult = collectTimezone();
@@ -20,7 +20,7 @@ export class PreferencesFingerprint {
       const indexedDBResult = await collectIndexedDB();
       const cookiesEnabledResult = collectCookiesEnabled();
 
-      const preferencesGroup: PreferencesGroupResult = {
+      const preferencesGroup: PreferencesGroupInfo = {
         languages: languagesResult.languages,
         timezone: timezoneResult.timezone,
         touchSupport: touchSupportResult.touchSupport,
