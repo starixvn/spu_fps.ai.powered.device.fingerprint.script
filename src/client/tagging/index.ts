@@ -7,7 +7,7 @@ import { TaggingHandler, STORAGE_KEYS } from './tagging';
 import { WindowNameHandler } from './modules/windowName';
 import { IStorageHandler } from './types';
 
-class TaggingClass {
+export class TaggingClass {
     private readonly storageHandlers: Array<{
         handler: IStorageHandler;
         key: string;
@@ -44,20 +44,20 @@ class TaggingClass {
     }
 }
 
-const tagging = new TaggingClass();
+// const tagging = new TaggingClass();
 
-if (typeof window !== 'undefined') {
-    (window.history as any).tag = {
-        ...(window.performance && { ...window.performance }),
-        self: null as Promise<string> | null,
-        sessionId: `session_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-        timestamp: Date.now(),
-        userAgent: navigator.userAgent
-    };
+// if (typeof window !== 'undefined') {
+//     (window.history as any).tag = {
+//         ...(window.performance && { ...window.performance }),
+//         self: null as Promise<string> | null,
+//         sessionId: `session_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+//         timestamp: Date.now(),
+//         userAgent: navigator.userAgent
+//     };
 
-    (window.history as any).tag.self = (async () => {
-        return await tagging.getStorage();
-    })();
-}
+//     (window.history as any).tag.self = (async () => {
+//         return await tagging.getStorage();
+//     })();
+// }
 
-export default tagging;
+// export default tagging;

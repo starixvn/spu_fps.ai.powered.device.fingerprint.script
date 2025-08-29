@@ -295,6 +295,12 @@ export interface WebRTCGroupInfo {
   timestamp: string;
 }
 
+export interface CollectedDeviceInfo {
+  sessionKey: string;
+  f4Hashed?: string;
+  f5Hashed?: string;
+}
+
 declare global {
   interface Window {
     FPSFingerprint: any;
