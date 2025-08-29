@@ -1,21 +1,98 @@
-interface DeviceMemoryResult {
-  deviceMemory: number | string;
-}
+import type { DeviceMemoryInfo } from "../../types";
 
-export function collectDeviceMemory(): DeviceMemoryResult {
+const RUNS = 5;
+const MIN_BENCHMARK_SCORE = 180000;
+const MIN_VALID_MEMORY = 0.25;
+const MAX_VALID_MEMORY = 128;
+const KNOWN_POWER2_VALUES = [0.25, 0.5, 1, 2, 4, 8, 16, 32];
+
+export async function collectDeviceMemory(): Promise<DeviceMemoryInfo> {
   try {
-    const deviceMemory = getDeviceMemory();
-    return { deviceMemory };
-  } catch (error) {
+    if (!("deviceMemory" in navigator)) return { deviceMemory: "" };
+
+    const values: number[] = [];
+
+    for (let i = 0; i < RUNS; i++) {
+      const v = getDeviceMemoryOnce();
+
+      if (v !== "") values.push(v);
+      await delay(1);
+    }
+
+    if (!values.length) return { deviceMemory: "" };
+
+    const stableValue = mostFrequent(values);
+
+    if (hasNoise(values, stableValue)) return { deviceMemory: "" };
+
+    const benchmark = await runCompositeBenchmark();
+
+    if (stableValue < MIN_VALID_MEMORY || stableValue > MAX_VALID_MEMORY)
+      return { deviceMemory: "" };
+
+    if (
+      KNOWN_POWER2_VALUES.includes(stableValue) &&
+      stableValue < Math.min(8, (benchmark / MIN_BENCHMARK_SCORE) * 8)
+    ) {
+      return { deviceMemory: "" };
+    }
+
+    return { deviceMemory: stableValue };
+  } catch {
     return { deviceMemory: "" };
   }
 }
 
-function getDeviceMemory(): number | string {
+function getDeviceMemoryOnce(): number | "" {
   try {
-    if (navigator.deviceMemory) return navigator.deviceMemory;
-    return "";
+    const val = (navigator as any).deviceMemory;
+    const n = typeof val === "string" ? parseFloat(val) : val;
+
+    return typeof n === "number" && n > 0 ? n : "";
   } catch {
     return "";
   }
+}
+
+function mostFrequent(arr: number[]): number {
+  const counts: Record<number, number> = {};
+
+  for (const v of arr) counts[v] = (counts[v] || 0) + 1;
+
+  return Number(Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0]);
+}
+
+function hasNoise(arr: number[], stable: number): boolean {
+  return arr.some((v) => v !== stable);
+}
+
+async function runCompositeBenchmark(): Promise<number> {
+  const ITER = 3;
+  const scores: number[] = [];
+
+  for (let t = 0; t < ITER; t++) {
+    const score = await new Promise<number>((resolve) => {
+      const start = performance.now();
+      let x = 0;
+      for (let i = 0; i < 3e5; i++) {
+        x += Math.sqrt(i) % 3;
+        if (i % 1000 === 0) x += Math.sin(i) * Math.cos(i);
+      }
+      const duration = performance.now() - start;
+      resolve(Math.floor(3e5 / duration));
+    });
+    scores.push(score);
+    await delay(1);
+  }
+
+  scores.sort((a, b) => a - b);
+  const median = scores[1];
+  const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
+  const harmonic = scores.length / scores.reduce((sum, s) => sum + 1 / s, 0);
+
+  return median * 0.5 + mean * 0.3 + harmonic * 0.2;
+}
+
+function delay(ms: number) {
+  return new Promise((res) => setTimeout(res, ms));
 }

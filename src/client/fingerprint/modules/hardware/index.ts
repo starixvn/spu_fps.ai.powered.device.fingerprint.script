@@ -41,7 +41,7 @@ export class HardwareFingerprint {
     }
 
     try {
-      deviceMemoryResult = collectDeviceMemory();
+      deviceMemoryResult = await collectDeviceMemory();
     } catch (error) {
       deviceMemoryResult = { deviceMemory: "" };
     }

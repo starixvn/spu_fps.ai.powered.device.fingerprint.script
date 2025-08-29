@@ -211,6 +211,10 @@ export interface AudioGroupResult {
   audioBaseLatency: number | string;
 }
 
+export interface DeviceMemoryInfo {
+  deviceMemory: number | string;
+}
+
 export interface HardwareGroupResult {
   platform: string;
   architecture: string;
