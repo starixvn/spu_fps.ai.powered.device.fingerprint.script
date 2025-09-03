@@ -78,14 +78,24 @@
       <h1>🔍 FPS Device Fingerprinting Demo</h1>
       <div style="text-align: center">
         <button class="button" onclick="collectFingerprint()">
-          Collect Fingerprint
+          Collect All Data
         </button>
-        <button class="button" onclick="collectIPs()">Collect IP</button>
+        <button class="button" onclick="showF4Data()">Show F4 Data</button>
+        <button class="button" onclick="showF5Data()">Show F5 Data</button>
+        <button class="button" onclick="collectIPs()">Show WebRTC Data</button>
+        <button class="button" onclick="showDeviceInfo()">Show Device Info</button>
         <button class="button" onclick="generateHash()">Generate Hash</button>
         <button class="button" onclick="sendToServer()">Send to Server</button>
         <button class="button" onclick="getStorageData()">
           Get Storage Data
         </button>
+      </div>
+
+      <div id="statusDisplay" class="fingerprint-display" style="display: block">
+        <h3>Data Availability Status:</h3>
+        <div id="statusInfo">
+          <p>🔄 Checking data availability...</p>
+        </div>
       </div>
 
       <div id="hashDisplay" class="hash-display" style="display: none">
@@ -139,24 +149,51 @@
       }
 
       async function collectFingerprint() {
-        if (!fingerprint) {
-          document.getElementById("fingerprintData").textContent =
-            "Error: fingerprint not loaded yet";
-          document.getElementById("fingerprintDisplay").style.display = "block";
-
-          return;
-        }
-
         try {
-          currentFingerprint = await fingerprint.collect();
+          // Wait a bit for the fingerprinting to complete (if needed)
+          await new Promise(resolve => setTimeout(resolve, 1000));
+
+          // Check if fingerprint data is available in window objects
+          if (!window.f4Attributes && !window.f5Attributes) {
+            document.getElementById("fingerprintData").textContent =
+              "Fingerprint data not ready yet. Please try again in a moment.";
+            document.getElementById("fingerprintDisplay").style.display = "block";
+            return;
+          }
+
+          // Collect data from window objects  
+          currentFingerprint = {
+            f4Data: window.f4Attributes || null,
+            f5Data: window.f5Attributes || null,
+            webrtcData: window.webrtcData || null,
+            deviceInfo: window.deviceInfo || null,
+            timestamp: new Date().toISOString(),
+            version: "1.9.0"
+          };
+
+          // Format and display the data
+          const formattedData = {
+            ...currentFingerprint,
+            // Add summary information
+            summary: {
+              f4Available: !!window.f4Attributes,
+              f5Available: !!window.f5Attributes, 
+              webrtcAvailable: !!window.webrtcData,
+              deviceInfoAvailable: !!window.deviceInfo
+            }
+          };
 
           document.getElementById("fingerprintData").textContent =
-            JSON.stringify(currentFingerprint, null, 2);
+            JSON.stringify(formattedData, null, 2);
           document.getElementById("fingerprintDisplay").style.display = "block";
+
+          console.log("🎯 Fingerprint collected from window objects:", formattedData);
+
         } catch (error) {
           document.getElementById("fingerprintData").textContent =
             "Error: " + error.message;
           document.getElementById("fingerprintDisplay").style.display = "block";
+          console.error("❌ Error collecting fingerprint:", error);
         }
       }
 
@@ -179,22 +216,102 @@
         }
       }
 
-      document.addEventListener("DOMContentLoaded", () => {
-        loadMainScript();
-        toggleStorageButton(false);
-      });
+      // New functions for handling window-based data access
+      function checkDataAvailability() {
+        const checkInterval = setInterval(() => {
+          const status = {
+            f4: !!window.f4Attributes,
+            f5: !!window.f5Attributes,
+            webrtc: !!window.webrtcData,
+            deviceInfo: !!window.deviceInfo
+          };
 
-      async function collectIPs() {
-        if (!fingerprint) {
-          document.getElementById("fingerprintData").textContent =
-            "Error: fingerprint not loaded yet";
+          let statusHtml = "<div style='font-family: monospace;'>";
+          statusHtml += `<p>📊 F4 Data (Audio, Browser, Hardware, Preferences): ${status.f4 ? '✅ Available' : '⏳ Loading...'}</p>`;
+          statusHtml += `<p>🎨 F5 Data (Graphics): ${status.f5 ? '✅ Available' : '⏳ Loading...'}</p>`;
+          statusHtml += `<p>🌐 WebRTC Data: ${status.webrtc ? '✅ Available' : '⏳ Loading...'}</p>`;
+          statusHtml += `<p>📱 Device Info: ${status.deviceInfo ? '✅ Available' : '⏳ Loading...'}</p>`;
+          statusHtml += "</div>";
+
+          document.getElementById("statusInfo").innerHTML = statusHtml;
+
+          // If all data is available, we can stop checking
+          if (status.f4 && status.f5 && status.webrtc && status.deviceInfo) {
+            clearInterval(checkInterval);
+            statusHtml += "<p style='color: green; font-weight: bold;'>🎉 All fingerprint data is ready!</p>";
+            document.getElementById("statusInfo").innerHTML = statusHtml;
+          }
+        }, 1000);
+
+        // Stop checking after 30 seconds to avoid infinite loop
+        setTimeout(() => clearInterval(checkInterval), 30000);
+      }
+
+      function showF4Data() {
+        if (!window.f4Attributes) {
+          document.getElementById("fingerprintData").textContent = "F4 data not available yet.";
           document.getElementById("fingerprintDisplay").style.display = "block";
           return;
         }
 
+        document.getElementById("fingerprintData").textContent = 
+          JSON.stringify(window.f4Attributes, null, 2);
+        document.getElementById("fingerprintDisplay").style.display = "block";
+        console.log("📊 F4 Data:", window.f4Attributes);
+      }
+
+      function showF5Data() {
+        if (!window.f5Attributes) {
+          document.getElementById("fingerprintData").textContent = "F5 data not available yet.";
+          document.getElementById("fingerprintDisplay").style.display = "block";
+          return;
+        }
+
+        document.getElementById("fingerprintData").textContent = 
+          JSON.stringify(window.f5Attributes, null, 2);
+        document.getElementById("fingerprintDisplay").style.display = "block";
+        console.log("🎨 F5 Data:", window.f5Attributes);
+      }
+
+      function showDeviceInfo() {
+        if (!window.deviceInfo) {
+          document.getElementById("fingerprintData").textContent = "Device info not available yet.";
+          document.getElementById("fingerprintDisplay").style.display = "block";
+          return;
+        }
+
+        document.getElementById("fingerprintData").textContent = 
+          JSON.stringify(window.deviceInfo, null, 2);
+        document.getElementById("fingerprintDisplay").style.display = "block";
+        console.log("📱 Device Info:", window.deviceInfo);
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        loadMainScript();
+        toggleStorageButton(false);
+        // Start checking data availability
+        checkDataAvailability();
+      });
+
+      async function collectIPs() {
         try {
-          const ips = await fingerprint.collectIPs(2000);
-          const formattedOutput = ips;
+          // Check if WebRTC data is available in window
+          if (!window.webrtcData) {
+            document.getElementById("fingerprintData").textContent =
+              "WebRTC data not available yet. Please wait for fingerprinting to complete.";
+            document.getElementById("fingerprintDisplay").style.display = "block";
+            return;
+          }
+
+          const webrtcData = window.webrtcData;
+          const formattedOutput = {
+            localIPs: webrtcData.localIPs || [],
+            publicIPs: webrtcData.publicIPs || [],
+            relayIPs: webrtcData.relayIPs || [],
+            flags: webrtcData.flags || {},
+            timestamp: webrtcData.timestamp || new Date().toISOString(),
+            error: webrtcData.error || null
+          };
 
           document.getElementById("fingerprintData").textContent =
             JSON.stringify(formattedOutput, null, 2);
@@ -207,28 +324,48 @@
       }
 
       async function generateHash() {
-        if (!fingerprint) {
-          document.getElementById("hashValue").textContent =
-            "Error: fingerprint not loaded yet";
-          document.getElementById("hashDisplay").style.display = "block";
-          return;
-        }
-
-        if (!currentFingerprint) {
-          currentFingerprint = await fingerprint.collect();
-        }
-
         try {
-          const hash = await fingerprint.generateHash(currentFingerprint);
-          const groupHashes = await fingerprint.generateGroupHashes(
-            currentFingerprint
-          );
+          // Check if data is available
+          if (!window.deviceInfo) {
+            document.getElementById("hashValue").textContent =
+              "Device info not available yet. Please wait for fingerprinting to complete.";
+            document.getElementById("hashDisplay").style.display = "block";
+            return;
+          }
 
-          document.getElementById("hashValue").textContent = hash;
+          // Use the hashes that are already generated in deviceInfo
+          const deviceInfo = window.deviceInfo;
+          let hashInfo = "";
+          
+          if (deviceInfo.f4Hashed) {
+            hashInfo += `F4 Hash: ${deviceInfo.f4Hashed}\n`;
+          }
+          
+          if (deviceInfo.f5Hashed) {
+            hashInfo += `F5 Hash: ${deviceInfo.f5Hashed}\n`;
+          }
+
+          // Generate a combined hash from all available data
+          const allData = {
+            f4: window.f4Attributes,
+            f5: window.f5Attributes,
+            webrtc: window.webrtcData,
+            deviceInfo: window.deviceInfo
+          };
+
+          const combinedDataString = JSON.stringify(allData);
+          const combinedHash = btoa(combinedDataString).substring(0, 32); // Simple hash for demo
+
+          hashInfo += `Combined Hash: ${combinedHash}`;
+
+          document.getElementById("hashValue").innerHTML = hashInfo.replace(/\n/g, '<br>');
           document.getElementById("hashDisplay").style.display = "block";
 
-          console.log("Generated hash:", hash);
-          console.log("Group hashes:", groupHashes);
+          console.log("Generated hashes:", {
+            f4Hash: deviceInfo.f4Hashed,
+            f5Hash: deviceInfo.f5Hashed,
+            combinedHash: combinedHash
+          });
         } catch (error) {
           document.getElementById("hashValue").textContent =
             "Error: " + error.message;
@@ -237,37 +374,50 @@
       }
 
       async function sendToServer() {
-        if (!fingerprint) {
-          document.getElementById("serverData").textContent =
-            "Error: fingerprint not loaded yet";
-          document.getElementById("serverResponse").style.display = "block";
-          return;
-        }
-
-        if (!currentFingerprint) {
-          currentFingerprint = await fingerprint.collect();
-        }
-
         try {
-          fingerprint.sendToServer(
-            "/api/fingerprint",
-            currentFingerprint,
-            function (error, response) {
-              if (error) {
-                document.getElementById("serverData").textContent =
-                  "Error: " + error.message;
-              } else {
-                console.log("Server response:", response);
-                document.getElementById("serverData").textContent =
-                  JSON.stringify(response, null, 2);
-              }
-              document.getElementById("serverResponse").style.display = "block";
-            }
-          );
+          // Check if data is available
+          if (!window.deviceInfo) {
+            document.getElementById("serverData").textContent =
+              "Device info not available yet. Please wait for fingerprinting to complete.";
+            document.getElementById("serverResponse").style.display = "block";
+            return;
+          }
+
+          // Prepare data to send (use deviceInfo which contains encoded data)
+          const dataToSend = {
+            deviceInfo: window.deviceInfo,
+            f4Data: window.f4Attributes,
+            f5Data: window.f5Attributes,
+            webrtcData: window.webrtcData,
+            timestamp: new Date().toISOString()
+          };
+
+          // Send to server using fetch
+          const response = await fetch("/api/fingerprint", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(dataToSend),
+          });
+
+          if (response.ok) {
+            const responseData = await response.json();
+            console.log("Server response:", responseData);
+            document.getElementById("serverData").textContent =
+              JSON.stringify(responseData, null, 2);
+          } else {
+            document.getElementById("serverData").textContent =
+              `Server error: ${response.status} ${response.statusText}`;
+          }
+          
+          document.getElementById("serverResponse").style.display = "block";
+
         } catch (error) {
           document.getElementById("serverData").textContent =
             "Error: " + error.message;
           document.getElementById("serverResponse").style.display = "block";
+          console.error("❌ Error sending to server:", error);
         }
       }
 
