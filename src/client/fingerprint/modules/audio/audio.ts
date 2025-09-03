@@ -13,41 +13,32 @@ const SPOOF_RANGES = [
 ];
 const VARIANCE_THRESHOLD = 25;
 const MEDIAN_DIFF_THRESHOLD = 5;
+const RMS_DIFF_THRESHOLD = 3;
+const SNAPSHOTS = 3;
 
 export async function collectAudio(): Promise<AudioInfo> {
   try {
     if (audioCache) return audioCache;
 
-    const samples: (number | null)[] = [];
+    const samples: number[] = [];
+    const snapshotsRMS: number[] = [];
 
-    for (let i = 0; i < 3; i++) {
-      samples.push(await getAudioSample());
+    for (let i = 0; i < SNAPSHOTS; i++) {
+      const result = await getAudioSampleWithRMS();
+
+      if (result !== null) {
+        samples.push(result.sample);
+        snapshotsRMS.push(result.rms);
+      }
     }
 
-    if (samples.every((v) => v === null)) {
-      return { audio: null, noiseType: "block" };
-    }
+    if (samples.length === 0) return { audio: null, noiseType: "block" };
 
-    const cleanSamples = samples
-      .filter((v): v is number => v !== null && !isNaN(v) && isFinite(v))
-      .sort((a, b) => a - b);
-
-    if (cleanSamples.length === 0) {
-      return { audio: null, noiseType: "block" };
-    }
-
-    const median =
-      cleanSamples.length % 2 === 1
-        ? cleanSamples[(cleanSamples.length - 1) / 2]
-        : (cleanSamples[Math.floor(cleanSamples.length / 2) - 1] + 
-           cleanSamples[Math.floor(cleanSamples.length / 2)]) / 2;
-
-    let noiseType: AudioInfo["noiseType"] = detectNoise(cleanSamples, median);
+    const median = computeMedian(samples);
+    const noiseType = detectNoise(samples, median, snapshotsRMS);
     const result: AudioInfo = { audio: median, noiseType };
 
-    if (noiseType !== "randomize") {
-      audioCache = result;
-    }
+    if (noiseType === "clean") audioCache = result;
 
     return result;
   } catch {
@@ -55,48 +46,85 @@ export async function collectAudio(): Promise<AudioInfo> {
   }
 }
 
-async function getAudioSample(): Promise<number | null> {
+async function getAudioSampleWithRMS(): Promise<{
+  sample: number;
+  rms: number;
+} | null> {
   try {
-    const ctx = new OfflineAudioContext(1, SAMPLE_RATE * DURATION, SAMPLE_RATE);
-    const oscillator = ctx.createOscillator();
-    const startIndex = 4500;
-    const endIndex = 5000;
-    let sum = 0;
+    const AudioCtxClass =
+      (window as any).OfflineAudioContext ||
+      (window as any).webkitOfflineAudioContext;
 
-    oscillator.type = "triangle";
-    oscillator.frequency.value = OSC_FREQUENCY;
+    if (!AudioCtxClass) return null;
 
-    const compressor = ctx.createDynamicsCompressor();
+    let ctx: OfflineAudioContext;
 
-    compressor.threshold.setValueAtTime(-50, ctx.currentTime);
-    compressor.knee.setValueAtTime(40, ctx.currentTime);
-    compressor.ratio.setValueAtTime(12, ctx.currentTime);
-    compressor.attack.setValueAtTime(0, ctx.currentTime);
-    compressor.release.setValueAtTime(0.25, ctx.currentTime);
-
-    oscillator.connect(compressor);
-    compressor.connect(ctx.destination);
-
-    oscillator.start(0);
-    oscillator.stop(DURATION);
-
-    const buffer = await ctx.startRendering();
-    const channelData = buffer.getChannelData(0);
-
-    for (let i = startIndex; i < endIndex; i++) {
-      sum += Math.abs(channelData[i]);
+    try {
+      ctx = new AudioCtxClass(1, SAMPLE_RATE * DURATION, SAMPLE_RATE);
+    } catch (err: any) {
+      if (
+        err.name === "NotAllowedError" ||
+        err.message?.includes("user gesture")
+      )
+        return null;
+      throw err;
     }
 
-    return sum;
+    const osc = ctx.createOscillator();
+    const comp = ctx.createDynamicsCompressor();
+
+    osc.type = "triangle";
+    osc.frequency.value = OSC_FREQUENCY;
+
+    comp.threshold.setValueAtTime(-50, ctx.currentTime);
+    comp.knee.setValueAtTime(40, ctx.currentTime);
+    comp.ratio.setValueAtTime(12, ctx.currentTime);
+    comp.attack.setValueAtTime(0, ctx.currentTime);
+    comp.release.setValueAtTime(0.25, ctx.currentTime);
+
+    osc.connect(comp);
+    comp.connect(ctx.destination);
+
+    osc.start(0);
+    osc.stop(DURATION);
+
+    const buffer = await ctx.startRendering();
+    const data = buffer.getChannelData(0);
+
+    let sum = 0;
+    let sumSquares = 0;
+    const start = Math.floor(data.length * 0.2);
+    const end = Math.floor(data.length * 0.25);
+
+    for (let i = start; i < end; i++) {
+      const absValue = Math.abs(data[i]);
+      sum += absValue;
+      sumSquares += data[i] * data[i];
+    }
+
+    const sampleCount = end - start;
+    const rms = Math.sqrt(sumSquares / sampleCount);
+
+    return { sample: sum, rms };
   } catch {
     return null;
   }
 }
 
+function computeMedian(arr: number[]): number {
+  const sorted = [...arr].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+
+  return sorted.length % 2 === 1
+    ? sorted[mid]
+    : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
 function detectNoise(
   cleanSamples: number[],
-  median: number
-): AudioInfo["noiseType"] {
+  median: number,
+  snapshotsRMS: number[]
+): "clean" | "randomize" | "spoof" | "block" {
   if (SPOOF_VALUES.includes(Math.round(median))) return "spoof";
   if (SPOOF_RANGES.some(([min, max]) => median >= min && median <= max))
     return "spoof";
@@ -107,12 +135,16 @@ function detectNoise(
 
   if (variance > VARIANCE_THRESHOLD) return "randomize";
 
+  const maxRMS = Math.max(...snapshotsRMS);
+  const minRMS = Math.min(...snapshotsRMS);
+
+  if (maxRMS - minRMS > RMS_DIFF_THRESHOLD) return "randomize";
+
   if (
     lastMedian !== null &&
     Math.abs(median - lastMedian) > MEDIAN_DIFF_THRESHOLD
-  ) {
+  )
     return "randomize";
-  }
 
   lastMedian = median;
   return "clean";
