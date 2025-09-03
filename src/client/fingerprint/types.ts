@@ -297,6 +297,7 @@ export interface WebRTCGroupInfo {
 
 export interface CollectedDeviceInfo {
   sessionKey: string;
+  deviceID: string;
   f4Hashed?: string;
   f5Hashed?: string;
   webrtc?: WebRTCGroupInfo;
@@ -304,13 +305,11 @@ export interface CollectedDeviceInfo {
 
 declare global {
   interface Window {
-    FPSFingerprint: any;
+    fingerprint: any;
     BrowserFingerprint: any;
     HardwareFingerprint: any;
     AudioFingerprint: any;
     PreferencesFingerprint: any;
-    FPSAutoCollect?: boolean;
-    FPSOnCollected?: (fingerprint: FingerprintData) => void;
     webkitAudioContext?: any;
     webkitDevicePixelRatio?: number;
     chrome: any;

@@ -139,16 +139,16 @@
       }
 
       async function collectFingerprint() {
-        if (!FPSFingerprint) {
+        if (!fingerprint) {
           document.getElementById("fingerprintData").textContent =
-            "Error: FPSFingerprint not loaded yet";
+            "Error: fingerprint not loaded yet";
           document.getElementById("fingerprintDisplay").style.display = "block";
 
           return;
         }
 
         try {
-          currentFingerprint = await FPSFingerprint.collect();
+          currentFingerprint = await fingerprint.collect();
 
           document.getElementById("fingerprintData").textContent =
             JSON.stringify(currentFingerprint, null, 2);
@@ -185,15 +185,15 @@
       });
 
       async function collectIPs() {
-        if (!FPSFingerprint) {
+        if (!fingerprint) {
           document.getElementById("fingerprintData").textContent =
-            "Error: FPSFingerprint not loaded yet";
+            "Error: fingerprint not loaded yet";
           document.getElementById("fingerprintDisplay").style.display = "block";
           return;
         }
 
         try {
-          const ips = await FPSFingerprint.collectIPs(2000);
+          const ips = await fingerprint.collectIPs(2000);
           const formattedOutput = ips;
 
           document.getElementById("fingerprintData").textContent =
@@ -207,20 +207,20 @@
       }
 
       async function generateHash() {
-        if (!FPSFingerprint) {
+        if (!fingerprint) {
           document.getElementById("hashValue").textContent =
-            "Error: FPSFingerprint not loaded yet";
+            "Error: fingerprint not loaded yet";
           document.getElementById("hashDisplay").style.display = "block";
           return;
         }
 
         if (!currentFingerprint) {
-          currentFingerprint = await FPSFingerprint.collect();
+          currentFingerprint = await fingerprint.collect();
         }
 
         try {
-          const hash = await FPSFingerprint.generateHash(currentFingerprint);
-          const groupHashes = await FPSFingerprint.generateGroupHashes(
+          const hash = await fingerprint.generateHash(currentFingerprint);
+          const groupHashes = await fingerprint.generateGroupHashes(
             currentFingerprint
           );
 
@@ -237,19 +237,19 @@
       }
 
       async function sendToServer() {
-        if (!FPSFingerprint) {
+        if (!fingerprint) {
           document.getElementById("serverData").textContent =
-            "Error: FPSFingerprint not loaded yet";
+            "Error: fingerprint not loaded yet";
           document.getElementById("serverResponse").style.display = "block";
           return;
         }
 
         if (!currentFingerprint) {
-          currentFingerprint = await FPSFingerprint.collect();
+          currentFingerprint = await fingerprint.collect();
         }
 
         try {
-          FPSFingerprint.sendToServer(
+          fingerprint.sendToServer(
             "/api/fingerprint",
             currentFingerprint,
             function (error, response) {

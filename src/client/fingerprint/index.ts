@@ -17,6 +17,7 @@ import { WebRTCFingerprint } from "./modules/webrtc/index";
 import { TaggingClass } from "../tagging/index";
 import { MurmurHash128, Base64Encoder } from "./utils/hash";
 import { DOMUtils } from "./dom";
+import { PacketTransformer } from "../tagging/utils/hash";
 
 const CONFIG = {
   ENCODING_KEY: "__ENCODE_KEY__",
@@ -25,15 +26,12 @@ const CONFIG = {
     F4: "/CheckFP4",
     F5: "/CheckFP5"
   },
-  TIMEOUTS: {
-    DEFAULT: 5000
-  },
   FIELD_NAMES: {
     DEVICE_INFO: "__di"
   }
 }
 
-class FPSFingerprintClass {
+class FingerprintClass {
   public readonly version: string = "1.9.0";
 
   private async collectWebRTC(): Promise<any> {
@@ -49,9 +47,8 @@ class FPSFingerprintClass {
     try {
       return MurmurHash128.hash128(JSON.stringify(fingerprint));
     } catch (error) {
-      console.log('error', error);
+      // console.log('error', error);
       return "";
-      // throw new FingerprintError(`Failed to generate hash: ${error}`, ErrorCodes.HASH_GENERATION_FAILED);
     }
   }
 
@@ -90,20 +87,25 @@ class FPSFingerprintClass {
     try {
       if (navigator.sendBeacon) {
         const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-        return navigator.sendBeacon(endpoint, blob);
-      } else {
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'accept': '*/*'
-          },
-          body: JSON.stringify(payload)
-        });
-        return response.ok;
-      }
+
+        let success = navigator.sendBeacon(endpoint, blob);
+        if (success) {
+          return true;
+        }
+      } 
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'accept': '*/*'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      return response.ok;
     } catch (error) {
-      console.error('Failed to send data to server:', error);
+      // console.error('Failed to send data to server:', error);
       return false;
     }
   }
@@ -149,6 +151,7 @@ class FPSFingerprintClass {
       collectedDeviceInfo.f4Hashed = this.generateGroupHashes(attributes);
   
       const f4Payload = this.buildPayload('F4', sessionKey, f4Data, collectedDeviceInfo.f4Hashed);
+      
       await this.sendToServer(`${CONFIG.GATEWAY_URL}${CONFIG.ENDPOINTS.F4}`, f4Payload);
   
       this.injectValueIntoHiddenField(CONFIG.FIELD_NAMES.DEVICE_INFO, this.encodeData(collectedDeviceInfo));
@@ -185,7 +188,7 @@ class FPSFingerprintClass {
       const tagging = new TaggingClass();
       const sessionKey = await tagging.getStorage();
 
-      const collectedDeviceInfo: CollectedDeviceInfo = { sessionKey };
+      const collectedDeviceInfo: CollectedDeviceInfo = { sessionKey, deviceID: PacketTransformer.unwrapMessage(sessionKey) };
 
       const f4Attributes = await this.processF4Data(sessionKey, collectedDeviceInfo);
       await this.processF5Data(sessionKey, collectedDeviceInfo, f4Attributes);
@@ -201,16 +204,16 @@ class FPSFingerprintClass {
   }
 }
 
-const fpsFingerprint = new FPSFingerprintClass();
+const fingerprint = new FingerprintClass();
 
 if (typeof window !== "undefined") {
   (async () => {
     try {
-      (window as any).FPSFingerprint = await fpsFingerprint.start();
+      (window as any).fingerprint = await fingerprint.start();
     } catch (error) {
-      console.error('Failed to initialize FPSFingerprint:', error);
+      console.error('Failed to initialize fingerprint:', error);
     }
   })();
 }
 
-export default fpsFingerprint;
+export default fingerprint;
