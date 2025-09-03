@@ -3,11 +3,10 @@ import { IStorageHandler } from "../types";
 const SERVER_DOMAIN = '__SERVER_DOMAIN__';
 
 export class ETagHandler implements IStorageHandler {
-    private _etag: string | null = null;
-    private _baseUrl: string | '' = '';
+    private _baseUrl: string | '';
 
     constructor() {
-        this._baseUrl = SERVER_DOMAIN;
+        this._baseUrl = `${SERVER_DOMAIN}/resources/vers`;
     }
 
     public async get(key: string): Promise<string | null> {
@@ -16,11 +15,7 @@ export class ETagHandler implements IStorageHandler {
                 return null;
             }
 
-            if (this._etag) {
-                return this._etag;
-            }
-
-            const response = await fetch(`${this._baseUrl}/resources/versions`, {
+            const response = await fetch(this._baseUrl, {
                 method: 'GET'
             });
 
@@ -28,8 +23,7 @@ export class ETagHandler implements IStorageHandler {
                 const data = await response.json();
                 
                 if (data.success && data.t) {
-                    this._etag = data.t;
-                    return this._etag;
+                    return data.t;
                 }
             }
             
@@ -45,19 +39,17 @@ export class ETagHandler implements IStorageHandler {
                 return false;
             }
 
-            if (this._etag === value) {
-                return true; 
-            }
-
-            const response = await fetch(`${this._baseUrl}/resources/versions`, {
-                method: 'GET'
+            const response = await fetch(this._baseUrl, {
+                method: 'GET',
+                headers: {
+                    'Res-Ec-X': value
+                }
             });
 
             if (response.ok) {
                 const data = await response.json();
                 
                 if (data.success && data.t) {
-                    this._etag = data.t;
                     return true;
                 }
             }

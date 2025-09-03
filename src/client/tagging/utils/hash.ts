@@ -1,4 +1,4 @@
-const ENCRYPT_KEY = '&％#@?,:*!~^.';
+const SESSION_SEED = '&％#@?,:*!~^.';
 
 export class RC4 {
     public static encrypt(key: string, value: string): string {
@@ -37,14 +37,10 @@ export class RC4 {
     }
 
     public static decrypt(key: string, value: string): string {
-        // RC4 is symmetric - decrypt is same as encrypt
         return this.encrypt(key, value);
     }
 }
 
-/**
- * Hexadecimal encoding/decoding utilities 
- */
 export class Hex {
     private static readonly HexDigits = "0123456789abcdef";
 
@@ -102,11 +98,16 @@ export class Hex {
     }
 }
 
-export class DeviceEncryption {
+export class PacketTransformer {
 
-    public static Encrypt(plaintext: string): string {
-        const encryptedText = RC4.encrypt(ENCRYPT_KEY, plaintext);
+    public static wrapMessage(plaintext: string): string {
+        const encryptedText = RC4.encrypt(SESSION_SEED, plaintext);
         return Hex.encode(encryptedText);
+    }
+
+    public static unwrapMessage(ciphertext: string): string {
+        const decodedText = Hex.decode(ciphertext);
+        return RC4.decrypt(SESSION_SEED, decodedText); 
     }
 }
 

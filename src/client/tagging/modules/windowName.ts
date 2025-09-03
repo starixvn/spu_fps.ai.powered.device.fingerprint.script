@@ -10,7 +10,7 @@ export class WindowNameHandler implements IStorageHandler {
 
             const currentValue = window.name;
             
-            if (!this.isValidObject(currentValue)) {
+            if (!this.isValidValue(currentValue)) {
                 return null;
             }
 
@@ -43,7 +43,7 @@ export class WindowNameHandler implements IStorageHandler {
         }
     }
 
-    private isValidObject(value: any): boolean {
-        return value !== undefined && !!value;
+    private isValidValue(value: any): boolean {
+        return value !== undefined && value !== null && value !== "";
     }
 }

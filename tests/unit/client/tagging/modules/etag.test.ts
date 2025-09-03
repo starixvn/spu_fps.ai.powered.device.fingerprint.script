@@ -4,24 +4,12 @@ import { ETagHandler } from '../../../../../src/client/tagging/modules/etag';
 const mockFetch = jest.fn();
 (global as any).fetch = mockFetch;
 
-describe('etagHandler', () => {
+describe('ETagHandler', () => {
   let etagHandler: ETagHandler;
   
   beforeEach(() => {
     jest.clearAllMocks();
     etagHandler = new ETagHandler();
-    // Reset the internal state
-    (etagHandler as any)._etag = null;
-  });
-
-  describe('constructor', () => {
-    it('should initialize with SERVER_DOMAIN as base URL', () => {
-      expect((etagHandler as any)._baseUrl).toBe('__SERVER_DOMAIN__');
-    });
-
-    it('should initialize with null etag', () => {
-      expect((etagHandler as any)._etag).toBeNull();
-    });
   });
 
   describe('available', () => {
@@ -52,18 +40,7 @@ describe('etagHandler', () => {
       expect(mockFetch).not.toHaveBeenCalled();
     });
 
-    it('should return cached etag when available', async () => {
-      const cachedEtag = 'cached-etag-123';
-      
-      (etagHandler as any)._etag = cachedEtag;
-      
-      const result = await etagHandler.get('testKey');
-      
-      expect(result).toBe(cachedEtag);
-      expect(mockFetch).not.toHaveBeenCalled();
-    });
-
-    it('should fetch etag when not cached and return it', async () => {
+    it('should fetch etag from API and return it', async () => {
       const testKey = 'testKey';
       const etagValue = 'etag-456';
       
@@ -79,10 +56,9 @@ describe('etagHandler', () => {
       const result = await etagHandler.get(testKey);
       
       expect(result).toBe(etagValue);
-      expect(mockFetch).toHaveBeenCalledWith('__SERVER_DOMAIN__/resources/versions', {
+      expect(mockFetch).toHaveBeenCalledWith('__SERVER_DOMAIN__/resources/vers', {
         method: 'GET'
       });
-      expect((etagHandler as any)._etag).toBe(etagValue);
     });
 
     it('should return null when fetch response is not ok', async () => {
@@ -95,7 +71,6 @@ describe('etagHandler', () => {
       const result = await etagHandler.get('testKey');
       
       expect(result).toBeNull();
-      expect((etagHandler as any)._etag).toBeNull();
     });
 
     it('should return null when response data is invalid', async () => {
@@ -111,7 +86,6 @@ describe('etagHandler', () => {
       const result = await etagHandler.get('testKey');
       
       expect(result).toBeNull();
-      expect((etagHandler as any)._etag).toBeNull();
     });
 
     it('should return null when response data lacks t property', async () => {
@@ -127,7 +101,6 @@ describe('etagHandler', () => {
       const result = await etagHandler.get('testKey');
       
       expect(result).toBeNull();
-      expect((etagHandler as any)._etag).toBeNull();
     });
 
     it('should return null when fetch throws an error', async () => {
@@ -136,7 +109,6 @@ describe('etagHandler', () => {
       const result = await etagHandler.get('testKey');
       
       expect(result).toBeNull();
-      expect((etagHandler as any)._etag).toBeNull();
     });
 
     it('should return null when JSON parsing fails', async () => {
@@ -149,7 +121,6 @@ describe('etagHandler', () => {
       const result = await etagHandler.get('testKey');
       
       expect(result).toBeNull();
-      expect((etagHandler as any)._etag).toBeNull();
     });
   });
 
@@ -171,42 +142,7 @@ describe('etagHandler', () => {
       expect(mockFetch).not.toHaveBeenCalled();
     });
 
-    it('should return true when value matches cached etag', async () => {
-      const etagValue = 'cached-etag-123';
-      
-      (etagHandler as any)._etag = etagValue;
-      
-      const result = await etagHandler.set('testKey', etagValue);
-      
-      expect(result).toBe(true);
-      expect(mockFetch).not.toHaveBeenCalled();
-    });
-
-    it('should fetch and update etag when value differs from cached', async () => {
-      const newValue = 'new-etag-456';
-      const fetchedEtag = 'fetched-etag-789';
-      
-      (etagHandler as any)._etag = 'old-etag';
-      
-      const mockResponse = {
-        ok: true,
-        json: jest.fn().mockResolvedValue({
-          success: true,
-          t: fetchedEtag
-        })
-      };
-      mockFetch.mockResolvedValue(mockResponse);
-      
-      const result = await etagHandler.set('testKey', newValue);
-      
-      expect(result).toBe(true);
-      expect(mockFetch).toHaveBeenCalledWith('__SERVER_DOMAIN__/resources/versions', {
-        method: 'GET'
-      });
-      expect((etagHandler as any)._etag).toBe(fetchedEtag);
-    });
-
-    it('should fetch and update etag when no cached etag exists', async () => {
+    it('should fetch and return true when API responds successfully', async () => {
       const newValue = 'new-etag-456';
       const fetchedEtag = 'fetched-etag-789';
       
@@ -222,10 +158,12 @@ describe('etagHandler', () => {
       const result = await etagHandler.set('testKey', newValue);
       
       expect(result).toBe(true);
-      expect(mockFetch).toHaveBeenCalledWith('__SERVER_DOMAIN__/resources/versions', {
-        method: 'GET'
+      expect(mockFetch).toHaveBeenCalledWith('__SERVER_DOMAIN__/resources/vers', {
+        method: 'GET',
+        headers: {
+          'Res-Ec-X': newValue
+        }
       });
-      expect((etagHandler as any)._etag).toBe(fetchedEtag);
     });
 
     it('should return false when fetch response is not ok', async () => {
@@ -240,7 +178,6 @@ describe('etagHandler', () => {
       const result = await etagHandler.set('testKey', newValue);
       
       expect(result).toBe(false);
-      expect((etagHandler as any)._etag).toBeNull();
     });
 
     it('should return false when response data is invalid', async () => {
@@ -258,7 +195,6 @@ describe('etagHandler', () => {
       const result = await etagHandler.set('testKey', newValue);
       
       expect(result).toBe(false);
-      expect((etagHandler as any)._etag).toBeNull();
     });
 
     it('should return false when fetch throws an error', async () => {
@@ -269,7 +205,6 @@ describe('etagHandler', () => {
       const result = await etagHandler.set('testKey', newValue);
       
       expect(result).toBe(false);
-      expect((etagHandler as any)._etag).toBeNull();
     });
   });
 
@@ -280,8 +215,8 @@ describe('etagHandler', () => {
       // Check availability
       expect(etagHandler.available()).toBe(true);
       
-      // Mock successful fetch
-      const mockResponse = {
+      // Mock successful fetch for get
+      let mockResponse = {
         ok: true,
         json: jest.fn().mockResolvedValue({
           success: true,
@@ -294,19 +229,29 @@ describe('etagHandler', () => {
       const getResult = await etagHandler.get('testKey');
       expect(getResult).toBe(etagValue);
       
-      // Set same etag (should use cached value)
-      const setResult = await etagHandler.set('testKey', etagValue);
+      // Mock successful fetch for set
+      mockResponse = {
+        ok: true,
+        json: jest.fn().mockResolvedValue({
+          success: true,
+          t: 'set-response-etag'
+        })
+      };
+      mockFetch.mockResolvedValue(mockResponse);
+      
+      // Set etag (should also fetch from API)
+      const setResult = await etagHandler.set('testKey', 'new-value');
       expect(setResult).toBe(true);
       
-      // Verify fetch was called only once (for get, not for set due to cache)
-      expect(mockFetch).toHaveBeenCalledTimes(1);
+      // Verify fetch was called twice (once for get, once for set)
+      expect(mockFetch).toHaveBeenCalledTimes(2);
     });
 
-    it('should handle state persistence across multiple operations', async () => {
+    it('should handle multiple get operations independently', async () => {
       const firstEtag = 'first-etag';
       const secondEtag = 'second-etag';
       
-      // First fetch
+      // First get
       let mockResponse = {
         ok: true,
         json: jest.fn().mockResolvedValue({
@@ -319,14 +264,7 @@ describe('etagHandler', () => {
       const firstGet = await etagHandler.get('key1');
       expect(firstGet).toBe(firstEtag);
       
-      // Second get should use cached value
-      const secondGet = await etagHandler.get('key2');
-      expect(secondGet).toBe(firstEtag);
-      
-      // Verify fetch was called only once
-      expect(mockFetch).toHaveBeenCalledTimes(1);
-      
-      // Set different value should trigger new fetch
+      // Second get with different response
       mockResponse = {
         ok: true,
         json: jest.fn().mockResolvedValue({
@@ -336,12 +274,35 @@ describe('etagHandler', () => {
       };
       mockFetch.mockResolvedValue(mockResponse);
       
-      const setResult = await etagHandler.set('testKey', 'different-value');
-      expect(setResult).toBe(true);
-      expect((etagHandler as any)._etag).toBe(secondEtag);
+      const secondGet = await etagHandler.get('key2');
+      expect(secondGet).toBe(secondEtag);
       
-      // Verify fetch was called again
+      // Verify fetch was called twice (no caching)
       expect(mockFetch).toHaveBeenCalledTimes(2);
+    });
+
+    it('should handle set operations with headers correctly', async () => {
+      const setValue = 'test-set-value';
+      
+      const mockResponse = {
+        ok: true,
+        json: jest.fn().mockResolvedValue({
+          success: true,
+          t: 'response-etag'
+        })
+      };
+      mockFetch.mockResolvedValue(mockResponse);
+      
+      const setResult = await etagHandler.set('testKey', setValue);
+      expect(setResult).toBe(true);
+      
+      // Verify the correct headers were sent
+      expect(mockFetch).toHaveBeenCalledWith('__SERVER_DOMAIN__/resources/vers', {
+        method: 'GET',
+        headers: {
+          'Res-Ec-X': setValue
+        }
+      });
     });
 
     it('should handle edge cases with malformed responses', async () => {

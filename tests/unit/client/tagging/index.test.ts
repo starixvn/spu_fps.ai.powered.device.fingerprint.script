@@ -6,8 +6,16 @@ jest.mock('../../../../src/client/tagging/modules/indexedDB');
 jest.mock('../../../../src/client/tagging/modules/localStorage');
 jest.mock('../../../../src/client/tagging/modules/windowName');
 
-// Mock TaggingHandler with manual mock
+// Mock TaggingHandler with STORAGE_KEYS export
 jest.mock('../../../../src/client/tagging/tagging', () => ({
+  STORAGE_KEYS: {
+    localStorage: "__localStorage_key__",
+    cookies: "__cookies_key__",
+    indexedDB: "__indexedDB_key__",
+    cache: "__cache_key__",
+    windowName: "__window_key__",
+    etag: "__etag_key__"
+  },
   TaggingHandler: {
     getTaggingValue: jest.fn(),
     generateTagging: jest.fn()
