@@ -1,4 +1,4 @@
-import { collectCanvas } from "./canvas";
+import { collectCanvas, CanvasStatus } from "./canvas";
 import { collectFonts } from "./fonts";
 import { collectFontPreferences } from "./fontPreferences";
 import { collectScreenResolution } from "./screenResolution";
@@ -39,10 +39,9 @@ export class GraphicsFingerprint {
       return {
         canvas: {
           fingerprint: "",
-          noiseType: "blocked",
+          status: CanvasStatus.BLOCKED,
           width: 0,
           height: 0,
-          textRendering: "",
           textBaseline: "",
           font: "",
           fillStyle: "",

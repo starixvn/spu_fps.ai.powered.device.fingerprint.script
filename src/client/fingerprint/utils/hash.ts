@@ -1,3 +1,5 @@
+import * as murmurhash from "murmurhash3js";
+
 export class MurmurHash128 {
   public static hash128(data: string, seed: number = 0): string {
     return murmurhash3_x86_128(data, seed);
@@ -21,15 +23,31 @@ function murmurhash3_x86_128(key: string, seed: number = 0): string {
 
   // Process 16 bytes at a time
   for (let i = 0; i < bytes; i += 16) {
-    let k1 = key.charCodeAt(i) | (key.charCodeAt(i + 1) << 8) | (key.charCodeAt(i + 2) << 16) | (key.charCodeAt(i + 3) << 24);
-    let k2 = key.charCodeAt(i + 4) | (key.charCodeAt(i + 5) << 8) | (key.charCodeAt(i + 6) << 16) | (key.charCodeAt(i + 7) << 24);
-    let k3 = key.charCodeAt(i + 8) | (key.charCodeAt(i + 9) << 8) | (key.charCodeAt(i + 10) << 16) | (key.charCodeAt(i + 11) << 24);
-    let k4 = key.charCodeAt(i + 12) | (key.charCodeAt(i + 13) << 8) | (key.charCodeAt(i + 14) << 16) | (key.charCodeAt(i + 15) << 24);
+    let k1 =
+      key.charCodeAt(i) |
+      (key.charCodeAt(i + 1) << 8) |
+      (key.charCodeAt(i + 2) << 16) |
+      (key.charCodeAt(i + 3) << 24);
+    let k2 =
+      key.charCodeAt(i + 4) |
+      (key.charCodeAt(i + 5) << 8) |
+      (key.charCodeAt(i + 6) << 16) |
+      (key.charCodeAt(i + 7) << 24);
+    let k3 =
+      key.charCodeAt(i + 8) |
+      (key.charCodeAt(i + 9) << 8) |
+      (key.charCodeAt(i + 10) << 16) |
+      (key.charCodeAt(i + 11) << 24);
+    let k4 =
+      key.charCodeAt(i + 12) |
+      (key.charCodeAt(i + 13) << 8) |
+      (key.charCodeAt(i + 14) << 16) |
+      (key.charCodeAt(i + 15) << 24);
 
     // Mix k1
     k1 = ((k1 & 0xff) * c1) >>> 0;
     k1 = (k1 << 15) | (k1 >>> 17);
-    k1 = ((k1 * c2) >>> 0);
+    k1 = (k1 * c2) >>> 0;
     h1 = (h1 ^ k1) >>> 0;
     h1 = (h1 + h2 + h3 + h4) >>> 0;
     h1 = (h1 * 3 + 0x52dce729) >>> 0;
@@ -37,7 +55,7 @@ function murmurhash3_x86_128(key: string, seed: number = 0): string {
     // Mix k2
     k2 = ((k2 & 0xff) * c2) >>> 0;
     k2 = (k2 << 16) | (k2 >>> 16);
-    k2 = ((k2 * c3) >>> 0);
+    k2 = (k2 * c3) >>> 0;
     h2 = (h2 ^ k2) >>> 0;
     h2 = (h2 + h1 + h3 + h4) >>> 0;
     h2 = (h2 * 3 + 0x38495ab5) >>> 0;
@@ -45,7 +63,7 @@ function murmurhash3_x86_128(key: string, seed: number = 0): string {
     // Mix k3
     k3 = ((k3 & 0xff) * c3) >>> 0;
     k3 = (k3 << 17) | (k3 >>> 15);
-    k3 = ((k3 * c4) >>> 0);
+    k3 = (k3 * c4) >>> 0;
     h3 = (h3 ^ k3) >>> 0;
     h3 = (h3 + h1 + h2 + h4) >>> 0;
     h3 = (h3 * 3 + 0x4c6f6a87) >>> 0;
@@ -53,7 +71,7 @@ function murmurhash3_x86_128(key: string, seed: number = 0): string {
     // Mix k4
     k4 = ((k4 & 0xff) * c4) >>> 0;
     k4 = (k4 << 18) | (k4 >>> 14);
-    k4 = ((k4 * c1) >>> 0);
+    k4 = (k4 * c1) >>> 0;
     h4 = (h4 ^ k4) >>> 0;
     h4 = (h4 + h1 + h2 + h3) >>> 0;
     h4 = (h4 * 3 + 0x5cf7bce1) >>> 0;
@@ -67,42 +85,57 @@ function murmurhash3_x86_128(key: string, seed: number = 0): string {
 
   // Handle remaining bytes
   switch (remainder) {
-    case 15: k4 = (k4 ^ (key.charCodeAt(bytes + 14) << 16)) >>> 0;
-    case 14: k4 = (k4 ^ (key.charCodeAt(bytes + 13) << 8)) >>> 0;
-    case 13: k4 = (k4 ^ key.charCodeAt(bytes + 12)) >>> 0;
-      k4 = ((k4 * c4) >>> 0);
+    case 15:
+      k4 = (k4 ^ (key.charCodeAt(bytes + 14) << 16)) >>> 0;
+    case 14:
+      k4 = (k4 ^ (key.charCodeAt(bytes + 13) << 8)) >>> 0;
+    case 13:
+      k4 = (k4 ^ key.charCodeAt(bytes + 12)) >>> 0;
+      k4 = (k4 * c4) >>> 0;
       k4 = (k4 << 18) | (k4 >>> 14);
-      k4 = ((k4 * c1) >>> 0);
+      k4 = (k4 * c1) >>> 0;
       h4 = (h4 ^ k4) >>> 0;
       break;
 
-    case 12: k3 = (k3 ^ (key.charCodeAt(bytes + 11) << 24)) >>> 0;
-    case 11: k3 = (k3 ^ (key.charCodeAt(bytes + 10) << 16)) >>> 0;
-    case 10: k3 = (k3 ^ (key.charCodeAt(bytes + 9) << 8)) >>> 0;
-    case 9: k3 = (k3 ^ key.charCodeAt(bytes + 8)) >>> 0;
-      k3 = ((k3 * c3) >>> 0);
+    case 12:
+      k3 = (k3 ^ (key.charCodeAt(bytes + 11) << 24)) >>> 0;
+    case 11:
+      k3 = (k3 ^ (key.charCodeAt(bytes + 10) << 16)) >>> 0;
+    case 10:
+      k3 = (k3 ^ (key.charCodeAt(bytes + 9) << 8)) >>> 0;
+    case 9:
+      k3 = (k3 ^ key.charCodeAt(bytes + 8)) >>> 0;
+      k3 = (k3 * c3) >>> 0;
       k3 = (k3 << 17) | (k3 >>> 15);
-      k3 = ((k3 * c4) >>> 0);
+      k3 = (k3 * c4) >>> 0;
       h3 = (h3 ^ k3) >>> 0;
       break;
 
-    case 8: k2 = (k2 ^ (key.charCodeAt(bytes + 7) << 24)) >>> 0;
-    case 7: k2 = (k2 ^ (key.charCodeAt(bytes + 6) << 16)) >>> 0;
-    case 6: k2 = (k2 ^ (key.charCodeAt(bytes + 5) << 8)) >>> 0;
-    case 5: k2 = (k2 ^ key.charCodeAt(bytes + 4)) >>> 0;
-      k2 = ((k2 * c2) >>> 0);
+    case 8:
+      k2 = (k2 ^ (key.charCodeAt(bytes + 7) << 24)) >>> 0;
+    case 7:
+      k2 = (k2 ^ (key.charCodeAt(bytes + 6) << 16)) >>> 0;
+    case 6:
+      k2 = (k2 ^ (key.charCodeAt(bytes + 5) << 8)) >>> 0;
+    case 5:
+      k2 = (k2 ^ key.charCodeAt(bytes + 4)) >>> 0;
+      k2 = (k2 * c2) >>> 0;
       k2 = (k2 << 16) | (k2 >>> 16);
-      k2 = ((k2 * c3) >>> 0);
+      k2 = (k2 * c3) >>> 0;
       h2 = (h2 ^ k2) >>> 0;
       break;
 
-    case 4: k1 = (k1 ^ (key.charCodeAt(bytes + 3) << 24)) >>> 0;
-    case 3: k1 = (k1 ^ (key.charCodeAt(bytes + 2) << 16)) >>> 0;
-    case 2: k1 = (k1 ^ (key.charCodeAt(bytes + 1) << 8)) >>> 0;
-    case 1: k1 = (k1 ^ key.charCodeAt(bytes)) >>> 0;
-      k1 = ((k1 * c1) >>> 0);
+    case 4:
+      k1 = (k1 ^ (key.charCodeAt(bytes + 3) << 24)) >>> 0;
+    case 3:
+      k1 = (k1 ^ (key.charCodeAt(bytes + 2) << 16)) >>> 0;
+    case 2:
+      k1 = (k1 ^ (key.charCodeAt(bytes + 1) << 8)) >>> 0;
+    case 1:
+      k1 = (k1 ^ key.charCodeAt(bytes)) >>> 0;
+      k1 = (k1 * c1) >>> 0;
       k1 = (k1 << 15) | (k1 >>> 17);
-      k1 = ((k1 * c2) >>> 0);
+      k1 = (k1 * c2) >>> 0;
       h1 = (h1 ^ k1) >>> 0;
       break;
   }
@@ -133,9 +166,9 @@ function murmurhash3_x86_128(key: string, seed: number = 0): string {
 
 function fmix32(h: number): number {
   h = (h ^ (h >>> 16)) >>> 0;
-  h = ((h * 0x85ebca6b) >>> 0);
+  h = (h * 0x85ebca6b) >>> 0;
   h = (h ^ (h >>> 13)) >>> 0;
-  h = ((h * 0xc2b2ae35) >>> 0);
+  h = (h * 0xc2b2ae35) >>> 0;
   h = (h ^ (h >>> 16)) >>> 0;
   return h;
 }
@@ -147,17 +180,16 @@ function toHexString(num: number): string {
 function simpleHash(str: string): string {
   let hash = 0;
   if (str.length === 0) return hash.toString(16);
-  
+
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
     hash = ((hash << 5) - hash + char) >>> 0;
   }
-  
+
   return hash.toString(16);
 }
 
 export class Base64Encoder {
-
   private static utf8_encode(string: string): string {
     string = string.replace(/\r\n/g, "\n");
     let utfText = "";
@@ -167,7 +199,7 @@ export class Base64Encoder {
 
       if (c < 128) {
         utfText += String.fromCharCode(c);
-      } else if ((c > 127) && (c < 2048)) {
+      } else if (c > 127 && c < 2048) {
         utfText += String.fromCharCode((c >> 6) | 192);
         utfText += String.fromCharCode((c & 63) | 128);
       } else {
@@ -204,13 +236,78 @@ export class Base64Encoder {
         enc4 = 64;
       }
 
-      output = output +
-        key.charAt(enc1) + key.charAt(enc2) +
-        key.charAt(enc3) + key.charAt(enc4);
+      output =
+        output +
+        key.charAt(enc1) +
+        key.charAt(enc2) +
+        key.charAt(enc3) +
+        key.charAt(enc4);
     }
 
     return output;
   }
 }
 
+export function murmurhash3_32_gc(key: string, seed = 31): number {
+  let remainder = key.length & 3; // key.length % 4
+  let bytes = key.length - remainder;
+  let h1 = seed;
+  let c1 = 0xcc9e2d51;
+  let c2 = 0x1b873593;
+  let i = 0;
+  let k1 = 0;
 
+  while (i < bytes) {
+    k1 =
+      (key.charCodeAt(i) & 0xff) |
+      ((key.charCodeAt(i + 1) & 0xff) << 8) |
+      ((key.charCodeAt(i + 2) & 0xff) << 16) |
+      ((key.charCodeAt(i + 3) & 0xff) << 24);
+
+    i += 4;
+
+    k1 =
+      ((k1 & 0xffff) * c1 + ((((k1 >>> 16) * c1) & 0xffff) << 16)) & 0xffffffff;
+    k1 = (k1 << 15) | (k1 >>> 17);
+    k1 =
+      ((k1 & 0xffff) * c2 + ((((k1 >>> 16) * c2) & 0xffff) << 16)) & 0xffffffff;
+
+    h1 ^= k1;
+    h1 = (h1 << 13) | (h1 >>> 19);
+    h1 = (h1 * 5 + 0xe6546b64) & 0xffffffff;
+  }
+
+  k1 = 0;
+
+  switch (remainder) {
+    case 3:
+      k1 ^= (key.charCodeAt(i + 2) & 0xff) << 16;
+    case 2:
+      k1 ^= (key.charCodeAt(i + 1) & 0xff) << 8;
+    case 1:
+      k1 ^= key.charCodeAt(i) & 0xff;
+      k1 =
+        ((k1 & 0xffff) * c1 + ((((k1 >>> 16) * c1) & 0xffff) << 16)) &
+        0xffffffff;
+      k1 = (k1 << 15) | (k1 >>> 17);
+      k1 =
+        ((k1 & 0xffff) * c2 + ((((k1 >>> 16) * c2) & 0xffff) << 16)) &
+        0xffffffff;
+      h1 ^= k1;
+  }
+
+  h1 ^= key.length;
+  h1 ^= h1 >>> 16;
+  h1 =
+    ((h1 & 0xffff) * 0x85ebca6b +
+      ((((h1 >>> 16) * 0x85ebca6b) & 0xffff) << 16)) &
+    0xffffffff;
+  h1 ^= h1 >>> 13;
+  h1 =
+    ((h1 & 0xffff) * 0xc2b2ae35 +
+      ((((h1 >>> 16) * 0xc2b2ae35) & 0xffff) << 16)) &
+    0xffffffff;
+  h1 ^= h1 >>> 16;
+
+  return h1 >>> 0;
+}

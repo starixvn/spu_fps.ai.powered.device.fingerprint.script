@@ -57,10 +57,9 @@ export interface GraphicsGroupInfo {
 
 export interface CanvasInfo {
   fingerprint: string;
-  noiseType: "ok" | "blocked" | "spoofed" | "randomized";
+  status: string;
   width: number;
   height: number;
-  textRendering: string;
   textBaseline: string;
   font: string;
   fillStyle: string;
