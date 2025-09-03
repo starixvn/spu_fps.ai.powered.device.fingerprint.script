@@ -1,5 +1,17 @@
 import type { AudioInfo } from "../../types";
 
+const enum SpecialFingerprint {
+  KnownForSuspending = -1,
+  NotSupported = -2,
+  Timeout = -3,
+  KnownForAntifingerprinting = -4,
+}
+
+const enum InnerErrorName {
+  Timeout = 'timeout',
+  Suspended = 'suspended',
+}
+
 let audioCache: AudioInfo | null = null;
 let lastMedian: number | null = null;
 
@@ -16,15 +28,176 @@ const MEDIAN_DIFF_THRESHOLD = 5;
 const RMS_DIFF_THRESHOLD = 3;
 const SNAPSHOTS = 3;
 
+function getBrowserName(): string {
+  try {
+    const userAgent = (navigator.userAgent || "").toLowerCase();
+    
+    if (window.chrome && !window.opr && !navigator.brave) {
+      return "Chrome";
+    }
+    
+    if (navigator.brave && navigator.brave.isBrave) {
+      return "Brave";
+    }
+    
+    if (typeof window.InstallTrigger !== "undefined") {
+      return "Firefox";
+    }
+    
+    if (window.safari && window.safari.pushNotification) {
+      return "Safari";
+    }
+    
+    if (/safari(?!.*chrome)/.test(userAgent)) return "Safari";
+    if (/edg\//.test(userAgent)) return "Edge";
+    if (/opr|opera/.test(userAgent)) return "Opera";
+    if (/chrome/.test(userAgent)) return "Chrome";
+    if (/firefox/.test(userAgent)) return "Firefox";
+    
+    return "";
+  } catch {
+    return "";
+  }
+}
+
+function getOSName(): string {
+  try {
+    const userAgent = navigator.userAgent;
+    
+    if (/iPhone|iPad|iPod/.test(userAgent)) return "iOS";
+    if (/Android/.test(userAgent)) return "Android";
+    if (/Mac OS X/.test(userAgent)) return "macOS";
+    if (/Windows/.test(userAgent)) return "Windows";
+    if (/Linux/.test(userAgent)) return "Linux";
+    
+    return "";
+  } catch {
+    return "";
+  }
+}
+
+function isMobile(): boolean {
+  try {
+    return /Mobi|Android/i.test(navigator.userAgent);
+  } catch {
+    return false;
+  }
+}
+
+function getBrowserVersion(): number {
+  try {
+    const userAgent = navigator.userAgent;
+    const browserName = getBrowserName().toLowerCase();
+    
+    if (browserName === "safari") {
+      const match = userAgent.match(/Version\/(\d+)/);
+      return match ? parseInt(match[1], 10) : 0;
+    }
+    
+    if (browserName === "chrome") {
+      const match = userAgent.match(/Chrome\/(\d+)/);
+      return match ? parseInt(match[1], 10) : 0;
+    }
+    
+    if (browserName === "firefox") {
+      const match = userAgent.match(/Firefox\/(\d+)/);
+      return match ? parseInt(match[1], 10) : 0;
+    }
+    
+    return 0;
+  } catch {
+    return 0;
+  }
+}
+
+function doesBrowserSuspendAudioContext(): boolean {
+  const browserName = getBrowserName().toLowerCase();
+  const osName = getOSName().toLowerCase();
+  const version = getBrowserVersion();
+  
+  if (browserName === "safari" && osName === "ios" && isMobile() && version <= 11) {
+    return true;
+  }
+  
+  if (browserName === "chrome" && version < 66) {
+    return true;
+  }
+  
+  return false;
+}
+
+function doesBrowserPerformAntifingerprinting(): boolean {
+  const browserName = getBrowserName().toLowerCase();
+  const version = getBrowserVersion();
+  
+  if (browserName === "safari" && version >= 17) {
+    return true;
+  }
+  
+  if (browserName === "brave") {
+    return true;
+  }
+  
+  if (browserName === "firefox" && navigator.userAgent.includes("rv:")) {
+    try {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      if (ctx) {
+        ctx.textBaseline = 'top';
+        ctx.font = '14px Arial';
+        ctx.fillText('Tor test', 2, 2);
+
+        const data = canvas.toDataURL();
+        
+        if (data.length < 5000) return true;
+      }
+    } catch {
+      return true;
+    }
+  }
+  
+  if (navigator.userAgent.includes("SamsungBrowser") && version >= 26) {
+    return true;
+  }
+  
+  return false;
+}
+
 export async function collectAudio(): Promise<AudioInfo> {
   try {
+    if (doesBrowserPerformAntifingerprinting()) {
+      return { 
+        audio: SpecialFingerprint.KnownForAntifingerprinting, 
+        noiseType: "spoof" 
+      };
+    }
+
+    if (doesBrowserSuspendAudioContext()) {
+      return { 
+        audio: SpecialFingerprint.KnownForSuspending, 
+        noiseType: "block" 
+      };
+    }
+
+    const AudioCtxClass =
+      (window as any).OfflineAudioContext ||
+      (window as any).webkitOfflineAudioContext;
+      
+    if (!AudioCtxClass) {
+      return { 
+        audio: SpecialFingerprint.NotSupported, 
+        noiseType: "block" 
+      };
+    }
+
     if (audioCache) return audioCache;
 
     const samples: number[] = [];
     const snapshotsRMS: number[] = [];
 
     for (let i = 0; i < SNAPSHOTS; i++) {
-      const result = await getAudioSampleWithRMS();
+      const result = await getAudioSampleWithRMSAndRetry();
 
       if (result !== null) {
         samples.push(result.sample);
@@ -32,7 +205,9 @@ export async function collectAudio(): Promise<AudioInfo> {
       }
     }
 
-    if (samples.length === 0) return { audio: null, noiseType: "block" };
+    if (samples.length === 0) {
+      return { audio: SpecialFingerprint.Timeout, noiseType: "block" };
+    }
 
     const median = computeMedian(samples);
     const noiseType = detectNoise(samples, median, snapshotsRMS);
@@ -42,8 +217,40 @@ export async function collectAudio(): Promise<AudioInfo> {
 
     return result;
   } catch {
-    return { audio: null, noiseType: "block" };
+    return { audio: SpecialFingerprint.Timeout, noiseType: "block" };
   }
+}
+
+async function getAudioSampleWithRMSAndRetry(): Promise<{
+  sample: number;
+  rms: number;
+} | null> {
+  const maxRetries = 3;
+  const retryDelay = 500;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const result = await getAudioSampleWithRMS();
+
+      if (result !== null) return result;
+      
+      if (isMobile() && document.hidden) {
+        await new Promise(resolve => setTimeout(resolve, retryDelay * 2));
+      } else {
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+      }
+    } catch (err: any) {
+      if (err.name === "NotAllowedError" || 
+          err.message?.includes("user gesture")) {
+        return null;
+      }
+      
+      if (attempt === maxRetries - 1) throw err;
+      await new Promise(resolve => setTimeout(resolve, retryDelay));
+    }
+  }
+  
+  return null;
 }
 
 async function getAudioSampleWithRMS(): Promise<{
@@ -88,7 +295,15 @@ async function getAudioSampleWithRMS(): Promise<{
     osc.start(0);
     osc.stop(DURATION);
 
-    const buffer = await ctx.startRendering();
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error(InnerErrorName.Timeout)), 5000);
+    });
+
+    const buffer = await Promise.race([
+      ctx.startRendering(),
+      timeoutPromise
+    ]);
+    
     const data = buffer.getChannelData(0);
 
     let sum = 0;
