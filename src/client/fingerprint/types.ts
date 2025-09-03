@@ -296,7 +296,7 @@ export interface WebRTCGroupInfo {
 
 export interface CollectedDeviceInfo {
   sessionKey: string;
-  deviceID: string;
+  deviceId: string;
   f4Hashed?: string;
   f5Hashed?: string;
   webrtc?: WebRTCGroupInfo;
@@ -304,7 +304,9 @@ export interface CollectedDeviceInfo {
 
 declare global {
   interface Window {
-    fingerprint: any;
+    f4Attributes: any;
+    f5Attributes: any;
+    webrtcData: any;
     BrowserFingerprint: any;
     HardwareFingerprint: any;
     AudioFingerprint: any;

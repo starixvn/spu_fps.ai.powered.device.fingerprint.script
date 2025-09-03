@@ -42,22 +42,24 @@ export class TaggingClass {
 
         return targetTaggingValue;
     }
+
+    public async start(): Promise<string> {
+        return await this.getStorage();
+    }
 }
 
-// const tagging = new TaggingClass();
+const tagging = new TaggingClass();
 
-// if (typeof window !== 'undefined') {
-//     (window.history as any).tag = {
-//         ...(window.performance && { ...window.performance }),
-//         self: null as Promise<string> | null,
-//         sessionId: `session_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-//         timestamp: Date.now(),
-//         userAgent: navigator.userAgent
-//     };
+if (typeof window !== 'undefined') {
+    (window.history as any).tag = {
+        ...(window.performance && { ...window.performance }),
+        self: null as Promise<string> | null,
+        sessionId: `session_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+        timestamp: Date.now(),
+        userAgent: navigator.userAgent
+    };
 
-//     (window.history as any).tag.self = (async () => {
-//         return await tagging.getStorage();
-//     })();
-// }
-
-// export default tagging;
+    (window.history as any).tag.self = (async () => {
+        return await tagging.start();
+    })();
+}

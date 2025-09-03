@@ -177,18 +177,6 @@ function toHexString(num: number): string {
   return ("00000000" + num.toString(16)).slice(-8);
 }
 
-function simpleHash(str: string): string {
-  let hash = 0;
-  if (str.length === 0) return hash.toString(16);
-
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash + char) >>> 0;
-  }
-
-  return hash.toString(16);
-}
-
 export class Base64Encoder {
   private static utf8_encode(string: string): string {
     string = string.replace(/\r\n/g, "\n");

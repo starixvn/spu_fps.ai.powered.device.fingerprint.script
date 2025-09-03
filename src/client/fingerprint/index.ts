@@ -1,12 +1,11 @@
 /// <reference lib="dom" />
 
-import {
-  AudioGroupInfo,
-  BrowserGroupInfo,
-  HardwareGroupInfo,
-  PreferencesGroupInfo,
-  GraphicsGroupInfo,
-  CollectedDeviceInfo,
+import { 
+  AudioGroupInfo, 
+  BrowserGroupInfo, 
+  HardwareGroupInfo, 
+  PreferencesGroupInfo, 
+  GraphicsGroupInfo, 
 } from "./types";
 import { HardwareFingerprint } from "./modules/hardware/index";
 import { GraphicsFingerprint } from "./modules/graphics/index";
@@ -14,60 +13,14 @@ import { AudioFingerprint } from "./modules/audio/index";
 import { BrowserFingerprint } from "./modules/browser/index";
 import { PreferencesFingerprint } from "./modules/preference/index";
 import { WebRTCFingerprint } from "./modules/webrtc/index";
-import { TaggingClass } from "../tagging/index";
 import { MurmurHash128, Base64Encoder } from "./utils/hash";
-import { DOMUtils } from "./dom";
-import { PacketTransformer } from "../tagging/utils/hash";
+import { CONFIG, FingerprintStep } from "../index";
 
-const CONFIG = {
-  ENCODING_KEY: "__ENCODE_KEY__",
-  GATEWAY_URL: "__GATEWAY_URL__",
-  ENDPOINTS: {
-    F4: "/CheckFP4",
-    F5: "/CheckFP5",
-  },
-  FIELD_NAMES: {
-    DEVICE_INFO: "__di",
-  },
-};
 
-class FingerprintClass {
+type InjectValueCallback = (hashed: string, step?: FingerprintStep) => void;
+
+export class FingerprintClass {
   public readonly version: string = "1.9.0";
-
-  public async collect(): Promise<any> {
-    try {
-      const f4Data = await this.collectF4();
-      const f5Data = await this.collectF5();
-      const webrtc = await this.collectWebRTC();
-
-      return {
-        ...f4Data,
-        ...f5Data,
-        webrtc,
-      };
-    } catch (error) {
-      console.error("Failed to collect fingerprint:", error);
-      throw error;
-    }
-  }
-
-  public async collectIPs(timeout: number = 2000): Promise<any> {
-    try {
-      return await WebRTCFingerprint.collect();
-    } catch (error) {
-      console.error("Failed to collect IPs:", error);
-      throw error;
-    }
-  }
-
-  private async collectWebRTC(): Promise<any> {
-    try {
-      return await WebRTCFingerprint.collect();
-    } catch (error) {
-      // console.error('Failed to collect WebRTC:', error);
-      return { webrtc: {} };
-    }
-  }
 
   private generateGroupHashes(fingerprint: any): string {
     try {
@@ -99,7 +52,7 @@ class FingerprintClass {
     };
   }
 
-  private async collectF5(): Promise<{
+  private async collectGraphics(): Promise<{
     graphics: GraphicsGroupInfo;
   }> {
     const graphics = await GraphicsFingerprint.collect();
@@ -108,19 +61,22 @@ class FingerprintClass {
     };
   }
 
-  private async sendToServer(endpoint: string, payload: any): Promise<boolean> {
+  private async sendViaBeacon(endpoint: string, payload: any): Promise<boolean> {
     try {
-      if (navigator.sendBeacon) {
-        const blob = new Blob([JSON.stringify(payload)], {
-          type: "application/json",
-        });
-
-        let success = navigator.sendBeacon(endpoint, blob);
-        if (success) {
-          return true;
-        }
+      if (!navigator.sendBeacon) {
+        return false;
       }
 
+      const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+      return navigator.sendBeacon(endpoint, blob);
+    } catch (error) {
+      // console.error('Failed to send data via sendBeacon:', error);
+      return false;
+    }
+  }
+
+  private async sendViaFetch(endpoint: string, payload: any): Promise<boolean> {
+    try {
       const response = await fetch(endpoint, {
         method: "POST",
         headers: {
@@ -131,6 +87,20 @@ class FingerprintClass {
       });
 
       return response.ok;
+    } catch (error) {
+      // console.error('Failed to send data via fetch:', error);
+      return false;
+    }
+  }
+
+  private async sendToServer(endpoint: string, payload: any): Promise<boolean> {
+    try {
+      const beaconSuccess = await this.sendViaBeacon(endpoint, payload);
+      if (beaconSuccess) {
+        return true;
+      }
+
+      return await this.sendViaFetch(endpoint, payload);
     } catch (error) {
       // console.error('Failed to send data to server:', error);
       return false;
@@ -163,127 +133,116 @@ class FingerprintClass {
     return { sessionKey, fingerprint, hashed };
   }
 
-  private injectValueIntoHiddenField(fieldName: string, value: string): void {
-    try {
-      DOMUtils.injectValueIntoHiddenField(fieldName, value);
-    } catch (error) {
-      // console.error(`Failed to inject value into field ${fieldName}:`, error);
+  private async processData<T>(
+    options: {
+      step: FingerprintStep;
+      sessionKey: string;
+      injectCallback: InjectValueCallback;
+      collectFn: () => Promise<T>;
+      extractAttributes: (data: T) => Record<string, any>;
+      endpoint: string;
     }
-  }
-
-  private async processF4Data(
-    sessionKey: string,
-    collectedDeviceInfo: CollectedDeviceInfo
   ): Promise<any> {
+    const {
+      step,
+      sessionKey,
+      injectCallback,
+      collectFn,
+      extractAttributes,
+      endpoint
+    } = options;
+  
     try {
-      const f4Data = await this.collectF4();
-      const attributes = {
-        ...f4Data.audio,
-        ...f4Data.browser,
-        ...f4Data.hardware,
-        ...f4Data.preferences,
-      };
-      collectedDeviceInfo.f4Hashed = this.generateGroupHashes(attributes);
-
-      const f4Payload = this.buildPayload(
-        "F4",
-        sessionKey,
-        f4Data,
-        collectedDeviceInfo.f4Hashed
-      );
-
-      await this.sendToServer(
-        `${CONFIG.GATEWAY_URL}${CONFIG.ENDPOINTS.F4}`,
-        f4Payload
-      );
-
-      this.injectValueIntoHiddenField(
-        CONFIG.FIELD_NAMES.DEVICE_INFO,
-        this.encodeData(collectedDeviceInfo)
-      );
-
+      const data = await collectFn();
+      const attributes = extractAttributes(data);
+  
+      const hashed = this.generateGroupHashes(attributes);
+   
+      injectCallback(hashed, step);
+  
+      const payload = this.buildPayload(step, sessionKey, data, hashed);
+      await this.sendToServer(`${CONFIG.GATEWAY_URL}${endpoint}`, payload);
+  
       return attributes;
     } catch (error) {
-      // console.error('F4 data collection failed:', error);
+      // Consider logging with a proper logger or monitoring tool
     }
   }
 
-  private async processF5Data(
+  public async processF4Data(
     sessionKey: string,
-    collectedDeviceInfo: CollectedDeviceInfo,
-    f4Attributes: any
-  ): Promise<void> {
-    try {
-      const f5Data = await this.collectF5();
+    injectCallback: InjectValueCallback
+  ): Promise<any> {
+    return this.processData({
+      step: 'F4',
+      sessionKey,
+      injectCallback,
+      collectFn: () => this.collectF4(),
+      extractAttributes: (data) => ({
+        ...data.audio,
+        ...data.browser,
+        ...data.hardware,
+        ...data.preferences
+      }),
+      endpoint: CONFIG.ENDPOINTS.F4
+    });
+  }
 
-      const attributes = {
+  public async processF5Data(
+    sessionKey: string,
+    f4Attributes: Record<string, any>,
+    injectCallback: InjectValueCallback
+  ): Promise<any> {
+    return this.processData({
+      step: 'F5',
+      sessionKey,
+      injectCallback,
+      collectFn: () => this.collectGraphics(),
+      extractAttributes: (data) => ({
         ...f4Attributes,
-        ...f5Data.graphics,
-      };
+        ...data.graphics
+      }),
+      endpoint: CONFIG.ENDPOINTS.F5
+    });
+  }
 
-      collectedDeviceInfo.f5Hashed = this.generateGroupHashes(attributes);
-
-      const f5Payload = this.buildPayload(
-        "F5",
-        sessionKey,
-        f5Data,
-        collectedDeviceInfo.f5Hashed
-      );
-      await this.sendToServer(
-        `${CONFIG.GATEWAY_URL}${CONFIG.ENDPOINTS.F5}`,
-        f5Payload
-      );
-
-      this.injectValueIntoHiddenField(
-        CONFIG.FIELD_NAMES.DEVICE_INFO,
-        this.encodeData(collectedDeviceInfo)
-      );
+  public async collectWebRTC(): Promise<any> {
+    try {
+      return await WebRTCFingerprint.collect();
     } catch (error) {
-      // console.error('F5 data collection failed:', error);
+      // console.error('Failed to collect WebRTC:', error);
+      return { webrtc: {} };
     }
   }
 
-  public async start(): Promise<void> {
+  public async start(sessionKey: string, injectCallback: InjectValueCallback): Promise<any> {
     try {
-      const tagging = new TaggingClass();
-      const sessionKey = await tagging.getStorage();
+      const f4Attributes = await this.processF4Data(sessionKey, injectCallback);
 
-      const collectedDeviceInfo: CollectedDeviceInfo = {
-        sessionKey,
-        deviceID: PacketTransformer.unwrapMessage(sessionKey),
+      if (typeof window !== "undefined") {
+        (window as any).f4Attributes = f4Attributes;
+      }
+
+      const f5Attributes = await this.processF5Data(sessionKey, f4Attributes, injectCallback);
+      if (typeof window !== "undefined") {
+        (window as any).f5Attributes = f5Attributes;
+      }
+
+      const webrtcData = await this.collectWebRTC();
+      if (typeof window !== "undefined") {
+        (window as any).webrtcData = webrtcData;
+      }
+
+      return {
+        f4: f4Attributes,
+        f5: f5Attributes,
+        webrtc: webrtcData,
+        sessionKey
       };
 
-      const f4Attributes = await this.processF4Data(
-        sessionKey,
-        collectedDeviceInfo
-      );
-      await this.processF5Data(sessionKey, collectedDeviceInfo, f4Attributes);
-
-      const webrtc = await this.collectWebRTC();
-      collectedDeviceInfo.webrtc = webrtc;
-
-      this.injectValueIntoHiddenField(
-        CONFIG.FIELD_NAMES.DEVICE_INFO,
-        this.encodeData(collectedDeviceInfo)
-      );
     } catch (error) {
       // console.error('Fingerprint collection failed:', error);
+      throw error;
     }
   }
 }
-
-const fingerprint = new FingerprintClass();
-
-if (typeof window !== "undefined") {
-  (window as any).fingerprint = fingerprint;
-
-  (async () => {
-    try {
-      await fingerprint.start();
-    } catch (error) {
-      console.error("Failed to auto-start fingerprint:", error);
-    }
-  })();
-}
-
-export default fingerprint;

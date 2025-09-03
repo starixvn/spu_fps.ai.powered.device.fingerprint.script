@@ -64,7 +64,8 @@ export class ScriptService {
         "fingerprint/modules/webrtc/ipCollector.js",
         "fingerprint/modules/webrtc/index.js",
         "fingerprint/index.js",
-        "fingerprint/dom.js"
+        "fingerprint/dom.js",
+        "index.js"
       ];
 
       const clientDistPath = path.join(__dirname, "..", "..", "client");

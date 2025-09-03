@@ -42,10 +42,6 @@ export class DOMUtils {
     }
   }
 
-  public static getElementById<T extends HTMLElement>(elementId: string): T | null {
-    return document.getElementById(elementId) as T | null;
-  }
-
   public static getElementsByName(name: string): NodeListOf<HTMLElement> {
     return document.getElementsByName(name) as NodeListOf<HTMLElement>;
   }
