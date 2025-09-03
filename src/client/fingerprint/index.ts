@@ -1,11 +1,11 @@
 /// <reference lib="dom" />
 
-import { 
-  AudioGroupInfo, 
-  BrowserGroupInfo, 
-  HardwareGroupInfo, 
-  PreferencesGroupInfo, 
-  GraphicsGroupInfo, 
+import {
+  AudioGroupInfo,
+  BrowserGroupInfo,
+  HardwareGroupInfo,
+  PreferencesGroupInfo,
+  GraphicsGroupInfo,
 } from "./types";
 import { HardwareFingerprint } from "./modules/hardware/index";
 import { GraphicsFingerprint } from "./modules/graphics/index";
@@ -15,7 +15,6 @@ import { PreferencesFingerprint } from "./modules/preference/index";
 import { WebRTCFingerprint } from "./modules/webrtc/index";
 import { MurmurHash128, Base64Encoder } from "./utils/hash";
 import { CONFIG, FingerprintStep } from "../index";
-
 
 type InjectValueCallback = (hashed: string, step?: FingerprintStep) => void;
 
@@ -61,13 +60,18 @@ export class FingerprintClass {
     };
   }
 
-  private async sendViaBeacon(endpoint: string, payload: any): Promise<boolean> {
+  private async sendViaBeacon(
+    endpoint: string,
+    payload: any
+  ): Promise<boolean> {
     try {
       if (!navigator.sendBeacon) {
         return false;
       }
 
-      const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+      const blob = new Blob([JSON.stringify(payload)], {
+        type: "application/json",
+      });
       return navigator.sendBeacon(endpoint, blob);
     } catch (error) {
       // console.error('Failed to send data via sendBeacon:', error);
@@ -133,36 +137,34 @@ export class FingerprintClass {
     return { sessionKey, fingerprint, hashed };
   }
 
-  private async processData<T>(
-    options: {
-      step: FingerprintStep;
-      sessionKey: string;
-      injectCallback: InjectValueCallback;
-      collectFn: () => Promise<T>;
-      extractAttributes: (data: T) => Record<string, any>;
-      endpoint: string;
-    }
-  ): Promise<any> {
+  private async processData<T>(options: {
+    step: FingerprintStep;
+    sessionKey: string;
+    injectCallback: InjectValueCallback;
+    collectFn: () => Promise<T>;
+    extractAttributes: (data: T) => Record<string, any>;
+    endpoint: string;
+  }): Promise<any> {
     const {
       step,
       sessionKey,
       injectCallback,
       collectFn,
       extractAttributes,
-      endpoint
+      endpoint,
     } = options;
-  
+
     try {
       const data = await collectFn();
       const attributes = extractAttributes(data);
-  
+
       const hashed = this.generateGroupHashes(attributes);
-   
+
       injectCallback(hashed, step);
-  
+
       const payload = this.buildPayload(step, sessionKey, data, hashed);
       await this.sendToServer(`${CONFIG.GATEWAY_URL}${endpoint}`, payload);
-  
+
       return attributes;
     } catch (error) {
       // Consider logging with a proper logger or monitoring tool
@@ -174,7 +176,7 @@ export class FingerprintClass {
     injectCallback: InjectValueCallback
   ): Promise<any> {
     return this.processData({
-      step: 'F4',
+      step: "F4",
       sessionKey,
       injectCallback,
       collectFn: () => this.collectF4(),
@@ -182,9 +184,9 @@ export class FingerprintClass {
         ...data.audio,
         ...data.browser,
         ...data.hardware,
-        ...data.preferences
+        ...data.preferences,
       }),
-      endpoint: CONFIG.ENDPOINTS.F4
+      endpoint: CONFIG.ENDPOINTS.F4,
     });
   }
 
@@ -194,15 +196,15 @@ export class FingerprintClass {
     injectCallback: InjectValueCallback
   ): Promise<any> {
     return this.processData({
-      step: 'F5',
+      step: "F5",
       sessionKey,
       injectCallback,
       collectFn: () => this.collectGraphics(),
       extractAttributes: (data) => ({
         ...f4Attributes,
-        ...data.graphics
+        ...data.graphics,
       }),
-      endpoint: CONFIG.ENDPOINTS.F5
+      endpoint: CONFIG.ENDPOINTS.F5,
     });
   }
 
@@ -215,7 +217,10 @@ export class FingerprintClass {
     }
   }
 
-  public async start(sessionKey: string, injectCallback: InjectValueCallback): Promise<any> {
+  public async start(
+    sessionKey: string,
+    injectCallback: InjectValueCallback
+  ): Promise<any> {
     try {
       const f4Attributes = await this.processF4Data(sessionKey, injectCallback);
 
@@ -223,7 +228,11 @@ export class FingerprintClass {
         (window as any).f4Attributes = f4Attributes;
       }
 
-      const f5Attributes = await this.processF5Data(sessionKey, f4Attributes, injectCallback);
+      const f5Attributes = await this.processF5Data(
+        sessionKey,
+        f4Attributes,
+        injectCallback
+      );
       if (typeof window !== "undefined") {
         (window as any).f5Attributes = f5Attributes;
       }
@@ -237,12 +246,46 @@ export class FingerprintClass {
         f4: f4Attributes,
         f5: f5Attributes,
         webrtc: webrtcData,
-        sessionKey
+        sessionKey,
       };
-
     } catch (error) {
       // console.error('Fingerprint collection failed:', error);
       throw error;
     }
   }
+
+  // Demo-compatible methods
+  public async collect(): Promise<any> {
+    try {
+      const f4Data = await this.collectF4();
+      const f5Data = await this.collectGraphics();
+      const webrtc = await this.collectWebRTC();
+
+      return {
+        ...f4Data,
+        ...f5Data,
+        webrtc,
+      };
+    } catch (error) {
+      console.error("Failed to collect fingerprint:", error);
+      throw error;
+    }
+  }
+
+  public async collectIPs(timeout: number = 2000): Promise<any> {
+    try {
+      return await WebRTCFingerprint.collect(timeout);
+    } catch (error) {
+      console.error("Failed to collect IPs:", error);
+      throw error;
+    }
+  }
 }
+
+const fingerprint = new FingerprintClass();
+
+if (typeof window !== "undefined") {
+  (window as any).fingerprint = fingerprint;
+}
+
+export default fingerprint;

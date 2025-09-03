@@ -2,30 +2,37 @@ import type { LocalStorageInfo } from "../../types";
 
 export function collectLocalStorage(): LocalStorageInfo {
   try {
-    const localStorage = getLocalStorage();
-    return { localStorage };
+    const localStorageSupported = getLocalStorage();
+    return { localStorage: localStorageSupported };
   } catch (error) {
+    console.warn("collectLocalStorage error:", error);
     return { localStorage: false };
   }
 }
 
 function getLocalStorage(): boolean {
   try {
-    if (typeof window !== "undefined" && window.localStorage) {
-      const testKey = "localstorage_test";
-      const testValue = "test_value";
+    if (typeof window === "undefined" || !window.localStorage) return false;
 
-      window.localStorage.setItem(testKey, testValue);
+    const testKey = `localstorage_test_${Math.random().toString(36).slice(2)}`;
+    const testValue = "test_value";
 
-      const hasValue = window.localStorage.getItem(testKey) === testValue;
+    window.localStorage.setItem(testKey, testValue);
 
-      window.localStorage.removeItem(testKey);
+    const storedValue = window.localStorage.getItem(testKey);
 
-      return hasValue;
+    window.localStorage.removeItem(testKey);
+
+    if (storedValue !== testValue) return false;
+
+    return true;
+  } catch (error) {
+    if (
+      error instanceof DOMException &&
+      (error.name === "QuotaExceededError" || error.name === "SecurityError")
+    ) {
+      return false;
     }
-
-    return false;
-  } catch {
     return false;
   }
 }

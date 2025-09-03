@@ -2,8 +2,8 @@ import type { OpenDatabaseInfo } from "../../types";
 
 export function collectOpenDatabase(): OpenDatabaseInfo {
   try {
-    const openDatabase = getOpenDatabase();
-    return { openDatabase };
+    const openDatabaseSupported = getOpenDatabase();
+    return { openDatabase: openDatabaseSupported };
   } catch (error) {
     return { openDatabase: false };
   }
@@ -11,24 +11,30 @@ export function collectOpenDatabase(): OpenDatabaseInfo {
 
 function getOpenDatabase(): boolean {
   try {
-    if (typeof window !== "undefined" && (window as any).openDatabase) {
-      return true;
-    }
+    if (typeof window === "undefined") return false;
 
-    if (typeof window !== "undefined" && (window as any).webkitOpenDatabase) {
-      return true;
-    }
+    const dbAPIs = [
+      "openDatabase",
+      "webkitOpenDatabase",
+      "mozOpenDatabase",
+      "msOpenDatabase",
+    ] as const;
 
-    if (typeof window !== "undefined" && (window as any).mozOpenDatabase) {
-      return true;
-    }
+    for (const api of dbAPIs) {
+      const fn = (window as any)[api];
 
-    if (typeof window !== "undefined" && (window as any).msOpenDatabase) {
-      return true;
+      if (typeof fn === "function") {
+        try {
+          fn("test", "1.0", "test_db", 1);
+          return true;
+        } catch {
+          continue;
+        }
+      }
     }
 
     return false;
-  } catch {
+  } catch (error) {
     return false;
   }
 }

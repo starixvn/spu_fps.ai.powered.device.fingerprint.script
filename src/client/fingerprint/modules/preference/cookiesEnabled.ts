@@ -3,7 +3,11 @@ import type { CookiesEnabledInfo } from "../../types";
 export function collectCookiesEnabled(): CookiesEnabledInfo {
   try {
     const cookiesEnabled = getCookiesEnabled();
-    return { cookiesEnabled };
+
+    return {
+      cookiesEnabled:
+        typeof cookiesEnabled === "boolean" ? cookiesEnabled : false,
+    };
   } catch (error) {
     return { cookiesEnabled: false };
   }
@@ -15,17 +19,25 @@ function getCookiesEnabled(): boolean {
       return navigator.cookieEnabled;
     }
 
-    const key = `cookie_test_${Math.random().toString(36).slice(2)}`;
-    document.cookie = `${key}=1; path=/`;
+    if (
+      typeof document !== "undefined" &&
+      typeof document.cookie === "string"
+    ) {
+      const key = `cookie_test_${Math.random().toString(36).slice(2)}`;
 
-    const enabled = document.cookie
-      .split("; ")
-      .some((cookie) => cookie.startsWith(`${key}=`));
+      document.cookie = `${key}=1; path=/; max-age=60`; // 1 min validity
 
-    document.cookie = `${key}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+      const cookieExists = document.cookie
+        .split("; ")
+        .some((c) => c.startsWith(`${key}=`));
 
-    return enabled;
-  } catch {
+      document.cookie = `${key}=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+
+      return cookieExists;
+    }
+
+    return false;
+  } catch (err) {
     return false;
   }
 }

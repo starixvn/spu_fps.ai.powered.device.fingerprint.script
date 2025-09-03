@@ -2,50 +2,79 @@ import type { IndexedDBInfo } from "../../types";
 
 export async function collectIndexedDB(): Promise<IndexedDBInfo> {
   try {
-    const indexedDB = await getIndexedDB();
-    return { indexedDB };
+    const indexedDBSupported = await getIndexedDB();
+
+    return {
+      indexedDB:
+        typeof indexedDBSupported === "boolean" ? indexedDBSupported : false,
+    };
   } catch (error) {
     return { indexedDB: false };
   }
 }
 
 async function getIndexedDB(): Promise<boolean> {
-  try {
-    if (typeof window === "undefined" || !window.indexedDB) {
-      return false;
-    }
+  if (typeof window === "undefined" || !window.indexedDB) {
+    return false;
+  }
 
-    const testDBName = `test_${Date.now()}_${Math.random()
-      .toString(36)
-      .slice(2)}`;
+  const testDBName = `fps_test_${Date.now()}_${Math.random()
+    .toString(36)
+    .slice(2)}`;
 
-    return new Promise((resolve) => {
-      const timeout = setTimeout(() => resolve(false), 5000);
+  return new Promise((resolve) => {
+    let resolved = false;
+
+    const cleanup = (db?: IDBDatabase) => {
+      if (db) db.close();
+
+      try {
+        window.indexedDB.deleteDatabase(testDBName);
+      } catch {}
+    };
+
+    const timeout = setTimeout(() => {
+      if (!resolved) {
+        resolved = true;
+        resolve(false);
+      }
+    }, 4000); // 4s timeout to avoid hanging
+
+    try {
       const request = window.indexedDB.open(testDBName, 1);
 
       request.onerror = () => {
-        clearTimeout(timeout);
-        resolve(false);
+        if (!resolved) {
+          resolved = true;
+          clearTimeout(timeout);
+          resolve(false);
+        }
       };
 
       request.onsuccess = () => {
-        clearTimeout(timeout);
-        const db = request.result;
-        db.close();
-
-        window.indexedDB.deleteDatabase(testDBName);
-        resolve(true);
+        if (!resolved) {
+          resolved = true;
+          clearTimeout(timeout);
+          cleanup(request.result);
+          resolve(true);
+        }
       };
 
       request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result;
+        try {
+          const db = (event.target as IDBOpenDBRequest).result;
 
-        if (!db.objectStoreNames.contains("test")) {
-          db.createObjectStore("test", { keyPath: "id" });
-        }
+          if (!db.objectStoreNames.contains("test")) {
+            db.createObjectStore("test", { keyPath: "id" });
+          }
+        } catch {}
       };
-    });
-  } catch {
-    return false;
-  }
+    } catch (err) {
+      if (!resolved) {
+        resolved = true;
+        clearTimeout(timeout);
+        resolve(false);
+      }
+    }
+  });
 }

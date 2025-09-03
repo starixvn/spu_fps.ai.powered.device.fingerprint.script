@@ -2,30 +2,29 @@ import type { SessionStorageInfo } from "../../types";
 
 export function collectSessionStorage(): SessionStorageInfo {
   try {
-    const sessionStorage = getSessionStorage();
-    return { sessionStorage };
+    const supported = getSessionStorage();
+    return { sessionStorage: supported };
   } catch (error) {
     return { sessionStorage: false };
   }
 }
 
 function getSessionStorage(): boolean {
+  if (typeof window === "undefined" || !window.sessionStorage) return false;
+
+  const testKey = `sessionstorage_test_${Math.random().toString(36).slice(2)}`;
+  const testValue = "test_value";
+
   try {
-    if (typeof window !== "undefined" && window.sessionStorage) {
-      const testKey = "sessionstorage_test";
-      const testValue = "test_value";
+    window.sessionStorage.setItem(testKey, testValue);
 
-      window.sessionStorage.setItem(testKey, testValue);
+    const readValue = window.sessionStorage.getItem(testKey);
+    const isValid = readValue === testValue;
 
-      const hasValue = window.sessionStorage.getItem(testKey) === testValue;
+    window.sessionStorage.removeItem(testKey);
 
-      window.sessionStorage.removeItem(testKey);
-
-      return hasValue;
-    }
-
-    return false;
-  } catch {
+    return isValid;
+  } catch (error) {
     return false;
   }
 }
