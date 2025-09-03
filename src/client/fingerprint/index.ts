@@ -253,39 +253,4 @@ export class FingerprintClass {
       throw error;
     }
   }
-
-  // Demo-compatible methods
-  public async collect(): Promise<any> {
-    try {
-      const f4Data = await this.collectF4();
-      const f5Data = await this.collectGraphics();
-      const webrtc = await this.collectWebRTC();
-
-      return {
-        ...f4Data,
-        ...f5Data,
-        webrtc,
-      };
-    } catch (error) {
-      console.error("Failed to collect fingerprint:", error);
-      throw error;
-    }
-  }
-
-  public async collectIPs(timeout: number = 2000): Promise<any> {
-    try {
-      return await WebRTCFingerprint.collect(timeout);
-    } catch (error) {
-      console.error("Failed to collect IPs:", error);
-      throw error;
-    }
-  }
 }
-
-const fingerprint = new FingerprintClass();
-
-if (typeof window !== "undefined") {
-  (window as any).fingerprint = fingerprint;
-}
-
-export default fingerprint;
