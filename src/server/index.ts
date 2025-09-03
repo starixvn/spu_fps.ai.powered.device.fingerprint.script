@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import * as path from 'path';
@@ -23,8 +23,16 @@ const fingerprintService = new FingerprintService();
 const hashService = new HashService();
 const scriptService = new ScriptService();
 
+// Middleware to restrict development endpoints in production
+const restrictInProduction = (req: Request, res: Response, next: NextFunction) => {
+  if (config.nodeEnv === 'production') {
+    return res.sendStatus(404);
+  }
+  next();
+};
+
 // Routes
-app.get('/api/fingerprint', async (req: Request, res: Response) => {
+app.get('/api/fingerprint', restrictInProduction, async (req: Request, res: Response) => {
   try {
     const fingerprint = await fingerprintService.generateFingerprint(req);
     const hashedFingerprint = hashService.hashFingerprint(fingerprint);
@@ -44,7 +52,7 @@ app.get('/api/fingerprint', async (req: Request, res: Response) => {
   }
 });
 
-app.post('/api/fingerprint', async (req: Request, res: Response) => {
+app.post('/api/fingerprint', restrictInProduction, async (req: Request, res: Response) => {
   try {
     const clientFingerprint = req.body.fingerprint;
     const serverFingerprint = await fingerprintService.generateFingerprint(req);
@@ -72,7 +80,7 @@ app.post('/api/fingerprint', async (req: Request, res: Response) => {
   }
 });
 
-app.get('/libs/apd-express.js', (req: Request, res: Response) => {
+app.get('/libs/apd-express.js', restrictInProduction, (req: Request, res: Response) => {
   try {
     const script = scriptService.getClientScript();
 
@@ -87,7 +95,7 @@ app.get('/libs/apd-express.js', (req: Request, res: Response) => {
   }
 });
 
-app.get('/api/script', (req: Request, res: Response) => {
+app.get('/api/script', restrictInProduction, (req: Request, res: Response) => {
   try {
     const script = scriptService.getClientScript();
 
@@ -153,7 +161,7 @@ app.get('/resources/vers', (req: Request, res: Response) => {
   }
 });
 
-app.get('/test', (req: Request, res: Response) => {
+app.get('/test', restrictInProduction, (req: Request, res: Response) => {
   res.send(`
     <!DOCTYPE html>
     <html>
@@ -183,10 +191,10 @@ app.get('/test', (req: Request, res: Response) => {
 
 // Root route - redirect to examples
 app.get('/', (req: Request, res: Response) => {
-  res.redirect('/examples.html');
+  res.redirect('/healthz');
 });
 
-app.get('/api/script-info', async (req: Request, res: Response) => {
+app.get('/api/script-info', restrictInProduction, async (req: Request, res: Response) => {
   try {
     const info = await scriptService.getScriptInfo();
     res.json({
@@ -203,7 +211,7 @@ app.get('/api/script-info', async (req: Request, res: Response) => {
 });
 
 // Compare async vs sync minification
-app.get('/api/minify-compare', async (req: Request, res: Response) => {
+app.get('/api/minify-compare', restrictInProduction, async (req: Request, res: Response) => {
   try {
     const originalScript = scriptService.getClientScript();
     const [asyncMinified, syncMinified] = await Promise.all([
@@ -242,7 +250,7 @@ app.get('/api/minify-compare', async (req: Request, res: Response) => {
   }
 });
 
-app.post('/api/rebuild-script', (req: Request, res: Response) => {
+app.post('/api/rebuild-script', restrictInProduction, (req: Request, res: Response) => {
   try {
     scriptService.rebuildScript();
     res.json({
@@ -259,15 +267,15 @@ app.post('/api/rebuild-script', (req: Request, res: Response) => {
 });
 
 // Serve HTML demo pages
-app.get('/demo.html', (req: Request, res: Response) => {
+app.get('/demo.html', restrictInProduction, (req: Request, res: Response) => {
   res.sendFile('demo.html', { root: path.join(__dirname, '../../examples/basic') });
 });
 
-app.get('/examples.html', (req: Request, res: Response) => {
+app.get('/examples.html', restrictInProduction, (req: Request, res: Response) => {
   res.sendFile('index.html', { root: path.join(__dirname, '../../examples') });
 });
 
-app.get('/login-demo.html', (req: Request, res: Response) => {
+app.get('/login-demo.html', restrictInProduction, (req: Request, res: Response) => {
   // Return a simple message since login-demo.html doesn't exist yet
   res.status(404).send(`
     <html>

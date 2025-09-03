@@ -28,7 +28,7 @@ export class HashService {
       .digest('hex');
     
     return {
-      murmur: murmurHash,
+      murmur: murmurHash.toString(),
       sha256: sha256Hash,
       combined: combinedHash
     };

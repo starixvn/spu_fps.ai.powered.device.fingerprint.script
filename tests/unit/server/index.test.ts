@@ -135,7 +135,7 @@ describe('Express Server Routes', () => {
         .get('/')
         .expect(302);
 
-      expect(response.header.location).toBe('/examples.html');
+      expect(response.header.location).toBe('/healthz');
     });
   });
 
