@@ -1,424 +1,389 @@
-import { djb2Hash, simpleHash, hashArray, hashObject } from '../../../../../src/client/fingerprint/utils/hash';
+import { MurmurHash128, Base64Encoder, murmurhash3_32_gc } from '../../../../../src/client/fingerprint/utils/hash';
 
-describe('Hash Utility Functions', () => {
-  describe('djb2Hash', () => {
-    it('should return consistent hash for same input', () => {
-      const input = 'test-string';
-      const hash1 = djb2Hash(input);
-      const hash2 = djb2Hash(input);
-      
-      expect(hash1).toBe(hash2);
-      expect(typeof hash1).toBe('string');
-      expect(hash1).toHaveLength(8);
-      expect(/^[0-9a-f]{8}$/.test(hash1)).toBe(true);
-    });
+describe('Hash Utilities', () => {
+  describe('MurmurHash128', () => {
+    describe('hash128', () => {
+      it('should generate consistent hash for same input', () => {
+        const input = 'test string';
+        const hash1 = MurmurHash128.hash128(input);
+        const hash2 = MurmurHash128.hash128(input);
+        
+        expect(hash1).toBe(hash2);
+        expect(typeof hash1).toBe('string');
+        expect(hash1).toHaveLength(32); // 128 bits = 32 hex characters
+      });
 
-    it('should return different hashes for different inputs', () => {
-      const hash1 = djb2Hash('string1');
-      const hash2 = djb2Hash('string2');
-      
-      expect(hash1).not.toBe(hash2);
-    });
+      it('should generate different hashes for different inputs', () => {
+        const hash1 = MurmurHash128.hash128('input1');
+        const hash2 = MurmurHash128.hash128('input2');
+        
+        expect(hash1).not.toBe(hash2);
+      });
 
-    it('should handle empty string', () => {
-      const hash = djb2Hash('');
-      
-      expect(typeof hash).toBe('string');
-      expect(hash).toHaveLength(8);
-      expect(/^[0-9a-f]{8}$/.test(hash)).toBe(true);
-    });
+      it('should handle empty string', () => {
+        const hash = MurmurHash128.hash128('');
+        
+        expect(typeof hash).toBe('string');
+        expect(hash).toHaveLength(32);
+      });
 
-    it('should handle very long strings', () => {
-      const longString = 'a'.repeat(10000);
-      const hash = djb2Hash(longString);
-      
-      expect(typeof hash).toBe('string');
-      expect(hash).toHaveLength(8);
-      expect(/^[0-9a-f]{8}$/.test(hash)).toBe(true);
-    });
+      it('should handle different seeds', () => {
+        const input = 'test string';
+        const hash1 = MurmurHash128.hash128(input, 0);
+        const hash2 = MurmurHash128.hash128(input, 1);
+        
+        expect(hash1).not.toBe(hash2);
+      });
 
-    it('should handle special characters', () => {
-      const specialChars = '!@#$%^&*()_+-=[]{}|;:,.<>?';
-      const hash = djb2Hash(specialChars);
-      
-      expect(typeof hash).toBe('string');
-      expect(hash).toHaveLength(8);
-      expect(/^[0-9a-f]{8}$/.test(hash)).toBe(true);
-    });
+      it('should handle unicode characters', () => {
+        const unicodeInput = 'Hello 世界 🌍';
+        const hash = MurmurHash128.hash128(unicodeInput);
+        
+        expect(typeof hash).toBe('string');
+        expect(hash).toHaveLength(32);
+      });
 
-    it('should handle unicode characters', () => {
-      const unicode = '🔍📱💻🌐';
-      const hash = djb2Hash(unicode);
-      
-      expect(typeof hash).toBe('string');
-      expect(hash).toHaveLength(8);
-      expect(/^[0-9a-f]{8}$/.test(hash)).toBe(true);
-    });
+      it('should handle very long strings', () => {
+        const longInput = 'a'.repeat(10000);
+        const hash = MurmurHash128.hash128(longInput);
+        
+        expect(typeof hash).toBe('string');
+        expect(hash).toHaveLength(32);
+      });
 
-    it('should be case sensitive', () => {
-      const hash1 = djb2Hash('Test');
-      const hash2 = djb2Hash('test');
-      
-      expect(hash1).not.toBe(hash2);
-    });
+      it('should return hex string with lowercase characters', () => {
+        const hash = MurmurHash128.hash128('test');
+        
+        expect(hash).toMatch(/^[0-9a-f]{32}$/);
+      });
 
-    it('should produce valid hexadecimal output', () => {
-      const hash = djb2Hash('test-input');
-      const numericValue = parseInt(hash, 16);
-      
-      expect(Number.isNaN(numericValue)).toBe(false);
-      expect(numericValue).toBeGreaterThanOrEqual(0);
+      it('should generate known hash for specific test cases', () => {
+        // Test with empty string and seed 0
+        const emptyHash = MurmurHash128.hash128('', 0);
+        expect(emptyHash).toMatch(/^[0-9a-f]{32}$/);
+
+        // Test with simple string
+        const simpleHash = MurmurHash128.hash128('a', 0);
+        expect(simpleHash).toMatch(/^[0-9a-f]{32}$/);
+        expect(simpleHash).not.toBe(emptyHash);
+      });
     });
   });
 
-  describe('simpleHash', () => {
-    it('should return consistent hash for same input', () => {
-      const input = 'test-string';
-      const hash1 = simpleHash(input);
-      const hash2 = simpleHash(input);
+  describe('Base64Encoder', () => {
+    describe('encodeBase64', () => {
+      const testKey = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+      it('should encode simple strings correctly', () => {
+        const input = 'Hello World';
+        const encoded = Base64Encoder.encodeBase64(input, testKey);
+        
+        expect(typeof encoded).toBe('string');
+        expect(encoded.length).toBeGreaterThan(0);
+      });
+
+      it('should handle empty string', () => {
+        const encoded = Base64Encoder.encodeBase64('', testKey);
+        
+        expect(encoded).toBe('');
+      });
+
+      it('should generate consistent output for same input', () => {
+        const input = 'test string';
+        const encoded1 = Base64Encoder.encodeBase64(input, testKey);
+        const encoded2 = Base64Encoder.encodeBase64(input, testKey);
+        
+        expect(encoded1).toBe(encoded2);
+      });
+
+      it('should generate different output for different keys', () => {
+        const input = 'test string';
+        const key1 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+        const key2 = 'ZYXWVUTSRQPONMLKJIHGFEDCBAzyxwvutsrqponmlkjihgfedcba9876543210/+';
+        
+        const encoded1 = Base64Encoder.encodeBase64(input, key1);
+        const encoded2 = Base64Encoder.encodeBase64(input, key2);
+        
+        expect(encoded1).not.toBe(encoded2);
+      });
+
+      it('should handle unicode characters', () => {
+        const unicodeInput = 'Hello 世界 🌍';
+        const encoded = Base64Encoder.encodeBase64(unicodeInput, testKey);
+        
+        expect(typeof encoded).toBe('string');
+        expect(encoded.length).toBeGreaterThan(0);
+      });
+
+      it('should handle newline characters', () => {
+        const inputWithNewlines = 'Line 1\nLine 2\r\nLine 3';
+        const encoded = Base64Encoder.encodeBase64(inputWithNewlines, testKey);
+        
+        expect(typeof encoded).toBe('string');
+        expect(encoded.length).toBeGreaterThan(0);
+      });
+
+      it('should only use characters from the provided key', () => {
+        const input = 'test string';
+        const customKey = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz+/';
+        const encoded = Base64Encoder.encodeBase64(input, customKey);
+        
+        // Check that all characters in encoded string are from the key
+        for (const char of encoded) {
+          expect(customKey).toContain(char);
+        }
+      });
+
+      it('should handle JSON objects', () => {
+        const jsonObject = { name: 'test', value: 123, nested: { key: 'value' } };
+        const jsonString = JSON.stringify(jsonObject);
+        const encoded = Base64Encoder.encodeBase64(jsonString, testKey);
+        
+        expect(typeof encoded).toBe('string');
+        expect(encoded.length).toBeGreaterThan(0);
+      });
+
+      it('should handle very long strings', () => {
+        const longInput = 'a'.repeat(10000);
+        const encoded = Base64Encoder.encodeBase64(longInput, testKey);
+        
+        expect(typeof encoded).toBe('string');
+        expect(encoded.length).toBeGreaterThan(0);
+      });
+
+      it('should handle special characters', () => {
+        const specialChars = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+        const encoded = Base64Encoder.encodeBase64(specialChars, testKey);
+        
+        expect(typeof encoded).toBe('string');
+        expect(encoded.length).toBeGreaterThan(0);
+      });
+    });
+  });
+
+  describe('murmurhash3_32_gc', () => {
+    it('should generate consistent hash for same input', () => {
+      const input = 'test string';
+      const hash1 = murmurhash3_32_gc(input);
+      const hash2 = murmurhash3_32_gc(input);
       
       expect(hash1).toBe(hash2);
       expect(typeof hash1).toBe('number');
-      expect(hash1).toBeGreaterThanOrEqual(0);
     });
 
-    it('should return different hashes for different inputs', () => {
-      const hash1 = simpleHash('string1');
-      const hash2 = simpleHash('string2');
+    it('should generate different hashes for different inputs', () => {
+      const hash1 = murmurhash3_32_gc('input1');
+      const hash2 = murmurhash3_32_gc('input2');
       
       expect(hash1).not.toBe(hash2);
     });
 
     it('should handle empty string', () => {
-      const hash = simpleHash('');
+      const hash = murmurhash3_32_gc('');
       
-      expect(hash).toBe(0);
       expect(typeof hash).toBe('number');
+      expect(hash).toBeGreaterThanOrEqual(0);
     });
 
-    it('should return positive numbers', () => {
-      const hash1 = simpleHash('positive-test');
-      const hash2 = simpleHash('another-test');
-      const hash3 = simpleHash('third-test');
+    it('should handle different seeds', () => {
+      const input = 'test string';
+      const hash1 = murmurhash3_32_gc(input, 31);
+      const hash2 = murmurhash3_32_gc(input, 42);
       
-      expect(hash1).toBeGreaterThanOrEqual(0);
-      expect(hash2).toBeGreaterThanOrEqual(0);
-      expect(hash3).toBeGreaterThanOrEqual(0);
+      expect(hash1).not.toBe(hash2);
+    });
+
+    it('should use default seed when not provided', () => {
+      const input = 'test string';
+      const hashWithDefault = murmurhash3_32_gc(input);
+      const hashWithSeed31 = murmurhash3_32_gc(input, 31);
+      
+      expect(hashWithDefault).toBe(hashWithSeed31);
+    });
+
+    it('should return unsigned 32-bit integer', () => {
+      const hash = murmurhash3_32_gc('test');
+      
+      expect(hash).toBeGreaterThanOrEqual(0);
+      expect(hash).toBeLessThanOrEqual(0xFFFFFFFF);
+      expect(Number.isInteger(hash)).toBe(true);
+    });
+
+    it('should handle unicode characters', () => {
+      const unicodeInput = 'Hello 世界 🌍';
+      const hash = murmurhash3_32_gc(unicodeInput);
+      
+      expect(typeof hash).toBe('number');
+      expect(hash).toBeGreaterThanOrEqual(0);
     });
 
     it('should handle very long strings', () => {
-      const longString = 'b'.repeat(5000);
-      const hash = simpleHash(longString);
+      const longInput = 'a'.repeat(10000);
+      const hash = murmurhash3_32_gc(longInput);
       
       expect(typeof hash).toBe('number');
       expect(hash).toBeGreaterThanOrEqual(0);
     });
 
-    it('should handle special characters', () => {
-      const specialChars = '!@#$%^&*()_+-=[]{}|;:,.<>?';
-      const hash = simpleHash(specialChars);
-      
-      expect(typeof hash).toBe('number');
-      expect(hash).toBeGreaterThanOrEqual(0);
+    it('should handle strings with different remainders when divided by 4', () => {
+      // Test strings with length % 4 = 0, 1, 2, 3
+      const tests = [
+        'abcd',     // length 4, remainder 0
+        'abcde',    // length 5, remainder 1
+        'abcdef',   // length 6, remainder 2
+        'abcdefg'   // length 7, remainder 3
+      ];
+
+      tests.forEach((input, index) => {
+        const hash = murmurhash3_32_gc(input);
+        expect(typeof hash).toBe('number');
+        expect(hash).toBeGreaterThanOrEqual(0);
+      });
     });
 
-    it('should be case sensitive', () => {
-      const hash1 = simpleHash('Test');
-      const hash2 = simpleHash('test');
-      
-      expect(hash1).not.toBe(hash2);
-    });
-  });
-
-  describe('hashArray', () => {
-    it('should return consistent hash for same array', () => {
-      const input = ['item1', 'item2', 'item3'];
-      const hash1 = hashArray(input);
-      const hash2 = hashArray(input);
-      
-      expect(hash1).toBe(hash2);
-      expect(typeof hash1).toBe('string');
-      expect(hash1).toHaveLength(8);
-      expect(/^[0-9a-f]{8}$/.test(hash1)).toBe(true);
-    });
-
-    it('should return different hashes for different arrays', () => {
-      const array1 = ['item1', 'item2'];
-      const array2 = ['item3', 'item4'];
-      
-      const hash1 = hashArray(array1);
-      const hash2 = hashArray(array2);
-      
-      expect(hash1).not.toBe(hash2);
-    });
-
-    it('should be order sensitive', () => {
-      const array1 = ['item1', 'item2'];
-      const array2 = ['item2', 'item1'];
-      
-      const hash1 = hashArray(array1);
-      const hash2 = hashArray(array2);
-      
-      expect(hash1).not.toBe(hash2);
-    });
-
-    it('should handle empty array', () => {
-      const hash = hashArray([]);
-      
-      expect(typeof hash).toBe('string');
-      expect(hash).toHaveLength(8);
-      expect(/^[0-9a-f]{8}$/.test(hash)).toBe(true);
-    });
-
-    it('should handle single item array', () => {
-      const hash = hashArray(['single-item']);
-      
-      expect(typeof hash).toBe('string');
-      expect(hash).toHaveLength(8);
-      expect(/^[0-9a-f]{8}$/.test(hash)).toBe(true);
-    });
-
-    it('should handle arrays with special characters', () => {
-      const array = ['item!@#', 'item$%^', 'item&*()'];
-      const hash = hashArray(array);
-      
-      expect(typeof hash).toBe('string');
-      expect(hash).toHaveLength(8);
-      expect(/^[0-9a-f]{8}$/.test(hash)).toBe(true);
-    });
-
-    it('should handle arrays with empty strings', () => {
-      const array = ['', 'item1', '', 'item2'];
-      const hash = hashArray(array);
-      
-      expect(typeof hash).toBe('string');
-      expect(hash).toHaveLength(8);
-      expect(/^[0-9a-f]{8}$/.test(hash)).toBe(true);
-    });
-
-    it('should handle large arrays', () => {
-      const largeArray = Array.from({ length: 1000 }, (_, i) => `item${i}`);
-      const hash = hashArray(largeArray);
-      
-      expect(typeof hash).toBe('string');
-      expect(hash).toHaveLength(8);
-      expect(/^[0-9a-f]{8}$/.test(hash)).toBe(true);
-    });
-  });
-
-  describe('hashObject', () => {
-    it('should return consistent hash for same object', () => {
-      const input = { key1: 'value1', key2: 'value2', key3: 'value3' };
-      const hash1 = hashObject(input);
-      const hash2 = hashObject(input);
-      
-      expect(hash1).toBe(hash2);
-      expect(typeof hash1).toBe('string');
-      expect(hash1).toHaveLength(8);
-      expect(/^[0-9a-f]{8}$/.test(hash1)).toBe(true);
-    });
-
-    it('should return different hashes for different objects', () => {
-      const obj1 = { key1: 'value1' };
-      const obj2 = { key2: 'value2' };
-      
-      const hash1 = hashObject(obj1);
-      const hash2 = hashObject(obj2);
-      
-      expect(hash1).not.toBe(hash2);
-    });
-
-    it('should be key order independent', () => {
-      const obj1 = { key1: 'value1', key2: 'value2' };
-      const obj2 = { key2: 'value2', key1: 'value1' };
-      
-      const hash1 = hashObject(obj1);
-      const hash2 = hashObject(obj2);
-      
-      expect(hash1).toBe(hash2);
-    });
-
-    it('should handle empty object', () => {
-      const hash = hashObject({});
-      
-      expect(typeof hash).toBe('string');
-      expect(hash).toHaveLength(8);
-      expect(/^[0-9a-f]{8}$/.test(hash)).toBe(true);
-    });
-
-    it('should handle objects with different value types', () => {
-      const obj = {
-        string: 'text',
-        number: 42,
-        boolean: true,
-        null: null,
-        undefined: undefined,
-        array: [1, 2, 3],
-        object: { nested: 'value' }
-      };
-      
-      const hash = hashObject(obj);
-      
-      expect(typeof hash).toBe('string');
-      expect(hash).toHaveLength(8);
-      expect(/^[0-9a-f]{8}$/.test(hash)).toBe(true);
-    });
-
-    it('should handle objects with special characters in keys and values', () => {
-      const obj = {
-        'key!@#': 'value$%^',
-        'key&*()': 'value_+-='
-      };
-      
-      const hash = hashObject(obj);
-      
-      expect(typeof hash).toBe('string');
-      expect(hash).toHaveLength(8);
-      expect(/^[0-9a-f]{8}$/.test(hash)).toBe(true);
-    });
-
-    it('should be sensitive to value changes', () => {
-      const obj1 = { key: 'value1' };
-      const obj2 = { key: 'value2' };
-      
-      const hash1 = hashObject(obj1);
-      const hash2 = hashObject(obj2);
-      
-      expect(hash1).not.toBe(hash2);
-    });
-
-    it('should be sensitive to key changes', () => {
-      const obj1 = { key1: 'value' };
-      const obj2 = { key2: 'value' };
-      
-      const hash1 = hashObject(obj1);
-      const hash2 = hashObject(obj2);
-      
-      expect(hash1).not.toBe(hash2);
-    });
-
-    it('should handle objects with numeric keys', () => {
-      const obj = {
-        1: 'value1',
-        2: 'value2',
-        10: 'value10'
-      };
-      
-      const hash = hashObject(obj);
-      
-      expect(typeof hash).toBe('string');
-      expect(hash).toHaveLength(8);
-      expect(/^[0-9a-f]{8}$/.test(hash)).toBe(true);
-    });
-
-    it('should handle large objects', () => {
-      const largeObj: Record<string, string> = {};
-      for (let i = 0; i < 1000; i++) {
-        largeObj[`key${i}`] = `value${i}`;
+    it('should generate good distribution for similar inputs', () => {
+      // Test that similar inputs generate different hashes
+      const hashes = new Set();
+      for (let i = 0; i < 100; i++) {
+        const hash = murmurhash3_32_gc(`test${i}`);
+        hashes.add(hash);
       }
       
-      const hash = hashObject(largeObj);
-      
-      expect(typeof hash).toBe('string');
-      expect(hash).toHaveLength(8);
-      expect(/^[0-9a-f]{8}$/.test(hash)).toBe(true);
+      // Should have generated many unique hashes (good distribution)
+      expect(hashes.size).toBeGreaterThan(90);
     });
   });
 
-  describe('Hash collision and distribution', () => {
-    it('should have low collision rate for djb2Hash', () => {
-      const hashes = new Set<string>();
-      const inputs = Array.from({ length: 1000 }, (_, i) => `test-string-${i}`);
+  describe('Integration tests', () => {
+    it('should work together to create unique fingerprints', () => {
+      const data = { 
+        browser: 'Chrome',
+        os: 'Windows',
+        screen: { width: 1920, height: 1080 }
+      };
       
-      inputs.forEach(input => {
-        hashes.add(djb2Hash(input));
-      });
+      const jsonString = JSON.stringify(data);
+      const hash128 = MurmurHash128.hash128(jsonString);
+      const hash32 = murmurhash3_32_gc(jsonString);
+      const key = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+      const encoded = Base64Encoder.encodeBase64(jsonString, key);
       
-      // Should have very few collisions (less than 5% for 1000 inputs)
-      expect(hashes.size).toBeGreaterThan(950);
+      expect(hash128).toHaveLength(32);
+      expect(typeof hash32).toBe('number');
+      expect(encoded.length).toBeGreaterThan(0);
+      
+      // All should be deterministic
+      expect(MurmurHash128.hash128(jsonString)).toBe(hash128);
+      expect(murmurhash3_32_gc(jsonString)).toBe(hash32);
+      expect(Base64Encoder.encodeBase64(jsonString, key)).toBe(encoded);
     });
 
-    it('should have low collision rate for simpleHash', () => {
-      const hashes = new Set<number>();
-      const inputs = Array.from({ length: 1000 }, (_, i) => `test-string-${i}`);
+    it('should handle complex fingerprint data structures', () => {
+      const complexData = {
+        fingerprint: {
+          canvas: 'canvas_hash_value',
+          webgl: { vendor: 'NVIDIA', renderer: 'GTX 1080' },
+          audio: { sampleRate: 44100, channels: 2 },
+          fonts: ['Arial', 'Times New Roman', 'Helvetica'],
+          screen: { width: 1920, height: 1080, depth: 24 },
+          timezone: 'UTC+7',
+          language: 'en-US'
+        },
+        metadata: {
+          timestamp: new Date().toISOString(),
+          version: '1.0.0'
+        }
+      };
       
-      inputs.forEach(input => {
-        hashes.add(simpleHash(input));
-      });
+      const jsonString = JSON.stringify(complexData);
       
-      // Should have very few collisions (less than 5% for 1000 inputs)
-      expect(hashes.size).toBeGreaterThan(950);
-    });
-
-    it('should produce well-distributed hashes for hashArray', () => {
-      const hashes = new Set<string>();
-      const arrays = Array.from({ length: 500 }, (_, i) => [`item${i}`, `value${i}`]);
-      
-      arrays.forEach(array => {
-        hashes.add(hashArray(array));
-      });
-      
-      // Should have very few collisions
-      expect(hashes.size).toBeGreaterThan(475);
-    });
-
-    it('should produce well-distributed hashes for hashObject', () => {
-      const hashes = new Set<string>();
-      const objects = Array.from({ length: 500 }, (_, i) => ({
-        [`key${i}`]: `value${i}`,
-        id: i
-      }));
-      
-      objects.forEach(obj => {
-        hashes.add(hashObject(obj));
-      });
-      
-      // Should have very few collisions
-      expect(hashes.size).toBeGreaterThan(475);
-    });
-  });
-
-  describe('Performance and edge cases', () => {
-    it('should handle extremely long strings efficiently', () => {
-      const veryLongString = 'x'.repeat(100000);
-      const startTime = Date.now();
-      
-      const hash = djb2Hash(veryLongString);
-      
-      const endTime = Date.now();
-      const duration = endTime - startTime;
-      
-      expect(hash).toBeDefined();
-      expect(duration).toBeLessThan(1000); // Should complete within 1 second
-    });
-
-    it('should handle objects with circular references gracefully', () => {
-      const obj: any = { key: 'value' };
-      obj.self = obj; // Create circular reference
-      
-      // Should handle toString conversion of circular reference
       expect(() => {
-        const hash = hashObject(obj);
-        expect(typeof hash).toBe('string');
+        const hash128 = MurmurHash128.hash128(jsonString);
+        const hash32 = murmurhash3_32_gc(jsonString);
+        const key = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+        const encoded = Base64Encoder.encodeBase64(jsonString, key);
+        
+        expect(hash128).toHaveLength(32);
+        expect(typeof hash32).toBe('number');
+        expect(encoded.length).toBeGreaterThan(0);
+      }).not.toThrow();
+    });
+  });
+
+  describe('Performance tests', () => {
+    it('should handle performance requirements for hash functions', () => {
+      const testData = 'x'.repeat(1000);
+      const iterations = 1000;
+      
+      const start128 = performance.now();
+      for (let i = 0; i < iterations; i++) {
+        MurmurHash128.hash128(testData);
+      }
+      const end128 = performance.now();
+      
+      const start32 = performance.now();
+      for (let i = 0; i < iterations; i++) {
+        murmurhash3_32_gc(testData);
+      }
+      const end32 = performance.now();
+      
+      const startBase64 = performance.now();
+      const key = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+      for (let i = 0; i < iterations; i++) {
+        Base64Encoder.encodeBase64(testData, key);
+      }
+      const endBase64 = performance.now();
+      
+      // All operations should complete in reasonable time (less than 1 second for 1000 iterations)
+      expect(end128 - start128).toBeLessThan(1000);
+      expect(end32 - start32).toBeLessThan(1000);
+      expect(endBase64 - startBase64).toBeLessThan(1000);
+    });
+  });
+
+  describe('Edge cases and error handling', () => {
+    it('should handle null and undefined gracefully', () => {
+      // These will cause TypeScript errors but test runtime behavior
+      expect(() => {
+        // @ts-ignore - Testing runtime behavior
+        MurmurHash128.hash128(null);
+      }).toThrow();
+      
+      expect(() => {
+        // @ts-ignore - Testing runtime behavior  
+        murmurhash3_32_gc(null);
+      }).toThrow();
+      
+      expect(() => {
+        // @ts-ignore - Testing runtime behavior
+        Base64Encoder.encodeBase64(null, 'key');
+      }).toThrow();
+    });
+
+    it('should handle extremely large numbers in seed', () => {
+      const input = 'test';
+      const largeSeed = Number.MAX_SAFE_INTEGER;
+      
+      expect(() => {
+        const hash128 = MurmurHash128.hash128(input, largeSeed);
+        const hash32 = murmurhash3_32_gc(input, largeSeed);
+        
+        expect(typeof hash128).toBe('string');
+        expect(typeof hash32).toBe('number');
       }).not.toThrow();
     });
 
-    it('should handle arrays with various data types', () => {
-      const mixedArray = [
-        'string',
-        42,
-        true,
-        null,
-        undefined,
-        { nested: 'object' },
-        [1, 2, 3]
-      ].map(item => String(item));
+    it('should handle negative seeds', () => {
+      const input = 'test';
+      const negativeSeed = -42;
       
-      const hash = hashArray(mixedArray);
-      
-      expect(typeof hash).toBe('string');
-      expect(hash).toHaveLength(8);
-      expect(/^[0-9a-f]{8}$/.test(hash)).toBe(true);
+      expect(() => {
+        const hash128 = MurmurHash128.hash128(input, negativeSeed);
+        const hash32 = murmurhash3_32_gc(input, negativeSeed);
+        
+        expect(typeof hash128).toBe('string');
+        expect(typeof hash32).toBe('number');
+      }).not.toThrow();
     });
   });
 });

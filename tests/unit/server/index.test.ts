@@ -2,13 +2,11 @@ import request from 'supertest';
 import app from '../../../src/server/index';
 import { FingerprintService } from '../../../src/server/services/fingerprintService';
 import { TaggingService } from '../../../src/server/services/taggingService';
-import { HashService } from '../../../src/server/services/hashService';
 import { ScriptService } from '../../../src/server/services/scriptService';
 
 // Mock all services
 jest.mock('../../../src/server/services/fingerprintService');
 jest.mock('../../../src/server/services/taggingService');
-jest.mock('../../../src/server/services/hashService');
 jest.mock('../../../src/server/services/scriptService');
 jest.mock('../../../src/config/environment', () => ({
   port: 3000,
@@ -17,13 +15,11 @@ jest.mock('../../../src/config/environment', () => ({
 
 const MockedFingerprintService = FingerprintService as jest.MockedClass<typeof FingerprintService>;
 const MockedTaggingService = TaggingService as jest.MockedClass<typeof TaggingService>;
-const MockedHashService = HashService as jest.MockedClass<typeof HashService>;
 const MockedScriptService = ScriptService as jest.MockedClass<typeof ScriptService>;
 
 describe('Express Server Routes', () => {
   let mockFingerprintService: jest.Mocked<FingerprintService>;
   let mockTaggingService: jest.Mocked<TaggingService>;
-  let mockHashService: jest.Mocked<HashService>;
   let mockScriptService: jest.Mocked<ScriptService>;
 
   beforeEach(() => {
@@ -31,18 +27,15 @@ describe('Express Server Routes', () => {
 
     mockFingerprintService = new MockedFingerprintService() as jest.Mocked<FingerprintService>;
     mockTaggingService = new MockedTaggingService() as jest.Mocked<TaggingService>;
-    mockHashService = new MockedHashService() as jest.Mocked<HashService>;
     mockScriptService = new MockedScriptService() as jest.Mocked<ScriptService>;
 
     MockedFingerprintService.mockImplementation(() => mockFingerprintService);
     MockedTaggingService.mockImplementation(() => mockTaggingService);
-    MockedHashService.mockImplementation(() => mockHashService);
     MockedScriptService.mockImplementation(() => mockScriptService);
 
     mockFingerprintService.generateFingerprint = jest.fn();
     mockFingerprintService.combineFingerprints = jest.fn();
     mockTaggingService.setEtag = jest.fn();
-    mockHashService.hashFingerprint = jest.fn();
     mockScriptService.getClientScript = jest.fn();
     mockScriptService.getMinifiedScript = jest.fn();
     mockScriptService.getWrappedScript = jest.fn();
