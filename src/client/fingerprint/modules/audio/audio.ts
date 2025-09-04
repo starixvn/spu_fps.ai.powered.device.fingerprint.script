@@ -1,74 +1,54 @@
 import type { AudioInfo } from "../../types";
 
 const enum SpecialFingerprint {
-  KnownForSuspending = -1,
-  NotSupported = -2,
-  Timeout = -3,
-  KnownForAntifingerprinting = -4,
+  NotSupported = -1,
+  Timeout = -2,
+  KnownForAntifingerprinting = -3,
 }
 
 const enum InnerErrorName {
   Timeout = 'timeout',
-  Suspended = 'suspended',
 }
 
 let audioCache: AudioInfo | null = null;
 let lastMedian: number | null = null;
 
-const OSC_FREQUENCY = 10000; // 10kHz
-const SAMPLE_RATE = 44100; // 44.1kHz
-const DURATION = 0.5; // 0.5s
-const SPOOF_VALUES = [-100, -120, 0];
+const OSC_FREQUENCY = 10000; // 10kHz triangle wave frequency
+const SAMPLE_RATE = 44100;   // 44.1kHz standard sample rate
+const DURATION = 0.5;        // 0.5s audio duration
+const SNAPSHOTS = 3;         // audio samples
+
+const SPOOF_VALUES = [-100, -120, 0];     
 const SPOOF_RANGES = [
   [-101, -99], // Brave
   [-121, -119], // Tor
 ];
-const VARIANCE_THRESHOLD = 25;
-const MEDIAN_DIFF_THRESHOLD = 5;
-const RMS_DIFF_THRESHOLD = 3;
-const SNAPSHOTS = 3;
+
+const VARIANCE_THRESHOLD = 25;      
+const MEDIAN_DIFF_THRESHOLD = 5;   
+const RMS_DIFF_THRESHOLD = 3;     
 
 function getBrowserName(): string {
   try {
     const userAgent = (navigator.userAgent || "").toLowerCase();
     
-    if (window.chrome && !window.opr && !navigator.brave) {
+    if (window.chrome && !window.opr && !navigator.brave) 
       return "Chrome";
-    }
     
-    if (navigator.brave && navigator.brave.isBrave) {
+    if (navigator.brave && navigator.brave.isBrave) 
       return "Brave";
-    }
     
-    if (typeof window.InstallTrigger !== "undefined") {
+    if (typeof window.InstallTrigger !== "undefined") 
       return "Firefox";
-    }
     
-    if (window.safari && window.safari.pushNotification) {
+    if (window.safari && window.safari.pushNotification) 
       return "Safari";
-    }
     
     if (/safari(?!.*chrome)/.test(userAgent)) return "Safari";
     if (/edg\//.test(userAgent)) return "Edge";
     if (/opr|opera/.test(userAgent)) return "Opera";
     if (/chrome/.test(userAgent)) return "Chrome";
     if (/firefox/.test(userAgent)) return "Firefox";
-    
-    return "";
-  } catch {
-    return "";
-  }
-}
-
-function getOSName(): string {
-  try {
-    const userAgent = navigator.userAgent;
-    
-    if (/iPhone|iPad|iPod/.test(userAgent)) return "iOS";
-    if (/Android/.test(userAgent)) return "Android";
-    if (/Mac OS X/.test(userAgent)) return "macOS";
-    if (/Windows/.test(userAgent)) return "Windows";
-    if (/Linux/.test(userAgent)) return "Linux";
     
     return "";
   } catch {
@@ -110,34 +90,22 @@ function getBrowserVersion(): number {
   }
 }
 
-function doesBrowserSuspendAudioContext(): boolean {
-  const browserName = getBrowserName().toLowerCase();
-  const osName = getOSName().toLowerCase();
-  const version = getBrowserVersion();
-  
-  if (browserName === "safari" && osName === "ios" && isMobile() && version <= 11) {
-    return true;
-  }
-  
-  if (browserName === "chrome" && version < 66) {
-    return true;
-  }
-  
-  return false;
-}
 
 function doesBrowserPerformAntifingerprinting(): boolean {
   const browserName = getBrowserName().toLowerCase();
   const version = getBrowserVersion();
   
+  // Safari 17+ has Intelligent Tracking Prevention with audio normalization
   if (browserName === "safari" && version >= 17) {
     return true;
   }
   
+  // Brave Browser has built-in fingerprinting protection
   if (browserName === "brave") {
     return true;
   }
   
+  // Tor Browser detection via canvas fingerprinting test
   if (browserName === "firefox" && navigator.userAgent.includes("rv:")) {
     try {
       const canvas = document.createElement('canvas');
@@ -150,6 +118,7 @@ function doesBrowserPerformAntifingerprinting(): boolean {
 
         const data = canvas.toDataURL();
         
+        // Tor Browser returns normalized canvas data < 5000 characters
         if (data.length < 5000) return true;
       }
     } catch {
@@ -157,6 +126,7 @@ function doesBrowserPerformAntifingerprinting(): boolean {
     }
   }
   
+  // Samsung Browser 26+ has enhanced privacy features
   if (navigator.userAgent.includes("SamsungBrowser") && version >= 26) {
     return true;
   }
@@ -166,17 +136,11 @@ function doesBrowserPerformAntifingerprinting(): boolean {
 
 export async function collectAudio(): Promise<AudioInfo> {
   try {
+    // Pre-screening for known anti-fingerprinting browsers
     if (doesBrowserPerformAntifingerprinting()) {
       return { 
         audio: SpecialFingerprint.KnownForAntifingerprinting, 
         noiseType: "spoof" 
-      };
-    }
-
-    if (doesBrowserSuspendAudioContext()) {
-      return { 
-        audio: SpecialFingerprint.KnownForSuspending, 
-        noiseType: "block" 
       };
     }
 
@@ -191,8 +155,11 @@ export async function collectAudio(): Promise<AudioInfo> {
       };
     }
 
-    if (audioCache) return audioCache;
+    if (audioCache) {
+      return audioCache;
+    }
 
+    // Generate multiple audio samples for analysis
     const samples: number[] = [];
     const snapshotsRMS: number[] = [];
 
@@ -200,8 +167,8 @@ export async function collectAudio(): Promise<AudioInfo> {
       const result = await getAudioSampleWithRMSAndRetry();
 
       if (result !== null) {
-        samples.push(result.sample);
-        snapshotsRMS.push(result.rms);
+        samples.push(result.sample);     
+        snapshotsRMS.push(result.rms);   
       }
     }
 
@@ -209,14 +176,18 @@ export async function collectAudio(): Promise<AudioInfo> {
       return { audio: SpecialFingerprint.Timeout, noiseType: "block" };
     }
 
+    // Statistical analysis and noise detection
     const median = computeMedian(samples);
     const noiseType = detectNoise(samples, median, snapshotsRMS);
     const result: AudioInfo = { audio: median, noiseType };
 
-    if (noiseType === "clean") audioCache = result;
+    // Cache clean results
+    if (noiseType === "clean") {
+      audioCache = result;
+    }
 
     return result;
-  } catch {
+  } catch (error) {
     return { audio: SpecialFingerprint.Timeout, noiseType: "block" };
   }
 }
@@ -271,12 +242,16 @@ async function getAudioSampleWithRMS(): Promise<{
     } catch (err: any) {
       if (
         err.name === "NotAllowedError" ||
-        err.message?.includes("user gesture")
-      )
+        err.message?.includes("user gesture") ||
+        err.message?.includes("AudioContext was not allowed") ||
+        err.message?.includes("autoplay policy")
+      ) {
         return null;
+      }
       throw err;
     }
 
+    // Build chain: oscillator -> compressor -> destination
     const osc = ctx.createOscillator();
     const comp = ctx.createDynamicsCompressor();
 
@@ -295,6 +270,7 @@ async function getAudioSampleWithRMS(): Promise<{
     osc.start(0);
     osc.stop(DURATION);
 
+    // Render audio with timeout
     const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(() => reject(new Error(InnerErrorName.Timeout)), 5000);
     });
@@ -304,8 +280,8 @@ async function getAudioSampleWithRMS(): Promise<{
       timeoutPromise
     ]);
     
+    // Analyze audio data for fingerprinting
     const data = buffer.getChannelData(0);
-
     let sum = 0;
     let sumSquares = 0;
     const start = Math.floor(data.length * 0.2);
@@ -341,20 +317,24 @@ function detectNoise(
   snapshotsRMS: number[]
 ): "clean" | "randomize" | "spoof" | "block" {
   if (SPOOF_VALUES.includes(Math.round(median))) return "spoof";
+  
   if (SPOOF_RANGES.some(([min, max]) => median >= min && median <= max))
     return "spoof";
 
+  // Variance => randomization
   const variance =
     cleanSamples.reduce((acc, v) => acc + Math.pow(v - median, 2), 0) /
     cleanSamples.length;
 
   if (variance > VARIANCE_THRESHOLD) return "randomize";
 
+  // RMS stability => randomization
   const maxRMS = Math.max(...snapshotsRMS);
   const minRMS = Math.min(...snapshotsRMS);
 
   if (maxRMS - minRMS > RMS_DIFF_THRESHOLD) return "randomize";
 
+  // Temporal consistency with last run
   if (
     lastMedian !== null &&
     Math.abs(median - lastMedian) > MEDIAN_DIFF_THRESHOLD
