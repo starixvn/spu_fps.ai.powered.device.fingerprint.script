@@ -70,4 +70,9 @@ export class ClientClass {
 }
 
 const client = new ClientClass();
-client.start();
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => client.start());
+} else {
+    client.start();
+}
