@@ -182,7 +182,7 @@ export interface AudioGroupInfo {
 
 export interface AudioInfo {
   audio: number | null;
-  noiseType: "clean" | "block" | "spoof" | "randomize";
+  status: string;
 }
 
 export interface AudioBaseLatencyInfo {

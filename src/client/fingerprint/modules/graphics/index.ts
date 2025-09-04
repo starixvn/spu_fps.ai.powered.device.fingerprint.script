@@ -39,7 +39,7 @@ export class GraphicsFingerprint {
       return {
         canvas: {
           fingerprint: "",
-          status: CanvasStatus.BLOCKED,
+          status: CanvasStatus.BLOCK,
           width: 0,
           height: 0,
           textBaseline: "",

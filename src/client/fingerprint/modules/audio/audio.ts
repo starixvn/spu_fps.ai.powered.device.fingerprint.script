@@ -1,5 +1,12 @@
 import type { AudioInfo } from "../../types";
 
+export const enum AudioStatus {
+  CLEAN = "clean",
+  RANDOMIZE = "randomize", 
+  SPOOF = "spoof",
+  BLOCK = "block",
+}
+
 const enum SpecialFingerprint {
   NotSupported = -1,
   Timeout = -2,
@@ -220,7 +227,7 @@ export async function collectAudio(): Promise<AudioInfo> {
     if (doesBrowserPerformAntifingerprinting()) {
       return { 
         audio: SpecialFingerprint.KnownForAntifingerprinting, 
-        noiseType: "spoof" 
+        status: AudioStatus.SPOOF 
       };
     }
 
@@ -231,7 +238,7 @@ export async function collectAudio(): Promise<AudioInfo> {
     if (!AudioCtxClass) {
       return { 
         audio: SpecialFingerprint.NotSupported, 
-        noiseType: "block" 
+        status: AudioStatus.BLOCK 
       };
     }
 
@@ -253,22 +260,22 @@ export async function collectAudio(): Promise<AudioInfo> {
     }
 
     if (samples.length === 0) {
-      return { audio: SpecialFingerprint.Timeout, noiseType: "block" };
+      return { audio: SpecialFingerprint.Timeout, status: AudioStatus.BLOCK };
     }
 
     // Statistical analysis and noise detection
     const median = computeMedian(samples);
-    const noiseType = detectNoise(samples, median, snapshotsRMS);
-    const result: AudioInfo = { audio: median, noiseType };
+    const status = detectNoise(samples, median, snapshotsRMS);
+    const result: AudioInfo = { audio: median, status };
 
     // Cache clean results
-    if (noiseType === "clean") {
+    if (status === "clean") {
       audioCache = result;
     }
 
     return result;
   } catch (error) {
-    return { audio: SpecialFingerprint.Timeout, noiseType: "block" };
+    return { audio: SpecialFingerprint.Timeout, status: AudioStatus.BLOCK };
   }
 }
 
@@ -395,32 +402,32 @@ function detectNoise(
   cleanSamples: number[],
   median: number,
   snapshotsRMS: number[]
-): "clean" | "randomize" | "spoof" | "block" {
-  if (SPOOF_VALUES.includes(Math.round(median))) return "spoof";
+): AudioStatus {
+  if (SPOOF_VALUES.includes(Math.round(median))) return AudioStatus.SPOOF;
   
   if (SPOOF_RANGES.some(([min, max]) => median >= min && median <= max))
-    return "spoof";
+    return AudioStatus.SPOOF;
 
   // Variance => randomization
   const variance =
     cleanSamples.reduce((acc, v) => acc + Math.pow(v - median, 2), 0) /
     cleanSamples.length;
 
-  if (variance > VARIANCE_THRESHOLD) return "randomize";
+  if (variance > VARIANCE_THRESHOLD) return AudioStatus.RANDOMIZE;
 
   // RMS stability => randomization
   const maxRMS = Math.max(...snapshotsRMS);
   const minRMS = Math.min(...snapshotsRMS);
 
-  if (maxRMS - minRMS > RMS_DIFF_THRESHOLD) return "randomize";
+  if (maxRMS - minRMS > RMS_DIFF_THRESHOLD) return AudioStatus.RANDOMIZE;
 
   // Temporal consistency with last run
   if (
     lastMedian !== null &&
     Math.abs(median - lastMedian) > MEDIAN_DIFF_THRESHOLD
   )
-    return "randomize";
+    return AudioStatus.RANDOMIZE;
 
   lastMedian = median;
-  return "clean";
+  return AudioStatus.CLEAN;
 }

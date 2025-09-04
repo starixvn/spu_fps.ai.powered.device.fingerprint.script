@@ -1,5 +1,5 @@
 import { collectAudioBaseLatency } from "./audioBaseLatency";
-import { collectAudio } from "./audio";
+import { collectAudio, AudioStatus } from "./audio";
 import type { AudioGroupInfo } from "../../types";
 
 export class AudioFingerprint {
@@ -12,7 +12,7 @@ export class AudioFingerprint {
 
       const audio = audioResult.status === "fulfilled" 
         ? audioResult.value 
-        : { audio: null, noiseType: "block" as const };
+        : { audio: null, status: AudioStatus.BLOCK };
 
       const audioBaseLatency = audioBaseLatencyResult.status === "fulfilled"
         ? audioBaseLatencyResult.value.audioBaseLatency
@@ -28,7 +28,7 @@ export class AudioFingerprint {
       return {
         audio: {
           audio: null,
-          noiseType: "block",
+          status: AudioStatus.BLOCK,
         },
         audioBaseLatency: "",
       };

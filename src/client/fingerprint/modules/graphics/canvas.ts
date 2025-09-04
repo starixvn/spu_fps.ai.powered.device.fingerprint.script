@@ -1,10 +1,10 @@
 import type { CanvasInfo } from "../../types";
 import { murmurhash3_32_gc } from "../../utils/hash";
 
-export enum CanvasStatus {
-  OK = "ok",
-  BLOCKED = "blocked",
-  RANDOMIZED = "randomized",
+export const enum CanvasStatus {
+  CLEAN = "clean",
+  BLOCK = "block",
+  RANDOMIZE = "randomize", 
   SPOOFED_LOW_ENTROPY = "spoofed-low-entropy",
 }
 
@@ -12,7 +12,7 @@ export async function collectCanvas(): Promise<CanvasInfo> {
   try {
     return await getCanvasInfo();
   } catch {
-    return getEmptyCanvasInfo(CanvasStatus.BLOCKED);
+    return getEmptyCanvasInfo(CanvasStatus.BLOCK);
   }
 }
 
@@ -46,7 +46,7 @@ async function getCanvasInfo(): Promise<CanvasInfo> {
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, 200, 200);
 
-  let status: CanvasStatus = CanvasStatus.OK;
+  let status: CanvasStatus = CanvasStatus.CLEAN;
   let fingerprint = "";
 
   try {
@@ -58,14 +58,14 @@ async function getCanvasInfo(): Promise<CanvasInfo> {
     fingerprint = murmurhash3_32_gc(dataUrl).toString(16);
 
     if (!dataUrl || dataUrl === "data:,") {
-      status = CanvasStatus.BLOCKED;
+      status = CanvasStatus.BLOCK;
     } else if (!compareArrays(data1, data2)) {
-      status = CanvasStatus.RANDOMIZED;
+      status = CanvasStatus.RANDOMIZE;
     } else if (isLowEntropy(data1)) {
       status = CanvasStatus.SPOOFED_LOW_ENTROPY;
     }
   } catch {
-    status = CanvasStatus.BLOCKED;
+    status = CanvasStatus.BLOCK;
   }
 
   return {
