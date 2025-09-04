@@ -1,7 +1,8 @@
 import { DOMUtils } from "./dom";
-import { FingerprintClass } from "./fingerprint";
-import { CollectedDeviceInfo } from "./fingerprint/types";
+import { CollectedDeviceInfo } from "./types";
 import { Base64Encoder } from "./fingerprint/utils/hash";
+import { FingerprintClass } from "./fingerprint";
+import { IPClass } from "./ip";
 import { TaggingClass } from "./tagging";
 import { PacketTransformer } from "./tagging/utils/hash";
 
@@ -19,7 +20,15 @@ export const CONFIG = {
 
 export type FingerprintStep = 'F4' | 'F5';
   
-export class ClientClass {
+class ClientClass {
+
+    private readonly fingerprint: FingerprintClass;
+    private readonly ip: IPClass;
+
+    constructor() {
+        this.fingerprint = new FingerprintClass();
+        this.ip = new IPClass();
+    }
 
     private injectValueIntoHiddenField(value: string): void {
         try {
@@ -41,38 +50,26 @@ export class ClientClass {
     }
 
     public async start(): Promise<void> {
-        try {
-            const fingerprint = new FingerprintClass();
-            const tagging = new TaggingClass();
-            const sessionKey = await tagging.start();
-            
-            const deviceInfo: CollectedDeviceInfo = { 
-                sessionKey, 
-                deviceId: PacketTransformer.unwrapMessage(sessionKey) 
-            };
+        const sessionKey = await (window.history as any).tag.self;
 
-            const collectedData = await fingerprint.start(sessionKey, (hashed: string, step?: FingerprintStep) => {
-                this.injectCallback(deviceInfo, hashed, step);
-            });
-            
-            deviceInfo.webrtc = collectedData.webrtc;
-            const finalEncodedData = Base64Encoder.encodeBase64(JSON.stringify(deviceInfo), CONFIG.ENCODING_KEY);
-            this.injectValueIntoHiddenField(finalEncodedData);
+        const deviceInfo = {
+            sessionKey,
+            deviceId: PacketTransformer.unwrapMessage(sessionKey)
+        };
 
-            if (typeof window !== "undefined") {
-                (window as any).deviceInfo = deviceInfo;
-            }
+        this.fingerprint.start(sessionKey, {
+            f4Callback: (hashed: string, step?: FingerprintStep) => this.injectCallback(deviceInfo, hashed, step),
+            f5Callback: (hashed: string, step?: FingerprintStep) => this.injectCallback(deviceInfo, hashed, step)
+        });
 
-        } catch (error) {
-            // console.error('Client start failed:', error);
-        }
+        this.ip.start((webRTC: any) => this.injectCallback(deviceInfo, webRTC));
     }
 }
 
 const client = new ClientClass();
 
 if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => client.start());
+    document.addEventListener("DOMContentLoaded", (async () => await client.start()));
 } else {
     client.start();
 }

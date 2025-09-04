@@ -4,7 +4,6 @@ export interface FingerprintData {
   AudioFingerprint: AudioGroupInfo;
   BrowserFingerprint: BrowserGroupInfo;
   PreferencesFingerprint: PreferencesGroupInfo;
-  WebRTCFingerprint: WebRTCGroupInfo;
   timestamp: string;
 }
 
@@ -279,34 +278,10 @@ export interface IndexedDBInfo {
   indexedDB: boolean;
 }
 
-// IP (WebRTC)
-export interface WebRTCGroupInfo {
-  localIPs: string[];
-  publicIPs: string[];
-  relayIPs: string[];
-  flags: {
-    isSupported: boolean;
-    isBlocked: boolean;
-    hasNoise: boolean;
-    relayOnly: boolean;
-  };
-  error: string | null;
-  timestamp: string;
-}
-
-export interface CollectedDeviceInfo {
-  sessionKey: string;
-  deviceId: string;
-  f4Hashed?: string;
-  f5Hashed?: string;
-  webrtc?: WebRTCGroupInfo;
-}
-
 declare global {
   interface Window {
     f4Attributes: any;
     f5Attributes: any;
-    webrtcData: any;
     BrowserFingerprint: any;
     HardwareFingerprint: any;
     AudioFingerprint: any;

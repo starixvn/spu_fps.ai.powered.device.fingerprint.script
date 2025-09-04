@@ -24,6 +24,7 @@ export class ScriptService {
         "tagging/index.js",
         "tagging/utils/hash.js",
         "fingerprint/utils/hash.js",
+        "fingerprint/index.js",
         "fingerprint/modules/hardware/platform.js",
         "fingerprint/modules/hardware/architecture.js",
         "fingerprint/modules/hardware/osCpu.js",
@@ -61,11 +62,14 @@ export class ScriptService {
         "fingerprint/modules/preference/openDatabase.js",
         "fingerprint/modules/preference/indexedDb.js",
         "fingerprint/modules/preference/index.js",
-        "fingerprint/modules/webrtc/ipCollector.js",
-        "fingerprint/modules/webrtc/index.js",
-        "fingerprint/index.js",
-        "fingerprint/dom.js",
-        "index.js"
+        "fingerprint/abstract/abstractFingerprint.js",
+        "fingerprint/f4Fingerprint.js",
+        "fingerprint/f5Fingerprint.js",
+        "ip/modules/webrtc/ipCollector.js",
+        "ip/modules/webrtc/index.js",
+        "ip/index.js",
+        "index.js",
+        "dom.js",
       ];
 
       const clientDistPath = path.join(__dirname, "..", "..", "client");

@@ -222,21 +222,19 @@
           const status = {
             f4: !!window.f4Attributes,
             f5: !!window.f5Attributes,
-            webrtc: !!window.webrtcData,
-            deviceInfo: !!window.deviceInfo
+            webrtc: !!window.webRTCData,
           };
 
           let statusHtml = "<div style='font-family: monospace;'>";
           statusHtml += `<p>📊 F4 Data (Audio, Browser, Hardware, Preferences): ${status.f4 ? '✅ Available' : '⏳ Loading...'}</p>`;
           statusHtml += `<p>🎨 F5 Data (Graphics): ${status.f5 ? '✅ Available' : '⏳ Loading...'}</p>`;
           statusHtml += `<p>🌐 WebRTC Data: ${status.webrtc ? '✅ Available' : '⏳ Loading...'}</p>`;
-          statusHtml += `<p>📱 Device Info: ${status.deviceInfo ? '✅ Available' : '⏳ Loading...'}</p>`;
           statusHtml += "</div>";
 
           document.getElementById("statusInfo").innerHTML = statusHtml;
 
           // If all data is available, we can stop checking
-          if (status.f4 && status.f5 && status.webrtc && status.deviceInfo) {
+          if (status.f4 && status.f5 && status.webrtc) {
             clearInterval(checkInterval);
             statusHtml += "<p style='color: green; font-weight: bold;'>🎉 All fingerprint data is ready!</p>";
             document.getElementById("statusInfo").innerHTML = statusHtml;
@@ -296,14 +294,14 @@
       async function collectIPs() {
         try {
           // Check if WebRTC data is available in window
-          if (!window.webrtcData) {
+          if (!window.webRTCData) {
             document.getElementById("fingerprintData").textContent =
               "WebRTC data not available yet. Please wait for fingerprinting to complete.";
             document.getElementById("fingerprintDisplay").style.display = "block";
             return;
           }
 
-          const webrtcData = window.webrtcData;
+          const webrtcData = window.webRTCData;
           const formattedOutput = {
             localIPs: webrtcData.localIPs || [],
             publicIPs: webrtcData.publicIPs || [],
@@ -333,24 +331,11 @@
             return;
           }
 
-          // Use the hashes that are already generated in deviceInfo
-          const deviceInfo = window.deviceInfo;
-          let hashInfo = "";
-          
-          if (deviceInfo.f4Hashed) {
-            hashInfo += `F4 Hash: ${deviceInfo.f4Hashed}\n`;
-          }
-          
-          if (deviceInfo.f5Hashed) {
-            hashInfo += `F5 Hash: ${deviceInfo.f5Hashed}\n`;
-          }
-
           // Generate a combined hash from all available data
           const allData = {
             f4: window.f4Attributes,
             f5: window.f5Attributes,
             webrtc: window.webrtcData,
-            deviceInfo: window.deviceInfo
           };
 
           const combinedDataString = JSON.stringify(allData);
@@ -362,8 +347,6 @@
           document.getElementById("hashDisplay").style.display = "block";
 
           console.log("Generated hashes:", {
-            f4Hash: deviceInfo.f4Hashed,
-            f5Hash: deviceInfo.f5Hashed,
             combinedHash: combinedHash
           });
         } catch (error) {
@@ -385,7 +368,6 @@
 
           // Prepare data to send (use deviceInfo which contains encoded data)
           const dataToSend = {
-            deviceInfo: window.deviceInfo,
             f4Data: window.f4Attributes,
             f5Data: window.f5Attributes,
             webrtcData: window.webrtcData,
