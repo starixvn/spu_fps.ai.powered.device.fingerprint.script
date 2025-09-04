@@ -90,6 +90,103 @@ function getBrowserVersion(): number {
   }
 }
 
+function detectFirefoxResistFingerprinting(): boolean {
+  try {
+    let indicators = 0;
+    
+    // Check timezone spoofing - resistFingerprinting forces UTC
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const timezoneOffset = new Date().getTimezoneOffset();
+    if (timezone === "UTC" && timezoneOffset !== 0) {
+      indicators++;
+    }
+    
+    // Check screen resolution normalization
+    const { width, height } = screen;
+    const commonResolutions = [
+      [1024, 768], [1366, 768], [1920, 1080], [1280, 720]
+    ];
+    const hasCommonResolution = commonResolutions.some(([w, h]) => 
+      width === w && height === h
+    );
+    if (hasCommonResolution && screen.availWidth === width && screen.availHeight === height) {
+      indicators++;
+    }
+    
+    // Check Date 
+    const dates = [];
+    for (let i = 0; i < 10; i++) {
+      dates.push(new Date().getTime());
+    }
+    const uniqueDates = new Set(dates).size;
+    if (uniqueDates <= 2) { // resistFingerprinting reduces Date precision
+      indicators++;
+    }
+    
+    // Check language spoofing - resistFingerprinting often forces 'en-US'
+    if (navigator.language === 'en-US' && navigator.languages && 
+        navigator.languages.length === 1 && navigator.languages[0] === 'en-US') {
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (!timezone.includes('America') && !timezone.includes('US') && !timezone.includes('Canada')) {
+        indicators++;
+      }
+    }
+    
+    // Check navigator.hardwareConcurrency spoofing
+    if (navigator.hardwareConcurrency === 2) {
+      if (indicators > 0) {
+        indicators++;
+      }
+    }
+    
+    // Check canvas fingerprinting normalization
+    try {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.textBaseline = 'top';
+        ctx.font = '14px Arial';
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+        ctx.fillRect(0, 0, 10, 10);
+        ctx.fillStyle = 'rgba(0, 255, 0, 0.7)';
+        ctx.fillText('fingerprint test', 2, 2);
+        ctx.globalCompositeOperation = 'multiply';
+        ctx.fillStyle = 'rgba(0, 0, 255, 0.3)';
+        ctx.fillRect(5, 5, 10, 10);
+        
+        const dataURL = canvas.toDataURL();
+
+        if (dataURL.length < 3000) {
+          indicators++;
+        }
+      }
+    } catch (err) {
+      indicators++;
+    }
+    
+    // Check WebGL renderer spoofing
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      if (gl) {
+        const webglContext = gl as WebGLRenderingContext;
+        const renderer = webglContext.getParameter(webglContext.RENDERER);
+       
+        if (renderer.includes('llvmpipe') || renderer.includes('Software') || 
+            renderer.includes('Mesa') || renderer.includes('SwiftShader')) {
+          indicators++;
+        }
+      }
+    } catch (err) {
+      indicators++; // WebGL blocked
+    }
+    
+    // Require at least 2 indicators for positive detection 
+    return indicators >= 2;
+  } catch (err) {
+    return false;
+  }
+}
 
 function doesBrowserPerformAntifingerprinting(): boolean {
   const browserName = getBrowserName().toLowerCase();
@@ -105,28 +202,12 @@ function doesBrowserPerformAntifingerprinting(): boolean {
     return true;
   }
   
-  // Tor Browser detection via canvas fingerprinting test
-  if (browserName === "firefox" && navigator.userAgent.includes("rv:")) {
-    try {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-
-      if (ctx) {
-        ctx.textBaseline = 'top';
-        ctx.font = '14px Arial';
-        ctx.fillText('Tor test', 2, 2);
-
-        const data = canvas.toDataURL();
-        
-        // Tor Browser returns normalized canvas data < 5000 characters
-        if (data.length < 5000) return true;
-      }
-    } catch {
-      return true;
-    }
+  // Firefox with privacy.resistFingerprinting detection
+  if (browserName === "firefox") {
+    return detectFirefoxResistFingerprinting();
   }
   
-  // Samsung Browser 26+ has enhanced privacy features
+  // Samsung Browser 26+ has enhanced privacy
   if (navigator.userAgent.includes("SamsungBrowser") && version >= 26) {
     return true;
   }
@@ -136,7 +217,6 @@ function doesBrowserPerformAntifingerprinting(): boolean {
 
 export async function collectAudio(): Promise<AudioInfo> {
   try {
-    // Pre-screening for known anti-fingerprinting browsers
     if (doesBrowserPerformAntifingerprinting()) {
       return { 
         audio: SpecialFingerprint.KnownForAntifingerprinting, 
