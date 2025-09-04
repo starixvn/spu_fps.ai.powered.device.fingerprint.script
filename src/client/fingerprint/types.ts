@@ -55,24 +55,8 @@ export interface GraphicsGroupInfo {
 }
 
 export interface CanvasInfo {
-  fingerprint: string;
+  value: string;
   status: string;
-  width: number;
-  height: number;
-  textBaseline: string;
-  font: string;
-  fillStyle: string;
-  strokeStyle: string;
-  lineWidth: number;
-  lineCap: string;
-  lineJoin: string;
-  miterLimit: number;
-  shadowOffsetX: number;
-  shadowOffsetY: number;
-  shadowBlur: number;
-  shadowColor: string;
-  globalAlpha: number;
-  globalCompositeOperation: string;
 }
 
 export interface WebGLBasicsInfo {

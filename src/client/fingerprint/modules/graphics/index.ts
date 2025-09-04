@@ -38,24 +38,8 @@ export class GraphicsFingerprint {
     } catch (error) {
       return {
         canvas: {
-          fingerprint: "",
+          value: "",
           status: CanvasStatus.BLOCK,
-          width: 0,
-          height: 0,
-          textBaseline: "",
-          font: "",
-          fillStyle: "",
-          strokeStyle: "",
-          lineWidth: 0,
-          lineCap: "",
-          lineJoin: "",
-          miterLimit: 0,
-          shadowOffsetX: 0,
-          shadowOffsetY: 0,
-          shadowBlur: 0,
-          shadowColor: "",
-          globalAlpha: 0,
-          globalCompositeOperation: "",
         },
         webglBasics: {
           vendor: "",
