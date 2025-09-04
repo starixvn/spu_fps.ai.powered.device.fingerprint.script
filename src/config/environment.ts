@@ -57,6 +57,7 @@ interface EnvironmentConfig {
   serverDomain: string;
   gatewayUrl: string;
   encodeKey: string;
+  sessionKey: string;
 }
 
 const environmentConfig: EnvironmentConfig = {
@@ -68,7 +69,8 @@ const environmentConfig: EnvironmentConfig = {
   cacheKey: process.env.CACHE_KEY || 'msn_identity_tag',
   serverDomain: process.env.SERVER_DOMAIN || 'https://fps-pwr-dfp.nexdev.net',
   gatewayUrl: process.env.GATEWAY_URL || '',
-  encodeKey: process.env.ENCODE_KEY || ''
+  encodeKey: process.env.ENCODE_KEY || '',
+  sessionKey: process.env.SESSION_KEY || ''
 };
 
 // Environment-specific defaults

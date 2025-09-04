@@ -2,18 +2,14 @@
 
 import { GraphicsGroupInfo } from "./types";
 import { GraphicsFingerprint } from "./modules/graphics/index";
-import { AbstractFingerprint, InjectValueCallback, FingerprintResult } from "./abstract/abstractFingerprint";
+import { AbstractFingerprint, InjectValueCallback } from "./abstract/abstractFingerprint";
 import { CONFIG, FingerprintStep } from "../index";
-
-export interface F5Data {
-  graphics: GraphicsGroupInfo;
-}
 
 export class F5Fingerprint extends AbstractFingerprint {
   protected readonly step: FingerprintStep = "F5";
   protected readonly endpoint: string = CONFIG.ENDPOINTS.F5;
 
-  protected async collectData(): Promise<F5Data> {
+  protected async collectData(): Promise<{graphics: GraphicsGroupInfo}> {
     const graphics = await GraphicsFingerprint.collect();
     
     return {
@@ -21,7 +17,7 @@ export class F5Fingerprint extends AbstractFingerprint {
     };
   }
 
-  protected extractAttributes(data: F5Data, f4Attributes?: Record<string, any>): Record<string, any> {
+  protected extractAttributes(data: {graphics: GraphicsGroupInfo}, f4Attributes?: Record<string, any>): Record<string, any> {
     const attributes = {
       ...data.graphics,
     };
@@ -38,7 +34,7 @@ export class F5Fingerprint extends AbstractFingerprint {
 
   protected buildPayload(
     sessionKey: string,
-    fingerprintData: F5Data,
+    fingerprintData: {graphics: GraphicsGroupInfo},
     hashed: string
   ): any {
     const fp = {
@@ -54,10 +50,11 @@ export class F5Fingerprint extends AbstractFingerprint {
     callback: InjectValueCallback
   ): Promise<Record<string, any>> {
     const result = await this.process(sessionKey, callback, f4Attributes);
-    return result.attributes;
-  }
 
-  public static create(): F5Fingerprint {
-    return new F5Fingerprint();
+    if(window !== undefined) {
+      (window as any).f5Attributes = result.attributes;
+    }
+
+    return result.attributes;
   }
 }

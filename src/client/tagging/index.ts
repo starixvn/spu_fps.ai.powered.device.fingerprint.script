@@ -6,6 +6,7 @@ import { LocalStorageHandler } from './modules/localStorage';
 import { TaggingHandler, STORAGE_KEYS } from './tagging';
 import { WindowNameHandler } from './modules/windowName';
 import { IStorageHandler } from './types';
+import { DeviceFactory } from '../deviceFactory';
 
 export class TaggingClass {
     private readonly storageHandlers: Array<{
@@ -28,7 +29,7 @@ export class TaggingClass {
         let targetTaggingValue = await TaggingHandler.getTaggingValue();
 
         if (!targetTaggingValue) {
-            targetTaggingValue = TaggingHandler.generateTagging();
+            targetTaggingValue = DeviceFactory.generateId();
         }
 
         await Promise.all(

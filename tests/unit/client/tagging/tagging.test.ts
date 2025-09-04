@@ -5,7 +5,7 @@ import { ETagHandler } from '../../../../src/client/tagging/modules/etag';
 import { IndexedDBHandler } from '../../../../src/client/tagging/modules/indexedDB';
 import { LocalStorageHandler } from '../../../../src/client/tagging/modules/localStorage';
 import { WindowNameHandler } from '../../../../src/client/tagging/modules/windowName';
-import { PacketTransformer } from '../../../../src/client/tagging/utils/hash';
+import { PacketTransformer } from '../../../../src/client/utils/hash';
 
 // Mock all the storage handlers
 jest.mock('../../../../src/client/tagging/modules/cacheApi');
@@ -14,7 +14,7 @@ jest.mock('../../../../src/client/tagging/modules/etag');
 jest.mock('../../../../src/client/tagging/modules/indexedDB');
 jest.mock('../../../../src/client/tagging/modules/localStorage');
 jest.mock('../../../../src/client/tagging/modules/windowName');
-jest.mock('../../../../src/client/tagging/utils/hash');
+jest.mock('../../../../src/client/utils/hash');
 
 // Mock crypto API
 const mockCrypto = {

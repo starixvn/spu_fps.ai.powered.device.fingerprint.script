@@ -1,4 +1,4 @@
-import { RC4, Hex, PacketTransformer } from '../../../../../src/client/tagging/utils/hash';
+import { RC4, Hex, PacketTransformer } from '../../../../src/client/utils/hash';
 
 describe('RC4', () => {
   describe('encrypt', () => {

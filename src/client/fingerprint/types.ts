@@ -7,6 +7,13 @@ export interface FingerprintData {
   timestamp: string;
 }
 
+export interface F4Data {
+  audio: AudioGroupInfo;
+  browser: BrowserGroupInfo;
+  hardware: HardwareGroupInfo;
+  preferences: PreferencesGroupInfo;
+}
+
 // Hardware
 export interface HardwareGroupInfo {
   platform: string;

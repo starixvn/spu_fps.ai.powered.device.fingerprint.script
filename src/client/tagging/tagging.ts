@@ -1,10 +1,10 @@
-import { PacketTransformer , GuidGenerator } from './utils/hash';
 import { CacheApiHandler } from './modules/cacheApi';
 import { CookiesHandler } from './modules/cookie';
 import { ETagHandler } from './modules/etag';
 import { IndexedDBHandler } from './modules/indexedDB';
 import { LocalStorageHandler } from './modules/localStorage';
 import { WindowNameHandler } from './modules/windowName';
+import { DeviceFactory } from '../deviceFactory';
 
 export const STORAGE_KEYS = {
     localStorage: "__localStorage_key__",
@@ -35,44 +35,13 @@ export class TaggingHandler {
             for (const key of keys) {
                 let value = await this.getStoredValue(key, handlerConfig.handler);
 
-                if (value && this.isValidTagging(value)) {
+                if (value && DeviceFactory.isValidTagging(value)) {
                     return value;
                 } 
             }
         }
 
         return null;
-    }
-
-    public static generateTagging(): string {
-        const guid = GuidGenerator.generateGuid();
-        const encryptedGuid = PacketTransformer.wrapMessage(guid);
-
-        return encryptedGuid;
-    }
-
-    public static isValidTagging(taggingValue: string): boolean {
-        try {
-            if (!taggingValue || taggingValue.trim() === '') {
-                return false;
-            }
-
-            const decryptedTagging = PacketTransformer.unwrapMessage(taggingValue);
-
-            return this.isValidGuid(decryptedTagging);
-        } catch (error) {
-            return false;
-        }
-    }
-
-    private static isValidGuid(guid: string): boolean {
-        if (!guid) {
-            return false;
-        }
-
-        const guidWithoutHyphensRegex = /^[0-9a-f]{32}$/i;
-        
-        return guidWithoutHyphensRegex.test(guid);
     }
 
     private static async getStoredValue(key: string, handler: any): Promise<string | null> {

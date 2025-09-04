@@ -14,6 +14,9 @@ export class ScriptService {
   private generateBundledScript(): void {
     try {
       const clientFiles = [
+        "utils/hash.js",
+        "deviceFactory.js",
+        "sessionKey/index.js",
         "tagging/modules/cacheApi.js",
         "tagging/modules/cookie.js",
         "tagging/modules/etag.js",
@@ -22,9 +25,7 @@ export class ScriptService {
         "tagging/tagging.js",
         "tagging/modules/windowName.js",
         "tagging/index.js",
-        "tagging/utils/hash.js",
         "fingerprint/utils/hash.js",
-        "fingerprint/index.js",
         "fingerprint/modules/hardware/platform.js",
         "fingerprint/modules/hardware/architecture.js",
         "fingerprint/modules/hardware/osCpu.js",
@@ -118,7 +119,8 @@ export class ScriptService {
             .replace(/__cookies_key__/g, config.cookiesKey)
             .replace(/__cache_key__/g, config.cacheKey)
             .replace(/__GATEWAY_URL__/g, config.gatewayUrl)
-            .replace(/__ENCODE_KEY__/g, config.encodeKey);
+            .replace(/__ENCODE_KEY__/g, config.encodeKey)
+            .replace(/__session_key__/g, config.sessionKey);
 
           let processedContent = fileContent
             .replace(/^import\s+.*?from\s+['"].*?['"];?\s*$/gm, '')

@@ -1,24 +1,16 @@
 /// <reference lib="dom" />
 
 import {
-  AudioGroupInfo,
-  BrowserGroupInfo,
-  HardwareGroupInfo,
-  PreferencesGroupInfo,
+  F4Data,
 } from "./types";
 import { HardwareFingerprint } from "./modules/hardware/index";
 import { AudioFingerprint } from "./modules/audio/index";
 import { BrowserFingerprint } from "./modules/browser/index";
 import { PreferencesFingerprint } from "./modules/preference/index";
-import { AbstractFingerprint, InjectValueCallback, FingerprintResult } from "./abstract/abstractFingerprint";
+import { AbstractFingerprint, InjectValueCallback } from "./abstract/abstractFingerprint";
 import { CONFIG, FingerprintStep } from "../index";
 
-export interface F4Data {
-  audio: AudioGroupInfo;
-  browser: BrowserGroupInfo;
-  hardware: HardwareGroupInfo;
-  preferences: PreferencesGroupInfo;
-}
+
 
 export class F4Fingerprint extends AbstractFingerprint {
   protected readonly step: FingerprintStep = "F4";
@@ -69,11 +61,12 @@ export class F4Fingerprint extends AbstractFingerprint {
     callback: InjectValueCallback
   ): Promise<Record<string, any>> {
     const result = await this.process(sessionKey, callback);
-    return result.attributes;
-  }
 
-  public static create(): F4Fingerprint {
-    return new F4Fingerprint();
+    if(window !== undefined) {
+      (window as any).f4Attributes = result.attributes;
+    }
+
+    return result.attributes;
   }
 
 }
