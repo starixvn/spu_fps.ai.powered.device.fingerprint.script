@@ -1,53 +1,30 @@
 import { config } from 'dotenv';
+import { existsSync } from 'fs';
 import path from 'path';
 
 /* istanbul ignore file */
 
-// Load environment file based on NODE_ENV
-const loadEnvironment = () => {
+const loadEnvironment = (): void => {
   const nodeEnv = process.env.NODE_ENV || 'development';
   const envFile = `.env.${nodeEnv}`;
-  const cwd = process.cwd();
-  const envPath = path.resolve(cwd, envFile);
+  const envPath = path.resolve(process.cwd(), envFile);
   
-  console.log(`🔍 Current working directory: ${cwd}`);
-  console.log(`🔍 Looking for environment file: ${envPath}`);
-  console.log(`🔍 NODE_ENV from process: ${process.env.NODE_ENV}`);
-  
-  // Check if file exists
-  const fs = require('fs');
-  const fileExists = fs.existsSync(envPath);
-  console.log(`🔍 Environment file exists: ${fileExists}`);
-  
-  if (fileExists) {
-    // Load specific environment file
+  if (existsSync(envPath)) {
     const result = config({ path: envPath });
-
     if (result.error) {
       console.warn(`⚠️ Failed to load ${envFile}:`, result.error.message);
-    } else {
-      console.log(`✅ Loaded environment file: ${envFile}`);
-      console.log(`✅ Loaded ${Object.keys(result.parsed || {}).length} variables from ${envFile}`);
     }
-  } else {
-    console.warn(`⚠️ Environment file not found: ${envPath}`);
   }
   
-  // Also load base .env if it exists (for shared variables)
-  const baseEnvPath = path.resolve(cwd, '.env');
-  if (fs.existsSync(baseEnvPath)) {
-    console.log(`🔍 Loading base .env file: ${baseEnvPath}`);
+  const baseEnvPath = path.resolve(process.cwd(), '.env');
+  if (existsSync(baseEnvPath)) {
     config({ path: baseEnvPath });
   }
-  
-  console.log(`🔍 Final environment values - NODE_ENV: ${process.env.NODE_ENV}, PORT: ${process.env.PORT}`);
 };
 
-// Load environment on import
 loadEnvironment();
 
 interface EnvironmentConfig {
-  // Server Configuration
   port: number;
   nodeEnv: string;
   localStorageKey: string;
@@ -61,22 +38,32 @@ interface EnvironmentConfig {
   version: string;
 }
 
+const getDefaultPort = (): number => {
+  return parseInt(
+    process.env.PORT || (process.env.NODE_ENV === 'production' ? '5000' : '3000'), 
+    10
+  );
+};
+
 const environmentConfig: EnvironmentConfig = {
-  port: parseInt(process.env.PORT || (process.env.NODE_ENV === 'production' ? '5000' : '3000'), 10),
+  port: getDefaultPort(),
   nodeEnv: process.env.NODE_ENV || 'local',
+  
   localStorageKey: process.env.LOCAL_STORAGE_KEY || 'awb_visitor_session',
   indexedDBKey: process.env.INDEXEDDB_KEY || 'pwr_client_sync',
   cookiesKey: process.env.COOKIES_KEY || 'cke_anchor_key',
   cacheKey: process.env.CACHE_KEY || 'msn_identity_tag',
+  sessionKey: process.env.SESSION_KEY || '',
+  
   serverDomain: process.env.SERVER_DOMAIN || 'https://fps-pwr-dfp.nexdev.net',
   gatewayUrl: process.env.GATEWAY_URL || '',
+  
   encodeKey: process.env.ENCODE_KEY || '',
-  sessionKey: process.env.SESSION_KEY || '',
+  
   version: process.env.VERSION || ''
 };
 
-// Environment-specific defaults
-function getDefaultLogLevel(): string {
+const getDefaultLogLevel = (): string => {
   switch (process.env.NODE_ENV) {
     case 'production':
       return 'warn';
@@ -86,34 +73,31 @@ function getDefaultLogLevel(): string {
     default:
       return 'debug';
   }
-}
+};
 
-// Validation functions
-function validateConfig(): void {
-  // Only validate port range - no other required variables
+const validateConfig = (): void => {
   if (environmentConfig.port < 1 || environmentConfig.port > 65535) {
     throw new Error('PORT must be between 1 and 65535');
   }
-}
+};
 
-function validateEnvironment(): void {
+const validateEnvironment = (): void => {
   const validEnvironments = ['local', 'development', 'staging', 'production'];
   if (!validEnvironments.includes(environmentConfig.nodeEnv)) {
     console.warn(`Warning: NODE_ENV '${environmentConfig.nodeEnv}' is not recognized. Using 'local' defaults.`);
   }
-}
+};
 
-// Run validations
-validateEnvironment();
-validateConfig();
+const initializeEnvironment = (): void => {
+  validateEnvironment();
+  validateConfig();
+  
+  if (environmentConfig.nodeEnv !== 'production') {
+    console.log(`🚀 Environment: ${environmentConfig.nodeEnv.toUpperCase()} | Port: ${environmentConfig.port}`);
+  }
+};
 
-// Log the loaded configuration
-console.log(`🚀 Environment loaded: ${environmentConfig.nodeEnv.toUpperCase()}`);
-console.log(`📡 Server will run on port: ${environmentConfig.port}`);
-console.log(`🔧 Log level: ${getDefaultLogLevel()}`);
-
-if (environmentConfig.nodeEnv !== 'production') {
-  console.log('🐛 Debug mode enabled');
-}
+initializeEnvironment();
 
 export default environmentConfig;
+export { getDefaultLogLevel };

@@ -121,7 +121,6 @@ describe('F5Fingerprint', () => {
     it('should initialize with correct step and endpoint', () => {
       expect((f5Fingerprint as any).step).toBe('F5');
       expect((f5Fingerprint as any).endpoint).toBe('/logs_sync');
-      expect(f5Fingerprint.version).toBe('1.9.0');
     });
   });
 
@@ -587,7 +586,6 @@ describe('F5Fingerprint', () => {
       // Assert
       expect(fingerprint).toBeInstanceOf(F5Fingerprint);
       expect(typeof fingerprint.processF5Data).toBe('function');
-      expect(typeof fingerprint.version).toBe('string');
     });
 
     // it('should enforce readonly properties', () => {

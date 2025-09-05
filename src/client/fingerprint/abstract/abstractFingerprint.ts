@@ -12,8 +12,6 @@ export interface FingerprintResult {
 }
 
 export abstract class AbstractFingerprint {
-  public readonly version: string = "1.9.0";
-  
   protected abstract readonly step: FingerprintStep;
   protected abstract readonly endpoint: string;
 

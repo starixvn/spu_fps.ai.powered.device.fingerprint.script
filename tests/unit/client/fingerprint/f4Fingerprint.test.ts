@@ -145,7 +145,6 @@ describe('F4Fingerprint', () => {
     it('should initialize with correct step and endpoint', () => {
       expect((f4Fingerprint as any).step).toBe('F4');
       expect((f4Fingerprint as any).endpoint).toBe('/meta_data');
-      expect(f4Fingerprint.version).toBe('1.9.0');
     });
   });
 
@@ -544,7 +543,6 @@ describe('F4Fingerprint', () => {
       // Assert
       expect(fingerprint).toBeInstanceOf(F4Fingerprint);
       expect(typeof fingerprint.processF4Data).toBe('function');
-      expect(typeof fingerprint.version).toBe('string');
     });
 
     // it('should enforce readonly properties', () => {
