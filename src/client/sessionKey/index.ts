@@ -3,7 +3,7 @@ import { SessionKeyData } from "./types";
 
 export class SessionKeyManager {
     private static readonly STORAGE_KEY = '__session_key__';
-    private static readonly EXPIRE_TIME = 60 * 60 * 1000; // 1 hour in milliseconds
+    private static readonly EXPIRE_TIME = 60 * 1000; // 1 minute in milliseconds
 
     public static getSessionKey(): string {
         if (typeof window !== "undefined" && (window as any).sessionKey) {

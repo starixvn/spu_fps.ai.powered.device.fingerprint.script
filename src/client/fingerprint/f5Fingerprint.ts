@@ -37,7 +37,8 @@ export class F5Fingerprint extends AbstractFingerprint {
     fingerprintData: {graphics: GraphicsGroupInfo},
     hashed: string
   ): any {
-    const payload = this.encodeData({sk: sessionKey, fp: {gp: fingerprintData.graphics}, hs: hashed});
+   
+    const payload = this.encodeData({sk: sessionKey, fp: {gp: JSON.stringify(fingerprintData.graphics)}, hs: hashed});
 
     return payload;
   }

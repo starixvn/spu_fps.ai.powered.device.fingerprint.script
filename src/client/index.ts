@@ -12,8 +12,8 @@ export const CONFIG = {
     ENCODING_KEY: "__ENCODE_KEY__",
     GATEWAY_URL: "__GATEWAY_URL__",
     ENDPOINTS: {
-      F4: "/meta_data",
-      F5: "/logs_sync"
+      F4: "/meta-data",
+      F5: "/logs-sync"
     },
     FIELD_NAMES: {
       DEVICE_INFO: "__di"
@@ -69,7 +69,7 @@ class ClientClass {
     public async start(): Promise<void> {
         try {
             const sessionKey = SessionKeyManager.getSessionKey();
-            const deviceInfo: CollectedDeviceInfo = { sk: sessionKey, href: window.location.href, version: CONFIG.VERSION };
+            const deviceInfo: CollectedDeviceInfo = { sk: sessionKey, v: CONFIG.VERSION };
 
             await this.ensureDOMReady();
             

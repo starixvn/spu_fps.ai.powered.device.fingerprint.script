@@ -126,36 +126,43 @@ describe('F5Fingerprint', () => {
   });
 
   describe('collectData', () => {
-    // it('should collect graphics data successfully', async () => {
-    //   // Act
-    //   const result = await (f5Fingerprint as any).collectData();
+    it('should collect graphics data successfully', async () => {
+      // Act
+      const result = await (f5Fingerprint as any).collectData();
 
-    //   // Assert
-    //   expect(result).toEqual({
-    //     graphics: {
-    //       canvas: {
-    //         canvasFingerprint: 'canvas-hash-123',
-    //         webglRenderer: 'ANGLE (Intel, Mesa Intel(R) HD Graphics 620)',
-    //         webglVendor: 'Intel Inc.'
-    //       },
-    //       webgl: {
-    //         webglVersion: 'WebGL 1.0',
-    //         shadingLanguageVersion: 'WebGL GLSL ES 1.0',
-    //         webglParameters: {
-    //           MAX_TEXTURE_SIZE: 16384,
-    //           MAX_VIEWPORT_DIMS: [16384, 16384]
-    //         }
-    //       },
-    //       screen: {
-    //         screenResolution: '1920x1080',
-    //         colorDepth: 24,
-    //         pixelDepth: 24
-    //       }
-    //     }
-    //   });
+      // Assert
+      expect(result).toEqual({
+        graphics: {
+          canvas: {
+            basicTest: "test-canvas-fingerprint",
+            textTest: "text-rendering-fingerprint", 
+            geometryTest: "geometry-fingerprint"
+          },
+          webglBasics: {
+            vendor: "Intel Inc.",
+            renderer: "ANGLE (Intel, Mesa Intel(R) HD Graphics 620)",
+            version: "WebGL 1.0",
+            shadingLanguageVersion: "WebGL GLSL ES 1.0"
+          },
+          webglExtensions: [
+            "ANGLE_instanced_arrays",
+            "EXT_blend_minmax",
+            "OES_element_index_uint"
+          ],
+          fonts: {
+            availableFonts: ["Arial", "Times New Roman", "Helvetica"],
+            fontRendering: "standard-rendering-fingerprint"
+          },
+          supportedFormats: {
+            audio: ["mp3", "wav"],
+            video: ["mp4", "webm"], 
+            image: ["png", "jpeg", "webp"]
+          }
+        }
+      });
 
-    //   expect(mockGraphicsFingerprint.collect).toHaveBeenCalledTimes(1);
-    // });
+      expect(mockGraphicsFingerprint.collect).toHaveBeenCalledTimes(1);
+    });
 
     it('should handle graphics collection failure', async () => {
       // Arrange
@@ -352,7 +359,7 @@ describe('F5Fingerprint', () => {
       expect(result).toBe('encoded-graphics-data');
       expect(mockBase64Encoder.encodeBase64).toHaveBeenCalledTimes(1);
       expect(mockBase64Encoder.encodeBase64).toHaveBeenCalledWith(
-        JSON.stringify({sk: sessionKey, fp: {gp: fingerprintData.graphics}, hs: hashed}),
+        JSON.stringify({sk: sessionKey, fp: {gp: JSON.stringify(fingerprintData.graphics)}, hs: hashed}),
         CONFIG.ENCODING_KEY
       );
     });
@@ -371,7 +378,7 @@ describe('F5Fingerprint', () => {
       // Assert
       expect(result).toBe('encoded-empty-graphics');
       expect(mockBase64Encoder.encodeBase64).toHaveBeenCalledWith(
-        JSON.stringify({sk: sessionKey, fp: {gp: {}}, hs: hashed}),
+        JSON.stringify({sk: sessionKey, fp: {gp: JSON.stringify({})}, hs: hashed}),
         CONFIG.ENCODING_KEY
       );
     });
@@ -390,7 +397,7 @@ describe('F5Fingerprint', () => {
       // Assert
       expect(result).toBe('encoded-null-graphics');
       expect(mockBase64Encoder.encodeBase64).toHaveBeenCalledWith(
-        JSON.stringify({sk: sessionKey, fp: {gp: null}, hs: hashed}),
+        JSON.stringify({sk: sessionKey, fp: {gp: JSON.stringify(null)}, hs: hashed}),
         CONFIG.ENCODING_KEY
       );
     });

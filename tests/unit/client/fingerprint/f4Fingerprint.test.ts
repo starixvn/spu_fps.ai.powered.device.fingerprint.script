@@ -198,19 +198,14 @@ describe('F4Fingerprint', () => {
       expect(mockPreferencesFingerprint.collect).toHaveBeenCalledTimes(1);
     });
 
-    // it('should handle individual module failures gracefully', async () => {
-    //   // Arrange
-    //   mockAudioFingerprint.collect.mockRejectedValue(new Error('Audio collection failed'));
+    it('should handle individual module failures by propagating the error', async () => {
+      // Arrange
+      mockAudioFingerprint.collect.mockRejectedValue(new Error('Audio collection failed'));
 
-    //   // Act
-    //   const result = await (f4Fingerprint as any).collectData();
-
-    //   // Assert
-    //   expect(result.audio).toBeUndefined();
-    //   expect(result.browser).toBeDefined();
-    //   expect(result.hardware).toBeDefined();
-    //   expect(result.preferences).toBeDefined();
-    // });
+      // Act & Assert
+      // Since Promise.all is used, any individual failure should cause the entire operation to fail
+      await expect((f4Fingerprint as any).collectData()).rejects.toThrow('Audio collection failed');
+    });
 
     it('should collect data in parallel', async () => {
       // Arrange
@@ -350,7 +345,16 @@ describe('F4Fingerprint', () => {
       expect(result).toBe('encoded-payload');
       expect(mockBase64Encoder.encodeBase64).toHaveBeenCalledTimes(1);
       expect(mockBase64Encoder.encodeBase64).toHaveBeenCalledWith(
-        JSON.stringify({sk: sessionKey, fp: fingerprintData, hs: hashed}), 
+        JSON.stringify({
+          sk: sessionKey, 
+          fp: {
+            au: JSON.stringify(fingerprintData.au), 
+            br: JSON.stringify(fingerprintData.br), 
+            hw: JSON.stringify(fingerprintData.hw), 
+            pf: JSON.stringify(fingerprintData.pf)
+          }, 
+          hs: hashed
+        }), 
         CONFIG.ENCODING_KEY
       );
     });
@@ -374,7 +378,16 @@ describe('F4Fingerprint', () => {
       // Assert
       expect(result).toBe('encoded-empty-payload');
       expect(mockBase64Encoder.encodeBase64).toHaveBeenCalledWith(
-        JSON.stringify({sk: sessionKey, fp: fingerprintData, hs: hashed}), 
+        JSON.stringify({
+          sk: sessionKey, 
+          fp: {
+            au: JSON.stringify(fingerprintData.au), 
+            br: JSON.stringify(fingerprintData.br), 
+            hw: JSON.stringify(fingerprintData.hw), 
+            pf: JSON.stringify(fingerprintData.pf)
+          }, 
+          hs: hashed
+        }), 
         CONFIG.ENCODING_KEY
       );
     });

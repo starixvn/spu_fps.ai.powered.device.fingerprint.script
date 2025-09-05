@@ -4,8 +4,7 @@ export interface CollectedDeviceInfo {
     f4?: string;
     f5?: string;
     rtc?: any;
-    href?: string;
-    version?: string;
+    v?: string;
   }
 
 declare global {

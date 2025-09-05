@@ -91,8 +91,8 @@ describe('Client Module Tests', () => {
     it('should have correct configuration values', () => {
       expect(CONFIG.ENCODING_KEY).toBe('__ENCODE_KEY__');
       expect(CONFIG.GATEWAY_URL).toBe('__GATEWAY_URL__');
-      expect(CONFIG.ENDPOINTS.F4).toBe('/meta_data');
-      expect(CONFIG.ENDPOINTS.F5).toBe('/logs_sync');
+      expect(CONFIG.ENDPOINTS.F4).toBe('/meta-data');
+      expect(CONFIG.ENDPOINTS.F5).toBe('/logs-sync');
       expect(CONFIG.FIELD_NAMES.DEVICE_INFO).toBe('__di');
     });
   });

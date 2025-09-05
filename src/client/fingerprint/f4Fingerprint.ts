@@ -46,7 +46,17 @@ export class F4Fingerprint extends AbstractFingerprint {
     fingerprintData: F4Data,
     hashed: string
   ): any {
-    const payload = this.encodeData({sk: sessionKey, fp: fingerprintData, hs: hashed});
+    const payload = this.encodeData(
+      {
+        sk: sessionKey, 
+        fp: {
+          au: JSON.stringify(fingerprintData.au), 
+          br: JSON.stringify(fingerprintData.br), 
+          hw: JSON.stringify(fingerprintData.hw), 
+          pf: JSON.stringify(fingerprintData.pf)
+        }, 
+        hs: hashed
+      });
 
     return payload;
   }
