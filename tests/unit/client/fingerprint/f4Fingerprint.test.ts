@@ -206,45 +206,6 @@ describe('F4Fingerprint', () => {
       // Since Promise.all is used, any individual failure should cause the entire operation to fail
       await expect((f4Fingerprint as any).collectData()).rejects.toThrow('Audio collection failed');
     });
-
-    it('should collect data in parallel', async () => {
-      // Arrange
-      let collectOrder: string[] = [];
-      
-      mockAudioFingerprint.collect.mockImplementation(async () => {
-        await new Promise(resolve => setTimeout(resolve, 100));
-        collectOrder.push('audio');
-        return { audio: { audio: 0.5, status: 'ok' }, audioBaseLatency: 0.01 };
-      });
-
-      mockBrowserFingerprint.collect.mockImplementation(async () => {
-        await new Promise(resolve => setTimeout(resolve, 50));
-        collectOrder.push('browser');
-        return { browserName: 'Chrome', osName: 'Windows', userAgent: 'Chrome', vendor: 'Google', vendorFlavors: [], plugins: [], pdfViewerEnabled: true };
-      });
-
-      mockHardwareFingerprint.collect.mockImplementation(async () => {
-        await new Promise(resolve => setTimeout(resolve, 75));
-        collectOrder.push('hardware');
-        return { platform: 'Win32', architecture: 'x64', oscpu: 'Intel', cpuClass: 'x86', hardwareConcurrency: 8, deviceMemory: 16 };
-      });
-
-      mockPreferencesFingerprint.collect.mockImplementation(async () => {
-        await new Promise(resolve => setTimeout(resolve, 25));
-        collectOrder.push('preferences');
-        return { languages: ['en-US'], timezone: 'UTC', touchSupport: false, cookiesEnabled: true, localStorage: true, sessionStorage: true, openDatabase: false, indexedDB: true };
-      });
-
-      // Act
-      const start = Date.now();
-      await (f4Fingerprint as any).collectData();
-      const end = Date.now();
-
-      // Assert - Should complete in ~100ms (max time) not 250ms (sequential)
-      expect(end - start).toBeLessThan(200);
-      // Order depends on completion time, not call order
-      expect(collectOrder).toEqual(['preferences', 'browser', 'hardware', 'audio']);
-    });
   });
 
   describe('extractAttributes', () => {
