@@ -4,48 +4,40 @@ export function collectVendor(): VendorInfo {
   try {
     const vendor = getVendor();
     return { vendor };
-  } catch (error) {
+  } catch {
     return { vendor: "" };
   }
 }
 
 function getVendor(): string {
   try {
-    const userAgent = navigator.userAgent.toLowerCase();
-
+    // 1. Native vendor field (quickest)
     if (navigator.vendor && navigator.vendor.trim() !== "") {
-      return navigator.vendor;
+      return navigator.vendor; // e.g. "Google Inc."
     }
 
-    if (navigator.userAgentData?.brands) {
-      for (const brand of navigator.userAgentData.brands) {
-        const b = brand.brand.toLowerCase();
-        if (b.includes("google")) return "Google Inc.";
-        if (b.includes("edge")) return "Microsoft Corporation";
-        if (b.includes("opera")) return "Opera Software ASA";
-        if (b.includes("brave")) return "Brave Software Inc.";
-        if (b.includes("samsung")) return "Samsung Electronics";
-      }
-    }
-
-    if (
-      userAgent.includes("applewebkit") &&
-      userAgent.includes("safari") &&
-      !userAgent.includes("chrome")
-    ) {
+    // 2. Browser-specific globals (stable)
+    if ((window as any).safari?.pushNotification) {
       return "Apple Inc.";
     }
-    if (userAgent.includes("firefox")) {
+    if (typeof (window as any).InstallTrigger !== "undefined") {
       return "Mozilla Foundation";
     }
-    if (userAgent.includes("edg/")) {
-      return "Microsoft Corporation";
-    }
-    if (userAgent.includes("opr") || userAgent.includes("opera")) {
+    if ((window as any).opr || (window as any).oprt) {
       return "Opera Software ASA";
     }
+    if ((navigator as any).brave || (window as any).chrome?.brave) {
+      return "Brave Software Inc.";
+    }
+    if ((window as any).samsungAr) {
+      return "Samsung Electronics";
+    }
+    if ((window as any).chrome) {
+      return "Google Inc."; // generic Chrome-family fallback
+    }
 
-    return "";
+    // 3. Fallback: unknown
+    return "Unknown";
   } catch {
     return "";
   }

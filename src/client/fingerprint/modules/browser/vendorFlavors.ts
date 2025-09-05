@@ -11,59 +11,68 @@ export function collectVendorFlavors(): VendorFlavorsInfo {
 
 function getVendorFlavors(): string[] {
   const flavors: string[] = [];
-  const brands = navigator.userAgentData?.brands ?? [];
-  const platform = navigator.userAgentData?.platform ?? "";
-  const ua = navigator.userAgent;
-  const engine = detectEngine(ua);
 
-  for (const brand of brands) {
-    const name = brand.brand.trim();
+  const browserGlobals = [
+    'chrome',           // Chrome, Edge, Opera, Brave (Blink-based)
+    'safari',           // Safari on macOS
+    '__crWeb',          // Chrome on iOS
+    '__gCrWeb',         // Chrome on iOS (alternative)
+    'yandex',           // Yandex Browser (multi-platform)
+    '__yb',             // Yandex Browser on iOS
+    '__ybro',           // Yandex Browser on iOS (alternative)  
+    '__firefox__',      // Firefox on iOS
+    '__edgeTrackingPreventionStatistics', // Edge on iOS
+    'webkit',           // WebKit-based browsers
+    'oprt',             // Opera Touch on iOS
+    'samsungAr',        // Samsung Internet on Android
+    'ucweb',            // UC Browser on Android
+    'UCShellJava',      // UC Browser on Android (alternative)
+    'puffinDevice'      // Puffin on Android
+  ];
 
-    if (name && !isGreaseBrand(name) && !flavors.includes(`Brand:${name}`)) {
-      flavors.push(`Brand:${name}`);
+  for (const key of browserGlobals) {
+    const value = (window as any)[key];
+
+    if (value && typeof value === 'object') {
+      flavors.push(key);
     }
   }
 
-  if (platform) {
-    flavors.push(`Platform:${platform}`);
+  if (flavors.length === 0) {
+    try {
+      // Chrome-family detection
+      if ((window as any).chrome?.runtime) {
+        flavors.push('chrome');
+      }
+      
+      // Safari-specific features
+      if ((window as any).safari?.pushNotification) {
+        flavors.push('safari');
+      }
+      
+      // Firefox detection
+      if (typeof (window as any).InstallTrigger !== 'undefined') {
+        flavors.push('firefox');
+      }
+      
+      // Legacy Edge detection  
+      if ((window as any).StyleMedia || (navigator as any).msLaunchUri) {
+        flavors.push('edge');
+      }
+    } catch {}
   }
 
-  if (navigator.vendor) {
-    flavors.push(`Vendor:${navigator.vendor}`);
+  if (flavors.length === 0) {
+    try {
+      if (CSS.supports && CSS.supports('-webkit-appearance', 'none')) {
+        if (CSS.supports('-webkit-transform-style', 'preserve-3d')) {
+          flavors.push('blink');
+        } else {
+          flavors.push('webkit');
+        }
+      }
+    } catch {}
   }
 
-  if (engine) {
-    flavors.push(`Engine:${engine}`);
-  }
-
-  if (ua) {
-    flavors.push(`UA:${ua}`);
-  }
-
-  return flavors.length > 0 ? flavors : ["Standard"];
-}
-
-function isGreaseBrand(brand: string): boolean {
-  return /;|Brand/i.test(brand) && brand !== "Chromium";
-}
-
-function detectEngine(userAgent: string): string | null {
-  const ua = userAgent.toLowerCase();
-
-  if (ua.includes("applewebkit") && ua.includes("chrome")) {
-    return "Blink";
-  }
-  if (ua.includes("applewebkit") && !ua.includes("chrome")) {
-    return "WebKit";
-  }
-  if (ua.includes("gecko") && ua.includes("firefox")) {
-    return "Gecko";
-  }
-  if (ua.includes("trident")) {
-    return "Trident";
-  }
-  if (ua.includes("edge") && ua.includes("edgehtml")) {
-    return "EdgeHTML";
-  }
-  return null;
+  return flavors.length > 0 ? flavors.sort() : []; 
 }
