@@ -349,18 +349,11 @@ describe('F5Fingerprint', () => {
       const result = (f5Fingerprint as any).buildPayload(sessionKey, fingerprintData, hashed);
 
       // Assert
-      expect(result).toEqual({
-        sk: sessionKey,
-        fp: {
-          gp: 'encoded-graphics-data'
-        },
-        hs: hashed
-      });
-
+      expect(result).toBe('encoded-graphics-data');
       expect(mockBase64Encoder.encodeBase64).toHaveBeenCalledTimes(1);
       expect(mockBase64Encoder.encodeBase64).toHaveBeenCalledWith(
-        JSON.stringify(fingerprintData.graphics),
-        mockCONFIG.ENCODING_KEY
+        JSON.stringify({sk: sessionKey, fp: {gp: fingerprintData.graphics}, hs: hashed}),
+        CONFIG.ENCODING_KEY
       );
     });
 
@@ -376,17 +369,10 @@ describe('F5Fingerprint', () => {
       const result = (f5Fingerprint as any).buildPayload(sessionKey, fingerprintData, hashed);
 
       // Assert
-      expect(result).toEqual({
-        sk: sessionKey,
-        fp: {
-          gp: 'encoded-empty-graphics'
-        },
-        hs: hashed
-      });
-
+      expect(result).toBe('encoded-empty-graphics');
       expect(mockBase64Encoder.encodeBase64).toHaveBeenCalledWith(
-        JSON.stringify({}),
-        mockCONFIG.ENCODING_KEY
+        JSON.stringify({sk: sessionKey, fp: {gp: {}}, hs: hashed}),
+        CONFIG.ENCODING_KEY
       );
     });
 
@@ -402,17 +388,10 @@ describe('F5Fingerprint', () => {
       const result = (f5Fingerprint as any).buildPayload(sessionKey, fingerprintData, hashed);
 
       // Assert
-      expect(result).toEqual({
-        sk: sessionKey,
-        fp: {
-          gp: 'encoded-null-graphics'
-        },
-        hs: hashed
-      });
-
+      expect(result).toBe('encoded-null-graphics');
       expect(mockBase64Encoder.encodeBase64).toHaveBeenCalledWith(
-        JSON.stringify(null),
-        mockCONFIG.ENCODING_KEY
+        JSON.stringify({sk: sessionKey, fp: {gp: null}, hs: hashed}),
+        CONFIG.ENCODING_KEY
       );
     });
   });

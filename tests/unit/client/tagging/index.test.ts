@@ -10,6 +10,7 @@ jest.mock('../../../../src/client/tagging/modules/windowName');
 jest.mock('../../../../src/client/deviceFactory', () => ({
   DeviceFactory: {
     generateId: jest.fn(),
+    generateTagging: jest.fn(),
     isValidTagging: jest.fn()
   }
 }));
@@ -101,7 +102,7 @@ describe('Tagging Index', () => {
     
     // Set default mock values for TaggingHandler and DeviceFactory
     (TaggingHandler.getTaggingValue as jest.Mock).mockResolvedValue('test-tag-value');
-    (DeviceFactory.generateId as jest.Mock).mockReturnValue('generated-tag-value');
+    (DeviceFactory.generateTagging as jest.Mock).mockReturnValue('generated-tag-value');
     
     // Create TaggingClass instance
     taggingInstance = new TaggingClass();
@@ -253,7 +254,7 @@ describe('Tagging Index', () => {
     it('should generate new tagging when getTaggingValue returns null', async () => {
       const generatedTagValue = 'generated-tag-123';
       (TaggingHandler.getTaggingValue as jest.Mock).mockResolvedValue(null);
-      (DeviceFactory.generateId as jest.Mock).mockReturnValue(generatedTagValue);
+      (DeviceFactory.generateTagging as jest.Mock).mockReturnValue(generatedTagValue);
       
       // Mock all handlers to return different values to trigger updates
       mockIndexedDB.get.mockResolvedValue('old-value');
@@ -266,7 +267,7 @@ describe('Tagging Index', () => {
       const result = await taggingInstance.getStorage();
 
       expect(TaggingHandler.getTaggingValue).toHaveBeenCalled();
-      expect(DeviceFactory.generateId).toHaveBeenCalled();
+      expect(DeviceFactory.generateTagging).toHaveBeenCalled();
       expect(result).toBe(generatedTagValue);
 
       // Verify all handlers were updated with generated value

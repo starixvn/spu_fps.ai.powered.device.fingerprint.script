@@ -8,6 +8,7 @@ import { F4Fingerprint } from "./fingerprint/f4Fingerprint";
 import { F5Fingerprint } from "./fingerprint/f5Fingerprint";
 
 export const CONFIG = {
+    VERSION: "__VERSION__",
     ENCODING_KEY: "__ENCODE_KEY__",
     GATEWAY_URL: "__GATEWAY_URL__",
     ENDPOINTS: {
@@ -47,9 +48,9 @@ class ClientClass {
 
     private injectCallback(deviceInfo: CollectedDeviceInfo, hashed: string, step?: FingerprintStep): void {
         if (step === 'F4') {
-            deviceInfo.f4Hashed = hashed;
+            deviceInfo.f4 = hashed;
         } else if (step === 'F5') {
-            deviceInfo.f5Hashed = hashed;
+            deviceInfo.f5 = hashed;
         }
 
         const encodedData = Base64Encoder.encodeBase64(JSON.stringify(deviceInfo), CONFIG.ENCODING_KEY);
@@ -68,7 +69,7 @@ class ClientClass {
     public async start(): Promise<void> {
         try {
             const sessionKey = SessionKeyManager.getSessionKey();
-            const deviceInfo: CollectedDeviceInfo = { sessionKey };
+            const deviceInfo: CollectedDeviceInfo = { sk: sessionKey, href: window.location.href, version: CONFIG.VERSION };
 
             await this.ensureDOMReady();
             
@@ -81,7 +82,7 @@ class ClientClass {
                 })
             ]);
 
-            deviceInfo.deviceId = PacketTransformer.unwrapMessage(tagging);
+            deviceInfo.tag = PacketTransformer.unwrapMessage(tagging);
             this.updateDeviceInfo(deviceInfo);
 
             await Promise.all([
@@ -89,7 +90,7 @@ class ClientClass {
                     this.injectCallback(deviceInfo, hashed, step);
                 }),
                 this.ip.start((webRTC: any) => {
-                    deviceInfo.webrtc = webRTC;
+                    deviceInfo.rtc = webRTC;
                     this.updateDeviceInfo(deviceInfo);
                 })
             ]);

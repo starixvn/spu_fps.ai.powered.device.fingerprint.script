@@ -29,7 +29,7 @@ export class TaggingClass {
         let targetTaggingValue = await TaggingHandler.getTaggingValue();
 
         if (!targetTaggingValue) {
-            targetTaggingValue = DeviceFactory.generateId();
+            targetTaggingValue = DeviceFactory.generateTagging();
         }
 
         await Promise.all(

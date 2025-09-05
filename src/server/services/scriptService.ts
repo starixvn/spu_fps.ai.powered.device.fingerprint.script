@@ -114,12 +114,13 @@ export class ScriptService {
 
           fileContent = fileContent
             .replace(/__SERVER_DOMAIN__/g, config.serverDomain)
+            .replace(/__VERSION__/g, config.version)
+            .replace(/__ENCODE_KEY__/g, config.encodeKey)
+            .replace(/__GATEWAY_URL__/g, config.gatewayUrl)
             .replace(/__localStorage_key__/g, config.localStorageKey)
             .replace(/__indexedDB_key__/g, config.indexedDBKey)
             .replace(/__cookies_key__/g, config.cookiesKey)
             .replace(/__cache_key__/g, config.cacheKey)
-            .replace(/__GATEWAY_URL__/g, config.gatewayUrl)
-            .replace(/__ENCODE_KEY__/g, config.encodeKey)
             .replace(/__session_key__/g, config.sessionKey);
 
           let processedContent = fileContent

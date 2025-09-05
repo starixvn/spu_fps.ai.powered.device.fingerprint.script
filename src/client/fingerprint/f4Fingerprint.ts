@@ -25,19 +25,19 @@ export class F4Fingerprint extends AbstractFingerprint {
     ]);
 
     return {
-      audio,
-      browser,
-      hardware,
-      preferences,
+      au: audio,
+      br: browser,
+      hw: hardware,
+      pf: preferences,
     };
   }
 
   protected extractAttributes(data: F4Data): Record<string, any> {
     return {
-      ...data.audio,
-      ...data.browser,
-      ...data.hardware,
-      ...data.preferences,
+      ...data.au,
+      ...data.br,
+      ...data.hw,
+      ...data.pf,
     };
   }
 
@@ -46,14 +46,9 @@ export class F4Fingerprint extends AbstractFingerprint {
     fingerprintData: F4Data,
     hashed: string
   ): any {
-    const fp = {
-      au: this.encodeData(fingerprintData.audio),
-      br: this.encodeData(fingerprintData.browser),
-      hw: this.encodeData(fingerprintData.hardware),
-      pf: this.encodeData(fingerprintData.preferences),
-    };
+    const payload = this.encodeData({sk: sessionKey, fp: fingerprintData, hs: hashed});
 
-    return { sk: sessionKey, fp, hs: hashed };
+    return payload;
   }
 
   public async processF4Data(

@@ -8,10 +8,10 @@ export interface FingerprintData {
 }
 
 export interface F4Data {
-  audio: AudioGroupInfo;
-  browser: BrowserGroupInfo;
-  hardware: HardwareGroupInfo;
-  preferences: PreferencesGroupInfo;
+  au: AudioGroupInfo;
+  br: BrowserGroupInfo;
+  hw: HardwareGroupInfo;
+  pf: PreferencesGroupInfo;
 }
 
 // Hardware

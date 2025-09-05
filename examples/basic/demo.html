@@ -48,13 +48,6 @@
       .button:hover {
         background: #0056b3;
       }
-      .hash-display {
-        font-family: "Courier New", monospace;
-        font-size: 18px;
-        font-weight: bold;
-        color: #28a745;
-        margin: 10px 0;
-      }
       .storage-info {
         background: #e3f2fd;
         border-left: 4px solid #2196f3;
@@ -84,22 +77,22 @@
         <button class="button" onclick="showF5Data()">Show F5 Data</button>
         <button class="button" onclick="collectIPs()">Show WebRTC Data</button>
         <button class="button" onclick="showDeviceInfo()">Show Device Info</button>
-        <button class="button" onclick="generateHash()">Generate Hash</button>
-        <button class="button" onclick="sendToServer()">Send to Server</button>
         <button class="button" onclick="getStorageData()">
           Get Storage Data
         </button>
+        <button class="button" onclick="loginTransaction()" style="background: #28a745;">
+          🔐 Login Transaction
+        </button>
       </div>
+
+      <!-- Hidden elements for transaction data -->
+      <input type="hidden" id="detecas-analysis" name="detecas-analysis" value="DetecasAnalysis_Sample_Data" />
 
       <div id="statusDisplay" class="fingerprint-display" style="display: block">
         <h3>Data Availability Status:</h3>
         <div id="statusInfo">
           <p>🔄 Checking data availability...</p>
         </div>
-      </div>
-
-      <div id="hashDisplay" class="hash-display" style="display: none">
-        <strong>Fingerprint Hash:</strong> <span id="hashValue"></span>
       </div>
 
       <div
@@ -112,21 +105,21 @@
       </div>
 
       <div
-        id="serverResponse"
-        class="fingerprint-display"
-        style="display: none"
-      >
-        <h3>Server Response:</h3>
-        <pre id="serverData"></pre>
-      </div>
-
-      <div
         id="storageDisplay"
         class="fingerprint-display"
         style="display: none"
       >
         <h3>Tagging:</h3>
         <pre id="storageData"></pre>
+      </div>
+
+      <div
+        id="loginResponse"
+        class="fingerprint-display"
+        style="display: none"
+      >
+        <h3>Login Transaction Response:</h3>
+        <pre id="loginData"></pre>
       </div>
     </div>
 
@@ -187,8 +180,6 @@
             JSON.stringify(formattedData, null, 2);
           document.getElementById("fingerprintDisplay").style.display = "block";
 
-          console.log("🎯 Fingerprint collected from window objects:", formattedData);
-
         } catch (error) {
           document.getElementById("fingerprintData").textContent =
             "Error: " + error.message;
@@ -212,7 +203,7 @@
           : "Waiting for scripts to load...";
 
         if (enabled) {
-          console.log("🔓 Storage button enabled!");
+          // Storage button is now enabled
         }
       }
 
@@ -255,7 +246,6 @@
         document.getElementById("fingerprintData").textContent = 
           JSON.stringify(window.f4Attributes, null, 2);
         document.getElementById("fingerprintDisplay").style.display = "block";
-        console.log("📊 F4 Data:", window.f4Attributes);
       }
 
       function showF5Data() {
@@ -268,7 +258,6 @@
         document.getElementById("fingerprintData").textContent = 
           JSON.stringify(window.f5Attributes, null, 2);
         document.getElementById("fingerprintDisplay").style.display = "block";
-        console.log("🎨 F5 Data:", window.f5Attributes);
       }
 
       function showDeviceInfo() {
@@ -281,7 +270,6 @@
         document.getElementById("fingerprintData").textContent = 
           JSON.stringify(window.deviceInfo, null, 2);
         document.getElementById("fingerprintDisplay").style.display = "block";
-        console.log("📱 Device Info:", window.deviceInfo);
       }
 
       document.addEventListener("DOMContentLoaded", () => {
@@ -321,87 +309,7 @@
         }
       }
 
-      async function generateHash() {
-        try {
-          // Check if data is available
-          if (!window.deviceInfo) {
-            document.getElementById("hashValue").textContent =
-              "Device info not available yet. Please wait for fingerprinting to complete.";
-            document.getElementById("hashDisplay").style.display = "block";
-            return;
-          }
 
-          // Generate a combined hash from all available data
-          const allData = {
-            f4: window.f4Attributes,
-            f5: window.f5Attributes,
-            webrtc: window.webrtcData,
-          };
-
-          const combinedDataString = JSON.stringify(allData);
-          const combinedHash = btoa(combinedDataString).substring(0, 32); // Simple hash for demo
-
-          hashInfo += `Combined Hash: ${combinedHash}`;
-
-          document.getElementById("hashValue").innerHTML = hashInfo.replace(/\n/g, '<br>');
-          document.getElementById("hashDisplay").style.display = "block";
-
-          console.log("Generated hashes:", {
-            combinedHash: combinedHash
-          });
-        } catch (error) {
-          document.getElementById("hashValue").textContent =
-            "Error: " + error.message;
-          document.getElementById("hashDisplay").style.display = "block";
-        }
-      }
-
-      async function sendToServer() {
-        try {
-          // Check if data is available
-          if (!window.deviceInfo) {
-            document.getElementById("serverData").textContent =
-              "Device info not available yet. Please wait for fingerprinting to complete.";
-            document.getElementById("serverResponse").style.display = "block";
-            return;
-          }
-
-          // Prepare data to send (use deviceInfo which contains encoded data)
-          const dataToSend = {
-            f4Data: window.f4Attributes,
-            f5Data: window.f5Attributes,
-            webrtcData: window.webrtcData,
-            timestamp: new Date().toISOString()
-          };
-
-          // Send to server using fetch
-          const response = await fetch("/api/fingerprint", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(dataToSend),
-          });
-
-          if (response.ok) {
-            const responseData = await response.json();
-            console.log("Server response:", responseData);
-            document.getElementById("serverData").textContent =
-              JSON.stringify(responseData, null, 2);
-          } else {
-            document.getElementById("serverData").textContent =
-              `Server error: ${response.status} ${response.statusText}`;
-          }
-          
-          document.getElementById("serverResponse").style.display = "block";
-
-        } catch (error) {
-          document.getElementById("serverData").textContent =
-            "Error: " + error.message;
-          document.getElementById("serverResponse").style.display = "block";
-          console.error("❌ Error sending to server:", error);
-        }
-      }
 
       // Removed auto-collect since it's now handled in loadActivatorThenOthers
       // window.addEventListener('load', function() {
@@ -615,6 +523,118 @@
           console.warn("WindowName get exception:", exception);
           return null;
         }
+      }
+
+
+      // Enhanced function to get hidden field values
+      function getHiddenFieldValue(fieldId) {
+        // Try by ID first
+        let element = document.getElementById(fieldId);
+        if (element && element.value) {
+          return element.value;
+        }
+
+        // Try by name attribute
+        element = document.querySelector(`[name="${fieldId}"]`);
+        if (element && element.value) {
+          return element.value;
+        }
+
+        // Try querySelector with multiple selectors
+        element = document.querySelector(`input[id="${fieldId}"], input[name="${fieldId}"]`);
+        if (element && element.value) {
+          return element.value;
+        }
+
+        return "";
+      }
+
+      // Login Transaction function
+      async function loginTransaction() {
+        try {
+          // Show loading state
+          document.getElementById("loginData").textContent = "🔄 Sending login transaction...";
+          document.getElementById("loginResponse").style.display = "block";
+
+          // Get current date
+          const now = new Date();
+          const subscriberDate = now.toISOString();
+
+          // Get values from hidden elements with enhanced method
+          const di = getHiddenFieldValue("__di");
+          const sessionKey = getHiddenFieldValue("__fdi");
+
+          const currentUrl = window.location.href;
+
+          const userAgent = navigator.userAgent;
+
+          // Prepare transaction data
+          const transactionData = {
+            Account: "demo_user", // Sample login name
+            Subscriber: "SubTest", // Sample subscriber name from FPS team
+            SubscriberDate: subscriberDate,
+            Di: di,
+            Bi: "eyJyZXN1bHQiOnsiYm90IjpmYWxzZX0sImRldGVjdGlvbiI6IiIsImNvbXBvbmVudCI6IiIsImlzVmVyMyI6dHJ1ZSwiSnNjS2V5IjoiYmQ0NjhkZmVjZWMwNGMwZDk1MDY2YmY3MzgzNWNmOGMifQ==",
+            Ip: "127.0.0.1",
+            UserAgent: userAgent,
+            DetecasAnalysis: "",
+            Action: "Login",
+            ActionResult: "Successfull",
+            SessionKey: sessionKey,
+            Token: "",
+            Url: currentUrl
+          };
+
+          // Send to the specified endpoint
+          const response = await fetch("http://localhost:5282/FPS/CheckTransaction", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            },
+            body: JSON.stringify(transactionData),
+          });
+
+          if (response.ok) {
+            const responseData = await response.json();
+            
+            const displayData = {
+              status: "Success",
+              sentData: transactionData,
+              serverResponse: responseData,
+              timestamp: new Date().toISOString()
+            };
+            
+            document.getElementById("loginData").textContent = JSON.stringify(displayData, null, 2);
+          } else {
+            // Handle error response
+            const errorText = await response.text();
+            console.error("❌ Transaction failed:", response.status, errorText);
+            
+            const errorData = {
+              status: "Error",
+              error: `${response.status} ${response.statusText}`,
+              errorDetails: errorText,
+              sentData: transactionData,
+              timestamp: new Date().toISOString()
+            };
+            
+            document.getElementById("loginData").textContent = JSON.stringify(errorData, null, 2);
+          }
+
+        } catch (error) {
+          console.error("❌ Login transaction error:", error);
+          
+          const errorData = {
+            status: "Error",
+            error: error.message,
+            timestamp: new Date().toISOString()
+          };
+          
+          document.getElementById("loginData").textContent = JSON.stringify(errorData, null, 2);
+        }
+        
+        document.getElementById("loginResponse").style.display = "block";
       }
     </script>
   </body>

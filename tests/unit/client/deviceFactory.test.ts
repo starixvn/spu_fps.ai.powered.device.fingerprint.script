@@ -23,6 +23,35 @@ describe('DeviceFactory', () => {
   });
 
   describe('generateId', () => {
+    it('should generate a GUID', () => {
+      // Arrange
+      const mockGuid = 'a1b2c3d4e5f6789012345678901234ab';
+      
+      mockGuidGenerator.generateGuid.mockReturnValue(mockGuid);
+
+      // Act
+      const result = DeviceFactory.generateId();
+
+      // Assert
+      expect(mockGuidGenerator.generateGuid).toHaveBeenCalledTimes(1);
+      expect(result).toBe(mockGuid);
+    });
+
+    it('should return the raw GUID from GuidGenerator', () => {
+      // Arrange
+      const mockGuid = '12345678901234567890123456789012';
+      
+      mockGuidGenerator.generateGuid.mockReturnValue(mockGuid);
+
+      // Act
+      const result = DeviceFactory.generateId();
+
+      // Assert
+      expect(result).toBe(mockGuid);
+    });
+  });
+
+  describe('generateTagging', () => {
     it('should generate and encrypt a GUID', () => {
       // Arrange
       const mockGuid = 'a1b2c3d4e5f6789012345678901234ab';
@@ -32,7 +61,7 @@ describe('DeviceFactory', () => {
       mockPacketTransformer.wrapMessage.mockReturnValue(mockEncryptedGuid);
 
       // Act
-      const result = DeviceFactory.generateId();
+      const result = DeviceFactory.generateTagging();
 
       // Assert
       expect(mockGuidGenerator.generateGuid).toHaveBeenCalledTimes(1);
@@ -49,7 +78,7 @@ describe('DeviceFactory', () => {
       mockPacketTransformer.wrapMessage.mockReturnValue(mockEncryptedGuid);
 
       // Act
-      const result = DeviceFactory.generateId();
+      const result = DeviceFactory.generateTagging();
 
       // Assert
       expect(result).toBe(mockEncryptedGuid);
@@ -188,7 +217,7 @@ describe('DeviceFactory', () => {
       const originalGuid = 'a1b2c3d4e5f67890a1b2c3d4e5f67890';
       const encryptedTagging = 'encrypted-tagging-value';
       
-      // Mock generateId flow
+      // Mock generateTagging flow
       mockGuidGenerator.generateGuid.mockReturnValue(originalGuid);
       mockPacketTransformer.wrapMessage.mockReturnValue(encryptedTagging);
       
@@ -196,11 +225,11 @@ describe('DeviceFactory', () => {
       mockPacketTransformer.unwrapMessage.mockReturnValue(originalGuid);
 
       // Act
-      const generatedId = DeviceFactory.generateId();
-      const isValid = DeviceFactory.isValidTagging(generatedId);
+      const generatedTagging = DeviceFactory.generateTagging();
+      const isValid = DeviceFactory.isValidTagging(generatedTagging);
 
       // Assert
-      expect(generatedId).toBe(encryptedTagging);
+      expect(generatedTagging).toBe(encryptedTagging);
       expect(isValid).toBe(true);
     });
 
@@ -214,7 +243,7 @@ describe('DeviceFactory', () => {
       mockPacketTransformer.unwrapMessage.mockReturnValue(originalGuid);
 
       // Act
-      const encrypted = DeviceFactory.generateId();
+      const encrypted = DeviceFactory.generateTagging();
       const isValidAfterDecryption = DeviceFactory.isValidTagging(encrypted);
 
       // Assert

@@ -58,6 +58,7 @@ interface EnvironmentConfig {
   gatewayUrl: string;
   encodeKey: string;
   sessionKey: string;
+  version: string;
 }
 
 const environmentConfig: EnvironmentConfig = {
@@ -70,7 +71,8 @@ const environmentConfig: EnvironmentConfig = {
   serverDomain: process.env.SERVER_DOMAIN || 'https://fps-pwr-dfp.nexdev.net',
   gatewayUrl: process.env.GATEWAY_URL || '',
   encodeKey: process.env.ENCODE_KEY || '',
-  sessionKey: process.env.SESSION_KEY || ''
+  sessionKey: process.env.SESSION_KEY || '',
+  version: process.env.VERSION || ''
 };
 
 // Environment-specific defaults

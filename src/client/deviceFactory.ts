@@ -3,8 +3,12 @@ import { GuidGenerator, PacketTransformer } from "./utils/hash";
 export class DeviceFactory {
     public static generateId(): string {
         const guid = GuidGenerator.generateGuid();
+        return guid;
+    }
+
+    public static generateTagging(): string {
+        const guid = this.generateId();
         const encryptedGuid = PacketTransformer.wrapMessage(guid);
-        
         return encryptedGuid;
     }
 

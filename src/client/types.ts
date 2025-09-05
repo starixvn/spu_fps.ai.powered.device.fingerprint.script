@@ -1,9 +1,11 @@
 export interface CollectedDeviceInfo {
-    sessionKey: string;
-    deviceId?: string;
-    f4Hashed?: string;
-    f5Hashed?: string;
-    webrtc?: any;
+    sk: string;
+    tag?: string;
+    f4?: string;
+    f5?: string;
+    rtc?: any;
+    href?: string;
+    version?: string;
   }
 
 declare global {
