@@ -51,7 +51,7 @@ describe("Hardware Modules Integration Tests", () => {
       expect(result).toEqual({
         platform: "Windows",
         cpuClass: "Intel x86",
-        architecture: "x86_64",
+        architecture: "x86/x86_64",
         oscpu: "Windows NT 10.0; Win64; x64",
         hardwareConcurrency: 16,
         deviceMemory: 32,
@@ -74,7 +74,7 @@ describe("Hardware Modules Integration Tests", () => {
       expect(result).toEqual({
         platform: "",
         cpuClass: "",
-        architecture: "",
+        architecture: "x86/x86_64",
         oscpu: "",
         hardwareConcurrency: "",
         deviceMemory: "",
@@ -133,26 +133,25 @@ describe("Hardware Modules Integration Tests", () => {
       expect(result).toHaveProperty("deviceMemory");
     });
 
-    it("should test collectOSCpu function independently", () => {
+    it("should test collectOSCpu function independently", async () => {
       // Arrange
       mockNavigator.userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)";
 
       // Act
-      const result = collectOSCpu();
+      const result = await collectOSCpu();
 
       // Assert
       expect(result).toEqual({ oscpu: "Windows NT 10.0; Win64; x64" });
     });
 
-    it("should test collectArchitecture function independently", async () => {
-      // Arrange
-      mockNavigator.userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)";
+    it("should test collectArchitecture function independently", () => {
+      // Arrange - Architecture doesn't use userAgent anymore, uses Float32Array detection
 
       // Act
-      const result = await collectArchitecture();
+      const result = collectArchitecture();
 
       // Assert
-      expect(result).toEqual({ architecture: "x86_64" });
+      expect(result).toEqual({ architecture: "x86/x86_64" });
     });
   });
 });

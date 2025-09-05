@@ -28,14 +28,14 @@ async function getOSCpu(): Promise<string> {
     const ua = navigator.userAgent;
     let oscpu = "";
 
-    if (ua.includes("Windows NT 10.0")) oscpu = "Windows NT 10.0";
+    if (ua.includes("Android")) oscpu = "Android";
+    else if (ua.includes("iPhone") || ua.includes("iPad") || ua.includes("iPod")) oscpu = "iOS";
+    else if (ua.includes("Windows NT 10.0")) oscpu = "Windows NT 10.0";
     else if (ua.includes("Windows NT 6.3")) oscpu = "Windows NT 6.3";
     else if (ua.includes("Windows NT 6.2")) oscpu = "Windows NT 6.2";
     else if (ua.includes("Windows NT 6.1")) oscpu = "Windows NT 6.1";
     else if (ua.includes("Mac OS X")) oscpu = "Mac OS X";
     else if (ua.includes("Linux")) oscpu = "Linux";
-    else if (ua.includes("Android")) oscpu = "Android";
-    else if (ua.includes("iOS")) oscpu = "iOS";
 
     if (oscpu.startsWith("Windows")) {
       if (ua.includes("Win64") || ua.includes("x64")) oscpu += "; Win64; x64";

@@ -23,9 +23,9 @@ describe('Hardware Fingerprint Module', () => {
     // Setup default mock return values
     mockCollectPlatform.mockReturnValue({ platform: 'Windows' });
     mockCollectCpuClass.mockReturnValue({ cpuClass: 'Intel x86' });
-    mockCollectArchitecture.mockResolvedValue({ architecture: 'x86_64' });
-    mockCollectOSCpu.mockReturnValue({ oscpu: 'Windows NT 10.0; Win64; x64' });
-    mockCollectHardwareConcurrency.mockReturnValue({ hardwareConcurrency: 8 });
+    mockCollectArchitecture.mockReturnValue({ architecture: 'x86/x86_64' });
+    mockCollectOSCpu.mockResolvedValue({ oscpu: 'Windows NT 10.0; Win64; x64' });
+    mockCollectHardwareConcurrency.mockResolvedValue({ hardwareConcurrency: 8 });
     mockCollectDeviceMemory.mockReturnValue({ deviceMemory: 16 });
   });
 
@@ -35,7 +35,7 @@ describe('Hardware Fingerprint Module', () => {
       const expectedResult = {
         platform: 'Windows',
         cpuClass: 'Intel x86',
-        architecture: 'x86_64',
+        architecture: 'x86/x86_64',
         oscpu: 'Windows NT 10.0; Win64; x64',
         hardwareConcurrency: 8,
         deviceMemory: 16,
@@ -58,9 +58,9 @@ describe('Hardware Fingerprint Module', () => {
       // Arrange
       mockCollectPlatform.mockReturnValue({ platform: '' });
       mockCollectCpuClass.mockReturnValue({ cpuClass: '' });
-      mockCollectArchitecture.mockResolvedValue({ architecture: '' });
-      mockCollectOSCpu.mockReturnValue({ oscpu: '' });
-      mockCollectHardwareConcurrency.mockReturnValue({ hardwareConcurrency: '' });
+      mockCollectArchitecture.mockReturnValue({ architecture: '' });
+      mockCollectOSCpu.mockResolvedValue({ oscpu: '' });
+      mockCollectHardwareConcurrency.mockResolvedValue({ hardwareConcurrency: '' });
       mockCollectDeviceMemory.mockReturnValue({ deviceMemory: '' });
 
       const expectedResult = {
@@ -83,15 +83,15 @@ describe('Hardware Fingerprint Module', () => {
       // Arrange
       mockCollectPlatform.mockReturnValue({ platform: 'Linux' });
       mockCollectCpuClass.mockReturnValue({ cpuClass: '' });
-      mockCollectArchitecture.mockResolvedValue({ architecture: 'arm64' });
-      mockCollectOSCpu.mockReturnValue({ oscpu: '' });
-      mockCollectHardwareConcurrency.mockReturnValue({ hardwareConcurrency: 4 });
+      mockCollectArchitecture.mockReturnValue({ architecture: 'x86/x86_64' });
+      mockCollectOSCpu.mockResolvedValue({ oscpu: '' });
+      mockCollectHardwareConcurrency.mockResolvedValue({ hardwareConcurrency: 4 });
       mockCollectDeviceMemory.mockReturnValue({ deviceMemory: '' });
 
       const expectedResult = {
         platform: 'Linux',
         cpuClass: '',
-        architecture: 'arm64',
+        architecture: 'x86/x86_64',
         oscpu: '',
         hardwareConcurrency: 4,
         deviceMemory: '',
@@ -108,15 +108,15 @@ describe('Hardware Fingerprint Module', () => {
       // Arrange
       mockCollectPlatform.mockReturnValue({ platform: 'MacOS' });
       mockCollectCpuClass.mockReturnValue({ cpuClass: 'Apple Silicon' });
-      mockCollectArchitecture.mockResolvedValue({ architecture: 'arm64' });
-      mockCollectOSCpu.mockReturnValue({ oscpu: 'Mac OS X; Intel' });
-      mockCollectHardwareConcurrency.mockReturnValue({ hardwareConcurrency: '16' });
+      mockCollectArchitecture.mockReturnValue({ architecture: 'x86/x86_64' });
+      mockCollectOSCpu.mockResolvedValue({ oscpu: 'Mac OS X; Intel' });
+      mockCollectHardwareConcurrency.mockResolvedValue({ hardwareConcurrency: '16' });
       mockCollectDeviceMemory.mockReturnValue({ deviceMemory: 32.5 });
 
       const expectedResult = {
         platform: 'MacOS',
         cpuClass: 'Apple Silicon',
-        architecture: 'arm64',
+        architecture: 'x86/x86_64',
         oscpu: 'Mac OS X; Intel',
         hardwareConcurrency: '16',
         deviceMemory: 32.5,
@@ -131,7 +131,9 @@ describe('Hardware Fingerprint Module', () => {
 
     it('should handle error in individual collectors gracefully', async () => {
       // Arrange
-      mockCollectArchitecture.mockRejectedValue(new Error('API not supported'));
+      mockCollectArchitecture.mockImplementation(() => {
+        throw new Error('API not supported');
+      });
 
       const expectedResult = {
         platform: 'Windows',
@@ -160,7 +162,9 @@ describe('Hardware Fingerprint Module', () => {
       mockCollectPlatform.mockImplementation(() => {
         throw new Error('Platform API error');
       });
-      mockCollectArchitecture.mockRejectedValue(new Error('Architecture API error'));
+      mockCollectArchitecture.mockImplementation(() => {
+        throw new Error('Architecture API error');
+      });
 
       const expectedResult = {
         platform: '',
@@ -186,7 +190,9 @@ describe('Hardware Fingerprint Module', () => {
       mockCollectCpuClass.mockImplementation(() => {
         throw new Error('CPU Class API error');
       });
-      mockCollectArchitecture.mockRejectedValue(new Error('Architecture API error'));
+      mockCollectArchitecture.mockImplementation(() => {
+        throw new Error('Architecture API error');
+      });
       mockCollectOSCpu.mockImplementation(() => {
         throw new Error('OS CPU API error');
       });
@@ -225,15 +231,15 @@ describe('Hardware Fingerprint Module', () => {
         callOrder.push('cpuClass');
         return { cpuClass: 'Intel x86' };
       });
-      mockCollectArchitecture.mockImplementation(async () => {
+      mockCollectArchitecture.mockImplementation(() => {
         callOrder.push('architecture');
-        return { architecture: 'x86_64' };
+        return { architecture: 'x86/x86_64' };
       });
-      mockCollectOSCpu.mockImplementation(() => {
+      mockCollectOSCpu.mockImplementation(async () => {
         callOrder.push('oscpu');
         return { oscpu: 'Windows NT 10.0; Win64; x64' };
       });
-      mockCollectHardwareConcurrency.mockImplementation(() => {
+      mockCollectHardwareConcurrency.mockImplementation(async () => {
         callOrder.push('hardwareConcurrency');
         return { hardwareConcurrency: 8 };
       });
@@ -260,9 +266,9 @@ describe('Hardware Fingerprint Module', () => {
       // Arrange
       mockCollectPlatform.mockReturnValue({ platform: null as any });
       mockCollectCpuClass.mockReturnValue({ cpuClass: undefined as any });
-      mockCollectArchitecture.mockResolvedValue({ architecture: null as any });
-      mockCollectOSCpu.mockReturnValue({ oscpu: undefined as any });
-      mockCollectHardwareConcurrency.mockReturnValue({ hardwareConcurrency: null as any });
+      mockCollectArchitecture.mockReturnValue({ architecture: null as any });
+      mockCollectOSCpu.mockResolvedValue({ oscpu: undefined as any });
+      mockCollectHardwareConcurrency.mockResolvedValue({ hardwareConcurrency: null as any });
       mockCollectDeviceMemory.mockReturnValue({ deviceMemory: undefined as any });
 
       const expectedResult = {

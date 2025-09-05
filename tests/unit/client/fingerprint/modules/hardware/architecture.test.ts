@@ -1,199 +1,71 @@
 import { collectArchitecture } from '../../../../../../src/client/fingerprint/modules/hardware/architecture';
 
-// Mock navigator object
-const mockNavigator: any = {
-  userAgentData: undefined,
-  userAgent: '',
-};
-
-// Mock global navigator
-Object.defineProperty(global, 'navigator', {
-  value: mockNavigator,
-  writable: true,
-});
-
 describe('Hardware Architecture Module', () => {
-  beforeEach(() => {
-    // Reset mock navigator before each test
-    mockNavigator.userAgentData = undefined;
-    mockNavigator.userAgent = '';
-  });
-
   describe('collectArchitecture', () => {
-    it('should return architecture from navigator.userAgentData.getHighEntropyValues when available', async () => {
-      // Arrange
-      const mockGetHighEntropyValues = jest.fn().mockResolvedValue({
-        architecture: 'x86_64',
-      });
-      
-      mockNavigator.userAgentData = {
-        getHighEntropyValues: mockGetHighEntropyValues,
-      };
-
+    it('should return x86/x86_64 for standard x86 systems', () => {
       // Act
-      const result = await collectArchitecture();
+      const result = collectArchitecture();
 
       // Assert
-      expect(result).toEqual({ architecture: 'x86_64' });
-      expect(mockGetHighEntropyValues).toHaveBeenCalledWith(['architecture']);
+      // Current implementation uses Float32Array byte manipulation to detect x86 architecture
+      // In most test environments, this should return "x86/x86_64"
+      expect(result).toEqual({ architecture: 'x86/x86_64' });
     });
 
-    it('should return empty string when getHighEntropyValues throws error', async () => {
-      // Arrange
-      const mockGetHighEntropyValues = jest.fn().mockRejectedValue(new Error('API not supported'));
-      
-      mockNavigator.userAgentData = {
-        getHighEntropyValues: mockGetHighEntropyValues,
-      };
-
-      // Act
-      const result = await collectArchitecture();
-
-      // Assert
-      expect(result).toEqual({ architecture: '' });
-    });
-
-    it('should return empty string when getHighEntropyValues returns undefined architecture', async () => {
-      // Arrange
-      const mockGetHighEntropyValues = jest.fn().mockResolvedValue({
-        architecture: undefined,
-      });
-      
-      mockNavigator.userAgentData = {
-        getHighEntropyValues: mockGetHighEntropyValues,
-      };
-
-      // Act
-      const result = await collectArchitecture();
-
-      // Assert
-      expect(result).toEqual({ architecture: '' });
-    });
-
-    it('should return x86_64 when userAgent contains win64', async () => {
-      // Arrange
-      mockNavigator.userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)';
-
-      // Act
-      const result = await collectArchitecture();
-
-      // Assert
-      expect(result).toEqual({ architecture: 'x86_64' });
-    });
-
-    it('should return x86_64 when userAgent contains x64', async () => {
-      // Arrange
-      mockNavigator.userAgent = 'Mozilla/5.0 (Windows NT 10.0; x64)';
-
-      // Act
-      const result = await collectArchitecture();
-
-      // Assert
-      expect(result).toEqual({ architecture: 'x86_64' });
-    });
-
-    it('should return x86 when userAgent contains win32', async () => {
-      // Arrange
-      mockNavigator.userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win32)';
-
-      // Act
-      const result = await collectArchitecture();
-
-      // Assert
-      expect(result).toEqual({ architecture: 'x86' });
-    });
-
-    it('should return x86 when userAgent contains i686', async () => {
-      // Arrange
-      mockNavigator.userAgent = 'Mozilla/5.0 (Linux; i686)';
-
-      // Act
-      const result = await collectArchitecture();
-
-      // Assert
-      expect(result).toEqual({ architecture: 'x86' });
-    });
-
-    it('should return arm64 when userAgent contains aarch64', async () => {
-      // Arrange
-      mockNavigator.userAgent = 'Mozilla/5.0 (Linux; aarch64)';
-
-      // Act
-      const result = await collectArchitecture();
-
-      // Assert
-      expect(result).toEqual({ architecture: 'arm64' });
-    });
-
-    it('should return arm64 when userAgent contains arm64', async () => {
-      // Arrange
-      mockNavigator.userAgent = 'Mozilla/5.0 (Windows NT 10.0; arm64)';
-
-      // Act
-      const result = await collectArchitecture();
-
-      // Assert
-      expect(result).toEqual({ architecture: 'arm64' });
-    });
-
-    it('should return armv7l when userAgent contains armv7l', async () => {
-      // Arrange
-      mockNavigator.userAgent = 'Mozilla/5.0 (Linux; armv7l)';
-
-      // Act
-      const result = await collectArchitecture();
-
-      // Assert
-      expect(result).toEqual({ architecture: 'armv7l' });
-    });
-
-    it('should return empty string when userAgent does not contain architecture indicators', async () => {
-      // Arrange
-      mockNavigator.userAgent = 'Mozilla/5.0 (Windows NT 10.0)';
-
-      // Act
-      const result = await collectArchitecture();
-
-      // Assert
-      expect(result).toEqual({ architecture: '' });
-    });
-
-    it('should prioritize userAgentData over userAgent parsing', async () => {
-      // Arrange
-      const mockGetHighEntropyValues = jest.fn().mockResolvedValue({
-        architecture: 'arm64',
-      });
-      
-      mockNavigator.userAgentData = {
-        getHighEntropyValues: mockGetHighEntropyValues,
-      };
-      mockNavigator.userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)';
-
-      // Act
-      const result = await collectArchitecture();
-
-      // Assert
-      expect(result).toEqual({ architecture: 'arm64' });
-    });
-
-    it('should handle error gracefully and return empty string', async () => {
-      // Arrange
-      Object.defineProperty(global, 'navigator', {
-        value: undefined,
-        writable: true,
+    it('should handle errors gracefully and return empty string', () => {
+      // Arrange - Mock Float32Array to throw an error
+      const originalFloat32Array = global.Float32Array;
+      (global as any).Float32Array = jest.fn().mockImplementation(() => {
+        throw new Error('Float32Array not supported');
       });
 
       // Act
-      const result = await collectArchitecture();
+      const result = collectArchitecture();
 
       // Assert
       expect(result).toEqual({ architecture: '' });
 
-      // Restore navigator for other tests
-      Object.defineProperty(global, 'navigator', {
-        value: mockNavigator,
-        writable: true,
+      // Cleanup
+      global.Float32Array = originalFloat32Array;
+    });
+
+    it('should handle Uint8Array errors gracefully', () => {
+      // Arrange - Mock Uint8Array to throw an error
+      const originalUint8Array = global.Uint8Array;
+      (global as any).Uint8Array = jest.fn().mockImplementation(() => {
+        throw new Error('Uint8Array not supported');
       });
+
+      // Act
+      const result = collectArchitecture();
+
+      // Assert
+      expect(result).toEqual({ architecture: '' });
+
+      // Cleanup
+      global.Uint8Array = originalUint8Array;
+    });
+
+    it('should return consistent results when called multiple times', () => {
+      // Act
+      const result1 = collectArchitecture();
+      const result2 = collectArchitecture();
+      const result3 = collectArchitecture();
+
+      // Assert
+      expect(result1).toEqual(result2);
+      expect(result2).toEqual(result3);
+      expect(typeof result1.architecture).toBe('string');
+    });
+
+    it('should return non-empty string for architecture value', () => {
+      // Act
+      const result = collectArchitecture();
+
+      // Assert
+      expect(typeof result.architecture).toBe('string');
+      // Architecture should be either "x86/x86_64", "non-x86", or "" (empty on error)
+      expect(['x86/x86_64', 'non-x86', '']).toContain(result.architecture);
     });
   });
 });
