@@ -61,18 +61,7 @@ export class GraphicsFingerprint {
           maxFragmentUniformVectors: 0,
           maxVaryingVectors: 0,
         },
-        fonts: {
-          availableFonts: [],
-          fontList: [],
-          fontMetrics: {},
-          fontDetection: {
-            detectedFonts: [],
-            fallbackFonts: [],
-            systemFonts: [],
-          },
-          noiseType: "blocked",
-          entropy: 0,
-        },
+        fonts: [],
         fontPreferences: {
           default: 0,
           apple: 0,

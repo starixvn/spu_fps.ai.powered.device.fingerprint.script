@@ -114,26 +114,7 @@ export interface WebGLExtensionsInfo {
   maxVaryingVectors: number;
 }
 
-export interface FontsInfo {
-  availableFonts: string[];
-  fontList: string[];
-  fontMetrics: Record<string, FontMetrics>;
-  fontDetection: FontDetectionResult;
-}
-
-export interface FontMetrics {
-  width: number;
-  height: number;
-  baseline: number;
-  ascent: number;
-  descent: number;
-}
-
-export interface FontDetectionResult {
-  detectedFonts: string[];
-  fallbackFonts: string[];
-  systemFonts: string[];
-}
+export type FontsInfo = string[];
 
 export interface FontPreferencesInfo {
   fontFamily: string;

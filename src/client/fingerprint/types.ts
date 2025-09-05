@@ -53,7 +53,7 @@ export interface GraphicsGroupInfo {
   canvas: string;
   webglBasics: WebGLBasicsInfo;
   webglExtensions: WebGLExtensionsInfo;
-  fonts: FontsInfo;
+  fonts: string[];
   fontPreferences: FontPreferencesInfo;
   screenResolution: ScreenResolutionInfo;
   screenFrame: ScreenFrameInfo;
@@ -92,28 +92,7 @@ export interface WebGLExtensionsInfo {
   maxVaryingVectors: number;
 }
 
-export interface FontsInfo {
-  availableFonts: string[];
-  fontList: string[];
-  fontMetrics: Record<string, FontMetrics>;
-  fontDetection: FontDetectionInfo;
-  noiseType: "ok" | "blocked" | "spoofed" | "randomized";
-  entropy: number;
-}
-
-export interface FontMetrics {
-  width: number;
-  height: number;
-  baseline: number;
-  ascent: number;
-  descent: number;
-}
-
-export interface FontDetectionInfo {
-  detectedFonts: string[];
-  fallbackFonts: string[];
-  systemFonts: string[];
-}
+export type FontsInfo = string[];
 
 export interface FontPreferencesInfo {
   default: number;
