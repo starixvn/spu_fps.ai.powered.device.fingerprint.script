@@ -11,33 +11,21 @@ export function collectVendor(): VendorInfo {
 
 function getVendor(): string {
   try {
-    // 1. Native vendor field (quickest)
     if (navigator.vendor && navigator.vendor.trim() !== "") {
-      return navigator.vendor; // e.g. "Google Inc."
+      return navigator.vendor; 
     }
 
-    // 2. Browser-specific globals (stable)
-    if ((window as any).safari?.pushNotification) {
-      return "Apple Inc.";
-    }
-    if (typeof (window as any).InstallTrigger !== "undefined") {
-      return "Mozilla Foundation";
-    }
-    if ((window as any).opr || (window as any).oprt) {
-      return "Opera Software ASA";
-    }
-    if ((navigator as any).brave || (window as any).chrome?.brave) {
-      return "Brave Software Inc.";
-    }
-    if ((window as any).samsungAr) {
-      return "Samsung Electronics";
-    }
-    if ((window as any).chrome) {
-      return "Google Inc."; // generic Chrome-family fallback
-    }
+    const w = window as any;
+    const n = navigator as any;
 
-    // 3. Fallback: unknown
-    return "Unknown";
+    if (w.safari?.pushNotification) return "Apple Inc.";
+    if (typeof w.InstallTrigger !== "undefined") return "Mozilla Foundation";
+    if (w.opr || w.oprt) return "Opera Software ASA";
+    if (n.brave || w.chrome?.brave) return "Brave Software Inc.";
+    if (w.samsungAr) return "Samsung Electronics";
+    if (w.chrome) return "Google Inc.";
+
+    return "";
   } catch {
     return "";
   }

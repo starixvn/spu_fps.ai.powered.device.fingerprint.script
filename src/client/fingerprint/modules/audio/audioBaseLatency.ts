@@ -35,7 +35,6 @@ export async function collectAudioBaseLatency(): Promise<AudioBaseLatencyInfo> {
       const diff = Math.abs(freshMedian - cached) / cached;
       
       if (diff <= NOISE_THRESHOLD) {
-        // Small deviation -> trust old cache for consistency
         return { audioBaseLatency: cached };
       } else {
         localStorage.setItem(CACHE_KEY, String(freshMedian));
@@ -43,7 +42,6 @@ export async function collectAudioBaseLatency(): Promise<AudioBaseLatencyInfo> {
       }
     }
 
-    // No cache yet -> save new value
     localStorage.setItem(CACHE_KEY, String(freshMedian));
     return { audioBaseLatency: freshMedian };
   } catch {

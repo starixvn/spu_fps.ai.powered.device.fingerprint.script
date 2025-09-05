@@ -1,5 +1,3 @@
-import type { AudioInfo } from "../../types";
-
 export const enum AudioStatus {
   CLEAN = "clean",
   RANDOMIZE = "randomize", 
@@ -17,7 +15,7 @@ const enum InnerErrorName {
   Timeout = 'timeout',
 }
 
-let audioCache: AudioInfo | null = null;
+let audioCache: number | null = null;
 let lastMedian: number | null = null;
 
 const OSC_FREQUENCY = 10000; // 10kHz triangle wave frequency
@@ -222,13 +220,10 @@ function doesBrowserPerformAntifingerprinting(): boolean {
   return false;
 }
 
-export async function collectAudio(): Promise<AudioInfo> {
+export async function collectAudio(): Promise<number | null> {
   try {
     if (doesBrowserPerformAntifingerprinting()) {
-      return { 
-        audio: SpecialFingerprint.KnownForAntifingerprinting, 
-        status: AudioStatus.SPOOF 
-      };
+      return SpecialFingerprint.KnownForAntifingerprinting;
     }
 
     const AudioCtxClass =
@@ -236,10 +231,7 @@ export async function collectAudio(): Promise<AudioInfo> {
       (window as any).webkitOfflineAudioContext;
       
     if (!AudioCtxClass) {
-      return { 
-        audio: SpecialFingerprint.NotSupported, 
-        status: AudioStatus.BLOCK 
-      };
+      return SpecialFingerprint.NotSupported;
     }
 
     if (audioCache) {
@@ -260,22 +252,21 @@ export async function collectAudio(): Promise<AudioInfo> {
     }
 
     if (samples.length === 0) {
-      return { audio: SpecialFingerprint.Timeout, status: AudioStatus.BLOCK };
+      return SpecialFingerprint.Timeout;
     }
 
     // Statistical analysis and noise detection
     const median = computeMedian(samples);
     const status = detectNoise(samples, median, snapshotsRMS);
-    const result: AudioInfo = { audio: median, status };
 
     // Cache clean results
     if (status === "clean") {
-      audioCache = result;
+      audioCache = median;
     }
 
-    return result;
+    return median;
   } catch (error) {
-    return { audio: SpecialFingerprint.Timeout, status: AudioStatus.BLOCK };
+    return SpecialFingerprint.Timeout;
   }
 }
 

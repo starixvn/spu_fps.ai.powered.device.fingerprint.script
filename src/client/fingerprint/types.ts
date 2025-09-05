@@ -50,7 +50,7 @@ export interface OSCpuInfo {
 
 // Graphics
 export interface GraphicsGroupInfo {
-  canvas: CanvasInfo;
+  canvas: string;
   webglBasics: WebGLBasicsInfo;
   webglExtensions: WebGLExtensionsInfo;
   fonts: FontsInfo;
@@ -63,7 +63,6 @@ export interface GraphicsGroupInfo {
 
 export interface CanvasInfo {
   value: string;
-  status: string;
 }
 
 export interface WebGLBasicsInfo {
@@ -166,7 +165,7 @@ export interface ColorGamutInfo {
 
 // Audio
 export interface AudioGroupInfo {
-  audio: AudioInfo;
+  audio: number | null;
   audioBaseLatency: number | string;
 }
 

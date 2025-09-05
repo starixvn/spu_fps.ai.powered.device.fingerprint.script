@@ -1,125 +1,122 @@
-import type { CanvasInfo } from "../../types";
 import { murmurhash3_32_gc } from "../../utils/hash";
 
-export const enum CanvasStatus {
-  CLEAN = "clean",
-  BLOCK = "block",
-  RANDOMIZE = "randomize",
-  SPOOFED_LOW_ENTROPY = "spoofed-low-entropy",
-}
+const CANVAS_CACHE_KEY = "canvasCache";
+const CANVAS_SNAPSHOTS = 5;
 
-export async function collectCanvas(): Promise<CanvasInfo> {
+export async function collectCanvas(): Promise<string> {
   try {
-    return await getCanvasInfo();
+    let cachedValue: string | null = null;
+    try {
+      const rawCache = localStorage.getItem(CANVAS_CACHE_KEY);
+
+      if (rawCache && rawCache.length > 0) {
+        cachedValue = rawCache;
+      }
+    } catch (e) {
+    }
+
+    const snapshotPromises = Array.from({ length: CANVAS_SNAPSHOTS }, () => getCanvasFeatures());
+    const samples = (await Promise.all(snapshotPromises)).filter(Boolean) as any[];
+
+    if (samples.length === 0) {
+      return "";
+    }
+
+    const stableFeatures = computeFeatureMedian(samples);
+    const value = murmurhash3_32_gc(JSON.stringify(stableFeatures)).toString(16);
+     
+    if (cachedValue && cachedValue === value) {
+      return cachedValue;
+    }
+
+    try {
+      localStorage.setItem(CANVAS_CACHE_KEY, value);
+    } catch (e) {
+    }
+
+    return value;
   } catch {
-    return getEmptyCanvasInfo(CanvasStatus.BLOCK);
+    return "";
   }
 }
 
-async function getCanvasInfo(): Promise<CanvasInfo> {
-  const collectedData: Record<string, any> = {};
-  let status: CanvasStatus = CanvasStatus.CLEAN;
-
+async function getCanvasFeatures(): Promise<Record<string, any> | null> {
   try {
+    const canvas = document.createElement("canvas");
+    
+    canvas.width = 400;
+    canvas.height = 100;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+
+    drawComplexCanvas(ctx, "FPS Fingerprint 💯 @123# 😊 Canvas/GPU Test", canvas.width, canvas.height);
+
+    const features: Record<string, any> = {
+      font: ctx.font,
+      shadowBlur: ctx.shadowBlur,
+      shadowColor: ctx.shadowColor,
+      globalCompositeOperation: ctx.globalCompositeOperation,
+      fillStyle: ctx.fillStyle?.toString() || "gradient", 
+      width: canvas.width,
+      height: canvas.height,
+      pixelSample: Array.from(ctx.getImageData(0, 0, 10, 10).data),
+    };
+
+    // WebGL features
     try {
-      const canvas = document.createElement("canvas");
       const gl = (canvas.getContext("webgl") || canvas.getContext("experimental-webgl")) as WebGLRenderingContext | null;
-
+      
       if (gl) {
-        collectedData.webglVersion = gl.getParameter(gl.VERSION);
-        collectedData.webglVendor = gl.getParameter(gl.VENDOR);
-        collectedData.webglRenderer = gl.getParameter(gl.RENDERER);
-        collectedData.webglShadingLanguageVersion = gl.getParameter(gl.SHADING_LANGUAGE_VERSION);
-
+        features.webglVersion = gl.getParameter(gl.VERSION);
+        features.webglVendor = gl.getParameter(gl.VENDOR);
+        features.webglRenderer = gl.getParameter(gl.RENDERER);
+        features.webglShadingLanguageVersion = gl.getParameter(gl.SHADING_LANGUAGE_VERSION);
         const extensions = gl.getSupportedExtensions();
-        collectedData.webglExtensions = extensions ? extensions.sort().join(",") : "";
+        features.webglExtensions = extensions ? extensions.sort().join(",") : "";
 
         const debugInfo = gl.getExtension("WEBGL_debug_renderer_info") as any;
-        
         if (debugInfo) {
           try {
-            collectedData.unmaskedVendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
-            collectedData.unmaskedRenderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
-
-            // If blocked or empty, mark as spoofed
-            if (!collectedData.unmaskedVendor || !collectedData.unmaskedRenderer) {
-              status = CanvasStatus.SPOOFED_LOW_ENTROPY;
-            }
+            features.unmaskedVendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+            features.unmaskedRenderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
           } catch {
-            collectedData.unmaskedVendor = "blocked";
-            collectedData.unmaskedRenderer = "blocked";
-            
-            status = CanvasStatus.SPOOFED_LOW_ENTROPY;
+            features.unmaskedVendor = "blocked";
+            features.unmaskedRenderer = "blocked";
           }
         }
       } else {
-        collectedData.webglVersion = "webgl-unavailable";
-        status = CanvasStatus.BLOCK;
+        features.webglVersion = "webgl-unavailable";
       }
     } catch {
-      collectedData.webglVersion = "webgl-error";
-      status = CanvasStatus.BLOCK;
+      features.webglVersion = "webgl-error";
     }
 
-    // 2D Canvas detection 
-    const width = 400;
-    const height = 100;
-    const text = "FPS Fingerprint 💯 @123# 😊 Canvas/GPU Test";
-    const canvas1 = document.createElement("canvas");
-
-    canvas1.width = width;
-    canvas1.height = height;
-
-    const ctx1 = canvas1.getContext("2d");
-
-    if (!ctx1) {
-      status = CanvasStatus.BLOCK;
-    } else {
-      try {
-        drawComplexCanvas(ctx1, text, width, height);
-        const data1 = ctx1.getImageData(0, 0, width, height).data;
-        const canvas2 = document.createElement("canvas");
-
-        canvas2.width = width;
-        canvas2.height = height;
-
-        const ctx2 = canvas2.getContext("2d");
-
-        if (!ctx2) {
-          status = CanvasStatus.BLOCK;
-        } else {
-          drawComplexCanvas(ctx2, text, width, height);
-          const data2 = ctx2.getImageData(0, 0, width, height).data;
-
-          // Compare pixel arrays
-          if (!comparePixelArrays(data1, data2)) {
-            status = CanvasStatus.RANDOMIZE;
-          }
-
-          // Check entropy if still CLEAN
-          if (status === CanvasStatus.CLEAN && isLowEntropy(data1)) {
-            status = CanvasStatus.SPOOFED_LOW_ENTROPY;
-          }
-
-          collectedData.canvasPixelData = Array.from(data1).slice(0, 100); // store small sample
-        }
-      } catch (e) {
-        status = CanvasStatus.BLOCK;
-        collectedData.canvasPixelData = "blocked";
-      }
-    }
-
-    // Hash final value 
-    const finalString = JSON.stringify(collectedData);
-    const value = murmurhash3_32_gc(finalString).toString(16);
-
-    return { value, status };
-  } catch {
-    return getEmptyCanvasInfo(CanvasStatus.BLOCK);
-  }
+    return features;
+   } catch (error) {
+     return null;
+   }
 }
 
-// Draw complex canvas
+function computeFeatureMedian(samples: any[]): any {
+  if (samples.length === 1) return samples[0];
+  
+  const median: any = {};
+  const keys = Object.keys(samples[0]);
+  
+  for (const key of keys) {
+    const vals = samples.map(s => JSON.stringify(s[key]));
+    const counts = new Map<string, number>();
+    vals.forEach(v => counts.set(v, (counts.get(v) || 0) + 1));
+    let maxCount = 0, mostCommon = vals[0];
+    counts.forEach((c, v) => { if(c > maxCount){maxCount=c;mostCommon=v;} });
+    median[key] = JSON.parse(mostCommon);
+  }
+  
+  return median;
+}
+
+// Draw canvas
 function drawComplexCanvas(ctx: CanvasRenderingContext2D, text: string, width: number, height: number) {
   ctx.clearRect(0, 0, width, height);
   ctx.font = "20px Arial";
@@ -127,7 +124,6 @@ function drawComplexCanvas(ctx: CanvasRenderingContext2D, text: string, width: n
   ctx.fillStyle = "rgb(255,0,255)";
   ctx.fillText(text, 10, height / 2);
 
-  // Add semi-transparent shapes
   ctx.fillStyle = "rgba(0,100,255,0.7)";
   ctx.fillRect(50, 10, 120, 60);
 
@@ -137,65 +133,14 @@ function drawComplexCanvas(ctx: CanvasRenderingContext2D, text: string, width: n
   ctx.arc(200, height / 2, 30, 0, Math.PI * 2);
   ctx.fill();
 
-  // Gradient + shadow
   const gradient = ctx.createLinearGradient(0, 0, width, height);
-
   gradient.addColorStop(0, "rgba(255,0,0,0.3)");
   gradient.addColorStop(1, "rgba(0,0,255,0.3)");
-
   ctx.fillStyle = gradient;
+
   ctx.shadowColor = "rgba(0,0,0,0.5)";
   ctx.shadowBlur = 5;
   ctx.shadowOffsetX = 2;
   ctx.shadowOffsetY = 2;
   ctx.fillRect(0, 0, width, height);
-}
-
-// Compare pixel arrays 
-function comparePixelArrays(a: Uint8ClampedArray, b: Uint8ClampedArray): boolean {
-  if (a.length !== b.length) return false;
-
-  for (let i = 0; i < a.length; i++) {
-    if (a[i] !== b[i]) return false;
-  }
-
-  return true;
-}
-
-// Entropy check on RGBA
-function isLowEntropy(data: Uint8ClampedArray): boolean {
-  try {
-    const histR = new Array(256).fill(0);
-    const histG = new Array(256).fill(0);
-    const histB = new Array(256).fill(0);
-
-    const total = data.length / 4;
-
-    for (let i = 0; i < data.length; i += 4) {
-      histR[data[i]]++;
-      histG[data[i + 1]]++;
-      histB[data[i + 2]]++;
-    }
-
-    const entropy = [histR, histG, histB].reduce((sum, hist) => {
-      let e = 0;
-
-      for (let i = 0; i < 256; i++) {
-        if (hist[i] > 0) {
-          const p = hist[i] / total;
-          e -= p * Math.log2(p);
-        }
-      }
-
-      return sum + e / 3;
-    }, 0);
-
-    return entropy < 3; 
-  } catch {
-    return false;
-  }
-}
-
-function getEmptyCanvasInfo(status: CanvasStatus): CanvasInfo {
-  return { value: "", status };
 }

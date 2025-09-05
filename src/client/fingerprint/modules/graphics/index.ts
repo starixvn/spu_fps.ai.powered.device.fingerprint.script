@@ -1,4 +1,4 @@
-import { collectCanvas, CanvasStatus } from "./canvas";
+import { collectCanvas } from "./canvas";
 import { collectFonts } from "./fonts";
 import { collectFontPreferences } from "./fontPreferences";
 import { collectScreenResolution } from "./screenResolution";
@@ -37,10 +37,7 @@ export class GraphicsFingerprint {
       return graphicsGroup;
     } catch (error) {
       return {
-        canvas: {
-          value: "",
-          status: CanvasStatus.BLOCK,
-        },
+        canvas: "",
         webglBasics: {
           vendor: "",
           renderer: "",
