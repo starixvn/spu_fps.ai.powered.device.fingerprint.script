@@ -29,7 +29,7 @@ export class HardwareFingerprint {
     }
 
     try {
-      osCpuResult = collectOSCpu();
+      osCpuResult = await collectOSCpu();
     } catch (error) {
       osCpuResult = { oscpu: "" };
     }

@@ -1,36 +1,25 @@
 import type { ArchitectureInfo } from "../../types";
 
-export async function collectArchitecture(): Promise<ArchitectureInfo> {
+export function collectArchitecture(): ArchitectureInfo {
   try {
-    const architecture = await getArchitecture();
+    const architecture = getArchitecture();
     return { architecture };
   } catch (error) {
     return { architecture: "" };
   }
 }
 
-async function getArchitecture(): Promise<string> {
+function getArchitecture(): string {
   try {
-    if (navigator.userAgentData?.getHighEntropyValues) {
-      try {
-        const data = await navigator.userAgentData.getHighEntropyValues([
-          "architecture",
-        ]);
+    const f = new Float32Array(1);
+    const u8 = new Uint8Array(f.buffer);
 
-        if (data?.architecture) return data.architecture;
-      } catch (err) {}
-    }
+    f[0] = Infinity;
+    f[0] = f[0] - f[0]; // NaN
 
-    const userAgent = navigator.userAgent.toLowerCase();
+    if (u8[3] === 255) return "x86/x86_64";
 
-    if (userAgent.includes("win64") || userAgent.includes("x64"))
-      return "x86_64";
-    if (userAgent.includes("win32") || userAgent.includes("i686")) return "x86";
-    if (userAgent.includes("aarch64") || userAgent.includes("arm64"))
-      return "arm64";
-    if (userAgent.includes("armv7l")) return "armv7l";
-
-    return "";
+    return "non-x86";
   } catch {
     return "";
   }
