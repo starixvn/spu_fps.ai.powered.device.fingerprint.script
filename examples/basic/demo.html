@@ -290,17 +290,9 @@
           }
 
           const webrtcData = window.webRTCData;
-          const formattedOutput = {
-            localIPs: webrtcData.localIPs || [],
-            publicIPs: webrtcData.publicIPs || [],
-            relayIPs: webrtcData.relayIPs || [],
-            flags: webrtcData.flags || {},
-            timestamp: webrtcData.timestamp || new Date().toISOString(),
-            error: webrtcData.error || null
-          };
 
           document.getElementById("fingerprintData").textContent =
-            JSON.stringify(formattedOutput, null, 2);
+            JSON.stringify(webrtcData, null, 2);
           document.getElementById("fingerprintDisplay").style.display = "block";
         } catch (error) {
           document.getElementById("fingerprintData").textContent =
