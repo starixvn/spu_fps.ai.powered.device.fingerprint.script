@@ -3,14 +3,15 @@ import { collectAllIPTypes } from "./ipCollector";
 
 export class WebRTCFingerprint {
   public static async collect(
-    timeout: number = 2000
+    timeout: number = 3000
   ): Promise<WebRTCGroupInfo> {
     try {
       if (!this.isWebRTCSupported()) {
         return "";
       }
 
-      const { localIPs, publicIPs, relayIPs } = await collectAllIPTypes(timeout);
+      const result = await collectAllIPTypes(timeout);
+      const { localIPs, publicIPs, relayIPs } = result;
       
       const ipGroups: string[] = [];
       
