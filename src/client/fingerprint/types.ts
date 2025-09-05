@@ -50,7 +50,7 @@ export interface OSCpuInfo {
 
 // Graphics
 export interface GraphicsGroupInfo {
-  canvas: string;
+  canvas: CanvasInfo;
   webglBasics: WebGLBasicsInfo;
   webglExtensions: WebGLExtensionsInfo;
   fonts: string[];
@@ -63,6 +63,7 @@ export interface GraphicsGroupInfo {
 
 export interface CanvasInfo {
   value: string;
+  canvasProtection: boolean;
 }
 
 export interface WebGLBasicsInfo {

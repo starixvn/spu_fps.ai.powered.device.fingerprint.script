@@ -1,9 +1,10 @@
 import { murmurhash3_32_gc } from "../../utils/hash";
+import type { CanvasInfo } from "../../types";
 
 const CANVAS_CACHE_KEY = "canvasCache";
 const CANVAS_SNAPSHOTS = 5;
 
-export async function collectCanvas(): Promise<string> {
+export async function collectCanvas(): Promise<CanvasInfo> {
   try {
     let cachedValue: string | null = null;
     try {
@@ -15,18 +16,34 @@ export async function collectCanvas(): Promise<string> {
     } catch (e) {
     }
 
+    // Detect canvas protection
+    const canvasProtection = await detectCanvasProtection();
+    
+    if (canvasProtection) {
+      return {
+        value: "",
+        canvasProtection: true
+      };
+    }
+
     const snapshotPromises = Array.from({ length: CANVAS_SNAPSHOTS }, () => getCanvasFeatures());
     const samples = (await Promise.all(snapshotPromises)).filter(Boolean) as any[];
 
     if (samples.length === 0) {
-      return "";
+      return {
+        value: "",
+        canvasProtection: false
+      };
     }
 
     const stableFeatures = computeFeatureMedian(samples);
     const value = murmurhash3_32_gc(JSON.stringify(stableFeatures)).toString(16);
      
     if (cachedValue && cachedValue === value) {
-      return cachedValue;
+      return {
+        value: cachedValue,
+        canvasProtection: false
+      };
     }
 
     try {
@@ -34,9 +51,119 @@ export async function collectCanvas(): Promise<string> {
     } catch (e) {
     }
 
-    return value;
+    return {
+      value,
+      canvasProtection: false
+    };
   } catch {
-    return "";
+    return {
+      value: "",
+      canvasProtection: false
+    };
+  }
+}
+
+// Checks across sessions
+async function detectCanvasProtection(): Promise<boolean> {
+  try {
+    const testCanvas = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 200;
+      canvas.height = 50;
+      
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return null;
+      
+      // Draw simple test pattern
+      ctx.textBaseline = "top";
+      ctx.font = "14px Arial";
+      ctx.fillStyle = "#f60";
+      ctx.fillRect(125, 1, 62, 20);
+      ctx.fillStyle = "#069";
+      ctx.fillText("Canvas Test 🎨", 2, 15);
+      ctx.fillStyle = "rgba(102, 204, 0, 0.7)";
+      ctx.fillText("Canvas Test 🎨", 4, 17);
+      
+      return canvas.toDataURL();
+    };
+
+    // Test current session consistency  
+    const dataUrl1 = testCanvas();
+    const dataUrl2 = testCanvas();
+    
+    if (!dataUrl1 || !dataUrl2) {
+      return true; 
+    }
+
+    // Test in-session randomization 
+    if (dataUrl1 !== dataUrl2) {
+      return true; 
+    }
+
+    // Compare with previous sessions 
+    const CANVAS_BASELINE_KEY = "canvasBaseline";
+    let storedBaseline: string | null = null;
+    
+    try {
+      storedBaseline = localStorage.getItem(CANVAS_BASELINE_KEY);
+    } catch (e) {
+      return true;
+    }
+
+    if (storedBaseline) {
+      if (dataUrl1 !== storedBaseline) {
+        return true;
+      }
+    } else {
+      try {
+        localStorage.setItem(CANVAS_BASELINE_KEY, dataUrl1);
+      } catch (e) {
+        return true;
+      }
+    }
+
+    // Check for suspicious canvas API modifications
+    if (typeof HTMLCanvasElement.prototype.toDataURL !== 'function') {
+      return true;
+    }
+
+    // Check for extension-specific markers
+    if (detectCanvasBlockerExtension()) {
+      return true;
+    }
+
+    return false; 
+  } catch (error) {
+    return true; 
+  }
+}
+
+// Detect CanvasBlocker extension specifically
+function detectCanvasBlockerExtension(): boolean {
+  try {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    if (!ctx) return false;
+    
+    // CanvasBlocker often modifies canvas prototype
+    const originalToDataURL = HTMLCanvasElement.prototype.toDataURL.toString();
+    
+    // Look for signs of method modification
+    if (originalToDataURL.includes('native code') === false || 
+        originalToDataURL.length > 100) {
+      return true; // Method likely modified
+    }
+
+    // Check for CanvasBlocker specific properties
+    if ('cbName' in canvas || 'cbInject' in canvas || 
+        'canvasBlockerName' in window || 'canvasBlocker' in window) {
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    return true; 
   }
 }
 

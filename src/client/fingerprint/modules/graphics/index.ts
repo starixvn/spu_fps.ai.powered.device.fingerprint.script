@@ -37,7 +37,10 @@ export class GraphicsFingerprint {
       return graphicsGroup;
     } catch (error) {
       return {
-        canvas: "",
+        canvas: {
+          value: "",
+          canvasProtection: false
+        },
         webglBasics: {
           vendor: "",
           renderer: "",
