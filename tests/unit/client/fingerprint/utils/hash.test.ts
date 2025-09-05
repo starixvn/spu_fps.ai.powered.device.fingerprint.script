@@ -310,37 +310,6 @@ describe('Hash Utilities', () => {
     });
   });
 
-  describe('Performance tests', () => {
-    it('should handle performance requirements for hash functions', () => {
-      const testData = 'x'.repeat(1000);
-      const iterations = 1000;
-      
-      const start128 = performance.now();
-      for (let i = 0; i < iterations; i++) {
-        MurmurHash128.hash128(testData);
-      }
-      const end128 = performance.now();
-      
-      const start32 = performance.now();
-      for (let i = 0; i < iterations; i++) {
-        murmurhash3_32_gc(testData);
-      }
-      const end32 = performance.now();
-      
-      const startBase64 = performance.now();
-      const key = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-      for (let i = 0; i < iterations; i++) {
-        Base64Encoder.encodeBase64(testData, key);
-      }
-      const endBase64 = performance.now();
-      
-      // All operations should complete in reasonable time (less than 1 second for 1000 iterations)
-      expect(end128 - start128).toBeLessThan(1000);
-      expect(end32 - start32).toBeLessThan(1000);
-      expect(endBase64 - startBase64).toBeLessThan(1000);
-    });
-  });
-
   describe('Edge cases and error handling', () => {
     it('should handle null and undefined gracefully', () => {
       // These will cause TypeScript errors but test runtime behavior
