@@ -1,37 +1,33 @@
 import type { OSCpuInfo } from "../../types";
 
-export function collectOSCpu(): Promise<OSCpuInfo> {
-  return getOSCpu().then(function(oscpu) {
+export async function collectOSCpu(): Promise<OSCpuInfo> {
+  try {
+    const oscpu = await getOSCpu();
     return { oscpu };
-  }).catch(function(error) {
+  } catch (error) {
     return { oscpu: "" };
-  });
+  }
 }
 
-function getOSCpu(): Promise<string> {
+async function getOSCpu(): Promise<string> {
   try {
-    if (navigator.oscpu) return Promise.resolve(navigator.oscpu);
+    if (navigator.oscpu) return navigator.oscpu;
 
     if (navigator.userAgentData?.getHighEntropyValues) {
       try {
-        return navigator.userAgentData.getHighEntropyValues([
+        const data = await navigator.userAgentData.getHighEntropyValues([
           "architecture",
           "platform",
-        ]).then(function(data) {
-          if (data?.platform && data?.architecture) {
-            return `${data.platform}; ${data.architecture}`;
-          }
-          return "";
-        }).catch(function() {
-          return "";
-        });
-      } catch {
-        return Promise.resolve("");
-      }
+        ]);
+        
+        if (data?.platform && data?.architecture) {
+          return `${data.platform}; ${data.architecture}`;
+        }
+      } catch {}
     }
 
-    return Promise.resolve("");
+    return "";
   } catch {
-    return Promise.resolve("");
+    return "";
   }
 }
