@@ -67,18 +67,12 @@ export interface CanvasInfo {
 }
 
 export interface WebGLBasicsInfo {
-  vendor: string;
-  renderer: string;
   version: string;
+  vendor: string;
+  vendorUnmasked: string;
+  renderer: string;
+  rendererUnmasked: string;
   shadingLanguageVersion: string;
-  unmaskedVendor?: string;
-  unmaskedRenderer?: string;
-  maxTextureSize: number;
-  maxViewportDims: [number, number];
-  maxRenderbufferSize: number;
-  aliasedLineWidthRange: [number, number];
-  aliasedPointSizeRange: [number, number];
-  maxAnisotropy: number;
 }
 
 export interface WebGLExtensionsInfo {

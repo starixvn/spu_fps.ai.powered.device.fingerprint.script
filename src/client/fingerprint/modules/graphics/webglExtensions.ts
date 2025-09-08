@@ -11,10 +11,10 @@ type Options = {
   }
 }
 
-export const STATUS_NO_GL_CONTEXT = -1
-export const STATUS_GET_PARAMETER_NOT_A_FUNCTION = -2
+export const STATUS_NO_GL_CONTEXT_EXT = -1
+export const STATUS_GET_PARAMETER_NOT_A_FUNCTION_EXT = -2
 
-export type SpecialStatus = typeof STATUS_NO_GL_CONTEXT | typeof STATUS_GET_PARAMETER_NOT_A_FUNCTION
+export type SpecialStatus = typeof STATUS_NO_GL_CONTEXT_EXT | typeof STATUS_GET_PARAMETER_NOT_A_FUNCTION_EXT
 
 const validContextParameters = new Set([
   10752, 2849, 2884, 2885, 2886, 2928, 2929, 2930, 2931, 2932, 2960, 2961, 2962, 2963, 2964, 2965, 2966, 2967, 2968,
@@ -37,7 +37,7 @@ const validExtensionParams = new Set([
 ])
 const shaderTypes = ['FRAGMENT_SHADER', 'VERTEX_SHADER'] as const
 const precisionTypes = ['LOW_FLOAT', 'MEDIUM_FLOAT', 'HIGH_FLOAT', 'LOW_INT', 'MEDIUM_INT', 'HIGH_INT'] as const
-const rendererInfoExtensionName = 'WEBGL_debug_renderer_info'
+const rendererInfoExtensionNameExt = 'WEBGL_debug_renderer_info'
 const polygonModeExtensionName = 'WEBGL_polygon_mode'
 
 function countTruthy(values: any[]): number {
@@ -81,13 +81,13 @@ export async function collectWebGLExtensions(): Promise<WebGLExtensionsInfo> {
 }
 
 export function getWebGlExtensions({ cache }: Options): WebGLExtensionsInfo | SpecialStatus {
-  const gl = getWebGLContext(cache)
+  const gl = getWebGLContextExt(cache)
   if (!gl) {
-    return STATUS_NO_GL_CONTEXT
+    return STATUS_NO_GL_CONTEXT_EXT
   }
 
   if (!isValidParameterGetter(gl)) {
-    return STATUS_GET_PARAMETER_NOT_A_FUNCTION
+    return STATUS_GET_PARAMETER_NOT_A_FUNCTION_EXT
   }
 
   const extensions = gl.getSupportedExtensions()
@@ -118,8 +118,8 @@ export function getWebGlExtensions({ cache }: Options): WebGLExtensionsInfo | Sp
   if (extensions) {
     for (const name of extensions) {
       if (
-        (name === rendererInfoExtensionName && shouldAvoidDebugRendererInfo()) ||
-        (name === polygonModeExtensionName && shouldAvoidPolygonModeExtensions())
+        (name === rendererInfoExtensionNameExt && shouldAvoidDebugRendererInfoExt()) ||
+        (name === polygonModeExtensionName && shouldAvoidPolygonModeExtensionsExt())
       ) {
         continue
       }
@@ -161,7 +161,7 @@ export function getWebGlExtensions({ cache }: Options): WebGLExtensionsInfo | Sp
   }
 }
 
-export function getWebGLContext(cache: Options['cache']): CanvasContext | undefined {
+function getWebGLContextExt(cache: Options['cache']): CanvasContext | undefined {
   if (cache.webgl?.context) {
     return cache.webgl.context;
   }
@@ -204,19 +204,19 @@ function isConstantLike<K>(key: K): key is Extract<K, string> {
   return typeof key === 'string' && !key.match(/[^A-Z0-9_x]/)
 }
 
-export function shouldAvoidDebugRendererInfo(): boolean {
-  return isGecko()
+function shouldAvoidDebugRendererInfoExt(): boolean {
+  return isGeckoExt()
 }
 
-export function shouldAvoidPolygonModeExtensions(): boolean {
-  return isChromium() || isWebKit()
+function shouldAvoidPolygonModeExtensionsExt(): boolean {
+  return isChromiumExt() || isWebKitExt()
 }
 
 function isValidParameterGetter(gl: WebGLRenderingContext) {
   return typeof gl.getParameter === 'function'
 }
 
-export function isChromium(): boolean {
+function isChromiumExt(): boolean {
   const w = window
   const n = navigator
 
@@ -233,7 +233,7 @@ export function isChromium(): boolean {
   )
 }
 
-export function isGecko(): boolean {
+function isGeckoExt(): boolean {
   const w = window
 
   return (
@@ -248,7 +248,7 @@ export function isGecko(): boolean {
   )
 }
 
-export function isWebKit(): boolean {
+function isWebKitExt(): boolean {
   const w = window
   const n = navigator
 
