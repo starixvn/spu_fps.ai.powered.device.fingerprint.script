@@ -1,92 +1,265 @@
 import type { WebGLExtensionsInfo } from "../../types";
 
+
+type CanvasContext = WebGLRenderingContext & { readonly canvas: HTMLCanvasElement }
+
+type Options = {
+  cache: {
+    webgl?: {
+      context: CanvasContext | undefined
+    }
+  }
+}
+
+export const STATUS_NO_GL_CONTEXT = -1
+export const STATUS_GET_PARAMETER_NOT_A_FUNCTION = -2
+
+export type SpecialStatus = typeof STATUS_NO_GL_CONTEXT | typeof STATUS_GET_PARAMETER_NOT_A_FUNCTION
+
+const validContextParameters = new Set([
+  10752, 2849, 2884, 2885, 2886, 2928, 2929, 2930, 2931, 2932, 2960, 2961, 2962, 2963, 2964, 2965, 2966, 2967, 2968,
+  2978, 3024, 3042, 3088, 3089, 3106, 3107, 32773, 32777, 32777, 32823, 32824, 32936, 32937, 32938, 32939, 32968, 32969,
+  32970, 32971, 3317, 33170, 3333, 3379, 3386, 33901, 33902, 34016, 34024, 34076, 3408, 3410, 3411, 3412, 3413, 3414,
+  3415, 34467, 34816, 34817, 34818, 34819, 34877, 34921, 34930, 35660, 35661, 35724, 35738, 35739, 36003, 36004, 36005,
+  36347, 36348, 36349, 37440, 37441, 37443, 7936, 7937, 7938,
+])
+const validExtensionParams = new Set([
+  34047, // MAX_TEXTURE_MAX_ANISOTROPY_EXT
+  35723, // FRAGMENT_SHADER_DERIVATIVE_HINT_OES
+  36063, // MAX_COLOR_ATTACHMENTS_WEBGL
+  34852, // MAX_DRAW_BUFFERS_WEBGL
+  34853, // DRAW_BUFFER0_WEBGL
+  34854, // DRAW_BUFFER1_WEBGL
+  34229, // VERTEX_ARRAY_BINDING_OES
+  36392, // TIMESTAMP_EXT
+  36795, // GPU_DISJOINT_EXT
+  38449, // MAX_VIEWS_OVR
+])
+const shaderTypes = ['FRAGMENT_SHADER', 'VERTEX_SHADER'] as const
+const precisionTypes = ['LOW_FLOAT', 'MEDIUM_FLOAT', 'HIGH_FLOAT', 'LOW_INT', 'MEDIUM_INT', 'HIGH_INT'] as const
+const rendererInfoExtensionName = 'WEBGL_debug_renderer_info'
+const polygonModeExtensionName = 'WEBGL_polygon_mode'
+
+function countTruthy(values: any[]): number {
+  return values.reduce((sum, value) => sum + (value ? 1 : 0), 0)
+}
+
 export async function collectWebGLExtensions(): Promise<WebGLExtensionsInfo> {
   try {
-    return await getWebGLExtensions();
+    const cache = { webgl: { context: undefined } };
+    const result = getWebGlExtensions({ cache });
+    
+    if (typeof result === 'number') {
+      return {
+        contextAttributes: [],
+        parameters: [],
+        shaderPrecisions: [],
+        extensions: null,
+        extensionParameters: [],
+        unsupportedExtensions: [],
+      };
+    }
+    
+    return {
+      contextAttributes: result.contextAttributes,
+      parameters: result.parameters,
+      shaderPrecisions: result.shaderPrecisions,
+      extensions: result.extensions,
+      extensionParameters: result.extensionParameters,
+      unsupportedExtensions: result.unsupportedExtensions,
+    };
   } catch (error) {
     return {
-      extensions: [],
-      supportedExtensions: [],
-      compressedTextureFormats: [],
-      maxDrawBuffers: 0,
-      maxColorAttachments: 0,
-      maxVertexAttribs: 0,
-      maxVertexUniformVectors: 0,
-      maxFragmentUniformVectors: 0,
-      maxVaryingVectors: 0,
+      contextAttributes: [],
+      parameters: [],
+      shaderPrecisions: [],
+      extensions: null,
+      extensionParameters: [],
+      unsupportedExtensions: [],
     };
   }
 }
 
-async function getWebGLExtensions(): Promise<WebGLExtensionsInfo> {
-  const canvas = document.createElement("canvas");
-  const gl = (canvas.getContext("webgl") ||
-    canvas.getContext("experimental-webgl")) as WebGLRenderingContext | null;
-
+export function getWebGlExtensions({ cache }: Options): WebGLExtensionsInfo | SpecialStatus {
+  const gl = getWebGLContext(cache)
   if (!gl) {
-    return {
-      extensions: [],
-      supportedExtensions: [],
-      compressedTextureFormats: [],
-      maxDrawBuffers: 0,
-      maxColorAttachments: 0,
-      maxVertexAttribs: 0,
-      maxVertexUniformVectors: 0,
-      maxFragmentUniformVectors: 0,
-      maxVaryingVectors: 0,
-    };
+    return STATUS_NO_GL_CONTEXT
   }
 
-  const supportedExtensions = gl.getSupportedExtensions() || [];
-  const extensions = supportedExtensions.filter((ext) => {
-    try {
-      return !!gl.getExtension(ext);
-    } catch {
-      return false;
+  if (!isValidParameterGetter(gl)) {
+    return STATUS_GET_PARAMETER_NOT_A_FUNCTION
+  }
+
+  const extensions = gl.getSupportedExtensions()
+  const contextAttributes = gl.getContextAttributes()
+  const unsupportedExtensions: string[] = []
+
+  // Features
+  const attributes: string[] = []
+  const parameters: string[] = []
+  const extensionParameters: string[] = []
+  const shaderPrecisions: string[] = []
+
+  // Context attributes
+  if (contextAttributes) {
+    for (const attributeName of Object.keys(contextAttributes) as (keyof WebGLContextAttributes)[]) {
+      attributes.push(`${attributeName}=${contextAttributes[attributeName]}`)
     }
-  });
+  }
 
-  let compressedTextureFormats: string[] = [];
+  // Context parameters
+  const constants = getConstantsFromPrototype(gl)
+  for (const constant of constants) {
+    const code = gl[constant] as number
+    parameters.push(`${constant}=${code}${validContextParameters.has(code) ? `=${gl.getParameter(code)}` : ''}`)
+  }
 
-  try {
-    const formats = gl.getParameter(gl.COMPRESSED_TEXTURE_FORMATS) as
-      | number[]
-      | null;
+  // Extension parameters
+  if (extensions) {
+    for (const name of extensions) {
+      if (
+        (name === rendererInfoExtensionName && shouldAvoidDebugRendererInfo()) ||
+        (name === polygonModeExtensionName && shouldAvoidPolygonModeExtensions())
+      ) {
+        continue
+      }
 
-    if (formats && Array.isArray(formats)) {
-      compressedTextureFormats = formats.map(String);
+      const extension = gl.getExtension(name)
+      if (!extension) {
+        unsupportedExtensions.push(name)
+        continue
+      }
+
+      for (const constant of getConstantsFromPrototype(extension)) {
+        const code = extension[constant]
+        extensionParameters.push(
+          `${constant}=${code}${validExtensionParams.has(code) ? `=${gl.getParameter(code)}` : ''}`,
+        )
+      }
     }
-  } catch {
-    compressedTextureFormats = [];
   }
 
-  const maxVertexAttribs = gl.getParameter(gl.MAX_VERTEX_ATTRIBS) || 0;
-  const maxVertexUniformVectors =
-    gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS) || 0;
-  const maxFragmentUniformVectors =
-    gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS) || 0;
-  const maxVaryingVectors = gl.getParameter(gl.MAX_VARYING_VECTORS) || 0;
-
-  let maxDrawBuffers = 0;
-  let maxColorAttachments = 0;
-  const drawBuffersExt = gl.getExtension("WEBGL_draw_buffers");
-
-  if (drawBuffersExt) {
-    maxDrawBuffers =
-      gl.getParameter(drawBuffersExt.MAX_DRAW_BUFFERS_WEBGL) || 0;
-    maxColorAttachments =
-      gl.getParameter(drawBuffersExt.MAX_COLOR_ATTACHMENTS_WEBGL) || 0;
+  // Shader precision
+  for (const shaderType of shaderTypes) {
+    for (const precisionType of precisionTypes) {
+      const shaderPrecision = getShaderPrecision(gl, shaderType, precisionType)
+      shaderPrecisions.push(`${shaderType}.${precisionType}=${shaderPrecision.join(',')}`)
+    }
   }
+
+  // Postprocess
+  extensionParameters.sort()
+  parameters.sort()
 
   return {
-    extensions,
-    supportedExtensions,
-    compressedTextureFormats,
-    maxDrawBuffers,
-    maxColorAttachments,
-    maxVertexAttribs,
-    maxVertexUniformVectors,
-    maxFragmentUniformVectors,
-    maxVaryingVectors,
-  };
+    contextAttributes: attributes,
+    parameters: parameters,
+    shaderPrecisions: shaderPrecisions,
+    extensions: extensions,
+    extensionParameters: extensionParameters,
+    unsupportedExtensions,
+  }
+}
+
+export function getWebGLContext(cache: Options['cache']): CanvasContext | undefined {
+  if (cache.webgl?.context) {
+    return cache.webgl.context;
+  }
+
+  const canvas = document.createElement('canvas');
+  let context: CanvasContext | undefined;
+
+  canvas.addEventListener('webglCreateContextError', () => (context = undefined));
+
+  const types = ['webgl', 'experimental-webgl', 'webgl2', 'experimental-webgl2'];
+
+  for (const type of types) {
+    try {
+      context = canvas.getContext(type, { failIfMajorPerformanceCaveat: false }) as CanvasContext;
+    } catch {
+    }
+    if (context) break;
+  }
+
+  cache.webgl = { context };
+  return context;
+}
+
+
+function getShaderPrecision(
+  gl: WebGLRenderingContext,
+  shaderType: typeof shaderTypes[number],
+  precisionType: typeof precisionTypes[number],
+) {
+  const shaderPrecision = gl.getShaderPrecisionFormat(gl[shaderType], gl[precisionType])
+  return shaderPrecision ? [shaderPrecision.rangeMin, shaderPrecision.rangeMax, shaderPrecision.precision] : []
+}
+
+function getConstantsFromPrototype<K>(obj: K): Array<Extract<keyof K, string>> {
+  const keys = Object.keys((obj as any).__proto__) as Array<keyof K>
+  return keys.filter(isConstantLike)
+}
+
+function isConstantLike<K>(key: K): key is Extract<K, string> {
+  return typeof key === 'string' && !key.match(/[^A-Z0-9_x]/)
+}
+
+export function shouldAvoidDebugRendererInfo(): boolean {
+  return isGecko()
+}
+
+export function shouldAvoidPolygonModeExtensions(): boolean {
+  return isChromium() || isWebKit()
+}
+
+function isValidParameterGetter(gl: WebGLRenderingContext) {
+  return typeof gl.getParameter === 'function'
+}
+
+export function isChromium(): boolean {
+  const w = window
+  const n = navigator
+
+  return (
+    countTruthy([
+      'webkitPersistentStorage' in n,
+      'webkitTemporaryStorage' in n,
+      (n.vendor || '').indexOf('Google') === 0,
+      'webkitResolveLocalFileSystemURL' in w,
+      'BatteryManager' in w,
+      'webkitMediaStream' in w,
+      'webkitSpeechGrammar' in w,
+    ]) >= 5
+  )
+}
+
+export function isGecko(): boolean {
+  const w = window
+
+  return (
+    countTruthy([
+      'buildID' in navigator,
+      'MozAppearance' in (document.documentElement?.style ?? {}),
+      'onmozfullscreenchange' in w,
+      'mozInnerScreenX' in w,
+      'CSSMozDocumentRule' in w,
+      'CanvasCaptureMediaStream' in w,
+    ]) >= 4
+  )
+}
+
+export function isWebKit(): boolean {
+  const w = window
+  const n = navigator
+
+  return (
+    countTruthy([
+      'ApplePayError' in w,
+      'CSSPrimitiveValue' in w,
+      'Counter' in w,
+      n.vendor.indexOf('Apple') === 0,
+      'RGBColor' in w,
+      'WebKitMediaKeys' in w,
+    ]) >= 4
+  )
 }

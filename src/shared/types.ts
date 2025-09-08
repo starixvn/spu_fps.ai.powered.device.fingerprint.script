@@ -103,15 +103,12 @@ export interface WebGLBasicsInfo {
 }
 
 export interface WebGLExtensionsInfo {
-  extensions: string[];
-  supportedExtensions: string[];
-  compressedTextureFormats: string[];
-  maxDrawBuffers: number;
-  maxColorAttachments: number;
-  maxVertexAttribs: number;
-  maxVertexUniformVectors: number;
-  maxFragmentUniformVectors: number;
-  maxVaryingVectors: number;
+  contextAttributes: string[];
+  parameters: string[];
+  shaderPrecisions: string[];
+  extensions: string[] | null;
+  extensionParameters: string[];
+  unsupportedExtensions: string[];
 }
 
 export type FontsInfo = string[];

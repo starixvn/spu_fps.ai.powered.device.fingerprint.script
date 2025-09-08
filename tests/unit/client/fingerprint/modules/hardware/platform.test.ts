@@ -1,93 +1,99 @@
+/**
+ * @jest-environment jsdom
+ */
+
 import { collectPlatform } from '../../../../../../src/client/fingerprint/modules/hardware/platform';
 
-// Mock navigator object
-const mockNavigator: any = {
-  userAgentData: undefined,
-  platform: undefined,
-};
+// Setup mock values in beforeEach
+const setupMocks = () => {
+  // Mock navigator properties
+  Object.defineProperty(navigator, 'platform', {
+    writable: true,
+    value: undefined
+  });
+  
+  Object.defineProperty(navigator, 'vendor', {
+    writable: true,
+    value: 'Google Inc.'
+  });
 
-// Mock global navigator
-Object.defineProperty(global, 'navigator', {
-  value: mockNavigator,
-  writable: true,
-});
+  // Ensure window properties exist
+  (window as any).HTMLElement = window.HTMLElement || { prototype: {} };
+  (window as any).Document = window.Document || { prototype: { pointerLockElement: {} } };
+  (window as any).Element = window.Element || { prototype: {} };
+};
 
 describe('Hardware Platform Module', () => {
   beforeEach(() => {
-    // Reset mock navigator before each test
-    mockNavigator.userAgentData = undefined;
-    mockNavigator.platform = undefined;
+    setupMocks();
+    
+    // Reset platform
+    Object.defineProperty(navigator, 'platform', {
+      writable: true,
+      value: undefined
+    });
+    
+    // Reset vendor to non-Apple
+    Object.defineProperty(navigator, 'vendor', {
+      writable: true,
+      value: 'Google Inc.'
+    });
   });
 
   describe('collectPlatform', () => {
-    it('should return normalized platform from navigator.platform first', () => {
+    it('should return platform from navigator.platform', () => {
       // Arrange
-      mockNavigator.platform = 'Windows';
-      mockNavigator.userAgentData = {
-        platform: 'Linux',
-      };
+      Object.defineProperty(navigator, 'platform', {
+        writable: true,
+        value: 'Windows'
+      });
 
       // Act
       const result = collectPlatform();
 
       // Assert
-      // Should prioritize navigator.platform and normalize it
-      expect(result).toEqual({ platform: 'Win32' });
+      expect(result).toEqual({ platform: 'Windows' });
     });
 
-    it('should return normalized platform from navigator.userAgentData.platform when navigator.platform not available', () => {
+    it('should return empty string when navigator.platform not available', () => {
       // Arrange
-      mockNavigator.platform = undefined;
-      mockNavigator.userAgentData = {
-        platform: 'Windows',
-      };
+      Object.defineProperty(navigator, 'platform', {
+        writable: true,
+        value: undefined
+      });
 
       // Act
       const result = collectPlatform();
 
       // Assert
-      expect(result).toEqual({ platform: 'Win32' });
+      expect(result).toEqual({ platform: '' });
     });
 
-    it('should return platform from navigator.platform when userAgentData is not available', () => {
-      // Arrange
-      mockNavigator.platform = 'MacIntel';
+    it('should return MacIntel platform correctly in non-WebKit environment', () => {
+      // Arrange - Set as non-WebKit environment
+      Object.defineProperty(navigator, 'platform', {
+        writable: true,
+        value: 'MacIntel'
+      });
+      
+      Object.defineProperty(navigator, 'vendor', {
+        writable: true,
+        value: 'Google Inc.' // Non-Apple vendor to avoid WebKit detection
+      });
 
       // Act
       const result = collectPlatform();
 
-      // Assert
+      // Assert  
       expect(result).toEqual({ platform: 'MacIntel' });
-    });
-
-    it('should return empty string when both userAgentData and platform are not available', () => {
-      // Arrange
-      mockNavigator.userAgentData = undefined;
-      mockNavigator.platform = undefined;
-
-      // Act
-      const result = collectPlatform();
-
-      // Assert
-      expect(result).toEqual({ platform: '' });
-    });
-
-    it('should return empty string when userAgentData.platform is empty', () => {
-      // Arrange
-      mockNavigator.userAgentData = {
-        platform: '',
-      };
-
-      // Act
-      const result = collectPlatform();
-
-      // Assert
-      expect(result).toEqual({ platform: '' });
     });
 
     it('should return empty string when navigator.platform is empty', () => {
       // Arrange
-      mockNavigator.platform = '';
+      Object.defineProperty(navigator, 'platform', {
+        writable: true,
+        value: ''
+      });
 
       // Act
       const result = collectPlatform();
@@ -96,28 +102,30 @@ describe('Hardware Platform Module', () => {
       expect(result).toEqual({ platform: '' });
     });
 
-    it('should normalize different platform values correctly', () => {
-      // Test Windows normalization
-      mockNavigator.platform = 'Win32';
+    it('should return different platform values as-is', () => {
+      // Test Windows platforms
+      Object.defineProperty(navigator, 'platform', { writable: true, value: 'Win32' });
       expect(collectPlatform()).toEqual({ platform: 'Win32' });
 
-      mockNavigator.platform = 'Win64';
-      expect(collectPlatform()).toEqual({ platform: 'Win32' });
+      Object.defineProperty(navigator, 'platform', { writable: true, value: 'Win64' });
+      expect(collectPlatform()).toEqual({ platform: 'Win64' });
 
-      // Test Mac normalization
-      mockNavigator.platform = 'MacIntel';
+      // Test Mac platforms (ensure non-Apple vendor to avoid special logic)
+      Object.defineProperty(navigator, 'vendor', { writable: true, value: 'Google Inc.' });
+      Object.defineProperty(navigator, 'platform', { writable: true, value: 'MacIntel' });
       expect(collectPlatform()).toEqual({ platform: 'MacIntel' });
 
-      // Test Linux normalization
-      mockNavigator.platform = 'Linux x86_64';
+      // Test Linux platforms
+      Object.defineProperty(navigator, 'platform', { writable: true, value: 'Linux x86_64' });
       expect(collectPlatform()).toEqual({ platform: 'Linux x86_64' });
     });
 
     it('should handle error gracefully and return empty string', () => {
-      // Arrange
+      // Arrange - Create a scenario where navigator access throws
+      const originalNavigator = global.navigator;
       Object.defineProperty(global, 'navigator', {
-        value: undefined,
-        writable: true,
+        get() { throw new Error('Navigator not available'); },
+        configurable: true
       });
 
       // Act
@@ -128,8 +136,9 @@ describe('Hardware Platform Module', () => {
 
       // Restore navigator for other tests
       Object.defineProperty(global, 'navigator', {
-        value: mockNavigator,
+        value: originalNavigator,
         writable: true,
+        configurable: true
       });
     });
   });

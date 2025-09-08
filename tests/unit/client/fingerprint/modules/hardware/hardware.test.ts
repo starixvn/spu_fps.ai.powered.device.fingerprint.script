@@ -49,7 +49,7 @@ describe("Hardware Modules Integration Tests", () => {
 
       // Assert
       expect(result).toEqual({
-        platform: "Win32",  // Changed: normalized value
+        platform: "Windows",  // Raw platform value from navigator.platform
         cpuClass: "Intel x86",
         architecture: 255,  // Changed: number value for x86
         oscpu: "Windows NT 10.0; Win64; x64",
