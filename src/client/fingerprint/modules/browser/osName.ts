@@ -11,14 +11,11 @@ export function collectOSName(): OSNameInfo {
 
 function getOSName(): string {
   try {
-    if (navigator.userAgentData?.platform) {
-      return normalizePlatform(navigator.userAgentData.platform);
-    }
-
     const fromPlatform = detectOSByPlatform();
     const fromFeatures = detectOSByFeatures();
     const fromHardware = detectOSByHardware();
     const fromInput = detectOSByInput();
+
     const userAgent = navigator.userAgent;
 
     const osPatterns = [
@@ -34,7 +31,7 @@ function getOSName(): string {
       { pattern: /webOS/, name: "webOS" },
       { pattern: /Windows Phone/, name: "Windows Phone" },
     ];
-
+   
     if (fromPlatform !== "") return fromPlatform;
 
     if (fromFeatures !== "") return fromFeatures;
@@ -42,6 +39,10 @@ function getOSName(): string {
     if (fromHardware !== "") return fromHardware;
 
     if (fromInput !== "") return fromInput;
+
+    if (navigator.userAgentData?.platform) {
+      return normalizePlatform(navigator.userAgentData.platform);
+    }
 
     for (const os of osPatterns) {
       if (os.pattern.test(userAgent)) {

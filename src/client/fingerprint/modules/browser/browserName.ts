@@ -11,16 +11,9 @@ export function collectBrowserName(): BrowserNameInfo {
 
 function getBrowserName(): string {
   try {
-    const brands = navigator.userAgentData?.brands;
     const fromFeatures = detectBrowserByFeatures();
     const fromCSS = detectBrowserByCSS();
     const userAgent = (navigator.userAgent || "").toLowerCase();
-
-    if (brands?.length) {
-      const fromBrands = parseFromBrands(brands);
-
-      if (fromBrands !== "") return fromBrands;
-    }
 
     if (fromFeatures !== "") return fromFeatures;
 
@@ -42,6 +35,12 @@ function getBrowserName(): string {
     if (/firefox/.test(userAgent)) return "Firefox";
     if (/safari(?!.*chrome)/.test(userAgent)) return "Safari";
     if (/msie|trident/.test(userAgent)) return "Internet Explorer";
+
+    const brands = navigator.userAgentData?.brands;
+    if (brands?.length) {
+      const fromBrands = parseFromBrands(brands);
+      if (fromBrands !== "") return fromBrands;
+    }
 
     return "";
   } catch {
