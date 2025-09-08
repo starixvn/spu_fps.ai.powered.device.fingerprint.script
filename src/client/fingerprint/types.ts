@@ -17,7 +17,7 @@ export interface F4Data {
 // Hardware
 export interface HardwareGroupInfo {
   platform: string;
-  architecture: string;
+  architecture: number;
   oscpu: string;
   cpuClass: string;
   hardwareConcurrency: number | string;
@@ -41,7 +41,7 @@ export interface PlatformInfo {
 }
 
 export interface ArchitectureInfo {
-  architecture: string;
+  architecture: number;
 }
 
 export interface OSCpuInfo {

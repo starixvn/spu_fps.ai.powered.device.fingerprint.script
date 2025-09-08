@@ -5,22 +5,20 @@ export function collectArchitecture(): ArchitectureInfo {
     const architecture = getArchitecture();
     return { architecture };
   } catch (error) {
-    return { architecture: "" };
+    return { architecture: 0 };
   }
 }
 
-function getArchitecture(): string {
+function getArchitecture(): number {
   try {
-    const f = new Float32Array(1);
-    const u8 = new Uint8Array(f.buffer);
+    const f = new Float32Array(1)
+    const u8 = new Uint8Array(f.buffer)
 
-    f[0] = Infinity;
-    f[0] = f[0] - f[0]; // NaN
+    f[0] = Infinity
+    f[0] = f[0] - f[0]
 
-    if (u8[3] === 255) return "x86/x86_64";
-
-    return "non-x86";
+    return u8[3]
   } catch {
-    return "";
+    return 0;
   }
 }

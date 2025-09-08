@@ -7,8 +7,8 @@ import { collectDeviceMemory } from "./deviceMemory";
 import type { HardwareGroupInfo } from "../../types";
 
 export class HardwareFingerprint {
-  public static async collect(): Promise<HardwareGroupInfo> {
-    let platformResult, cpuClassResult, architectureResult, osCpuResult, hardwareConcurrencyResult, deviceMemoryResult;
+  public static collect(): Promise<HardwareGroupInfo> {
+    let platformResult, cpuClassResult, architectureResult;
 
     try {
       platformResult = collectPlatform();
@@ -23,38 +23,35 @@ export class HardwareFingerprint {
     }
 
     try {
-      architectureResult = await collectArchitecture();
+      architectureResult = collectArchitecture();
     } catch (error) {
-      architectureResult = { architecture: "" };
+      architectureResult = { architecture: 0 };
     }
 
-    try {
-      osCpuResult = await collectOSCpu();
-    } catch (error) {
-      osCpuResult = { oscpu: "" };
-    }
-
-    try {
-      hardwareConcurrencyResult = await collectHardwareConcurrency();
-    } catch (error) {
-      hardwareConcurrencyResult = { hardwareConcurrency: "" };
-    }
-
-    try {
-      deviceMemoryResult = await collectDeviceMemory();
-    } catch (error) {
-      deviceMemoryResult = { deviceMemory: "" };
-    }
-
-    const hardwareGroup: HardwareGroupInfo = {
-      platform: platformResult.platform || "",
-      cpuClass: cpuClassResult.cpuClass || "",
-      architecture: architectureResult.architecture || "",
-      oscpu: osCpuResult.oscpu || "",
-      hardwareConcurrency: hardwareConcurrencyResult.hardwareConcurrency || "",
-      deviceMemory: deviceMemoryResult.deviceMemory || "",
-    };
-
-    return hardwareGroup;
+    return collectOSCpu().then(function(osCpuResult) {
+      return collectHardwareConcurrency().then(function(hardwareConcurrencyResult) {
+        return collectDeviceMemory().then(function(deviceMemoryResult) {
+          const hardwareGroup: HardwareGroupInfo = {
+            platform: platformResult.platform || "",
+            cpuClass: cpuClassResult.cpuClass || "",
+            architecture: architectureResult.architecture || 0,
+            oscpu: osCpuResult.oscpu || "",
+            hardwareConcurrency: hardwareConcurrencyResult.hardwareConcurrency || "",
+            deviceMemory: deviceMemoryResult.deviceMemory || "",
+          };
+          return hardwareGroup;
+        });
+      });
+    }).catch(function(error) {
+      const hardwareGroup: HardwareGroupInfo = {
+        platform: platformResult.platform || "",
+        cpuClass: cpuClassResult.cpuClass || "",
+        architecture: architectureResult.architecture || 0,
+        oscpu: "",
+        hardwareConcurrency: "",
+        deviceMemory: "",
+      };
+      return hardwareGroup;
+    });
   }
 }
