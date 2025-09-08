@@ -3,7 +3,7 @@ import { collectOSCpu } from '../../../../../../src/client/fingerprint/modules/h
 // Mock navigator object
 const mockNavigator: any = {
   oscpu: undefined,
-  userAgent: '',
+  userAgentData: undefined,
 };
 
 // Mock global navigator
@@ -16,11 +16,11 @@ describe('Hardware OS CPU Module', () => {
   beforeEach(() => {
     // Reset mock navigator before each test
     mockNavigator.oscpu = undefined;
-    mockNavigator.userAgent = '';
+    mockNavigator.userAgentData = undefined;
   });
 
   describe('collectOSCpu', () => {
-    it('should return oscpu from navigator.oscpu when available', async () => {
+    it('should return navigator.oscpu when available', async () => {
       // Arrange
       mockNavigator.oscpu = 'Windows NT 10.0; Win64; x64';
 
@@ -31,203 +31,109 @@ describe('Hardware OS CPU Module', () => {
       expect(result).toEqual({ oscpu: 'Windows NT 10.0; Win64; x64' });
     });
 
-    it('should return Windows NT 10.0 when userAgent contains Windows NT 10.0', async () => {
+    it('should return userAgentData platform and architecture when navigator.oscpu not available', async () => {
       // Arrange
-      mockNavigator.userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)';
+      mockNavigator.oscpu = undefined;
+      mockNavigator.userAgentData = {
+        getHighEntropyValues: jest.fn().mockResolvedValue({
+          platform: 'Windows',
+          architecture: 'x86'
+        })
+      };
 
       // Act
       const result = await collectOSCpu();
 
       // Assert
-      expect(result).toEqual({ oscpu: 'Windows NT 10.0; Win64; x64' });
+      expect(result).toEqual({ oscpu: 'Windows; x86' });
+      expect(mockNavigator.userAgentData.getHighEntropyValues).toHaveBeenCalledWith([
+        'architecture',
+        'platform'
+      ]);
     });
 
-    it('should return Windows NT 6.3 when userAgent contains Windows NT 6.3', async () => {
+    it('should return empty string when userAgentData returns incomplete data', async () => {
       // Arrange
-      mockNavigator.userAgent = 'Mozilla/5.0 (Windows NT 6.3; Win64; x64)';
-
-      // Act
-      const result = await collectOSCpu();
-
-      // Assert
-      expect(result).toEqual({ oscpu: 'Windows NT 6.3; Win64; x64' });
-    });
-
-    it('should return Windows NT 6.2 when userAgent contains Windows NT 6.2', async () => {
-      // Arrange
-      mockNavigator.userAgent = 'Mozilla/5.0 (Windows NT 6.2; Win64; x64)';
-
-      // Act
-      const result = await collectOSCpu();
-
-      // Assert
-      expect(result).toEqual({ oscpu: 'Windows NT 6.2; Win64; x64' });
-    });
-
-    it('should return Windows NT 6.1 when userAgent contains Windows NT 6.1', async () => {
-      // Arrange
-      mockNavigator.userAgent = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64)';
-
-      // Act
-      const result = await collectOSCpu();
-
-      // Assert
-      expect(result).toEqual({ oscpu: 'Windows NT 6.1; Win64; x64' });
-    });
-
-    it('should return Mac OS X when userAgent contains Mac OS X', async () => {
-      // Arrange
-      mockNavigator.userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)';
-
-      // Act
-      const result = await collectOSCpu();
-
-      // Assert
-      expect(result).toEqual({ oscpu: 'Mac OS X; Intel' });
-    });
-
-    it('should return Linux when userAgent contains Linux', async () => {
-      // Arrange
-      mockNavigator.userAgent = 'Mozilla/5.0 (X11; Linux x86_64)';
-
-      // Act
-      const result = await collectOSCpu();
-
-      // Assert
-      expect(result).toEqual({ oscpu: 'Linux; x86_64' });
-    });
-
-    it('should return Android when userAgent contains Android', async () => {
-      // Arrange
-      mockNavigator.userAgent = 'Mozilla/5.0 (Linux; Android 11)';
-
-      // Act
-      const result = await collectOSCpu();
-
-      // Assert
-      expect(result).toEqual({ oscpu: 'Android' });
-    });
-
-    it('should return iOS when userAgent contains iPhone', async () => {
-      // Arrange
-      mockNavigator.userAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X)';
-
-      // Act
-      const result = await collectOSCpu();
-
-      // Assert
-      expect(result).toEqual({ oscpu: 'iOS' });
-    });
-
-    it('should add Win64; x64 to Windows when userAgent contains Win64 or x64', async () => {
-      // Arrange
-      mockNavigator.userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)';
-
-      // Act
-      const result = await collectOSCpu();
-
-      // Assert
-      expect(result).toEqual({ oscpu: 'Windows NT 10.0; Win64; x64' });
-    });
-
-    it('should add Win32; x86 to Windows when userAgent contains Win32 or i686', async () => {
-      // Arrange
-      mockNavigator.userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win32; i686)';
-
-      // Act
-      const result = await collectOSCpu();
-
-      // Assert
-      expect(result).toEqual({ oscpu: 'Windows NT 10.0; Win32; x86' });
-    });
-
-    it('should add Intel to Mac OS X when userAgent contains Intel', async () => {
-      // Arrange
-      mockNavigator.userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)';
-
-      // Act
-      const result = await collectOSCpu();
-
-      // Assert
-      expect(result).toEqual({ oscpu: 'Mac OS X; Intel' });
-    });
-
-    it('should add PPC to Mac OS X when userAgent contains PPC', async () => {
-      // Arrange
-      mockNavigator.userAgent = 'Mozilla/5.0 (Macintosh; PPC Mac OS X 10_5_8)';
-
-      // Act
-      const result = await collectOSCpu();
-
-      // Assert
-      expect(result).toEqual({ oscpu: 'Mac OS X; PPC' });
-    });
-
-    it('should add x86_64 to Linux when userAgent contains x86_64', async () => {
-      // Arrange
-      mockNavigator.userAgent = 'Mozilla/5.0 (X11; Linux x86_64)';
-
-      // Act
-      const result = await collectOSCpu();
-
-      // Assert
-      expect(result).toEqual({ oscpu: 'Linux; x86_64' });
-    });
-
-    it('should add i686 to Linux when userAgent contains i686', async () => {
-      // Arrange
-      mockNavigator.userAgent = 'Mozilla/5.0 (X11; Linux i686)';
-
-      // Act
-      const result = await collectOSCpu();
-
-      // Assert
-      expect(result).toEqual({ oscpu: 'Linux; i686' });
-    });
-
-    it('should add armv7l to Linux when userAgent contains armv7l', async () => {
-      // Arrange
-      mockNavigator.userAgent = 'Mozilla/5.0 (X11; Linux armv7l)';
-
-      // Act
-      const result = await collectOSCpu();
-
-      // Assert
-      expect(result).toEqual({ oscpu: 'Linux; armv7l' });
-    });
-
-    it('should add aarch64 to Linux when userAgent contains aarch64', async () => {
-      // Arrange
-      mockNavigator.userAgent = 'Mozilla/5.0 (X11; Linux aarch64)';
-
-      // Act
-      const result = await collectOSCpu();
-
-      // Assert
-      expect(result).toEqual({ oscpu: 'Linux; aarch64' });
-    });
-
-    it('should prioritize navigator.oscpu over userAgent parsing', async () => {
-      // Arrange
-      mockNavigator.oscpu = 'Custom OS String';
-      mockNavigator.userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)';
-
-      // Act
-      const result = await collectOSCpu();
-
-      // Assert
-      expect(result).toEqual({ oscpu: 'Custom OS String' });
-    });
-
-    it('should return empty string when no OS indicators found', async () => {
-      // Arrange
-      mockNavigator.userAgent = 'Mozilla/5.0 (Unknown Platform)';
+      mockNavigator.oscpu = undefined;
+      mockNavigator.userAgentData = {
+        getHighEntropyValues: jest.fn().mockResolvedValue({
+          platform: 'Windows'
+          // Missing architecture
+        })
+      };
 
       // Act
       const result = await collectOSCpu();
 
       // Assert
       expect(result).toEqual({ oscpu: '' });
+    });
+
+    it('should return empty string when userAgentData.getHighEntropyValues throws error', async () => {
+      // Arrange
+      mockNavigator.oscpu = undefined;
+      mockNavigator.userAgentData = {
+        getHighEntropyValues: jest.fn().mockRejectedValue(new Error('Not allowed'))
+      };
+
+      // Act
+      const result = await collectOSCpu();
+
+      // Assert
+      expect(result).toEqual({ oscpu: '' });
+    });
+
+    it('should return empty string when both navigator.oscpu and userAgentData are not available', async () => {
+      // Arrange
+      mockNavigator.oscpu = undefined;
+      mockNavigator.userAgentData = undefined;
+
+      // Act
+      const result = await collectOSCpu();
+
+      // Assert
+      expect(result).toEqual({ oscpu: '' });
+    });
+
+    it('should prioritize navigator.oscpu over userAgentData', async () => {
+      // Arrange
+      mockNavigator.oscpu = 'Windows NT 10.0; Win64; x64';
+      mockNavigator.userAgentData = {
+        getHighEntropyValues: jest.fn().mockResolvedValue({
+          platform: 'Linux',
+          architecture: 'x86_64'
+        })
+      };
+
+      // Act
+      const result = await collectOSCpu();
+
+      // Assert
+      expect(result).toEqual({ oscpu: 'Windows NT 10.0; Win64; x64' });
+      // Should not call userAgentData when oscpu is available
+      expect(mockNavigator.userAgentData.getHighEntropyValues).not.toHaveBeenCalled();
+    });
+
+    it('should handle various platform and architecture combinations', async () => {
+      // Test different combinations
+      const testCases = [
+        { platform: 'macOS', architecture: 'arm64', expected: 'macOS; arm64' },
+        { platform: 'Linux', architecture: 'x86_64', expected: 'Linux; x86_64' },
+        { platform: 'Android', architecture: 'arm', expected: 'Android; arm' },
+      ];
+
+      for (const testCase of testCases) {
+        mockNavigator.oscpu = undefined;
+        mockNavigator.userAgentData = {
+          getHighEntropyValues: jest.fn().mockResolvedValue({
+            platform: testCase.platform,
+            architecture: testCase.architecture
+          })
+        };
+
+        const result = await collectOSCpu();
+        expect(result).toEqual({ oscpu: testCase.expected });
+      }
     });
 
     it('should handle error gracefully and return empty string', async () => {

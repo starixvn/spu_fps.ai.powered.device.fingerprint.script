@@ -20,8 +20,24 @@ describe('Hardware Platform Module', () => {
   });
 
   describe('collectPlatform', () => {
-    it('should return platform from navigator.userAgentData.platform when available', () => {
+    it('should return normalized platform from navigator.platform first', () => {
       // Arrange
+      mockNavigator.platform = 'Windows';
+      mockNavigator.userAgentData = {
+        platform: 'Linux',
+      };
+
+      // Act
+      const result = collectPlatform();
+
+      // Assert
+      // Should prioritize navigator.platform and normalize it
+      expect(result).toEqual({ platform: 'Win32' });
+    });
+
+    it('should return normalized platform from navigator.userAgentData.platform when navigator.platform not available', () => {
+      // Arrange
+      mockNavigator.platform = undefined;
       mockNavigator.userAgentData = {
         platform: 'Windows',
       };
@@ -30,7 +46,7 @@ describe('Hardware Platform Module', () => {
       const result = collectPlatform();
 
       // Assert
-      expect(result).toEqual({ platform: 'Windows' });
+      expect(result).toEqual({ platform: 'Win32' });
     });
 
     it('should return platform from navigator.platform when userAgentData is not available', () => {
@@ -80,18 +96,21 @@ describe('Hardware Platform Module', () => {
       expect(result).toEqual({ platform: '' });
     });
 
-    it('should prioritize userAgentData.platform over navigator.platform', () => {
-      // Arrange
-      mockNavigator.userAgentData = {
-        platform: 'Linux',
-      };
+    it('should normalize different platform values correctly', () => {
+      // Test Windows normalization
       mockNavigator.platform = 'Win32';
+      expect(collectPlatform()).toEqual({ platform: 'Win32' });
 
-      // Act
-      const result = collectPlatform();
+      mockNavigator.platform = 'Win64';
+      expect(collectPlatform()).toEqual({ platform: 'Win32' });
 
-      // Assert
-      expect(result).toEqual({ platform: 'Linux' });
+      // Test Mac normalization
+      mockNavigator.platform = 'MacIntel';
+      expect(collectPlatform()).toEqual({ platform: 'MacIntel' });
+
+      // Test Linux normalization
+      mockNavigator.platform = 'Linux x86_64';
+      expect(collectPlatform()).toEqual({ platform: 'Linux x86_64' });
     });
 
     it('should handle error gracefully and return empty string', () => {

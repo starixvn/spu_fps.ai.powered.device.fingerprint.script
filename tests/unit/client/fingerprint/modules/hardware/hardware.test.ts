@@ -38,20 +38,20 @@ describe("Hardware Modules Integration Tests", () => {
   describe("Complete Hardware Fingerprint Collection", () => {
     it("should collect complete hardware fingerprint for Windows x64 system", async () => {
       // Arrange
-      mockNavigator.userAgentData = { platform: "Windows" };
+      mockNavigator.platform = "Windows";  // Changed: prioritize navigator.platform
       mockNavigator.cpuClass = "Intel x86";
       mockNavigator.hardwareConcurrency = 16;
       mockNavigator.deviceMemory = 32;
-      mockNavigator.userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)";
+      mockNavigator.oscpu = "Windows NT 10.0; Win64; x64";  // Changed: use navigator.oscpu
 
       // Act
       const result = await HardwareFingerprint.collect();
 
       // Assert
       expect(result).toEqual({
-        platform: "Windows",
+        platform: "Win32",  // Changed: normalized value
         cpuClass: "Intel x86",
-        architecture: "x86/x86_64",
+        architecture: 255,  // Changed: number value for x86
         oscpu: "Windows NT 10.0; Win64; x64",
         hardwareConcurrency: 16,
         deviceMemory: 32,
@@ -74,7 +74,7 @@ describe("Hardware Modules Integration Tests", () => {
       expect(result).toEqual({
         platform: "",
         cpuClass: "",
-        architecture: "x86/x86_64",
+        architecture: 255,  // Changed: still returns 255 even without navigator
         oscpu: "",
         hardwareConcurrency: "",
         deviceMemory: "",
@@ -91,7 +91,7 @@ describe("Hardware Modules Integration Tests", () => {
   describe("Individual Module Function Tests", () => {
     it("should test collectPlatform function independently", () => {
       // Arrange
-      mockNavigator.userAgentData = { platform: "Test Platform" };
+      mockNavigator.platform = "Test Platform";
 
       // Act
       const result = collectPlatform();
@@ -135,7 +135,7 @@ describe("Hardware Modules Integration Tests", () => {
 
     it("should test collectOSCpu function independently", async () => {
       // Arrange
-      mockNavigator.userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)";
+      mockNavigator.oscpu = "Windows NT 10.0; Win64; x64";  // Changed: use navigator.oscpu
 
       // Act
       const result = await collectOSCpu();
@@ -145,13 +145,13 @@ describe("Hardware Modules Integration Tests", () => {
     });
 
     it("should test collectArchitecture function independently", () => {
-      // Arrange - Architecture doesn't use userAgent anymore, uses Float32Array detection
+      // Arrange - Architecture uses Float32Array detection, not navigator
 
       // Act
       const result = collectArchitecture();
 
       // Assert
-      expect(result).toEqual({ architecture: "x86/x86_64" });
+      expect(result).toEqual({ architecture: 255 });  // Changed: number value
     });
   });
 });

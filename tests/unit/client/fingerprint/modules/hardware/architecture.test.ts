@@ -2,17 +2,17 @@ import { collectArchitecture } from '../../../../../../src/client/fingerprint/mo
 
 describe('Hardware Architecture Module', () => {
   describe('collectArchitecture', () => {
-    it('should return x86/x86_64 for standard x86 systems', () => {
+    it('should return 255 for standard x86 systems', () => {
       // Act
       const result = collectArchitecture();
 
       // Assert
       // Current implementation uses Float32Array byte manipulation to detect x86 architecture
-      // In most test environments, this should return "x86/x86_64"
-      expect(result).toEqual({ architecture: 'x86/x86_64' });
+      // In most test environments, this should return 255 for x86/x86_64
+      expect(result).toEqual({ architecture: 255 });
     });
 
-    it('should handle errors gracefully and return empty string', () => {
+    it('should handle errors gracefully and return 0', () => {
       // Arrange - Mock Float32Array to throw an error
       const originalFloat32Array = global.Float32Array;
       (global as any).Float32Array = jest.fn().mockImplementation(() => {
@@ -23,7 +23,7 @@ describe('Hardware Architecture Module', () => {
       const result = collectArchitecture();
 
       // Assert
-      expect(result).toEqual({ architecture: '' });
+      expect(result).toEqual({ architecture: 0 });
 
       // Cleanup
       global.Float32Array = originalFloat32Array;
@@ -40,7 +40,7 @@ describe('Hardware Architecture Module', () => {
       const result = collectArchitecture();
 
       // Assert
-      expect(result).toEqual({ architecture: '' });
+      expect(result).toEqual({ architecture: 0 });
 
       // Cleanup
       global.Uint8Array = originalUint8Array;
@@ -55,17 +55,18 @@ describe('Hardware Architecture Module', () => {
       // Assert
       expect(result1).toEqual(result2);
       expect(result2).toEqual(result3);
-      expect(typeof result1.architecture).toBe('string');
+      expect(typeof result1.architecture).toBe('number');
     });
 
-    it('should return non-empty string for architecture value', () => {
+    it('should return number for architecture value', () => {
       // Act
       const result = collectArchitecture();
 
       // Assert
-      expect(typeof result.architecture).toBe('string');
-      // Architecture should be either "x86/x86_64", "non-x86", or "" (empty on error)
-      expect(['x86/x86_64', 'non-x86', '']).toContain(result.architecture);
+      expect(typeof result.architecture).toBe('number');
+      // Architecture should be a number (typically 255 for x86, or 0 on error)
+      expect(result.architecture).toBeGreaterThanOrEqual(0);
+      expect(result.architecture).toBeLessThanOrEqual(255);
     });
   });
 });
