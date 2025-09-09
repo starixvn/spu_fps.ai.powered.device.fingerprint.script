@@ -31,36 +31,20 @@ describe('Hardware OS CPU Module', () => {
       expect(result).toEqual({ oscpu: 'Windows NT 10.0; Win64; x64' });
     });
 
-    it('should return userAgentData platform and architecture when navigator.oscpu not available', async () => {
+    it('should return empty string when navigator.oscpu not available', async () => {
       // Arrange
       mockNavigator.oscpu = undefined;
-      mockNavigator.userAgentData = {
-        getHighEntropyValues: jest.fn().mockResolvedValue({
-          platform: 'Windows',
-          architecture: 'x86'
-        })
-      };
 
       // Act
       const result = await collectOSCpu();
 
       // Assert
-      expect(result).toEqual({ oscpu: 'Windows; x86' });
-      expect(mockNavigator.userAgentData.getHighEntropyValues).toHaveBeenCalledWith([
-        'architecture',
-        'platform'
-      ]);
+      expect(result).toEqual({ oscpu: '' });
     });
 
     it('should return empty string when userAgentData returns incomplete data', async () => {
       // Arrange
       mockNavigator.oscpu = undefined;
-      mockNavigator.userAgentData = {
-        getHighEntropyValues: jest.fn().mockResolvedValue({
-          platform: 'Windows'
-          // Missing architecture
-        })
-      };
 
       // Act
       const result = await collectOSCpu();
@@ -72,9 +56,6 @@ describe('Hardware OS CPU Module', () => {
     it('should return empty string when userAgentData.getHighEntropyValues throws error', async () => {
       // Arrange
       mockNavigator.oscpu = undefined;
-      mockNavigator.userAgentData = {
-        getHighEntropyValues: jest.fn().mockRejectedValue(new Error('Not allowed'))
-      };
 
       // Act
       const result = await collectOSCpu();
@@ -86,7 +67,6 @@ describe('Hardware OS CPU Module', () => {
     it('should return empty string when both navigator.oscpu and userAgentData are not available', async () => {
       // Arrange
       mockNavigator.oscpu = undefined;
-      mockNavigator.userAgentData = undefined;
 
       // Act
       const result = await collectOSCpu();
@@ -98,38 +78,27 @@ describe('Hardware OS CPU Module', () => {
     it('should prioritize navigator.oscpu over userAgentData', async () => {
       // Arrange
       mockNavigator.oscpu = 'Windows NT 10.0; Win64; x64';
-      mockNavigator.userAgentData = {
-        getHighEntropyValues: jest.fn().mockResolvedValue({
-          platform: 'Linux',
-          architecture: 'x86_64'
-        })
-      };
 
       // Act
       const result = await collectOSCpu();
 
       // Assert
       expect(result).toEqual({ oscpu: 'Windows NT 10.0; Win64; x64' });
-      // Should not call userAgentData when oscpu is available
-      expect(mockNavigator.userAgentData.getHighEntropyValues).not.toHaveBeenCalled();
     });
 
-    it('should handle various platform and architecture combinations', async () => {
-      // Test different combinations
+    it('should handle oscpu property that is not a string', async () => {
+      // Test different cases of invalid oscpu values
       const testCases = [
-        { platform: 'macOS', architecture: 'arm64', expected: 'macOS; arm64' },
-        { platform: 'Linux', architecture: 'x86_64', expected: 'Linux; x86_64' },
-        { platform: 'Android', architecture: 'arm', expected: 'Android; arm' },
+        { oscpu: null, expected: '' },
+        { oscpu: undefined, expected: '' },
+        { oscpu: 123, expected: '' },
+        { oscpu: {}, expected: '' },
+        { oscpu: '   ', expected: '' }, // Only whitespace
+        { oscpu: '  Windows NT 10.0  ', expected: 'Windows NT 10.0' }, // With whitespace
       ];
 
       for (const testCase of testCases) {
-        mockNavigator.oscpu = undefined;
-        mockNavigator.userAgentData = {
-          getHighEntropyValues: jest.fn().mockResolvedValue({
-            platform: testCase.platform,
-            architecture: testCase.architecture
-          })
-        };
+        mockNavigator.oscpu = testCase.oscpu;
 
         const result = await collectOSCpu();
         expect(result).toEqual({ oscpu: testCase.expected });
@@ -140,6 +109,27 @@ describe('Hardware OS CPU Module', () => {
       // Arrange
       Object.defineProperty(global, 'navigator', {
         value: undefined,
+        writable: true,
+      });
+
+      // Act
+      const result = await collectOSCpu();
+
+      // Assert
+      expect(result).toEqual({ oscpu: '' });
+
+      // Restore navigator for other tests
+      Object.defineProperty(global, 'navigator', {
+        value: mockNavigator,
+        writable: true,
+      });
+    });
+
+    it('should return empty string when navigator does not have oscpu property', async () => {
+      // Arrange
+      const navigatorWithoutOscpu = {};
+      Object.defineProperty(global, 'navigator', {
+        value: navigatorWithoutOscpu,
         writable: true,
       });
 
