@@ -11,22 +11,11 @@ export async function collectOSCpu(): Promise<OSCpuInfo> {
 
 async function getOSCpu(): Promise<string> {
   try {
-    if (navigator.oscpu) return navigator.oscpu;
+    if (!("oscpu" in navigator)) return "";
 
-    if (navigator.userAgentData?.getHighEntropyValues) {
-      try {
-        const data = await navigator.userAgentData.getHighEntropyValues([
-          "architecture",
-          "platform",
-        ]);
-        
-        if (data?.platform && data?.architecture) {
-          return `${data.platform}; ${data.architecture}`;
-        }
-      } catch {}
-    }
-
-    return "";
+    const rawOSCpu = (navigator as any).oscpu;
+    
+    return typeof rawOSCpu === "string" ? rawOSCpu.trim() : "";
   } catch {
     return "";
   }

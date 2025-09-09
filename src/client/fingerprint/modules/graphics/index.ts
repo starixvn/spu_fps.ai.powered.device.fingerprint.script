@@ -18,9 +18,9 @@ export class GraphicsFingerprint {
       const fontsResult = await collectFonts();
       const fontPreferencesResult = collectFontPreferences();
       const screenResolutionResult = collectScreenResolution();
-      const screenFrameResult = collectScreenFrame();
+      const screenFrameResult = await collectScreenFrame();
       const colorDepthResult = collectColorDepth();
-      const colorGamutResult = await collectColorGamut();
+      const colorGamutResult = collectColorGamut();
 
       const graphicsGroup: GraphicsGroupInfo = {
         canvas: canvasResult,
@@ -67,40 +67,10 @@ export class GraphicsFingerprint {
           min: 0,
           system: 0,
         },
-        screenResolution: {
-          width: 0,
-          height: 0,
-          availWidth: 0,
-          availHeight: 0,
-          pixelRatio: 0,
-          devicePixelRatio: 0,
-          logicalPixelRatio: 0,
-        },
-        screenFrame: {
-          frameWidth: 0,
-          frameHeight: 0,
-          frameDepth: 0,
-          frameColorDepth: 0,
-          framePixelDepth: 0,
-          orientation: "",
-          orientationAngle: 0,
-        },
-        colorDepth: {
-          colorDepth: 0,
-          pixelDepth: 0,
-          bitsPerChannel: 0,
-          totalBits: 0,
-          hasAlpha: false,
-          hasTransparency: false,
-        },
-        colorGamut: {
-          colorGamut: "",
-          supportedColorSpaces: [],
-          p3Support: false,
-          rec2020Support: false,
-          srgbSupport: false,
-          displayP3Support: false,
-        },
+        screenResolution: [0, 0],
+        screenFrame: [0, 0, 0, 0],
+        colorDepth: "",
+        colorGamut: undefined,
       };
     }
   }

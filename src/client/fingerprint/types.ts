@@ -55,10 +55,10 @@ export interface GraphicsGroupInfo {
   webglExtensions: WebGLExtensionsInfo;
   fonts: string[];
   fontPreferences: FontPreferencesInfo;
-  screenResolution: ScreenResolutionInfo;
-  screenFrame: ScreenFrameInfo;
-  colorDepth: ColorDepthInfo;
-  colorGamut: ColorGamutInfo;
+  screenResolution: [number, number];
+  screenFrame: [number, number, number, number];
+  colorDepth: number | "";
+  colorGamut: 'srgb' | 'p3' | 'rec2020' | undefined;
 }
 
 export interface CanvasInfo {
@@ -94,44 +94,6 @@ export interface FontPreferencesInfo {
   mono: number;
   min: number;
   system: number;
-}
-
-export interface ScreenResolutionInfo {
-  width: number;
-  height: number;
-  availWidth: number;
-  availHeight: number;
-  pixelRatio: number;
-  devicePixelRatio: number;
-  logicalPixelRatio: number;
-}
-
-export interface ScreenFrameInfo {
-  frameWidth: number;
-  frameHeight: number;
-  frameDepth: number;
-  frameColorDepth: number;
-  framePixelDepth: number;
-  orientation: string;
-  orientationAngle: number;
-}
-
-export interface ColorDepthInfo {
-  colorDepth: number;
-  pixelDepth: number;
-  bitsPerChannel: number;
-  totalBits: number;
-  hasAlpha: boolean;
-  hasTransparency: boolean;
-}
-
-export interface ColorGamutInfo {
-  colorGamut: string;
-  supportedColorSpaces: string[];
-  p3Support: boolean;
-  rec2020Support: boolean;
-  srgbSupport: boolean;
-  displayP3Support: boolean;
 }
 
 // Audio

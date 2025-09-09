@@ -1,116 +1,132 @@
-import type { ScreenFrameInfo } from "../../types";
+import { replaceNaN, toFloat, round } from '../../utils/data';
+import { exitFullscreen, getFullscreenElement, isSafariWebKit, isWebKit, isWebKit616OrNewer } from '../../utils/browser';
 
-export function collectScreenFrame(): ScreenFrameInfo {
+export type FrameSize = [number | null, number | null, number | null, number | null];
+export const screenFrameCheckInterval = 2500;
+
+const roundingPrecision = 10;
+let screenFrameBackup: Readonly<FrameSize> | undefined;
+let screenFrameSizeTimeoutId: number | undefined;
+
+export async function collectScreenFrame(): Promise<[number, number, number, number]> {
   try {
-    return getScreenFrame();
-  } catch (error) {
-    return getDefaultScreenFrame();
+    const getFrameAsync = getScreenFrame();
+    const frameSize = await getFrameAsync();
+
+    if (!frameSize) {
+      return [0, 0, 0, 0];
+    }
+
+    return [
+      frameSize[0] === null ? 0 : frameSize[0],
+      frameSize[1] === null ? 0 : frameSize[1],
+      frameSize[2] === null ? 0 : frameSize[2],
+      frameSize[3] === null ? 0 : frameSize[3],
+    ];
+  } catch {
+    return [0, 0, 0, 0];
   }
 }
 
-function getScreenFrame(): ScreenFrameInfo {
-  const screen = window.screen;
+export function resetScreenFrameWatch(): void {
+  if (screenFrameSizeTimeoutId !== undefined) {
+    clearTimeout(screenFrameSizeTimeoutId);
+    screenFrameSizeTimeoutId = undefined;
+  }
+  screenFrameBackup = undefined;
+}
 
-  const frameWidth = screen.width || 0;
-  const frameHeight = screen.height || 0;
+function watchScreenFrame() {
+  if (screenFrameSizeTimeoutId !== undefined) {
+    return;
+  }
 
-  const frameColorDepth = screen.colorDepth || 0;
-  const framePixelDepth = screen.pixelDepth || 0;
+  const checkScreenFrame = () => {
+    const frameSize = getCurrentScreenFrame();
+    if (isFrameSizeNull(frameSize)) {
+      screenFrameSizeTimeoutId = (setTimeout as typeof window.setTimeout)(
+        checkScreenFrame,
+        screenFrameCheckInterval,
+      );
+    } else {
+      screenFrameBackup = frameSize;
+      screenFrameSizeTimeoutId = undefined;
+    }
+  };
 
-  const frameDepth = frameColorDepth || framePixelDepth || 24;
+  checkScreenFrame();
+}
 
-  const orientation = getScreenOrientation();
-  const orientationAngle = getOrientationAngle();
+export function getUnstableScreenFrame(): () => Promise<FrameSize> {
+  watchScreenFrame();
 
-  return {
-    frameWidth,
-    frameHeight,
-    frameDepth,
-    frameColorDepth,
-    framePixelDepth,
-    orientation,
-    orientationAngle,
+  return async () => {
+    let frameSize = getCurrentScreenFrame();
+
+    if (isFrameSizeNull(frameSize)) {
+      if (screenFrameBackup) {
+        return [...screenFrameBackup];
+      }
+
+      if (getFullscreenElement()) {
+        await exitFullscreen();
+        frameSize = getCurrentScreenFrame();
+      }
+    }
+
+    if (!isFrameSizeNull(frameSize)) {
+      screenFrameBackup = frameSize;
+    }
+
+    return frameSize;
   };
 }
 
-function getScreenOrientation(): string {
-  try {
-    if ("orientation" in screen && (screen as any).orientation?.type) {
-      return (screen as any).orientation.type;
-    }
-    if ("webkitOrientation" in screen && (screen as any).webkitOrientation) {
-      return String((screen as any).webkitOrientation);
-    }
-    if ("mozOrientation" in screen && (screen as any).mozOrientation) {
-      return String((screen as any).mozOrientation);
-    }
-    if ("msOrientation" in screen && (screen as any).msOrientation) {
-      return String((screen as any).msOrientation);
-    }
-
-    if (screen.width && screen.height) {
-      return screen.width > screen.height ? "landscape" : "portrait";
-    }
-
-    if (window.matchMedia) {
-      if (window.matchMedia("(orientation: portrait)").matches)
-        return "portrait";
-      if (window.matchMedia("(orientation: landscape)").matches)
-        return "landscape";
-    }
-
-    return "unknown";
-  } catch {
-    return "unknown";
+function getScreenFrame(): () => Promise<FrameSize | undefined> {
+  if (isWebKit() && isWebKit616OrNewer() && isSafariWebKit()) {
+    return () => Promise.resolve(undefined);
   }
-}
 
-function getOrientationAngle(): number {
-  try {
-    if (
-      "orientation" in screen &&
-      typeof (screen as any).orientation?.angle === "number"
-    ) {
-      return (screen as any).orientation.angle;
-    }
+  const screenFrameGetter = getUnstableScreenFrame();
 
-    if (
-      "webkitOrientation" in screen &&
-      typeof (screen as any).webkitOrientation?.angle === "number"
-    ) {
-      return (screen as any).webkitOrientation.angle;
-    }
-    if (
-      "mozOrientation" in screen &&
-      typeof (screen as any).mozOrientation?.angle === "number"
-    ) {
-      return (screen as any).mozOrientation.angle;
-    }
-    if (
-      "msOrientation" in screen &&
-      typeof (screen as any).msOrientation?.angle === "number"
-    ) {
-      return (screen as any).msOrientation.angle;
-    }
+  return async () => {
+    const frameSize = await screenFrameGetter();
+    const processSize = (sideSize: FrameSize[number]) =>
+      sideSize === null ? null : round(sideSize, roundingPrecision);
 
-    if (screen.width && screen.height) {
-      return screen.width > screen.height ? 90 : 0;
-    }
-
-    return 0;
-  } catch {
-    return 0;
-  }
-}
-
-function getDefaultScreenFrame(): ScreenFrameInfo {
-  return {
-    frameWidth: 0,
-    frameHeight: 0,
-    frameDepth: 24,
-    frameColorDepth: 24,
-    framePixelDepth: 24,
-    orientation: "unknown",
-    orientationAngle: 0,
+    return [
+      processSize(frameSize[0]),
+      processSize(frameSize[1]),
+      processSize(frameSize[2]),
+      processSize(frameSize[3]),
+    ];
   };
+}
+
+function getCurrentScreenFrame(): FrameSize {
+  const s = screen as any;
+
+  // Handle undefined availTop and availLeft - major issue on many browsers
+  const availTop = s.availTop !== undefined ? toFloat(s.availTop) : 0;
+  const availLeft = s.availLeft !== undefined ? toFloat(s.availLeft) : 0;
+  const width = toFloat(s.width) || 0;
+  const height = toFloat(s.height) || 0;
+  const availWidth = toFloat(s.availWidth) || 0;
+  const availHeight = toFloat(s.availHeight) || 0;
+
+  return [
+    replaceNaN(availTop, null),
+    replaceNaN(width - availWidth - replaceNaN(availLeft, 0), null),
+    replaceNaN(height - availHeight - replaceNaN(availTop, 0), null),
+    replaceNaN(availLeft, null),
+  ];
+}
+
+function isFrameSizeNull(frameSize: FrameSize) {
+  for (let i = 0; i < 4; ++i) {
+    if (frameSize[i]) {
+      return false;
+    }
+  }
+  return true;
 }

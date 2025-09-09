@@ -38,6 +38,8 @@ export class ScriptService {
     const fileGroups = {
       utils: [
         "utils/hash.js",
+        "utils/data.js",
+        "utils/browser.js",
         "deviceFactory.js",
       ],
       
@@ -54,7 +56,11 @@ export class ScriptService {
         "tagging/index.js"
       ],
       
-      fingerprintUtils: ["fingerprint/utils/hash.js"],
+      fingerprintUtils: [
+        "fingerprint/utils/hash.js",
+        "fingerprint/utils/data.js", 
+        "fingerprint/utils/browser.js"
+      ],
       
       hardware: [
         "fingerprint/modules/hardware/platform.js",
