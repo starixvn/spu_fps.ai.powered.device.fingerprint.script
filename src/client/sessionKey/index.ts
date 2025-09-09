@@ -3,7 +3,6 @@ import { SessionKeyData } from "./types";
 
 export class SessionKeyManager {
     private static readonly STORAGE_KEY = '__session_key__';
-    private static readonly EXPIRE_TIME = 60 * 1000; // 1 minute in milliseconds
 
     public static getSessionKey(): string {
         if (typeof window !== "undefined" && (window as any).sessionKey) {
@@ -14,7 +13,7 @@ export class SessionKeyManager {
         }
 
         const storedData = this.getFromStorage();
-        if (storedData && !this.isExpired(storedData)) {
+        if (storedData) {
             if(this.isValidSessionKey(storedData.sessionKey)) {
                 this.setToWindow(storedData.sessionKey);
                 return storedData.sessionKey;
@@ -30,7 +29,6 @@ export class SessionKeyManager {
         const sessionData: SessionKeyData = {
             sessionKey,
             timestamp: now,
-            expiresAt: now + this.EXPIRE_TIME
         };
 
         this.saveToStorage(sessionData);
@@ -41,10 +39,6 @@ export class SessionKeyManager {
 
     private static isValidSessionKey(sessionKey: string): boolean {
         return DeviceFactory.isValidGuid(sessionKey);
-    }
-
-    private static isExpired(data: SessionKeyData): boolean {
-        return Date.now() > data.expiresAt;
     }
 
     private static getFromStorage(): SessionKeyData | null {
@@ -60,7 +54,7 @@ export class SessionKeyManager {
 
             const data: SessionKeyData = JSON.parse(stored);
             
-            if (!data.sessionKey || !data.timestamp || !data.expiresAt) {
+            if (!data.sessionKey || !data.timestamp) {
                 this.clearStorage();
                 return null;
             }

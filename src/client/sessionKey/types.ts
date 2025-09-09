@@ -1,7 +1,6 @@
 export interface SessionKeyData {
     sessionKey: string;
     timestamp: number;
-    expiresAt: number;
 }
 
 declare global {
