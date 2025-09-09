@@ -1,27 +1,70 @@
 /**
  * Counts truthy values in an array
  */
-function countTruthy(values: unknown[]): number {
+export function countTruthy(values: unknown[]): number {
   return values.filter(Boolean).length;
+}
+
+/**
+ * Detects if browser is based on Chromium without using user-agent
+ */
+export function isChromium(): boolean {
+  const w = window;
+  const n = navigator;
+
+  return (
+    countTruthy([
+      'webkitPersistentStorage' in n,
+      'webkitTemporaryStorage' in n,
+      (n.vendor || '').indexOf('Google') === 0,
+      'webkitResolveLocalFileSystemURL' in w,
+      'BatteryManager' in w,
+      'webkitMediaStream' in w,
+      'webkitSpeechGrammar' in w,
+    ]) >= 5
+  );
+}
+
+/**
+ * Detects if browser is based on Chromium version ≥86 without using user-agent
+ */
+export function isChromium86OrNewer(): boolean {
+  const w = window;
+
+  return (
+    countTruthy([
+      !('MediaSettingsRange' in w),
+      'RTCEncodedAudioFrame' in w,
+      '' + (w as any).Intl === '[object Intl]',
+      '' + (w as any).Reflect === '[object Reflect]',
+    ]) >= 3
+  );
 }
 
 /**
  * Detects if browser is WebKit-based
  */
 export function isWebKit(): boolean {
-  const w = window;
-  const n = navigator;
+  try {
+    const w = window;
+    const n = navigator;
 
-  return (
-    countTruthy([
+    const checks = [
       'ApplePayError' in w,
       'CSSPrimitiveValue' in w,
       'Counter' in w,
       n.vendor.indexOf('Apple') === 0,
       'RGBColor' in w,
       'WebKitMediaKeys' in w,
-    ]) >= 4
-  );
+    ];
+    
+    const truthyCount = countTruthy(checks);
+    const result = truthyCount >= 4;
+    
+    return result;
+  } catch (error) {
+    return false;
+  }
 }
 
 /**
@@ -100,4 +143,36 @@ export function exitFullscreen(): Promise<void> {
                  (d as any).webkitExitFullscreen;
   
   return exitFn.call(d);
+}
+
+/**
+ * Detects if browser is Gecko-based (Firefox)
+ */
+export function isGecko(): boolean {
+  const w = window;
+
+  return (
+    countTruthy([
+      'buildID' in navigator,
+      'MozAppearance' in (document.documentElement?.style ?? {}),
+      'onmozfullscreenchange' in w,
+      'mozInnerScreenX' in w,
+      'CSSMozDocumentRule' in w,
+      'CanvasCaptureMediaStream' in w,
+    ]) >= 4
+  );
+}
+
+/**
+ * Checks whether the device runs on Android without using user-agent
+ */
+export function isAndroid(): boolean {
+  try {
+    const n = navigator;
+    const w = window;
+    const result = /android/i.test(n.userAgent) || 'ontouchstart' in w;
+    return result;
+  } catch (error) {
+    return false;
+  }
 }

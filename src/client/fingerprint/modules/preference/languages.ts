@@ -1,44 +1,52 @@
 import type { LanguagesInfo } from "../../types";
+import { isChromium, isChromium86OrNewer } from "../../utils/browser";
 
 export function collectLanguages(): LanguagesInfo {
   try {
     const languages = getLanguages();
 
     return {
-      languages:
-        Array.isArray(languages) && languages.length > 0 ? languages : [""],
+      languages: languages.length > 0 ? languages : [[""]],
     };
   } catch (error) {
-    console.warn("collectLanguages error:", error);
-    return { languages: [""] };
+    return { languages: [[""]]};
   }
 }
 
-function getLanguages(): string[] {
+function getLanguages(): string[][] {
   try {
-    let langs: string[] = [];
+    const n = navigator as any;
+    const result: string[][] = [];
 
-    if (Array.isArray(navigator.languages) && navigator.languages.length > 0) {
-      langs = navigator.languages
-        .filter(
-          (lang): lang is string =>
+    // Get primary language 
+    const language = n.language || n.userLanguage || n.browserLanguage || n.systemLanguage;
+
+    if (language !== undefined) {
+      result.push([language]);
+    }
+
+    if (Array.isArray(n.languages)) {
+      // Chromium 86+: `navigator.languages` is always a single value in Incognito → ignore it.
+      if (!(isChromium() && isChromium86OrNewer())) {
+        const validLanguages = n.languages.filter(
+          (lang: any): lang is string =>
             typeof lang === "string" && lang.trim().length > 0
-        )
-        .map((lang) => lang.trim());
+        );
+
+        if (validLanguages.length > 0) {
+          result.push(validLanguages);
+        }
+      }
+    } else if (typeof n.languages === 'string') {
+      const languages = n.languages as string;
+      
+      if (languages) {
+        result.push(languages.split(',').map((lang: string) => lang.trim()).filter((lang: string) => lang.length > 0));
+      }
     }
 
-    if (
-      langs.length === 0 &&
-      typeof navigator.language === "string" &&
-      navigator.language.trim()
-    ) {
-      langs = [navigator.language.trim()];
-    }
-
-    if (langs.length === 0) langs = [""];
-
-    return langs;
+    return result;
   } catch {
-    return [""];
+    return [[""]];
   }
 }

@@ -28,7 +28,6 @@ export class BrowserFingerprint {
 
       return browserGroup;
     } catch (error) {
-      console.error("Error collecting browser fingerprint:", error);
       return {
         browserName: "",
         osName: "",

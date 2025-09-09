@@ -1,4 +1,5 @@
 import type { PlatformInfo } from "../../types";
+import { countTruthy, isWebKit } from "../../utils/browser";
 
 export function collectPlatform(): PlatformInfo {
   try {
@@ -23,10 +24,6 @@ function getPlatform(): string {
   } catch {
     return "";
   }
-}
-
-function countTruthy(array: any[]): number {
-  return array.filter(Boolean).length;
 }
 
 function isDesktopWebKit(): boolean {
@@ -62,18 +59,3 @@ function isIPad(): boolean {
   );
 }
 
-function isWebKit(): boolean {
-  const w = window;
-  const n = navigator;
-
-  return (
-    countTruthy([
-      'ApplePayError' in w,
-      'CSSPrimitiveValue' in w,
-      'Counter' in w,
-      n.vendor.indexOf('Apple') === 0,
-      'RGBColor' in w,
-      'WebKitMediaKeys' in w,
-    ]) >= 4
-  );
-}

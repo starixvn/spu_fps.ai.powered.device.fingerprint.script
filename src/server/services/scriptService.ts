@@ -42,6 +42,7 @@ export class ScriptService {
         "utils/hash.js",
         "utils/data.js",
         "utils/browser.js",
+        "utils/dom.js",
         "deviceFactory.js",
       ],
       
@@ -61,7 +62,8 @@ export class ScriptService {
       fingerprintUtils: [
         "fingerprint/utils/hash.js",
         "fingerprint/utils/data.js", 
-        "fingerprint/utils/browser.js"
+        "fingerprint/utils/browser.js",
+        "fingerprint/utils/dom.js"
       ],
       
       hardware: [

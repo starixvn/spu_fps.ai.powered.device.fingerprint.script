@@ -11,7 +11,6 @@ export class IPClass {
                 (window as any).webRTCData = webRTC;
             }
         } catch (error) {
-            // console.warn('WebRTC collection failed:', error);
             callback({});
         }
     }

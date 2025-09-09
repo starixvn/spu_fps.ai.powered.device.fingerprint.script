@@ -23,7 +23,7 @@ export class PreferencesFingerprint {
       const preferencesGroup: PreferencesGroupInfo = {
         languages: languagesResult.languages,
         timezone: timezoneResult.timezone,
-        touchSupport: touchSupportResult.touchSupport,
+        touchSupport: touchSupportResult,
         sessionStorage: sessionStorageResult.sessionStorage,
         openDatabase: openDatabaseResult.openDatabase,
         localStorage: localStorageResult.localStorage,
@@ -33,11 +33,14 @@ export class PreferencesFingerprint {
 
       return preferencesGroup;
     } catch (error) {
-      console.error("Error collecting preferences fingerprint:", error);
       return {
-        languages: [],
+        languages: [[""]],
         timezone: "",
-        touchSupport: false,
+        touchSupport: {
+          maxTouchPoints: 0,
+          touchEvent: false,
+          touchStart: false,
+        },
         sessionStorage: false,
         openDatabase: false,
         localStorage: false,

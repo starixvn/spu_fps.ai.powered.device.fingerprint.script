@@ -1,8 +1,56 @@
 import type { FontPreferencesInfo } from "../../types";
+import { withNaturalFonts } from "../../utils/dom";
 
-export function collectFontPreferences(): FontPreferencesInfo {
+const defaultText = "mmMwWLliI0fiflO&1";
+
+const presets: Record<keyof FontPreferencesInfo, [Partial<CSSStyleDeclaration>?, string?]> = {
+  default: [],
+  apple: [{ font: "-apple-system-body" }],
+  serif: [{ fontFamily: "serif" }],
+  sans: [{ fontFamily: "sans-serif" }],
+  mono: [{ fontFamily: "monospace" }],
+  min: [{ fontSize: "1px" }],
+  system: [{ fontFamily: "system-ui" }],
+};
+
+export async function collectFontPreferences(): Promise<FontPreferencesInfo> {
   try {
-    return getFontPreferenceMetrics();
+    return await withNaturalFonts((doc, container) => {
+      const elements: Record<string, HTMLElement> = {};
+      const results: FontPreferencesInfo = {
+        default: 0,
+        apple: 0,
+        serif: 0,
+        sans: 0,
+        mono: 0,
+        min: 0,
+        system: 0,
+      };
+
+      for (const key of Object.keys(presets) as (keyof FontPreferencesInfo)[]) {
+        const [style = {}, text = defaultText] = presets[key];
+        const el = doc.createElement("span");
+
+        el.textContent = text;
+        el.style.whiteSpace = "nowrap";
+
+        for (const [name, value] of Object.entries(style)) {
+          if (value !== undefined) {
+            (el.style as any)[name] = value;
+          }
+        }
+
+        elements[key] = el;
+        container.appendChild(doc.createElement("br"));
+        container.appendChild(el);
+      }
+
+      for (const key of Object.keys(elements) as (keyof FontPreferencesInfo)[]) {
+        results[key] = elements[key].getBoundingClientRect().width;
+      }
+
+      return results;
+    });
   } catch {
     return {
       default: 0,
@@ -16,46 +64,3 @@ export function collectFontPreferences(): FontPreferencesInfo {
   }
 }
 
-function getFontPreferenceMetrics(): FontPreferencesInfo {
-  const fonts = {
-    default: "sans-serif",
-    apple: "-apple-system",
-    serif: "serif",
-    sans: "sans-serif",
-    mono: "monospace",
-    min: "cursive",
-    system: "system-ui",
-  };
-
-  const testString = "mmMwWLliI0fiflO&1";
-  const testElement = document.createElement("span");
-
-  testElement.style.position = "absolute";
-  testElement.style.left = "-9999px";
-  testElement.style.fontSize = "128px";
-  testElement.style.whiteSpace = "nowrap";
-  testElement.textContent = testString;
-
-  document.body.appendChild(testElement);
-
-  const results = {
-    default: 0,
-    apple: 0,
-    serif: 0,
-    sans: 0,
-    mono: 0,
-    min: 0,
-    system: 0,
-  };
-
-  for (const key in fonts) {
-    testElement.style.fontFamily = fonts[key as keyof typeof fonts];
-
-    results[key as keyof typeof results] =
-      testElement.getBoundingClientRect().width;
-  }
-
-  document.body.removeChild(testElement);
-
-  return results;
-}

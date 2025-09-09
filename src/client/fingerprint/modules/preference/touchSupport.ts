@@ -1,42 +1,50 @@
 import type { TouchSupportInfo } from "../../types";
+import { toInt } from "../../utils/data";
 
 export function collectTouchSupport(): TouchSupportInfo {
   try {
-    const touchSupport = getTouchSupport();
-    return { touchSupport };
+    return getTouchSupport();
   } catch (error) {
-    return { touchSupport: false };
+    return {
+      maxTouchPoints: 0,
+      touchEvent: false,
+      touchStart: false,
+    };
   }
 }
 
-function getTouchSupport(): boolean {
+function getTouchSupport(): TouchSupportInfo {
   try {
-    if (typeof navigator !== "undefined") {
-      if (navigator.maxTouchPoints && navigator.maxTouchPoints > 0) return true;
+    const n = navigator;
 
-      if (
-        (navigator as any).msMaxTouchPoints &&
-        (navigator as any).msMaxTouchPoints > 0
-      )
-        return true;
+    let maxTouchPoints = 0;
+    let touchEvent: boolean;
+
+    if (n.maxTouchPoints !== undefined) {
+      maxTouchPoints = toInt(n.maxTouchPoints);
+    } else if ((n as any).msMaxTouchPoints !== undefined) {
+      maxTouchPoints = (n as any).msMaxTouchPoints;
     }
 
-    if (typeof window !== "undefined" && "ontouchstart" in window) return true;
-
-    if (typeof document !== "undefined") {
-      if ("ontouchstart" in document) return true;
-
-      if (
-        document.documentElement &&
-        "ontouchstart" in document.documentElement
-      )
-        return true;
-
-      if (document.body && "ontouchstart" in document.body) return true;
+    try {
+      document.createEvent('TouchEvent');
+      touchEvent = true;
+    } catch {
+      touchEvent = false;
     }
 
-    return false;
+    const touchStart = 'ontouchstart' in window;
+
+    return {
+      maxTouchPoints,
+      touchEvent,
+      touchStart,
+    };
   } catch {
-    return false;
+    return {
+      maxTouchPoints: 0,
+      touchEvent: false,
+      touchStart: false,
+    };
   }
 }

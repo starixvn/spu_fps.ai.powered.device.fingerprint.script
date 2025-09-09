@@ -16,7 +16,7 @@ export class GraphicsFingerprint {
       const webglBasicsResult = collectWebGLBasics();
       const webglExtensionsResult = await collectWebGLExtensions();
       const fontsResult = await collectFonts();
-      const fontPreferencesResult = collectFontPreferences();
+      const fontPreferencesResult = await collectFontPreferences();
       const screenResolutionResult = collectScreenResolution();
       const screenFrameResult = await collectScreenFrame();
       const colorDepthResult = collectColorDepth();

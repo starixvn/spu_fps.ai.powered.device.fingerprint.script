@@ -1,119 +1,51 @@
 import type { AudioBaseLatencyInfo } from "../../types";
+import { isAndroid, isWebKit } from "../../utils/browser";
 
-const CACHE_KEY = "audioBaseLatencyCache";
-const LATENCY_SAMPLE_RATE = 44100;      
-const LATENCY_DURATION = 0.1;           
-const LATENCY_CHANNELS = 1;             
-const LATENCY_BUFFER_LENGTH = LATENCY_SAMPLE_RATE * LATENCY_DURATION; 
-const LATENCY_SNAPSHOTS = 3;
-const NOISE_THRESHOLD = 0.1; 
-
-export async function collectAudioBaseLatency(): Promise<AudioBaseLatencyInfo> {
-  try {
-    let cached: number | null = null;
-    const rawCache = localStorage.getItem(CACHE_KEY);
-
-    if (rawCache && !isNaN(Number(rawCache))) {
-      cached = Number(rawCache);
-    }
-
-    // Measure new median
-    const samples: number[] = [];
-    for (let i = 0; i < LATENCY_SNAPSHOTS; i++) {
-      const value = await getAudioBaseLatency();
-      if (typeof value === "number") samples.push(value);
-    }
-
-    if (!samples.length) {
-      return { audioBaseLatency: "not_supported" };
-    }
-
-    const freshMedian = computeMedian(samples);
-
-    // If cache exists, compare values
-    if (cached !== null) {
-      const diff = Math.abs(freshMedian - cached) / cached;
-      
-      if (diff <= NOISE_THRESHOLD) {
-        return { audioBaseLatency: cached };
-      } else {
-        localStorage.setItem(CACHE_KEY, String(freshMedian));
-        return { audioBaseLatency: freshMedian };
-      }
-    }
-
-    localStorage.setItem(CACHE_KEY, String(freshMedian));
-    return { audioBaseLatency: freshMedian };
-  } catch {
-    return { audioBaseLatency: "error" };
-  }
+export enum SpecialFingerprint {
+  NotSupported = -1,
+  Disabled = -2,
+  NotFinite = -3,
 }
 
-async function getAudioBaseLatency(): Promise<number | string> {
+export function collectAudioBaseLatency(): AudioBaseLatencyInfo {
   try {
+    const isAllowedPlatform = isAndroid() || isWebKit();
+    
+    if (!isAllowedPlatform) {
+      return { audioBaseLatency: SpecialFingerprint.Disabled };
+    }
+
     const OfflineAudioContextClass =
-      (window as any).OfflineAudioContext || (window as any).webkitOfflineAudioContext;
+      (window as any).OfflineAudioContext ||
+      (window as any).webkitOfflineAudioContext;
 
     if (!OfflineAudioContextClass) {
-      return "not_supported";
+      return { audioBaseLatency: SpecialFingerprint.NotSupported };
     }
 
-    let offlineContext: OfflineAudioContext;
-
+    let ctx: OfflineAudioContext;
     try {
-      offlineContext = new OfflineAudioContextClass(
-        LATENCY_CHANNELS,
-        LATENCY_BUFFER_LENGTH,
-        LATENCY_SAMPLE_RATE
-      );
-    } catch (err: any) {
-      if (
-        err.name === "NotAllowedError" ||
-        err.message?.includes("user gesture") ||
-        err.message?.includes("AudioContext was not allowed") ||
-        err.message?.includes("autoplay policy")
-      ) {
-        return "user_gesture_required";
-      }
-      throw err;
+      ctx = new OfflineAudioContextClass(1, 1, 44100);
+    } catch (error) {
+      return { audioBaseLatency: SpecialFingerprint.NotSupported };
     }
 
-    if ((offlineContext as any).baseLatency !== undefined) {
-      return (offlineContext as any).baseLatency;
+    if ((ctx as any).baseLatency === undefined) {
+      return { audioBaseLatency: SpecialFingerprint.NotSupported };
     }
 
-    // Simulate audio rendering to estimate latency
-    const oscillator = offlineContext.createOscillator();
-    const gainNode = offlineContext.createGain();
+    const latency = (ctx as any).baseLatency;
 
-    gainNode.gain.value = 0.01;
-    oscillator.type = "sine";
-    oscillator.frequency.setValueAtTime(1000, offlineContext.currentTime);
+    if (latency === null || latency === undefined) {
+      return { audioBaseLatency: SpecialFingerprint.NotSupported };
+    }
 
-    oscillator.connect(gainNode);
-    gainNode.connect(offlineContext.destination);
+    if (!isFinite(latency)) {
+      return { audioBaseLatency: SpecialFingerprint.NotFinite };
+    }
 
-    oscillator.start(0);
-    oscillator.stop(LATENCY_DURATION);
-
-    const renderStart = performance.now();
-    await offlineContext.startRendering();
-    const renderEnd = performance.now();
-
-    const processingTime = renderEnd - renderStart;
-    const bufferDuration = (LATENCY_BUFFER_LENGTH / LATENCY_SAMPLE_RATE) * 1000;
-    const estimatedLatency = Math.round((processingTime + bufferDuration) * 100) / 100;
-
-    return estimatedLatency;
-  } catch {
-    return "error";
+    return { audioBaseLatency: latency };
+  } catch (error) {
+    return { audioBaseLatency: SpecialFingerprint.NotSupported };
   }
-}
-
-function computeMedian(arr: number[]): number {
-  const sorted = [...arr].sort((a, b) => a - b);
-  const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 1
-    ? sorted[mid]
-    : (sorted[mid - 1] + sorted[mid]) / 2;
 }

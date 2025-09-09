@@ -1,10 +1,4 @@
-import type { PluginsInfo } from "../../types";
-
-interface Plugin {
-  name: string;
-  description: string;
-  filename: string;
-}
+import type { PluginsInfo, PluginData, PluginMimeTypeData } from "../../types";
 
 export function collectPlugins(): PluginsInfo {
   try {
@@ -15,19 +9,45 @@ export function collectPlugins(): PluginsInfo {
   }
 }
 
-function getPlugins(): Plugin[] {
+function getPlugins(): PluginData[] {
   try {
-    const rawPlugins = (navigator as any).plugins;
+    const rawPlugins = navigator.plugins;
 
-    if (!rawPlugins || rawPlugins.length === 0) {
+    if (!rawPlugins) {
       return [];
     }
 
-    return Array.from(rawPlugins).map((plugin: any) => ({
-      name: plugin.name || "",
-      description: plugin.description || "",
-      filename: plugin.filename || "",
-    }));
+    const plugins: PluginData[] = [];
+
+    // Safari 10 doesn't support iterating navigator.plugins with for...of
+    for (let i = 0; i < rawPlugins.length; ++i) {
+      const plugin = rawPlugins[i];
+      
+      if (!plugin) {
+        continue;
+      }
+
+      const mimeTypes: PluginMimeTypeData[] = [];
+
+      for (let j = 0; j < plugin.length; ++j) {
+        const mimeType = plugin[j];
+
+        if (mimeType) {
+          mimeTypes.push({
+            type: mimeType.type || "",
+            suffixes: mimeType.suffixes || "",
+          });
+        }
+      }
+
+      plugins.push({
+        name: plugin.name || "",
+        description: plugin.description || "",
+        mimeTypes,
+      });
+    }
+
+    return plugins;
   } catch {
     return [];
   }

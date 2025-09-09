@@ -1,96 +1,103 @@
 import type { FontsInfo } from "../../types";
+import { withNaturalFonts } from "../../utils/dom";
 
 const testString = "mmMwWLliI0O&1";
 const textSize = "48px";
 const baseFonts = ["monospace", "sans-serif", "serif"] as const;
 
 const fontsToTest = [
+  // Android-specific font from "Roboto" family
   "sans-serif-thin",
+  // Specialized and less common fonts for better fingerprinting
   "ARNO PRO", "Agency FB", "Arabic Typesetting", "Arial Unicode MS",
   "AvantGarde Bk BT", "BankGothic Md BT", "Batang", "Bitstream Vera Sans Mono",
-  "Arial", "Calibri", "Cambria", "Century", "Century Gothic", "Clarendon",
-  "Consolas", "Courier New", "EUROSTILE",
-  "Futura Bk BT", "Futura Md BT", "GOTHAM", "Georgia", "Gill Sans",
-  "HELV", "Haettenschweiler", "Helvetica", "Helvetica Neue", "Humanst521 BT",
+  "Calibri", "Century", "Century Gothic", "Clarendon", "EUROSTILE",
+  "Franklin Gothic", "Futura Bk BT", "Futura Md BT", "GOTHAM", "Gill Sans",
+  "HELV", "Haettenschweiler", "Helvetica Neue", "Humanst521 BT",
   "Leelawadee", "Letter Gothic", "Levenim MT", "Lucida Bright", "Lucida Sans",
-  "MS Mincho", "MS Outlook", "MS Reference Specialty", "MS UI Gothic", "MT Extra",
-  "MYRIAD PRO", "Marlett", "Meiryo UI", "Menlo", "Microsoft Uighur", "Minion Pro",
-  "Monotype Corsiva", "Noto Sans", "PMingLiU", "Pristina", "Roboto",
-  "SCRIPTINA", "SF Pro", "Segoe UI", "Segoe UI Light", "Serifa", "SimHei",
-  "Small Fonts", "Staccato222 BT", "TRAJAN PRO", "Times New Roman", "Trebuchet MS",
-  "Ubuntu", "Univers CE 55 Medium", "Verdana", "Vrinda", "ZWAdobeF"
+  "Menlo", "MS Mincho", "MS Outlook", "MS Reference Specialty", "MS UI Gothic", "MT Extra",
+  "MYRIAD PRO", "Marlett", "Meiryo UI", "Microsoft Uighur", "Minion Pro",
+  "Monotype Corsiva", "PMingLiU", "Pristina", "SCRIPTINA", "Segoe UI Light",
+  "Serifa", "SimHei", "Small Fonts", "Staccato222 BT", "TRAJAN PRO",
+  "Ubuntu", "Univers CE 55 Medium", "Vrinda", "ZWAdobeF"
 ] as const;
 
 export async function collectFonts(): Promise<FontsInfo> {
   try {
-    return getFontsInfo();
+    return await getFontsInfo();
   } catch {
     return [];
   }
 }
 
-function getFontsInfo(): FontsInfo {
-  const holder = document.body;
-  const originalFontSize = holder.style.fontSize;
-  holder.style.fontSize = textSize;
+function getFontsInfo(): Promise<FontsInfo> {
+  return withNaturalFonts(async (document, holder) => {
+    holder.style.fontSize = textSize;
 
-  const container = document.createElement("div");
-  container.style.visibility = "hidden";
-  container.style.position = "absolute";
-  container.style.top = "0";
-  container.style.left = "0";
+    // div to load spans for the default fonts and the fonts to detect
+    const spansContainer = document.createElement('div');
+    spansContainer.style.setProperty('visibility', 'hidden', 'important');
 
-  const defaultWidth: Partial<Record<string, number>> = {};
-  const defaultHeight: Partial<Record<string, number>> = {};
+    const defaultWidth: Partial<Record<string, number>> = {};
+    const defaultHeight: Partial<Record<string, number>> = {};
 
-  const createSpan = (fontFamily: string): HTMLSpanElement => {
-    const span = document.createElement("span");
-    span.style.position = "absolute";
-    span.style.fontFamily = fontFamily;
-    span.style.fontSize = textSize;
-    span.textContent = testString;
-    container.appendChild(span);
-    return span;
-  };
+    // creates a span where the fonts will be loaded
+    const createSpan = (fontFamily: string) => {
+      const span = document.createElement('span');
+      const { style } = span;
+      style.position = 'absolute';
+      style.top = '0';
+      style.left = '0';
+      style.fontFamily = fontFamily;
+      span.textContent = testString;
+      spansContainer.appendChild(span);
+      return span;
+    };
 
-  const createSpanWithBase = (fontToDetect: string, baseFont: string) => {
-    return createSpan(`'${fontToDetect}', ${baseFont}`);
-  };
+    // load the font to detect and a base font for fallback
+    const createSpanWithFonts = (fontToDetect: string, baseFont: string) => {
+      return createSpan(`'${fontToDetect}',${baseFont}`);
+    };
 
-  try {
-    const baseSpans = baseFonts.map(createSpan);
-    
-    const fontSpans: Record<string, HTMLSpanElement[]> = {};
-    for (const font of fontsToTest) {
-      fontSpans[font] = baseFonts.map((b) => createSpanWithBase(font, b));
-    }
+    // creates spans for the base fonts
+    const initializeBaseFontsSpans = () => {
+      return baseFonts.map(createSpan);
+    };
 
-    holder.appendChild(container);
+    // creates spans for the fonts to detect
+    const initializeFontsSpans = () => {
+      const spans: Record<string, HTMLSpanElement[]> = {};
 
-    baseFonts.forEach((b, i) => {
-      defaultWidth[b] = baseSpans[i].offsetWidth;
-      defaultHeight[b] = baseSpans[i].offsetHeight;
-    });
+      for (const font of fontsToTest) {
+        spans[font] = baseFonts.map((baseFont) => createSpanWithFonts(font, baseFont));
+      }
 
-    const isFontAvailable = (spans: HTMLSpanElement[]) => {
+      return spans;
+    };
+
+    const isFontAvailable = (fontSpans: HTMLElement[]) => {
       return baseFonts.some(
-        (b, i) =>
-          spans[i].offsetWidth !== defaultWidth[b] ||
-          spans[i].offsetHeight !== defaultHeight[b]
+        (baseFont, baseFontIndex) =>
+          fontSpans[baseFontIndex].offsetWidth !== defaultWidth[baseFont] ||
+          fontSpans[baseFontIndex].offsetHeight !== defaultHeight[baseFont],
       );
     };
 
-    const availableFonts = fontsToTest.filter((font) => {
-      try {
-        return isFontAvailable(fontSpans[font]);
-      } catch {
-        return false;
-      }
-    });
+    const baseFontsSpans = initializeBaseFontsSpans();
+    const fontsSpans = initializeFontsSpans();
 
-    return availableFonts as string[];
-  } finally {
-    if (container.parentNode) container.parentNode.removeChild(container);
-    holder.style.fontSize = originalFontSize;
-  }
+    // add all the spans to the DOM
+    holder.appendChild(spansContainer);
+
+    // get the default width for the three base fonts
+    for (let index = 0; index < baseFonts.length; index++) {
+      defaultWidth[baseFonts[index]] = baseFontsSpans[index].offsetWidth; // width for the default font
+      defaultHeight[baseFonts[index]] = baseFontsSpans[index].offsetHeight; // height for the default font
+    }
+
+    // check available fonts
+    const availableFonts = fontsToTest.filter((font) => isFontAvailable(fontsSpans[font]));
+    
+    return availableFonts as FontsInfo;
+  });
 }

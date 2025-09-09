@@ -99,7 +99,7 @@ export interface FontPreferencesInfo {
 // Audio
 export interface AudioGroupInfo {
   audio: number | null;
-  audioBaseLatency: number | string;
+  audioBaseLatency: number | -1 | -2 | -3;
 }
 
 export interface AudioInfo {
@@ -108,7 +108,7 @@ export interface AudioInfo {
 }
 
 export interface AudioBaseLatencyInfo {
-  audioBaseLatency: number | string;
+  audioBaseLatency: number | -1 | -2 | -3;
 }
 
 // Browser
@@ -118,11 +118,7 @@ export interface BrowserGroupInfo {
   userAgent: string;
   vendor: string;
   vendorFlavors: string[];
-  plugins: Array<{
-    name: string;
-    description: string;
-    filename: string;
-  }>;
+  plugins: PluginData[];
   pdfViewerEnabled: boolean;
 }
 
@@ -146,12 +142,19 @@ export interface VendorFlavorsInfo {
   vendorFlavors: string[];
 }
 
+export interface PluginMimeTypeData {
+  type: string;
+  suffixes: string;
+}
+
+export interface PluginData {
+  name: string;
+  description: string;
+  mimeTypes: PluginMimeTypeData[];
+}
+
 export interface PluginsInfo {
-  plugins: Array<{
-    name: string;
-    description: string;
-    filename: string;
-  }>;
+  plugins: PluginData[];
 }
 
 export interface PdfViewerEnabledInfo {
@@ -160,9 +163,9 @@ export interface PdfViewerEnabledInfo {
 
 // Preferences
 export interface PreferencesGroupInfo {
-  languages: string[];
+  languages: string[][];
   timezone: string;
-  touchSupport: boolean;
+  touchSupport: TouchSupportInfo;
   cookiesEnabled: boolean;
   localStorage: boolean;
   sessionStorage: boolean;
@@ -170,7 +173,7 @@ export interface PreferencesGroupInfo {
   indexedDB: boolean;
 }
 export interface LanguagesInfo {
-  languages: string[];
+  languages: string[][];
 }
 
 export interface TimezoneInfo {
@@ -178,7 +181,9 @@ export interface TimezoneInfo {
 }
 
 export interface TouchSupportInfo {
-  touchSupport: boolean;
+  maxTouchPoints: number;
+  touchEvent: boolean;
+  touchStart: boolean;
 }
 
 export interface CookiesEnabledInfo {

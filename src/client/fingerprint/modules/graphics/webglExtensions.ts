@@ -1,4 +1,5 @@
 import type { WebGLExtensionsInfo } from "../../types";
+import { countTruthy, isChromium, isWebKit, isGecko } from "../../utils/browser";
 
 
 type CanvasContext = WebGLRenderingContext & { readonly canvas: HTMLCanvasElement }
@@ -13,7 +14,6 @@ type Options = {
 
 export const STATUS_NO_GL_CONTEXT_EXT = -1
 export const STATUS_GET_PARAMETER_NOT_A_FUNCTION_EXT = -2
-
 export type SpecialStatus = typeof STATUS_NO_GL_CONTEXT_EXT | typeof STATUS_GET_PARAMETER_NOT_A_FUNCTION_EXT
 
 const validContextParameters = new Set([
@@ -40,10 +40,6 @@ const precisionTypes = ['LOW_FLOAT', 'MEDIUM_FLOAT', 'HIGH_FLOAT', 'LOW_INT', 'M
 const rendererInfoExtensionNameExt = 'WEBGL_debug_renderer_info'
 const polygonModeExtensionName = 'WEBGL_polygon_mode'
 
-function countTruthy(values: any[]): number {
-  return values.reduce((sum, value) => sum + (value ? 1 : 0), 0)
-}
-
 export async function collectWebGLExtensions(): Promise<WebGLExtensionsInfo> {
   try {
     const cache = { webgl: { context: undefined } };
@@ -54,7 +50,7 @@ export async function collectWebGLExtensions(): Promise<WebGLExtensionsInfo> {
         contextAttributes: [],
         parameters: [],
         shaderPrecisions: [],
-        extensions: null,
+        extensions: [],
         extensionParameters: [],
         unsupportedExtensions: [],
       };
@@ -73,7 +69,7 @@ export async function collectWebGLExtensions(): Promise<WebGLExtensionsInfo> {
       contextAttributes: [],
       parameters: [],
       shaderPrecisions: [],
-      extensions: null,
+      extensions: [],
       extensionParameters: [],
       unsupportedExtensions: [],
     };
@@ -93,22 +89,19 @@ export function getWebGlExtensions({ cache }: Options): WebGLExtensionsInfo | Sp
   const extensions = gl.getSupportedExtensions()
   const contextAttributes = gl.getContextAttributes()
   const unsupportedExtensions: string[] = []
-
-  // Features
   const attributes: string[] = []
   const parameters: string[] = []
   const extensionParameters: string[] = []
   const shaderPrecisions: string[] = []
 
-  // Context attributes
   if (contextAttributes) {
     for (const attributeName of Object.keys(contextAttributes) as (keyof WebGLContextAttributes)[]) {
       attributes.push(`${attributeName}=${contextAttributes[attributeName]}`)
     }
   }
 
-  // Context parameters
   const constants = getConstantsFromPrototype(gl)
+  
   for (const constant of constants) {
     const code = gl[constant] as number
     parameters.push(`${constant}=${code}${validContextParameters.has(code) ? `=${gl.getParameter(code)}` : ''}`)
@@ -205,61 +198,14 @@ function isConstantLike<K>(key: K): key is Extract<K, string> {
 }
 
 function shouldAvoidDebugRendererInfoExt(): boolean {
-  return isGeckoExt()
+  return isGecko()
 }
 
 function shouldAvoidPolygonModeExtensionsExt(): boolean {
-  return isChromiumExt() || isWebKitExt()
+  return isChromium() || isWebKit()
 }
 
 function isValidParameterGetter(gl: WebGLRenderingContext) {
   return typeof gl.getParameter === 'function'
 }
 
-function isChromiumExt(): boolean {
-  const w = window
-  const n = navigator
-
-  return (
-    countTruthy([
-      'webkitPersistentStorage' in n,
-      'webkitTemporaryStorage' in n,
-      (n.vendor || '').indexOf('Google') === 0,
-      'webkitResolveLocalFileSystemURL' in w,
-      'BatteryManager' in w,
-      'webkitMediaStream' in w,
-      'webkitSpeechGrammar' in w,
-    ]) >= 5
-  )
-}
-
-function isGeckoExt(): boolean {
-  const w = window
-
-  return (
-    countTruthy([
-      'buildID' in navigator,
-      'MozAppearance' in (document.documentElement?.style ?? {}),
-      'onmozfullscreenchange' in w,
-      'mozInnerScreenX' in w,
-      'CSSMozDocumentRule' in w,
-      'CanvasCaptureMediaStream' in w,
-    ]) >= 4
-  )
-}
-
-function isWebKitExt(): boolean {
-  const w = window
-  const n = navigator
-
-  return (
-    countTruthy([
-      'ApplePayError' in w,
-      'CSSPrimitiveValue' in w,
-      'Counter' in w,
-      n.vendor.indexOf('Apple') === 0,
-      'RGBColor' in w,
-      'WebKitMediaKeys' in w,
-    ]) >= 4
-  )
-}

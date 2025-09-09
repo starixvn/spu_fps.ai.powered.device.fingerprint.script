@@ -1,4 +1,5 @@
 import type { WebGLBasicsInfo } from "../../types";
+import { isGecko } from "../../utils/browser";
 
 type CanvasContext = WebGLRenderingContext & { readonly canvas: HTMLCanvasElement }
 
@@ -10,27 +11,19 @@ type Options = {
   }
 }
 
-/** WebGl context is not available */
 export const STATUS_NO_GL_CONTEXT = -1
-/** WebGL context `getParameter` method is not a function */
 export const STATUS_GET_PARAMETER_NOT_A_FUNCTION = -2
-
 export type SpecialStatus = typeof STATUS_NO_GL_CONTEXT | typeof STATUS_GET_PARAMETER_NOT_A_FUNCTION
 
 const rendererInfoExtensionName = 'WEBGL_debug_renderer_info'
-
-// Global cache
 const globalCache: Options['cache'] = {}
 
 export function collectWebGLBasics(): WebGLBasicsInfo {
   try {
     const options = { cache: globalCache }
-    
-    // Get basic WebGL info using FingerprintJS logic
     const basics = getWebGlBasics(options)
     
     if (typeof basics === 'number') {
-      // Error case
       return getEmptyWebGLBasics()
     }
 
@@ -41,7 +34,7 @@ export function collectWebGLBasics(): WebGLBasicsInfo {
 }
 
 /**
- * Gets the basic and simple WebGL parameters (from FingerprintJS)
+ * Gets the basic and simple WebGL parameters 
  */
 export function getWebGlBasics({ cache }: Options): WebGLBasicsInfo | SpecialStatus {
   const gl = getWebGLContext(cache)
@@ -65,9 +58,6 @@ export function getWebGlBasics({ cache }: Options): WebGLBasicsInfo | SpecialSta
   }
 }
 
-/**
- * This function usually takes the most time to execute in all the sources, therefore we cache its result.
- */
 export function getWebGLContext(cache: Options['cache']) {
   if (cache.webgl) {
     return cache.webgl.context
@@ -82,7 +72,6 @@ export function getWebGLContext(cache: Options['cache']) {
     try {
       context = canvas.getContext(type) as CanvasContext
     } catch {
-      // Ok, continue
     }
     if (context) {
       break
@@ -93,16 +82,10 @@ export function getWebGLContext(cache: Options['cache']) {
   return context
 }
 
-/**
- * Some browsers print a console warning when the WEBGL_debug_renderer_info extension is requested.
- */
 export function shouldAvoidDebugRendererInfo(): boolean {
   return isGecko()
 }
 
-/**
- * Some unknown browsers have no `getParameter` method
- */
 function isValidParameterGetter(gl: WebGLRenderingContext) {
   return typeof gl.getParameter === 'function'
 }
@@ -116,57 +99,4 @@ function getEmptyWebGLBasics(): WebGLBasicsInfo {
     rendererUnmasked: "",
     shadingLanguageVersion: "",
   }
-}
-
-// Browser detection functions (from FingerprintJS)
-function countTruthy(values: unknown[]): number {
-  return values.reduce<number>((sum, value) => sum + (value ? 1 : 0), 0)
-}
-
-export function isChromium(): boolean {
-  const w = window
-  const n = navigator
-
-  return (
-    countTruthy([
-      'webkitPersistentStorage' in n,
-      'webkitTemporaryStorage' in n,
-      (n.vendor || '').indexOf('Google') === 0,
-      'webkitResolveLocalFileSystemURL' in w,
-      'BatteryManager' in w,
-      'webkitMediaStream' in w,
-      'webkitSpeechGrammar' in w,
-    ]) >= 5
-  )
-}
-
-export function isGecko(): boolean {
-  const w = window
-
-  return (
-    countTruthy([
-      'buildID' in navigator,
-      'MozAppearance' in (document.documentElement?.style ?? {}),
-      'onmozfullscreenchange' in w,
-      'mozInnerScreenX' in w,
-      'CSSMozDocumentRule' in w,
-      'CanvasCaptureMediaStream' in w,
-    ]) >= 4
-  )
-}
-
-export function isWebKit(): boolean {
-  const w = window
-  const n = navigator
-
-  return (
-    countTruthy([
-      'ApplePayError' in w,
-      'CSSPrimitiveValue' in w,
-      'Counter' in w,
-      n.vendor.indexOf('Apple') === 0,
-      'RGBColor' in w,
-      'WebKitMediaKeys' in w,
-    ]) >= 4
-  )
 }
