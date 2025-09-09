@@ -6,9 +6,11 @@ import config from '../../config/environment';
 export class ScriptService {
   private bundledScript: string | null = null;
   private lastBuildTime: number = 0;
+  private minifiedScript: string | null = null;
 
   constructor() {
     this.generateBundledScript();
+    this.initializeMinifiedScript();
   }
 
   private generateBundledScript(): void {
@@ -289,8 +291,16 @@ export class ScriptService {
       return false;
     }
   }
+
+  private async initializeMinifiedScript(): Promise<void> {
+    this.minifiedScript = await this.getMinifiedScript();
+  }
   
   async getMinifiedScript(): Promise<string> {
+    if (this.minifiedScript) {
+      return this.minifiedScript;
+    }
+    
     try {
       const script = this.getClientScript();
       
