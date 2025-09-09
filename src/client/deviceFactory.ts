@@ -26,7 +26,7 @@ export class DeviceFactory {
         }
     }
 
-    private static isValidGuid(guid: string): boolean {
+    public static isValidGuid(guid: string): boolean {
         if (!guid) {
             return false;
         }

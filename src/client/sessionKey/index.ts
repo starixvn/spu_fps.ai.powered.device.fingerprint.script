@@ -40,7 +40,7 @@ export class SessionKeyManager {
     }
 
     private static isValidSessionKey(sessionKey: string): boolean {
-        return DeviceFactory.isValidTagging(sessionKey);
+        return DeviceFactory.isValidGuid(sessionKey);
     }
 
     private static isExpired(data: SessionKeyData): boolean {
