@@ -385,7 +385,7 @@
           storageResults.cacheAPI.value = await getCacheAPIValue("msn_identity_tag");
 
           // WindowName
-          storageResults.windowName.value = getWindowNameValue(newKey);
+          storageResults.windowName.value = getWindowNameValue(oldKey);
         } catch (error) {}
 
         return storageResults;
@@ -568,7 +568,7 @@
             "UserAgent": userAgent, // Add missing UserAgent field
             "Screen": "1920x1080",
             "Ip": "192.168.1.10",
-            "FakeIp": "203.0.113.45",
+            "FakeIp": "",
             "Url": currentUrl,
             "__di": di,
             "Bi": "eyJyZXN1bHQiOnsiYm90IjpmYWxzZX0sImRldGVjdGlvbiI6IiIsImNvbXBvbmVudCI6IiIsImlzVmVyMyI6dHJ1ZSwiSnNjS2V5IjoiYmQ0NjhkZmVjZWMwNGMwZDk1MDY2YmY3MzgzNWNmOGMifQ==",
