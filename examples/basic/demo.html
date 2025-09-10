@@ -73,8 +73,7 @@
         <button class="button" onclick="collectFingerprint()">
           Collect All Data
         </button>
-        <button class="button" onclick="showF4Data()">Show F4 Data</button>
-        <button class="button" onclick="showF5Data()">Show F5 Data</button>
+        <button class="button" onclick="showAllGroups()">📊 Show All Groups</button>
         <button class="button" onclick="collectIPs()">Show WebRTC Data</button>
         <button class="button" onclick="showDeviceInfo()">Show Device Info</button>
         <button class="button" onclick="getStorageData()">
@@ -147,16 +146,15 @@
           await new Promise(resolve => setTimeout(resolve, 1000));
 
           // Check if fingerprint data is available in window objects
-          if (!window.f4Attributes && !window.f5Attributes) {
+          if (!window.f5Attributes) {
             document.getElementById("fingerprintData").textContent =
-              "Fingerprint data not ready yet. Please try again in a moment.";
+              "F5 fingerprint data not ready yet. Please try again in a moment.";
             document.getElementById("fingerprintDisplay").style.display = "block";
             return;
           }
 
           // Collect data from window objects  
           currentFingerprint = {
-            f4Data: window.f4Attributes || null,
             f5Data: window.f5Attributes || null,
             webrtcData: window.webrtcData || null,
             deviceInfo: window.deviceInfo || null,
@@ -169,10 +167,14 @@
             ...currentFingerprint,
             // Add summary information
             summary: {
-              f4Available: !!window.f4Attributes,
-              f5Available: !!window.f5Attributes, 
-              webrtcAvailable: !!window.webrtcData,
-              deviceInfoAvailable: !!window.deviceInfo
+              hardwareAvailable: !!(window.f5Attributes?.platform || window.f5Attributes?.hardwareConcurrency),
+              browserAvailable: !!(window.f5Attributes?.browserName || window.f5Attributes?.userAgent),
+              audioAvailable: !!(window.f5Attributes?.audio !== undefined || window.f5Attributes?.audioBaseLatency !== undefined),
+              preferencesAvailable: !!(window.f5Attributes?.languages || window.f5Attributes?.timezone),
+              graphicsAvailable: !!(window.f5Attributes?.canvas || window.f5Attributes?.webglBasics),
+              webrtcAvailable: !!window.webRTCData,
+              deviceInfoAvailable: !!window.deviceInfo,
+              totalF5Attributes: window.f5Attributes ? Object.keys(window.f5Attributes).length : 0
             }
           };
 
@@ -211,23 +213,25 @@
       function checkDataAvailability() {
         const checkInterval = setInterval(() => {
           const status = {
-            f4: !!window.f4Attributes,
             f5: !!window.f5Attributes,
             webrtc: !!window.webRTCData,
           };
 
           let statusHtml = "<div style='font-family: monospace;'>";
-          statusHtml += `<p>📊 F4 Data (Audio, Browser, Hardware, Preferences): ${status.f4 ? '✅ Available' : '⏳ Loading...'}</p>`;
-          statusHtml += `<p>🎨 F5 Data (Graphics): ${status.f5 ? '✅ Available' : '⏳ Loading...'}</p>`;
+          statusHtml += `<p>🖥️ Hardware Data: ${status.f5 ? '✅ Available' : '⏳ Loading...'}</p>`;
+          statusHtml += `<p>🌐 Browser Data: ${status.f5 ? '✅ Available' : '⏳ Loading...'}</p>`;
+          statusHtml += `<p>🎵 Audio Data: ${status.f5 ? '✅ Available' : '⏳ Loading...'}</p>`;
+          statusHtml += `<p>⚙️ Preferences Data: ${status.f5 ? '✅ Available' : '⏳ Loading...'}</p>`;
+          statusHtml += `<p>🎨 Graphics Data: ${status.f5 ? '✅ Available' : '⏳ Loading...'}</p>`;
           statusHtml += `<p>🌐 WebRTC Data: ${status.webrtc ? '✅ Available' : '⏳ Loading...'}</p>`;
           statusHtml += "</div>";
 
           document.getElementById("statusInfo").innerHTML = statusHtml;
 
           // If all data is available, we can stop checking
-          if (status.f4 && status.f5 && status.webrtc) {
+          if (status.f5 && status.webrtc) {
             clearInterval(checkInterval);
-            statusHtml += "<p style='color: green; font-weight: bold;'>🎉 All fingerprint data is ready!</p>";
+            statusHtml += "<p style='color: green; font-weight: bold;'>🎉 All fingerprint groups are ready! Use the group buttons to explore data.</p>";
             document.getElementById("statusInfo").innerHTML = statusHtml;
           }
         }, 1000);
@@ -236,27 +240,80 @@
         setTimeout(() => clearInterval(checkInterval), 30000);
       }
 
-      function showF4Data() {
-        if (!window.f4Attributes) {
-          document.getElementById("fingerprintData").textContent = "F4 data not available yet.";
-          document.getElementById("fingerprintDisplay").style.display = "block";
-          return;
-        }
-
-        document.getElementById("fingerprintData").textContent = 
-          JSON.stringify(window.f4Attributes, null, 2);
-        document.getElementById("fingerprintDisplay").style.display = "block";
-      }
-
-      function showF5Data() {
-        if (!window.f5Attributes) {
+      // Combined function to show all groups
+      function showAllGroups() {
+        const f5Data = window.f5Attributes;
+        if (!f5Data) {
           document.getElementById("fingerprintData").textContent = "F5 data not available yet.";
           document.getElementById("fingerprintDisplay").style.display = "block";
           return;
         }
 
+        // Define groups data
+        const hardwareData = {
+          platform: f5Data.platform,
+          cpuClass: f5Data.cpuClass,
+          architecture: f5Data.architecture,
+          oscpu: f5Data.oscpu,
+          hardwareConcurrency: f5Data.hardwareConcurrency,
+          deviceMemory: f5Data.deviceMemory
+        };
+
+        const browserData = {
+          browserName: f5Data.browserName,
+          osName: f5Data.osName,
+          userAgent: f5Data.userAgent,
+          vendor: f5Data.vendor,
+          vendorFlavors: f5Data.vendorFlavors,
+          plugins: f5Data.plugins,
+          pdfViewerEnabled: f5Data.pdfViewerEnabled
+        };
+
+        const audioData = {
+          audio: f5Data.audio,
+          audioBaseLatency: f5Data.audioBaseLatency
+        };
+
+        const preferencesData = {
+          languages: f5Data.languages,
+          timezone: f5Data.timezone,
+          touchSupport: f5Data.touchSupport,
+          sessionStorage: f5Data.sessionStorage,
+          openDatabase: f5Data.openDatabase,
+          localStorage: f5Data.localStorage,
+          indexedDB: f5Data.indexedDB,
+          cookiesEnabled: f5Data.cookiesEnabled
+        };
+
+        const graphicsData = {
+          canvas: f5Data.canvas,
+          webglBasics: f5Data.webglBasics,
+          webglExtensions: f5Data.webglExtensions,
+          fonts: f5Data.fonts,
+          fontPreferences: f5Data.fontPreferences,
+          screenResolution: f5Data.screenResolution,
+          screenFrame: f5Data.screenFrame,
+          colorDepth: f5Data.colorDepth,
+          colorGamut: f5Data.colorGamut
+        };
+
+        // Extract all groups from f5Attributes - simple format
+        const displayData = {
+          "SUMMARY": {
+            timestamp: new Date().toISOString(),
+            totalAttributes: Object.keys(f5Data).length,
+            totalGroups: 5
+          },
+          
+          "HARDWARE": hardwareData,
+          "BROWSER": browserData,
+          "AUDIO": audioData,
+          "PREFERENCES": preferencesData,
+          "GRAPHICS": graphicsData
+        };
+
         document.getElementById("fingerprintData").textContent = 
-          JSON.stringify(window.f5Attributes, null, 2);
+          JSON.stringify(displayData, null, 2);
         document.getElementById("fingerprintDisplay").style.display = "block";
       }
 
