@@ -294,12 +294,11 @@ describe('F4Fingerprint', () => {
         hw: { platform: 'Win32' },
         pf: { timezone: 'UTC' }
       };
-      const hashed = 'test-hash';
 
       mockBase64Encoder.encodeBase64.mockReturnValue('encoded-payload');
 
       // Act
-      const result = (f4Fingerprint as any).buildPayload(sessionKey, fingerprintData, hashed);
+      const result = (f4Fingerprint as any).buildPayload(sessionKey, fingerprintData);
 
       // Assert
       expect(result).toBe('encoded-payload');
@@ -312,8 +311,7 @@ describe('F4Fingerprint', () => {
             br: JSON.stringify(fingerprintData.br), 
             hw: JSON.stringify(fingerprintData.hw), 
             pf: JSON.stringify(fingerprintData.pf)
-          }, 
-          hs: hashed
+          }
         }), 
         CONFIG.ENCODING_KEY
       );
@@ -328,12 +326,11 @@ describe('F4Fingerprint', () => {
         hw: {},
         pf: {}
       };
-      const hashed = 'test-hash';
 
       mockBase64Encoder.encodeBase64.mockReturnValue('encoded-empty-payload');
 
       // Act
-      const result = (f4Fingerprint as any).buildPayload(sessionKey, fingerprintData, hashed);
+      const result = (f4Fingerprint as any).buildPayload(sessionKey, fingerprintData);
 
       // Assert
       expect(result).toBe('encoded-empty-payload');
@@ -345,8 +342,7 @@ describe('F4Fingerprint', () => {
             br: JSON.stringify(fingerprintData.br), 
             hw: JSON.stringify(fingerprintData.hw), 
             pf: JSON.stringify(fingerprintData.pf)
-          }, 
-          hs: hashed
+          }
         }), 
         CONFIG.ENCODING_KEY
       );

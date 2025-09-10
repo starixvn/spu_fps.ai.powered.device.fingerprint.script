@@ -98,7 +98,6 @@ export abstract class AbstractFingerprint {
     protected abstract buildPayload(
         sessionKey: string,
         fingerprintData: any,
-        hashed: string
     ): any;
 
     public async process(
@@ -115,7 +114,7 @@ export abstract class AbstractFingerprint {
 
             injectCallback(hashed, this.step);
 
-            const payload = this.buildPayload(sessionKey, data, hashed);
+            const payload = this.buildPayload(sessionKey, data);
             await this.sendToServer(
                 `${CONFIG.GATEWAY_URL}${this.endpoint}`,
                 payload
