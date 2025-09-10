@@ -13,21 +13,11 @@ export class WebRTCFingerprint {
       const result = await collectAllIPTypes(timeout);
       const { localIPs, publicIPs, relayIPs } = result;
       
-      const ipGroups: string[] = [];
+      const localIPsStr = localIPs.length > 0 ? localIPs.join(',') : '';
+      const publicIPsStr = publicIPs.length > 0 ? publicIPs.join(',') : '';
+      const relayIPsStr = relayIPs.length > 0 ? relayIPs.join(',') : '';
       
-      if (localIPs.length > 0) {
-        ipGroups.push(localIPs.join(','));
-      }
-      
-      if (publicIPs.length > 0) {
-        ipGroups.push(publicIPs.join(','));
-      }
-      
-      if (relayIPs.length > 0) {
-        ipGroups.push(relayIPs.join(','));
-      }
-      
-      return ipGroups.join(';');
+      return `${localIPsStr};${publicIPsStr};${relayIPsStr}`;
     } catch (error) {
       return "";
     }
