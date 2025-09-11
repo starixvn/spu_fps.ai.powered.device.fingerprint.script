@@ -29,42 +29,93 @@ class VisualLogger {
   private createLogContainer(): void {
     if (typeof window === "undefined" || this.logContainer) return;
 
+    // Wait for DOM to be ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => this.createLogContainer());
+      return;
+    }
+
     this.logContainer = document.createElement('div');
     this.logContainer.id = 'webrtc-visual-logger';
+    
+    // Mobile-friendly styling
+    const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
     this.logContainer.style.cssText = `
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      width: 300px;
-      max-height: 400px;
-      background: rgba(0,0,0,0.9);
-      color: #00ff00;
-      font-family: monospace;
-      font-size: 11px;
-      padding: 10px;
-      border-radius: 5px;
-      overflow-y: auto;
-      z-index: 999999;
-      border: 1px solid #333;
+      position: fixed !important;
+      top: ${isMobile ? '5px' : '10px'} !important;
+      left: ${isMobile ? '5px' : 'auto'} !important;
+      right: ${isMobile ? '5px' : '10px'} !important;
+      width: ${isMobile ? 'calc(100vw - 20px)' : '350px'} !important;
+      max-width: ${isMobile ? '95vw' : '400px'} !important;
+      max-height: ${isMobile ? '50vh' : '400px'} !important;
+      background: rgba(0,0,0,0.95) !important;
+      color: #00ff00 !important;
+      font-family: monospace !important;
+      font-size: ${isMobile ? '10px' : '11px'} !important;
+      line-height: 1.2 !important;
+      padding: ${isMobile ? '8px' : '10px'} !important;
+      border-radius: 5px !important;
+      overflow-y: auto !important;
+      z-index: 2147483647 !important;
+      border: 2px solid #00ff00 !important;
+      box-shadow: 0 0 10px rgba(0,255,0,0.5) !important;
+      -webkit-overflow-scrolling: touch !important;
     `;
 
     const header = document.createElement('div');
-    header.style.cssText = 'color: #ffff00; font-weight: bold; margin-bottom: 5px; cursor: pointer;';
-    header.textContent = '🔍 WebRTC Debug Log (click to hide)';
+    header.style.cssText = `
+      color: #ffff00 !important;
+      font-weight: bold !important;
+      margin-bottom: 5px !important;
+      cursor: pointer !important;
+      padding: ${isMobile ? '8px 0' : '5px 0'} !important;
+      border-bottom: 1px solid #333 !important;
+      text-align: center !important;
+    `;
+    header.textContent = isMobile ? '🔍 WebRTC Debug (tap)' : '🔍 WebRTC Debug Log (click to hide)';
+    
+    let isCollapsed = false;
     header.onclick = () => {
       const content = this.logContainer?.querySelector('#log-content') as HTMLElement;
       if (content) {
-        content.style.display = content.style.display === 'none' ? 'block' : 'none';
+        isCollapsed = !isCollapsed;
+        content.style.display = isCollapsed ? 'none' : 'block';
+        header.textContent = isCollapsed ? 
+          (isMobile ? '🔍 WebRTC (tap to show)' : '🔍 WebRTC (click to show)') :
+          (isMobile ? '🔍 WebRTC Debug (tap)' : '🔍 WebRTC Debug Log (click to hide)');
       }
     };
 
     const content = document.createElement('div');
     content.id = 'log-content';
-    content.style.cssText = 'white-space: pre-wrap; word-break: break-word;';
+    content.style.cssText = `
+      white-space: pre-wrap !important;
+      word-break: break-word !important;
+      overflow-wrap: break-word !important;
+      max-height: ${isMobile ? '40vh' : '350px'} !important;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+    `;
 
     this.logContainer.appendChild(header);
     this.logContainer.appendChild(content);
-    document.body.appendChild(this.logContainer);
+    
+    // Ensure DOM is ready before appending
+    try {
+      document.body.appendChild(this.logContainer);
+      
+      // Force visibility for mobile debugging
+      setTimeout(() => {
+        if (this.logContainer) {
+          this.logContainer.style.display = 'block';
+          this.logContainer.style.visibility = 'visible';
+        }
+      }, 100);
+      
+    } catch (error) {
+      console.error('Failed to append logger:', error);
+    }
   }
 
   log(message: string): void {
@@ -85,10 +136,38 @@ class VisualLogger {
         this.createLogContainer();
       }
       
-      const content = this.logContainer?.querySelector('#log-content');
-      if (content) {
-        content.textContent = this.logs.join('\n');
-        content.scrollTop = content.scrollHeight;
+      // Retry if container still not available
+      if (!this.logContainer) {
+        setTimeout(() => {
+          this.createLogContainer();
+          this.updateLogContent();
+        }, 500);
+        return;
+      }
+      
+      this.updateLogContent();
+    }
+  }
+
+  private updateLogContent(): void {
+    const content = this.logContainer?.querySelector('#log-content');
+    if (content) {
+      content.textContent = this.logs.join('\n');
+      content.scrollTop = content.scrollHeight;
+    }
+  }
+
+  // Force show logger (for manual debugging)
+  forceShow(): void {
+    if (typeof window !== "undefined") {
+      this.logContainer = null; // Reset
+      this.createLogContainer();
+      
+      // Add to page title as backup
+      const logs = this.getLogs();
+      if (logs.length > 0) {
+        const lastLog = logs[logs.length - 1];
+        document.title = `DEBUG: ${lastLog.substring(0, 50)}`;
       }
     }
   }
@@ -116,12 +195,66 @@ class VisualLogger {
       content.textContent = '';
     }
   }
+
+  // Getter for external access
+  getLogs() {
+    return [...this.logs];
+  }
 }
 
 const logger = VisualLogger.getInstance();
 
 // Export logger for external access/control
 export const debugLogger = logger;
+
+// Global access for mobile debugging
+if (typeof window !== "undefined") {
+  (window as any).webrtcDebugLogger = logger;
+  
+  // Add backup visual method using alert/page modification
+  (window as any).showWebRTCDebug = () => {
+    logger.forceShow();
+    
+    // Fallback: modify page background to show debug status
+    const logs = logger.getLogs();
+    if (logs.length > 0) {
+      const status = logs[logs.length - 1];
+      document.body.style.borderTop = '5px solid red';
+      document.body.style.borderBottom = '5px solid red';
+      
+      // Create fallback display
+      const fallbackDiv = document.createElement('div');
+      fallbackDiv.id = 'webrtc-fallback-debug';
+      fallbackDiv.style.cssText = `
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        background: red !important;
+        color: white !important;
+        text-align: center !important;
+        z-index: 999999 !important;
+        padding: 10px !important;
+        font-size: 14px !important;
+        font-weight: bold !important;
+      `;
+      fallbackDiv.textContent = `WebRTC Status: ${status.substring(0, 80)}`;
+      
+      // Remove existing fallback
+      const existing = document.getElementById('webrtc-fallback-debug');
+      if (existing) existing.remove();
+      
+      document.body.insertBefore(fallbackDiv, document.body.firstChild);
+      
+      // Auto remove after 5 seconds
+      setTimeout(() => {
+        if (fallbackDiv.parentNode) {
+          fallbackDiv.remove();
+        }
+      }, 5000);
+    }
+  };
+}
 
 // Add mobile-specific timeouts for problematic browsers
 const MOBILE_BROWSER_TIMEOUTS = {
