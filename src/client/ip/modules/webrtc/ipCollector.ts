@@ -13,7 +13,7 @@ export interface IPCollectionResult {
 }
 
 let ipCache: IPCollectionResult | null = null;
-const CACHE_TTL = 2 * 60 * 1000; // 2 phút cache
+const CACHE_TTL = 2 * 60 * 1000; // 2 mins cache
 
 const HYBRID_CONFIG = {
   STUN_SERVERS: [
@@ -63,14 +63,19 @@ async function collectAllIPTypes1PC(): Promise<IPCollectionResult> {
     ...HYBRID_CONFIG.TURN_SERVERS
   ];
 
-  const pc = new RTCPeerConnection({
-    iceServers,
-    iceCandidatePoolSize: HYBRID_CONFIG.ICE_CANDIDATE_POOL_SIZE
-  });
+  let pc: RTCPeerConnection | null = null;
+  try {
+    pc = new RTCPeerConnection({
+      iceServers,
+      iceCandidatePoolSize: HYBRID_CONFIG.ICE_CANDIDATE_POOL_SIZE
+    });
+  } catch {
+    return emptyResult(performance.now() - start, ["webrtc_ctor_error"], true);
+  }
 
   const buildResult = (label: string) => {
     const filter = (set: Set<string>) =>
-      [...set].filter(ip => ip && !["0.0.0.0", "127.0.0.1", "::1"].includes(ip.trim()));
+      [...set].filter(ip => !isPrivateOrInvalidIP(ip));
 
     const l = filter(localIPs);
     const p = filter(publicIPs);
@@ -87,7 +92,7 @@ async function collectAllIPTypes1PC(): Promise<IPCollectionResult> {
       collectionMetadata: {
         timestamp: Date.now(),
         collectionTime,
-        methodsUsed: ["single_pc_all_servers", ...HYBRID_CONFIG.METHODS, label],
+        methodsUsed: ["single_pc_all_servers", label],
         totalIPs: total,
         successRate: total > 0 ? 100 : 0,
         webrtcSupported: true
@@ -102,60 +107,83 @@ async function collectAllIPTypes1PC(): Promise<IPCollectionResult> {
     seen.add(cand);
 
     const m = cand.match(IP_RE);
-    if (!m || !m[1]) return;
+    if (!m?.[1]) return;
     const ip = m[1].trim();
     const candLower = cand.toLowerCase();
 
-    if (candLower.includes("typ host") || isPrivateOrInvalidIP(ip)) localIPs.add(ip);
+    if (candLower.includes("typ relay")) relayIPs.add(ip);
     else if (candLower.includes("typ srflx")) publicIPs.add(ip);
-    else if (candLower.includes("typ relay") || candLower.includes("typ prflx")) relayIPs.add(ip);
-    else isPrivateOrInvalidIP(ip) ? localIPs.add(ip) : publicIPs.add(ip);
+    else if (candLower.includes("typ host")) localIPs.add(ip);
+    else {
+      isPrivateOrInvalidIP(ip) ? localIPs.add(ip) : publicIPs.add(ip);
+    }
   };
 
-  // Start ICE
+  // prevent hanging
+  const setupOffer = Promise.race([
+    (async () => {
+      pc.createDataChannel("singlePC");
+      const offer = await pc.createOffer({ iceRestart: true });
+      await pc.setLocalDescription(offer);
+      return true;
+    })(),
+    new Promise<boolean>((_, reject) =>
+      setTimeout(() => reject(new Error("offer_timeout")), 1200)
+    )
+  ]);
+
   try {
-    pc.createDataChannel("singlePC");
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
+    await setupOffer;
   } catch {
-    return emptyResult(performance.now() - start, ["webrtc_error"], true);
+    try { pc.close(); } catch {}
+    return emptyResult(performance.now() - start, ["offer_failed"], true);
   }
 
-  // Promise fastResult (~1s)
+  // FastResult (~1s snapshot)
   const fastResultPromise = new Promise<IPCollectionResult>((resolve) => {
-    const fastTimer = setTimeout(() => resolve(buildResult("fast-exit")), HYBRID_CONFIG.FAST_EXIT_MS);
+    const finish = (label: string) => {
+      clearTimeout(fastTimer);
+      clearInterval(checker);
+      resolve(buildResult(label));
+    };
+
     const checker = setInterval(() => {
       if (localIPs.size && publicIPs.size) {
-        clearTimeout(fastTimer);
-        clearInterval(checker);
-        resolve(buildResult("fast-exit"));
+        finish("fast-exit");
       }
     }, 50);
+
+    const fastTimer = setTimeout(() => {
+      finish("fast-exit");
+    }, HYBRID_CONFIG.FAST_EXIT_MS);
   });
 
-  // Promise fullResult (relay) for ICE complete or timeout
+  // FullResult (~3s max)
   const fullResultPromise = new Promise<IPCollectionResult>((resolve) => {
-    const cleanup = () => {
-      resolve(buildResult("full"));
-      try { pc.close(); } catch {}
+    const cleanup = (label: string) => {
       clearTimeout(fullTimer);
+      if (pc && pc.connectionState !== "closed") {
+        try { pc.close(); } catch {}
+      }
+      resolve(buildResult(label));
     };
 
     pc.onicegatheringstatechange = () => {
-      if (pc.iceGatheringState === "complete") setTimeout(cleanup, 50);
+      if (pc?.iceGatheringState === "complete") {
+        setTimeout(() => cleanup("full"), 50);
+      }
     };
 
-    const fullTimer = setTimeout(cleanup, HYBRID_CONFIG.FULL_TIMEOUT_MS);
+    const fullTimer = setTimeout(() => {
+      cleanup("full");
+    }, HYBRID_CONFIG.FULL_TIMEOUT_MS);
   });
 
-  // Chạy song song, log fastResult, fullResult tiếp tục collect relay
   fastResultPromise.then(res => {
     console.log("[IP-Collector] fastResult ready:", res.collectionMetadata.collectionTime.toFixed(2), "ms");
   });
 
-  const fullResult = await fullResultPromise;
-
-  return fullResult;
+  return fullResultPromise;
 }
 
 function emptyResult(collectionTime: number, methodsUsed: string[], webrtcSupported: boolean): IPCollectionResult {
