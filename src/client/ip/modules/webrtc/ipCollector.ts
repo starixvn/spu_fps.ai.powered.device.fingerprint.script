@@ -12,6 +12,141 @@ export interface IPCollectionResult {
   };
 }
 
+// Visual Logger cho mobile debugging
+class VisualLogger {
+  private static instance: VisualLogger;
+  private logContainer: HTMLElement | null = null;
+  private logs: string[] = [];
+  private maxLogs = 50;
+
+  static getInstance(): VisualLogger {
+    if (!VisualLogger.instance) {
+      VisualLogger.instance = new VisualLogger();
+    }
+    return VisualLogger.instance;
+  }
+
+  private createLogContainer(): void {
+    if (typeof window === "undefined" || this.logContainer) return;
+
+    this.logContainer = document.createElement('div');
+    this.logContainer.id = 'webrtc-visual-logger';
+    this.logContainer.style.cssText = `
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      width: 300px;
+      max-height: 400px;
+      background: rgba(0,0,0,0.9);
+      color: #00ff00;
+      font-family: monospace;
+      font-size: 11px;
+      padding: 10px;
+      border-radius: 5px;
+      overflow-y: auto;
+      z-index: 999999;
+      border: 1px solid #333;
+    `;
+
+    const header = document.createElement('div');
+    header.style.cssText = 'color: #ffff00; font-weight: bold; margin-bottom: 5px; cursor: pointer;';
+    header.textContent = '🔍 WebRTC Debug Log (click to hide)';
+    header.onclick = () => {
+      const content = this.logContainer?.querySelector('#log-content') as HTMLElement;
+      if (content) {
+        content.style.display = content.style.display === 'none' ? 'block' : 'none';
+      }
+    };
+
+    const content = document.createElement('div');
+    content.id = 'log-content';
+    content.style.cssText = 'white-space: pre-wrap; word-break: break-word;';
+
+    this.logContainer.appendChild(header);
+    this.logContainer.appendChild(content);
+    document.body.appendChild(this.logContainer);
+  }
+
+  log(message: string): void {
+    const timestamp = new Date().toLocaleTimeString();
+    const logMessage = `[${timestamp}] ${message}`;
+    
+    // Console log
+    console.log(`[WebRTC-Debug] ${logMessage}`);
+    
+    // Visual log
+    this.logs.push(logMessage);
+    if (this.logs.length > this.maxLogs) {
+      this.logs = this.logs.slice(-this.maxLogs);
+    }
+
+    if (typeof window !== "undefined") {
+      if (!this.logContainer) {
+        this.createLogContainer();
+      }
+      
+      const content = this.logContainer?.querySelector('#log-content');
+      if (content) {
+        content.textContent = this.logs.join('\n');
+        content.scrollTop = content.scrollHeight;
+      }
+    }
+  }
+
+  error(message: string): void {
+    this.log(`❌ ERROR: ${message}`);
+  }
+
+  warn(message: string): void {
+    this.log(`⚠️ WARN: ${message}`);
+  }
+
+  info(message: string): void {
+    this.log(`ℹ️ INFO: ${message}`);
+  }
+
+  success(message: string): void {
+    this.log(`✅ SUCCESS: ${message}`);
+  }
+
+  clear(): void {
+    this.logs = [];
+    const content = this.logContainer?.querySelector('#log-content');
+    if (content) {
+      content.textContent = '';
+    }
+  }
+}
+
+const logger = VisualLogger.getInstance();
+
+// Export logger for external access/control
+export const debugLogger = logger;
+
+// Add mobile-specific timeouts for problematic browsers
+const MOBILE_BROWSER_TIMEOUTS = {
+  MiBrowser: {
+    OFFER_TIMEOUT: 2000,    // Longer timeout for MiBrowser
+    FAST_EXIT: 1500,        // Slightly longer fast exit
+    FULL_TIMEOUT: 5000      // Longer full timeout
+  },
+  UCBrowser: {
+    OFFER_TIMEOUT: 2000,
+    FAST_EXIT: 1500,
+    FULL_TIMEOUT: 5000
+  },
+  default: {
+    OFFER_TIMEOUT: 1200,
+    FAST_EXIT: 1000,
+    FULL_TIMEOUT: 3000
+  }
+};
+
+function getBrowserTimeouts() {
+  const browser = getBrowserInfo();
+  return MOBILE_BROWSER_TIMEOUTS[browser as keyof typeof MOBILE_BROWSER_TIMEOUTS] || MOBILE_BROWSER_TIMEOUTS.default;
+}
+
 let ipCache: IPCollectionResult | null = null;
 const CACHE_TTL = 2 * 60 * 1000; // 2 mins cache
 
@@ -37,19 +172,29 @@ const HYBRID_CONFIG = {
 const IP_RE = /([0-9]{1,3}(?:\.[0-9]{1,3}){3}|([a-f0-9]{1,4}:){2,7}[a-f0-9]{1,4})/i;
 
 export async function collectAllIPTypes(): Promise<IPCollectionResult> {
+  logger.info("🚀 Starting WebRTC IP collection");
+  
   if (ipCache && Date.now() - ipCache.collectionMetadata.timestamp < CACHE_TTL) {
     return ipCache;
   }
 
-  const result = await collectAllIPTypes1PC();
-  ipCache = result;
-  return result;
+  try {
+    const result = await collectAllIPTypes1PC();
+    ipCache = result;
+    logger.success(`✅ Completed: ${result.collectionMetadata.totalIPs} IPs in ${result.collectionMetadata.collectionTime.toFixed(2)}ms`);
+    return result;
+  } catch (error) {
+    logger.error(`❌ Failed: ${error instanceof Error ? error.message : String(error)}`);
+    throw error;
+  }
 }
 
 async function collectAllIPTypes1PC(): Promise<IPCollectionResult> {
   const start = performance.now();
 
+  // Check WebRTC support
   if (!isWebRTCSupported()) {
+    logger.error("❌ WebRTC not supported");
     return emptyResult(performance.now() - start, ["fallback_no_webrtc"], false);
   }
 
@@ -58,18 +203,23 @@ async function collectAllIPTypes1PC(): Promise<IPCollectionResult> {
   const relayIPs = new Set<string>();
   const seen = new Set<string>();
 
+  // Setup ICE servers
   const iceServers: RTCIceServer[] = [
     ...HYBRID_CONFIG.STUN_SERVERS.map(url => ({ urls: url })),
     ...HYBRID_CONFIG.TURN_SERVERS
   ];
 
+  // Create RTCPeerConnection - critical checkpoint
   let pc: RTCPeerConnection | null = null;
+  logger.info("🔌 Creating RTCPeerConnection...");
   try {
     pc = new RTCPeerConnection({
       iceServers,
       iceCandidatePoolSize: HYBRID_CONFIG.ICE_CANDIDATE_POOL_SIZE
     });
-  } catch {
+    logger.info("✅ RTCPeerConnection created");
+  } catch (error) {
+    logger.error(`❌ RTCPeerConnection failed: ${error instanceof Error ? error.message : String(error)}`);
     return emptyResult(performance.now() - start, ["webrtc_ctor_error"], true);
   }
 
@@ -82,8 +232,6 @@ async function collectAllIPTypes1PC(): Promise<IPCollectionResult> {
     const r = filter(relayIPs);
     const total = l.length + p.length + r.length;
     const collectionTime = performance.now() - start;
-
-    console.log(`[IP-Collector] ${label}: ${total} IPs collected in ${collectionTime.toFixed(2)}ms (L:${l.length}, P:${p.length}, R:${r.length})`);
 
     return {
       localIPs: l,
@@ -100,14 +248,29 @@ async function collectAllIPTypes1PC(): Promise<IPCollectionResult> {
     };
   };
 
-  // ICE candidate handler
+  // ICE candidate handler 
+  let candidateCount = 0;
+  let firstCandidateReceived = false;
+  
   pc.onicecandidate = (ev) => {
+    if (ev.candidate === null) {
+      logger.info("🏁 ICE gathering complete");
+      return;
+    }
+
+    if (!firstCandidateReceived) {
+      logger.info("🧊 First ICE candidate received");
+      firstCandidateReceived = true;
+    }
+
     const cand = ev.candidate?.candidate;
     if (!cand || seen.has(cand)) return;
     seen.add(cand);
+    candidateCount++;
 
     const m = cand.match(IP_RE);
     if (!m?.[1]) return;
+    
     const ip = m[1].trim();
     const candLower = cand.toLowerCase();
 
@@ -117,70 +280,75 @@ async function collectAllIPTypes1PC(): Promise<IPCollectionResult> {
     else {
       isPrivateOrInvalidIP(ip) ? localIPs.add(ip) : publicIPs.add(ip);
     }
+
+    // Only log progress at milestones
+    if (candidateCount === 1 || candidateCount % 5 === 0) {
+      logger.info(`📊 ${candidateCount} candidates, L:${localIPs.size} P:${publicIPs.size} R:${relayIPs.size}`);
+    }
   };
 
-  // prevent hanging
+  // Critical state monitoring - only log state changes
+  pc.onicegatheringstatechange = () => {
+    logger.info(`❄️ ICE state: ${pc?.iceGatheringState}`);
+  };
+
+  // Get browser-specific timeouts
+  const timeouts = getBrowserTimeouts();
+
+  // Create offer 
+  logger.info("📄 Creating offer...");
   const setupOffer = Promise.race([
     (async () => {
       pc.createDataChannel("singlePC");
       const offer = await pc.createOffer({ iceRestart: true });
       await pc.setLocalDescription(offer);
+      logger.info("✅ Offer setup complete");
       return true;
     })(),
-    new Promise<boolean>((_, reject) =>
-      setTimeout(() => reject(new Error("offer_timeout")), 1200)
-    )
+    new Promise<boolean>((_, reject) => {
+      setTimeout(() => {
+        logger.error(`⏰ Offer timeout (${timeouts.OFFER_TIMEOUT}ms)`);
+        reject(new Error("offer_timeout"));
+      }, timeouts.OFFER_TIMEOUT);
+    })
   ]);
 
   try {
     await setupOffer;
-  } catch {
+  } catch (error) {
+    logger.error(`❌ Offer failed: ${error instanceof Error ? error.message : String(error)}`);
     try { pc.close(); } catch {}
     return emptyResult(performance.now() - start, ["offer_failed"], true);
   }
 
-  // FastResult (~1s snapshot)
-  const fastResultPromise = new Promise<IPCollectionResult>((resolve) => {
-    const finish = (label: string) => {
-      clearTimeout(fastTimer);
-      clearInterval(checker);
-      resolve(buildResult(label));
-    };
-
-    const checker = setInterval(() => {
-      if (localIPs.size && publicIPs.size) {
-        finish("fast-exit");
-      }
-    }, 50);
-
-    const fastTimer = setTimeout(() => {
-      finish("fast-exit");
-    }, HYBRID_CONFIG.FAST_EXIT_MS);
-  });
-
-  // FullResult (~3s max)
+  // Result collection with timeouts
+  logger.info(`⏳ Waiting for ICE candidates (${timeouts.FULL_TIMEOUT}ms max)...`);
+  
   const fullResultPromise = new Promise<IPCollectionResult>((resolve) => {
     const cleanup = (label: string) => {
       clearTimeout(fullTimer);
       if (pc && pc.connectionState !== "closed") {
-        try { pc.close(); } catch {}
+        try { 
+          pc.close(); 
+        } catch {}
       }
       resolve(buildResult(label));
     };
 
+    // Override to catch ICE completion
     pc.onicegatheringstatechange = () => {
-      if (pc?.iceGatheringState === "complete") {
-        setTimeout(() => cleanup("full"), 50);
+      const state = pc?.iceGatheringState;
+      logger.info(`❄️ ICE state: ${state}`);
+      if (state === "complete") {
+        logger.info("🏁 ICE complete");
+        setTimeout(() => cleanup("complete"), 50);
       }
     };
 
     const fullTimer = setTimeout(() => {
-      cleanup("full");
-    }, HYBRID_CONFIG.FULL_TIMEOUT_MS);
-  });
-
-  fastResultPromise.then(res => {
-    console.log("[IP-Collector] fastResult ready:", res.collectionMetadata.collectionTime.toFixed(2), "ms");
+      logger.warn(`⏰ Timeout reached (${timeouts.FULL_TIMEOUT}ms)`);
+      cleanup("timeout");
+    }, timeouts.FULL_TIMEOUT);
   });
 
   return fullResultPromise;
@@ -202,8 +370,35 @@ function emptyResult(collectionTime: number, methodsUsed: string[], webrtcSuppor
   };
 }
 
+function getBrowserInfo(): string {
+  if (typeof window === "undefined" || !window.navigator) return "unknown";
+  const ua = window.navigator.userAgent;
+  
+  if (ua.includes("MiBrowser")) return "MiBrowser";
+  if (ua.includes("UCBrowser")) return "UCBrowser";
+  if (ua.includes("UC/")) return "UCBrowser";
+  if (ua.includes("Chrome")) return "Chrome";
+  if (ua.includes("Firefox")) return "Firefox";
+  if (ua.includes("Safari")) return "Safari";
+  if (ua.includes("Edge")) return "Edge";
+  
+  return "unknown";
+}
+
 function isWebRTCSupported(): boolean {
-  return typeof window !== "undefined" && "RTCPeerConnection" in window;
+  const supported = typeof window !== "undefined" && "RTCPeerConnection" in window;
+  const browser = getBrowserInfo();
+  
+  // Critical info for debugging hang on mobile browsers
+  logger.info(`🌐 ${browser} - WebRTC: ${supported ? "✅" : "❌"}`);
+  
+  // Log user agent for problematic browsers only
+  if (browser === "MiBrowser" || browser === "UCBrowser") {
+    const ua = typeof window !== "undefined" ? window.navigator?.userAgent || "unknown" : "server";
+    logger.info(`🔍 UA: ${ua.substring(0, 80)}...`);
+  }
+  
+  return supported;
 }
 
 function isPrivateOrInvalidIP(ip: string): boolean {
@@ -225,7 +420,17 @@ export function cleanupIPCache(): void {
   ipCache = null;
 }
 
+// Global error handlers for debugging hangs
 if (typeof window !== "undefined") {
   window.addEventListener("beforeunload", cleanupIPCache);
   window.addEventListener("pagehide", cleanupIPCache);
+
+  // Critical error handlers for mobile debugging
+  window.addEventListener("error", (event) => {
+    logger.error(`🚨 Error: ${event.message}`);
+  });
+
+  window.addEventListener("unhandledrejection", (event) => {
+    logger.error(`🚨 Promise rejected: ${event.reason}`);
+  });
 }
