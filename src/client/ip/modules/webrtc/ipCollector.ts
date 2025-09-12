@@ -12,120 +12,6 @@ export interface IPCollectionResult {
     };
 }
 
-// Simple DOM Logger cho mobile debugging
-class VisualLogger {
-    private static instance: VisualLogger;
-    private logs: string[] = [];
-    private maxLogs = 20;
-    private logElement: HTMLElement | null = null;
-
-    static getInstance(): VisualLogger {
-        if (!VisualLogger.instance) {
-            VisualLogger.instance = new VisualLogger();
-        }
-        return VisualLogger.instance;
-    }
-
-    private createLogElement(): void {
-        if (typeof window === 'undefined' || this.logElement) return;
-
-        // Tạo element đơn giản inject vào page
-        this.logElement = document.createElement('div');
-        this.logElement.id = 'webrtc-debug-logs';
-        this.logElement.style.cssText = `
-      background: #000 !important;
-      color: #0f0 !important;
-      font-family: monospace !important;
-      font-size: 11px !important;
-      padding: 10px !important;
-      margin: 10px 0 !important;
-      border: 2px solid #0f0 !important;
-      border-radius: 5px !important;
-      white-space: pre-wrap !important;
-      word-break: break-word !important;
-      max-height: 300px !important;
-      overflow-y: auto !important;
-    `;
-
-        // Thêm vào đầu body hoặc sau element đầu tiên
-        try {
-            if (document.body.firstChild) {
-                document.body.insertBefore(
-                    this.logElement,
-                    document.body.firstChild
-                );
-            } else {
-                document.body.appendChild(this.logElement);
-            }
-        } catch (error) {
-            console.error('Failed to inject debug element:', error);
-        }
-    }
-
-    log(message: string): void {
-        const timestamp = new Date().toLocaleTimeString();
-        const logMessage = `[${timestamp}] ${message}`;
-
-        // Console log
-        console.log(`[WebRTC-Debug] ${logMessage}`);
-
-        // Add to logs array
-        this.logs.push(logMessage);
-        if (this.logs.length > this.maxLogs) {
-            this.logs = this.logs.slice(-this.maxLogs);
-        }
-
-        // Inject vào DOM
-        if (typeof window !== 'undefined') {
-            if (!this.logElement) {
-                this.createLogElement();
-            }
-
-            if (this.logElement) {
-                this.logElement.textContent = this.logs.join('\n');
-                this.logElement.scrollTop = this.logElement.scrollHeight;
-            }
-        }
-    }
-
-    error(message: string): void {
-        this.log(`❌ ${message}`);
-    }
-
-    warn(message: string): void {
-        this.log(`⚠️ ${message}`);
-    }
-
-    info(message: string): void {
-        this.log(`ℹ️ ${message}`);
-    }
-
-    success(message: string): void {
-        this.log(`✅ ${message}`);
-    }
-
-    clear(): void {
-        this.logs = [];
-        if (this.logElement) {
-            this.logElement.textContent = '';
-        }
-    }
-
-    getLogs() {
-        return [...this.logs];
-    }
-}
-
-const logger = VisualLogger.getInstance();
-
-// Export logger for external access/control
-export const debugLogger = logger;
-debugLogger.info('🔍 WebRTC Debug Logger Initialized');
-// Global access for debugging
-if (typeof window !== 'undefined') {
-    (window as any).webrtcDebugLogger = logger;
-}
-
 // Add mobile-specific timeouts for problematic browsers
 const MOBILE_BROWSER_TIMEOUTS = {
     MiBrowser: {
@@ -180,7 +66,6 @@ const IP_RE =
     /([0-9]{1,3}(?:\.[0-9]{1,3}){3}|([a-f0-9]{1,4}:){2,7}[a-f0-9]{1,4})/i;
 
 export async function collectAllIPTypes(): Promise<IPCollectionResult> {
-    logger.info('🚀 Starting WebRTC IP collection');
 
     if (
         ipCache &&
@@ -192,35 +77,14 @@ export async function collectAllIPTypes(): Promise<IPCollectionResult> {
     try {
         const result = await collectAllIPTypes1PC();
         ipCache = result;
-        logger.success(
-            `✅ Completed: ${
-                result.collectionMetadata.totalIPs
-            } IPs in ${result.collectionMetadata.collectionTime.toFixed(2)}ms`
-        );
         return result;
     } catch (error) {
-        logger.error(
-            `❌ Failed: ${
-                error instanceof Error ? error.message : String(error)
-            }`
-        );
         throw error;
     }
 }
 
 async function collectAllIPTypes1PC(): Promise<IPCollectionResult> {
     const start = performance.now();
-
-    // Check WebRTC support
-    if (!isWebRTCSupported()) {
-        logger.error('❌ WebRTC not supported');
-        return emptyResult(
-            performance.now() - start,
-            ['fallback_no_webrtc'],
-            false
-        );
-    }
-
     const localIPs = new Set<string>();
     const publicIPs = new Set<string>();
     const relayIPs = new Set<string>();
@@ -234,19 +98,12 @@ async function collectAllIPTypes1PC(): Promise<IPCollectionResult> {
 
     // Create RTCPeerConnection - critical checkpoint
     let pc: RTCPeerConnection | null = null;
-    logger.info('🔌 Creating RTCPeerConnection...');
     try {
         pc = new RTCPeerConnection({
             iceServers,
             iceCandidatePoolSize: HYBRID_CONFIG.ICE_CANDIDATE_POOL_SIZE,
         });
-        logger.info('✅ RTCPeerConnection created');
     } catch (error) {
-        logger.error(
-            `❌ RTCPeerConnection failed: ${
-                error instanceof Error ? error.message : String(error)
-            }`
-        );
         return emptyResult(
             performance.now() - start,
             ['webrtc_ctor_error'],
@@ -285,12 +142,10 @@ async function collectAllIPTypes1PC(): Promise<IPCollectionResult> {
 
     pc.onicecandidate = (ev) => {
         if (ev.candidate === null) {
-            logger.info('🏁 ICE gathering complete');
             return;
         }
 
         if (!firstCandidateReceived) {
-            logger.info('🧊 First ICE candidate received');
             firstCandidateReceived = true;
         }
 
@@ -311,36 +166,20 @@ async function collectAllIPTypes1PC(): Promise<IPCollectionResult> {
         else {
             isPrivateOrInvalidIP(ip) ? localIPs.add(ip) : publicIPs.add(ip);
         }
-
-        // Only log progress at milestones
-        if (candidateCount === 1 || candidateCount % 5 === 0) {
-            logger.info(
-                `📊 ${candidateCount} candidates, L:${localIPs.size} P:${publicIPs.size} R:${relayIPs.size}`
-            );
-        }
     };
 
-    // Critical state monitoring - only log state changes
-    pc.onicegatheringstatechange = () => {
-        logger.info(`❄️ ICE state: ${pc?.iceGatheringState}`);
-    };
-
-    // Get browser-specific timeouts
     const timeouts = getBrowserTimeouts();
 
     // Create offer
-    logger.info('📄 Creating offer...');
     const setupOffer = Promise.race([
         (async () => {
             pc.createDataChannel('singlePC');
             const offer = await pc.createOffer({ iceRestart: true });
             await pc.setLocalDescription(offer);
-            logger.info('✅ Offer setup complete');
             return true;
         })(),
         new Promise<boolean>((_, reject) => {
             setTimeout(() => {
-                logger.error(`⏰ Offer timeout (${timeouts.OFFER_TIMEOUT}ms)`);
                 reject(new Error('offer_timeout'));
             }, timeouts.OFFER_TIMEOUT);
         }),
@@ -349,11 +188,6 @@ async function collectAllIPTypes1PC(): Promise<IPCollectionResult> {
     try {
         await setupOffer;
     } catch (error) {
-        logger.error(
-            `❌ Offer failed: ${
-                error instanceof Error ? error.message : String(error)
-            }`
-        );
         try {
             pc.close();
         } catch {}
@@ -361,10 +195,6 @@ async function collectAllIPTypes1PC(): Promise<IPCollectionResult> {
     }
 
     // Result collection with timeouts
-    logger.info(
-        `⏳ Waiting for ICE candidates (${timeouts.FULL_TIMEOUT}ms max)...`
-    );
-
     const fullResultPromise = new Promise<IPCollectionResult>((resolve) => {
         const cleanup = (label: string) => {
             clearTimeout(fullTimer);
@@ -379,15 +209,12 @@ async function collectAllIPTypes1PC(): Promise<IPCollectionResult> {
         // Override to catch ICE completion
         pc.onicegatheringstatechange = () => {
             const state = pc?.iceGatheringState;
-            logger.info(`❄️ ICE state: ${state}`);
             if (state === 'complete') {
-                logger.info('🏁 ICE complete');
                 setTimeout(() => cleanup('complete'), 50);
             }
         };
 
         const fullTimer = setTimeout(() => {
-            logger.warn(`⏰ Timeout reached (${timeouts.FULL_TIMEOUT}ms)`);
             cleanup('timeout');
         }, timeouts.FULL_TIMEOUT);
     });
@@ -430,30 +257,12 @@ function getBrowserInfo(): string {
     return 'unknown';
 }
 
-function isWebRTCSupported(): boolean {
-    const supported =
-        typeof window !== 'undefined' && 'RTCPeerConnection' in window;
-    const browser = getBrowserInfo();
-
-    // Critical info for debugging hang on mobile browsers
-    logger.info(`🌐 ${browser} - WebRTC: ${supported ? '✅' : '❌'}`);
-
-    // Log user agent for problematic browsers only
-    if (browser === 'MiBrowser' || browser === 'UCBrowser') {
-        const ua =
-            typeof window !== 'undefined'
-                ? window.navigator?.userAgent || 'unknown'
-                : 'server';
-        logger.info(`🔍 UA: ${ua.substring(0, 80)}...`);
-    }
-
-    return supported;
-}
-
 function isPrivateOrInvalidIP(ip: string): boolean {
     if (!ip) return true;
+
     const v = ip.trim();
     const invalid = new Set(['0.0.0.0', '127.0.0.1', '::1', 'localhost']);
+
     if (invalid.has(v)) return true;
     if (v.includes(':')) {
         const low = v.toLowerCase();
@@ -463,8 +272,11 @@ function isPrivateOrInvalidIP(ip: string): boolean {
             low.startsWith('fd00:')
         );
     }
+
     const parts = v.split('.').map((n) => Number(n));
+
     if (parts.length !== 4 || parts.some(isNaN)) return true;
+
     const [a, b] = parts;
     return (
         a === 10 ||
@@ -484,13 +296,4 @@ export function cleanupIPCache(): void {
 if (typeof window !== 'undefined') {
     window.addEventListener('beforeunload', cleanupIPCache);
     window.addEventListener('pagehide', cleanupIPCache);
-
-    // Critical error handlers for mobile debugging
-    window.addEventListener('error', (event) => {
-        logger.error(`🚨 Error: ${event.message}`);
-    });
-
-    window.addEventListener('unhandledrejection', (event) => {
-        logger.error(`🚨 Promise rejected: ${event.reason}`);
-    });
 }
