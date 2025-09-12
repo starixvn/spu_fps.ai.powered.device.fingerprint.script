@@ -139,7 +139,6 @@ async function collectAllIPTypes1PC(): Promise<IPCollectionResult> {
         if (!m?.[1]) return;
 
         const ip = m[1].trim();
-        console.log('Found candidate:', cand, 'IP:', ip);
         const candLower = cand.toLowerCase();
 
         if (candLower.includes('typ srflx')) publicIPs.add(ip);

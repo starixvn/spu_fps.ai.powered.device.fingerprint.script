@@ -11,10 +11,6 @@ export class IPClass {
                 (window as any).webRTCData = webRTC;
             }
         } catch (error) {
-            // Create a div element to log WebRTC data
-            var divElement = window.document.createElement('div');
-            divElement.innerText = `Error Collecting WebRTC data... ${error}`;
-            window.document.body.appendChild(divElement);
             callback({});
         }
     }
