@@ -10,9 +10,14 @@ import { PreferencesFingerprint } from "./modules/preference/index";
 import { AbstractFingerprint, InjectValueCallback } from "./abstract/abstractFingerprint";
 import { CONFIG, FingerprintStep } from "../index";
 
-
-
 export class F4Fingerprint extends AbstractFingerprint {
+  private readonly f4Directory = {
+    audio: "au",
+    browser: "br",
+    hardware: "hw",
+    preferences: "pf",
+  };
+  
   protected readonly step: FingerprintStep = "F4";
   protected readonly endpoint: string = CONFIG.ENDPOINTS.F4;
 
@@ -25,19 +30,19 @@ export class F4Fingerprint extends AbstractFingerprint {
     ]);
 
     return {
-      au: audio,
-      br: browser,
-      hw: hardware,
-      pf: preferences,
+      audio,
+      browser,
+      hardware,
+      preferences,
     };
   }
 
   protected extractAttributes(data: F4Data): Record<string, any> {
     return {
-      ...data.au,
-      ...data.br,
-      ...data.hw,
-      ...data.pf,
+      ...data.audio,
+      ...data.browser,
+      ...data.hardware,
+      ...data.preferences,
     };
   }
 
@@ -49,10 +54,10 @@ export class F4Fingerprint extends AbstractFingerprint {
       {
         sk: sessionKey, 
         fp: {
-          au: JSON.stringify(fingerprintData.au), 
-          br: JSON.stringify(fingerprintData.br), 
-          hw: JSON.stringify(fingerprintData.hw), 
-          pf: JSON.stringify(fingerprintData.pf)
+          [this.f4Directory.audio]: JSON.stringify(fingerprintData.audio), 
+          [this.f4Directory.browser]: JSON.stringify(fingerprintData.browser), 
+          [this.f4Directory.hardware]: JSON.stringify(fingerprintData.hardware), 
+          [this.f4Directory.preferences]: JSON.stringify(fingerprintData.preferences)
         }
       });
 

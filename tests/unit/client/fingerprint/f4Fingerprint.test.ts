@@ -155,14 +155,14 @@ describe('F4Fingerprint', () => {
 
       // Assert
       expect(result).toEqual({
-        au: {
+        audio: {
           audio: {
             audio: 0.5,
             status: 'ok'
           },
           audioBaseLatency: 0.01
         },
-        br: {
+        browser: {
           browserName: 'Chrome',
           osName: 'Windows',
           userAgent: 'Chrome/90.0.4430.212',
@@ -171,7 +171,7 @@ describe('F4Fingerprint', () => {
           plugins: [],
           pdfViewerEnabled: true
         },
-        hw: {
+        hardware: {
           platform: 'Win32',
           architecture: 'x64',
           oscpu: 'Intel Mac OS X 10_15_7',
@@ -179,7 +179,7 @@ describe('F4Fingerprint', () => {
           hardwareConcurrency: 8,
           deviceMemory: 16
         },
-        pf: {
+        preferences: {
           languages: ['en-US', 'en'],
           timezone: 'Asia/Ho_Chi_Minh',
           touchSupport: false,
@@ -211,10 +211,10 @@ describe('F4Fingerprint', () => {
     it('should merge all attributes from F4 data', () => {
       // Arrange
       const mockData = {
-        au: { audio: { audio: 0.5, status: 'ok' }, audioBaseLatency: 0.01 },
-        br: { browserName: 'Chrome', userAgent: 'Chrome/90.0', vendor: 'Google' },
-        hw: { platform: 'Win32', hardwareConcurrency: 8, architecture: 'x64', oscpu: 'Intel', cpuClass: 'x86', deviceMemory: 16 },
-        pf: { languages: ['en-US'], timezone: 'UTC', touchSupport: false, cookiesEnabled: true, localStorage: true, sessionStorage: true, openDatabase: false, indexedDB: true }
+        audio: { audio: { audio: 0.5, status: 'ok' }, audioBaseLatency: 0.01 },
+        browser: { browserName: 'Chrome', userAgent: 'Chrome/90.0', vendor: 'Google' },
+        hardware: { platform: 'Win32', hardwareConcurrency: 8, architecture: 'x64', oscpu: 'Intel', cpuClass: 'x86', deviceMemory: 16 },
+        preferences: { languages: ['en-US'], timezone: 'UTC', touchSupport: false, cookiesEnabled: true, localStorage: true, sessionStorage: true, openDatabase: false, indexedDB: true }
       };
 
       // Act
@@ -247,10 +247,10 @@ describe('F4Fingerprint', () => {
     it('should handle missing properties gracefully', () => {
       // Arrange
       const mockData = {
-        au: { audio: { audio: 0.5, status: 'ok' } },
-        br: {},
-        hw: null,
-        pf: undefined
+        audio: { audio: { audio: 0.5, status: 'ok' } },
+        browser: {},
+        hardware: null,
+        preferences: undefined
       };
 
       // Act
@@ -265,10 +265,10 @@ describe('F4Fingerprint', () => {
     it('should handle duplicate keys by using spread operator precedence', () => {
       // Arrange
       const mockData = {
-        au: { commonKey: 'audio-value', audioSpecific: 'audio' },
-        br: { commonKey: 'browser-value', browserSpecific: 'browser' },
-        hw: { commonKey: 'hardware-value', hardwareSpecific: 'hardware' },
-        pf: { commonKey: 'preferences-value', prefSpecific: 'pref' }
+        audio: { commonKey: 'audio-value', audioSpecific: 'audio' },
+        browser: { commonKey: 'browser-value', browserSpecific: 'browser' },
+        hardware: { commonKey: 'hardware-value', hardwareSpecific: 'hardware' },
+        preferences: { commonKey: 'preferences-value', prefSpecific: 'pref' }
       };
 
       // Act
@@ -289,10 +289,10 @@ describe('F4Fingerprint', () => {
       // Arrange
       const sessionKey = 'test-session-key';
       const fingerprintData = {
-        au: { audioCodecs: ['mp3'] },
-        br: { userAgent: 'Chrome' },
-        hw: { platform: 'Win32' },
-        pf: { timezone: 'UTC' }
+        audio: { audioCodecs: ['mp3'] },
+        browser: { userAgent: 'Chrome' },
+        hardware: { platform: 'Win32' },
+        preferences: { timezone: 'UTC' }
       };
 
       mockBase64Encoder.encodeBase64.mockReturnValue('encoded-payload');
@@ -307,10 +307,10 @@ describe('F4Fingerprint', () => {
         JSON.stringify({
           sk: sessionKey, 
           fp: {
-            au: JSON.stringify(fingerprintData.au), 
-            br: JSON.stringify(fingerprintData.br), 
-            hw: JSON.stringify(fingerprintData.hw), 
-            pf: JSON.stringify(fingerprintData.pf)
+            au: JSON.stringify(fingerprintData.audio), 
+            br: JSON.stringify(fingerprintData.browser), 
+            hw: JSON.stringify(fingerprintData.hardware), 
+            pf: JSON.stringify(fingerprintData.preferences)
           }
         }), 
         CONFIG.ENCODING_KEY
@@ -321,10 +321,10 @@ describe('F4Fingerprint', () => {
       // Arrange
       const sessionKey = 'test-session-key';
       const fingerprintData = {
-        au: {},
-        br: {},
-        hw: {},
-        pf: {}
+        audio: {},
+        browser: {},
+        hardware: {},
+        preferences: {}
       };
 
       mockBase64Encoder.encodeBase64.mockReturnValue('encoded-empty-payload');
@@ -338,10 +338,10 @@ describe('F4Fingerprint', () => {
         JSON.stringify({
           sk: sessionKey, 
           fp: {
-            au: JSON.stringify(fingerprintData.au), 
-            br: JSON.stringify(fingerprintData.br), 
-            hw: JSON.stringify(fingerprintData.hw), 
-            pf: JSON.stringify(fingerprintData.pf)
+            au: JSON.stringify(fingerprintData.audio), 
+            br: JSON.stringify(fingerprintData.browser), 
+            hw: JSON.stringify(fingerprintData.hardware), 
+            pf: JSON.stringify(fingerprintData.preferences)
           }
         }), 
         CONFIG.ENCODING_KEY
