@@ -1,7 +1,6 @@
 export interface IPCollectionResult {
     localIPs: string[];
     publicIPs: string[];
-    relayIPs: string[];
     collectionMetadata: {
         timestamp: number;
         collectionTime: number;
@@ -49,13 +48,6 @@ const HYBRID_CONFIG = {
         'stun:stun1.l.google.com:19302',
         'stun:stun.services.mozilla.com:3478',
     ],
-    TURN_SERVERS: [
-        {
-            urls: 'turn:openrelay.metered.ca:443',
-            username: 'openrelayproject',
-            credential: 'openrelayproject',
-        },
-    ],
     FAST_EXIT_MS: 1000, // early exit ~1s
     FULL_TIMEOUT_MS: 3000, // max wait relay
     ICE_CANDIDATE_POOL_SIZE: 10,
@@ -66,7 +58,6 @@ const IP_RE =
     /([0-9]{1,3}(?:\.[0-9]{1,3}){3}|([a-f0-9]{1,4}:){2,7}[a-f0-9]{1,4})/i;
 
 export async function collectAllIPTypes(): Promise<IPCollectionResult> {
-
     if (
         ipCache &&
         Date.now() - ipCache.collectionMetadata.timestamp < CACHE_TTL
@@ -87,13 +78,11 @@ async function collectAllIPTypes1PC(): Promise<IPCollectionResult> {
     const start = performance.now();
     const localIPs = new Set<string>();
     const publicIPs = new Set<string>();
-    const relayIPs = new Set<string>();
     const seen = new Set<string>();
 
     // Setup ICE servers
     const iceServers: RTCIceServer[] = [
         ...HYBRID_CONFIG.STUN_SERVERS.map((url) => ({ urls: url })),
-        ...HYBRID_CONFIG.TURN_SERVERS,
     ];
 
     // Create RTCPeerConnection - critical checkpoint
@@ -112,19 +101,16 @@ async function collectAllIPTypes1PC(): Promise<IPCollectionResult> {
     }
 
     const buildResult = (label: string) => {
-        const filter = (set: Set<string>) =>
-            [...set].filter((ip) => !isPrivateOrInvalidIP(ip));
+        const filter = (set: Set<string>) => [...set].filter((ip) => true);
 
         const l = filter(localIPs);
         const p = filter(publicIPs);
-        const r = filter(relayIPs);
-        const total = l.length + p.length + r.length;
+        const total = l.length + p.length;
         const collectionTime = performance.now() - start;
 
         return {
             localIPs: l,
             publicIPs: p,
-            relayIPs: r,
             collectionMetadata: {
                 timestamp: Date.now(),
                 collectionTime,
@@ -138,15 +124,10 @@ async function collectAllIPTypes1PC(): Promise<IPCollectionResult> {
 
     // ICE candidate handler
     let candidateCount = 0;
-    let firstCandidateReceived = false;
 
     pc.onicecandidate = (ev) => {
         if (ev.candidate === null) {
             return;
-        }
-
-        if (!firstCandidateReceived) {
-            firstCandidateReceived = true;
         }
 
         const cand = ev.candidate?.candidate;
@@ -158,10 +139,10 @@ async function collectAllIPTypes1PC(): Promise<IPCollectionResult> {
         if (!m?.[1]) return;
 
         const ip = m[1].trim();
+        console.log('Found candidate:', cand, 'IP:', ip);
         const candLower = cand.toLowerCase();
 
-        if (candLower.includes('typ relay')) relayIPs.add(ip);
-        else if (candLower.includes('typ srflx')) publicIPs.add(ip);
+        if (candLower.includes('typ srflx')) publicIPs.add(ip);
         else if (candLower.includes('typ host')) localIPs.add(ip);
         else {
             isPrivateOrInvalidIP(ip) ? localIPs.add(ip) : publicIPs.add(ip);
@@ -230,7 +211,6 @@ function emptyResult(
     return {
         localIPs: [],
         publicIPs: [],
-        relayIPs: [],
         collectionMetadata: {
             timestamp: Date.now(),
             collectionTime,
