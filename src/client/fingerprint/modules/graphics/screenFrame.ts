@@ -1,5 +1,6 @@
 import { replaceNaN, toFloat, round } from '../../utils/data';
 import { exitFullscreen, getFullscreenElement, isSafariWebKit, isWebKit, isWebKit616OrNewer } from '../../utils/browser';
+import type { Bit } from '../../types';
 
 export type FrameSize = [number | null, number | null, number | null, number | null];
 export const screenFrameCheckInterval = 2500;
@@ -121,9 +122,6 @@ function getCurrentScreenFrame(): FrameSize {
     replaceNaN(availLeft, null),
   ];
 }
-
-import type { Bit } from '../../types';
-import { boolToBit } from '../../utils/data';
 
 function isFrameSizeNull(frameSize: FrameSize): Bit {
   for (let i = 0; i < 4; ++i) {

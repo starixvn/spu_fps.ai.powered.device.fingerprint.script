@@ -1,5 +1,6 @@
 import type { WebGLBasicsInfo } from "../../types";
 import { isGecko } from "../../utils/browser";
+import type { Bit } from '../../types';
 
 type CanvasContext = WebGLRenderingContext & { readonly canvas: HTMLCanvasElement }
 
@@ -27,16 +28,20 @@ export function collectWebGLBasics(): WebGLBasicsInfo {
       return getEmptyWebGLBasics()
     }
 
-    return basics
+    return [
+      basics.version,
+      basics.vendor, 
+      basics.vendorUnmasked,
+      basics.renderer,
+      basics.rendererUnmasked,
+      basics.shadingLanguageVersion
+    ]
   } catch (error) {
     return getEmptyWebGLBasics()
   }
 }
 
-/**
- * Gets the basic and simple WebGL parameters 
- */
-export function getWebGlBasics({ cache }: Options): WebGLBasicsInfo | SpecialStatus {
+export function getWebGlBasics({ cache }: Options): { version: string; vendor: string; vendorUnmasked: string; renderer: string; rendererUnmasked: string; shadingLanguageVersion: string } | SpecialStatus {
   const gl = getWebGLContext(cache)
   if (!gl) {
     return STATUS_NO_GL_CONTEXT
@@ -82,7 +87,6 @@ export function getWebGLContext(cache: Options['cache']) {
   return context
 }
 
-import type { Bit } from '../../types';
 
 export function shouldAvoidDebugRendererInfo(): Bit {
   return isGecko()
@@ -93,12 +97,5 @@ function isValidParameterGetter(gl: WebGLRenderingContext) {
 }
 
 function getEmptyWebGLBasics(): WebGLBasicsInfo {
-  return {
-    version: "",
-    vendor: "",
-    vendorUnmasked: "",
-    renderer: "",
-    rendererUnmasked: "",
-    shadingLanguageVersion: "",
-  }
+  return ["", "", "", "", "", ""] // [version, vendor, vendorUnmasked, renderer, rendererUnmasked, shadingLanguageVersion]
 }

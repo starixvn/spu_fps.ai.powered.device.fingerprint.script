@@ -1,5 +1,4 @@
 import type { OpenDatabaseInfo, Bit } from "../../types";
-import { boolToBit } from "../../utils/data";
 
 export function collectOpenDatabase(): OpenDatabaseInfo {
   try {

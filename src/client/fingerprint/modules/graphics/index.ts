@@ -41,14 +41,7 @@ export class GraphicsFingerprint {
           value: "",
           canvasProtection: 0
         },
-        webglBasics: {
-          vendor: "",
-          renderer: "",
-          version: "",
-          shadingLanguageVersion: "",
-          vendorUnmasked: "",
-          rendererUnmasked: "",
-        },
+        webglBasics: ["", "", "", "", "", ""],
         webglExtensions: "",
         fonts: [],
         fontPreferences: {

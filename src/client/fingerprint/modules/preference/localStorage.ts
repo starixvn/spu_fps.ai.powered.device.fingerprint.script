@@ -1,5 +1,4 @@
 import type { LocalStorageInfo, Bit } from "../../types";
-import { boolToBit } from "../../utils/data";
 
 export function collectLocalStorage(): LocalStorageInfo {
   try {

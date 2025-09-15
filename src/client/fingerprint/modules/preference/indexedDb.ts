@@ -1,5 +1,4 @@
 import type { IndexedDBInfo, Bit } from "../../types";
-import { boolToBit } from "../../utils/data";
 
 export async function collectIndexedDB(): Promise<IndexedDBInfo> {
   try {

@@ -1,6 +1,8 @@
 import type { WebGLExtensionsInfo, WebGLExtensionsData } from "../../types";
-import { countTruthy, isChromium, isWebKit, isGecko } from "../../utils/browser";
+import { isChromium, isWebKit, isGecko } from "../../utils/browser";
 import { MurmurHash128 } from "../../utils/hash";
+import type { Bit } from '../../types';
+import { boolToBit } from '../../utils/data';
 
 type CanvasContext = WebGLRenderingContext & { readonly canvas: HTMLCanvasElement }
 
@@ -193,9 +195,6 @@ function getConstantsFromPrototype<K>(obj: K): Array<Extract<keyof K, string>> {
 function isConstantLike<K>(key: K): key is Extract<K, string> {
   return typeof key === 'string' && !key.match(/[^A-Z0-9_x]/)
 }
-
-import type { Bit } from '../../types';
-import { boolToBit } from '../../utils/data';
 
 function shouldAvoidDebugRendererInfoExt(): Bit {
   return isGecko()

@@ -70,14 +70,7 @@ export interface CanvasInfo {
   canvasProtection: Bit;
 }
 
-export interface WebGLBasicsInfo {
-  version: string;
-  vendor: string;
-  vendorUnmasked: string;
-  renderer: string;
-  rendererUnmasked: string;
-  shadingLanguageVersion: string;
-}
+export type WebGLBasicsInfo = [string, string, string, string, string, string]; // [version, vendor, vendorUnmasked, renderer, rendererUnmasked, shadingLanguageVersion]
 
 export type WebGLExtensionsInfo = string;
 
