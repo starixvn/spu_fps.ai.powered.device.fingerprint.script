@@ -36,11 +36,7 @@ export class PreferencesFingerprint {
       return {
         languages: [[""]],
         timezone: "",
-        touchSupport: {
-          maxTouchPoints: 0,
-          touchEvent: 0,
-          touchStart: 0,
-        },
+        touchSupport: [0, 0, 0],
         sessionStorage: 0,
         openDatabase: 0,
         localStorage: 0,

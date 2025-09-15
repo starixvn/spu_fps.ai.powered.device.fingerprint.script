@@ -189,11 +189,7 @@ export interface TimezoneInfo {
   timezone: string;
 }
 
-export interface TouchSupportInfo {
-  maxTouchPoints: number;
-  touchEvent: Bit;
-  touchStart: Bit;
-}
+export type TouchSupportInfo = [number, Bit, Bit]; // [maxTouchPoints, touchEvent, touchStart]
 
 export interface CookiesEnabledInfo {
   cookiesEnabled: Bit;

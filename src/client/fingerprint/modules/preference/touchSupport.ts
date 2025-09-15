@@ -3,17 +3,14 @@ import { toInt, boolToBit } from "../../utils/data";
 
 export function collectTouchSupport(): TouchSupportInfo {
   try {
-    return getTouchSupport();
+    const result = getTouchSupport();
+    return [result.maxTouchPoints, result.touchEvent, result.touchStart];
   } catch (error) {
-    return {
-      maxTouchPoints: 0,
-      touchEvent: 0,
-      touchStart: 0,
-    };
+    return [0, 0, 0];
   }
 }
 
-function getTouchSupport(): TouchSupportInfo {
+function getTouchSupport(): { maxTouchPoints: number; touchEvent: Bit; touchStart: Bit } {
   try {
     const n = navigator;
 
