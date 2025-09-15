@@ -17,27 +17,27 @@ export class HardwareFingerprint {
       const deviceMemoryResult = await collectDeviceMemory();
 
       const hardwareGroup: HardwareGroupInfo = {
-        plf: platformResult.plf || "",
-        ccl: cpuClassResult.ccl || "",
-        arc: architectureResult.arc || 0,
-        osc: osCpuResult.osc || "",
-        hwc: hardwareConcurrencyResult.hwc || "",
-        dvm: deviceMemoryResult.dvm || "",
+        platform: platformResult.platform || "",
+        cpuClass: cpuClassResult.cpuClass || "",
+        architecture: architectureResult.architecture || 0,
+        oscpu: osCpuResult.oscpu || "",
+        hardwareConcurrency: hardwareConcurrencyResult.hardwareConcurrency || "",
+        deviceMemory: deviceMemoryResult.deviceMemory || "",
       };
 
       return hardwareGroup;
     } catch (error) {
-      const platformResult = { plf: "" };
-      const cpuClassResult = { ccl: "" };
-      const architectureResult = { arc: 0 };
+      const platformResult = { platform: "" };
+      const cpuClassResult = { cpuClass: "" };
+      const architectureResult = { architecture: 0 };
 
       const fallbackResult = {
-        plf: platformResult.plf,
-        ccl: cpuClassResult.ccl,
-        arc: architectureResult.arc,
-        osc: "",
-        hwc: "",
-        dvm: "",
+        platform: platformResult.platform,
+        cpuClass: cpuClassResult.cpuClass,
+        architecture: architectureResult.architecture,
+        oscpu: "",
+        hardwareConcurrency: "",
+        deviceMemory: "",
       };
       return fallbackResult;
     }

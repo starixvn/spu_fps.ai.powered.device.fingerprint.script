@@ -194,12 +194,15 @@ function isConstantLike<K>(key: K): key is Extract<K, string> {
   return typeof key === 'string' && !key.match(/[^A-Z0-9_x]/)
 }
 
-function shouldAvoidDebugRendererInfoExt(): boolean {
+import type { Bit } from '../../types';
+import { boolToBit } from '../../utils/data';
+
+function shouldAvoidDebugRendererInfoExt(): Bit {
   return isGecko()
 }
 
-function shouldAvoidPolygonModeExtensionsExt(): boolean {
-  return isChromium() || isWebKit()
+function shouldAvoidPolygonModeExtensionsExt(): Bit {
+  return boolToBit(isChromium() === 1 || isWebKit() === 1)
 }
 
 function isValidParameterGetter(gl: WebGLRenderingContext) {

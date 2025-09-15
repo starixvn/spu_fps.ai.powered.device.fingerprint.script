@@ -1,22 +1,22 @@
-import type { CookiesEnabledInfo } from "../../types";
+import type { CookiesEnabledInfo, Bit } from "../../types";
+import { boolToBit } from "../../utils/data";
 
 export function collectCookiesEnabled(): CookiesEnabledInfo {
   try {
     const cookiesEnabled = getCookiesEnabled();
 
     return {
-      cookiesEnabled:
-        typeof cookiesEnabled === "boolean" ? cookiesEnabled : false,
+      cookiesEnabled: cookiesEnabled,
     };
   } catch (error) {
-    return { cookiesEnabled: false };
+    return { cookiesEnabled: 0 };
   }
 }
 
-function getCookiesEnabled(): boolean {
+function getCookiesEnabled(): Bit {
   try {
     if (typeof navigator.cookieEnabled === "boolean") {
-      return navigator.cookieEnabled;
+      return boolToBit(navigator.cookieEnabled);
     }
 
     if (
@@ -33,11 +33,11 @@ function getCookiesEnabled(): boolean {
 
       document.cookie = `${key}=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
 
-      return cookieExists;
+      return boolToBit(cookieExists);
     }
 
-    return false;
+    return 0;
   } catch (err) {
-    return false;
+    return 0;
   }
 }

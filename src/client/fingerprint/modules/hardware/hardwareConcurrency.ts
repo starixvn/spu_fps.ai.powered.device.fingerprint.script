@@ -8,7 +8,7 @@ const HARDWARE_CONCURRENCY_MIN_BENCHMARK_SCORE = 180000;
 export async function collectHardwareConcurrency(): Promise<HardwareConcurrencyInfo> {
   try {
     if (!("hardwareConcurrency" in navigator))
-      return { hwc: "" };
+      return { hardwareConcurrency: "" };
 
     const values: number[] = [];
 
@@ -19,27 +19,27 @@ export async function collectHardwareConcurrency(): Promise<HardwareConcurrencyI
       await delay(1);
     }
 
-    if (!values.length) return { hwc: "" };
+    if (!values.length) return { hardwareConcurrency: "" };
 
     const stableValue = mostFrequent(values);
 
-    if (hasNoise(values, stableValue)) return { hwc: "" };
+    if (hasNoise(values, stableValue)) return { hardwareConcurrency: "" };
 
     const benchmark = await runCompositeBenchmark();
 
     if (stableValue < MIN_VALID_CORES || stableValue > MAX_VALID_CORES)
-      return { hwc: "" };
+      return { hardwareConcurrency: "" };
 
     const expectedMinCores = Math.max(
       MIN_VALID_CORES,
       (benchmark / HARDWARE_CONCURRENCY_MIN_BENCHMARK_SCORE) * stableValue
     );
 
-    if (stableValue < expectedMinCores) return { hwc: "" };
+    if (stableValue < expectedMinCores) return { hardwareConcurrency: "" };
 
-    return { hwc: stableValue };
+    return { hardwareConcurrency: stableValue };
   } catch {
-    return { hwc: "" };
+    return { hardwareConcurrency: "" };
   }
 }
 

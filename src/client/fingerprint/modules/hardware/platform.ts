@@ -1,12 +1,13 @@
-import type { PlatformInfo } from "../../types";
+import type { PlatformInfo, Bit } from "../../types";
 import { countTruthy, isWebKit } from "../../utils/browser";
+import { boolToBit } from "../../utils/data";
 
 export function collectPlatform(): PlatformInfo {
   try {
-    const plf = getPlatform();
-    return { plf };
+    const platform = getPlatform();
+    return { platform };
   } catch {
-    return { plf: "" };
+    return { platform: "" };
   }
 }
 
@@ -15,8 +16,8 @@ function getPlatform(): string {
     const platform = navigator.platform;
    
     if (platform === 'MacIntel') {
-      if (isWebKit() && !isDesktopWebKit()) {
-        return isIPad() ? 'iPad' : 'iPhone';
+      if (isWebKit() === 1 && isDesktopWebKit() === 0) {
+        return isIPad() === 1 ? 'iPad' : 'iPhone';
       }
     }
 
@@ -26,11 +27,11 @@ function getPlatform(): string {
   }
 }
 
-function isDesktopWebKit(): boolean {
+function isDesktopWebKit(): Bit {
   const w = window;
   const { HTMLElement, Document } = w;
 
-  return (
+  return boolToBit(
     countTruthy([
       'safari' in w, 
       !('ongestureend' in w),
@@ -42,15 +43,15 @@ function isDesktopWebKit(): boolean {
   );
 }
 
-function isIPad(): boolean {
+function isIPad(): Bit {
   if (navigator.platform === 'iPad') {
-    return true;
+    return 1;
   }
 
   const s = screen;
   const screenRatio = s.width / s.height;
 
-  return (
+  return boolToBit(
     countTruthy([
       'MediaSource' in window,
       !!(Element.prototype as any).webkitRequestFullscreen,

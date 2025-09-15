@@ -122,11 +122,14 @@ function getCurrentScreenFrame(): FrameSize {
   ];
 }
 
-function isFrameSizeNull(frameSize: FrameSize) {
+import type { Bit } from '../../types';
+import { boolToBit } from '../../utils/data';
+
+function isFrameSizeNull(frameSize: FrameSize): Bit {
   for (let i = 0; i < 4; ++i) {
     if (frameSize[i]) {
-      return false;
+      return 0;
     }
   }
-  return true;
+  return 1;
 }

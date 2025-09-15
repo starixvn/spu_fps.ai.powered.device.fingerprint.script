@@ -82,7 +82,9 @@ export function getWebGLContext(cache: Options['cache']) {
   return context
 }
 
-export function shouldAvoidDebugRendererInfo(): boolean {
+import type { Bit } from '../../types';
+
+export function shouldAvoidDebugRendererInfo(): Bit {
   return isGecko()
 }
 

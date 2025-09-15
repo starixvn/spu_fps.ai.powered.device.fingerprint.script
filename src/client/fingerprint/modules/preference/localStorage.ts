@@ -1,4 +1,5 @@
-import type { LocalStorageInfo } from "../../types";
+import type { LocalStorageInfo, Bit } from "../../types";
+import { boolToBit } from "../../utils/data";
 
 export function collectLocalStorage(): LocalStorageInfo {
   try {
@@ -6,13 +7,13 @@ export function collectLocalStorage(): LocalStorageInfo {
     return { localStorage: localStorageSupported };
   } catch (error) {
     console.warn("collectLocalStorage error:", error);
-    return { localStorage: false };
+    return { localStorage: 0 };
   }
 }
 
-function getLocalStorage(): boolean {
+function getLocalStorage(): Bit {
   try {
-    if (typeof window === "undefined" || !window.localStorage) return false;
+    if (typeof window === "undefined" || !window.localStorage) return 0;
 
     const testKey = `localstorage_test_${Math.random().toString(36).slice(2)}`;
     const testValue = "test_value";
@@ -23,16 +24,16 @@ function getLocalStorage(): boolean {
 
     window.localStorage.removeItem(testKey);
 
-    if (storedValue !== testValue) return false;
+    if (storedValue !== testValue) return 0;
 
-    return true;
+    return 1;
   } catch (error) {
     if (
       error instanceof DOMException &&
       (error.name === "QuotaExceededError" || error.name === "SecurityError")
     ) {
-      return false;
+      return 0;
     }
-    return false;
+    return 0;
   }
 }

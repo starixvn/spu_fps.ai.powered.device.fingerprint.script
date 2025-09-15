@@ -1,17 +1,18 @@
-import type { OpenDatabaseInfo } from "../../types";
+import type { OpenDatabaseInfo, Bit } from "../../types";
+import { boolToBit } from "../../utils/data";
 
 export function collectOpenDatabase(): OpenDatabaseInfo {
   try {
     const openDatabaseSupported = getOpenDatabase();
     return { openDatabase: openDatabaseSupported };
   } catch (error) {
-    return { openDatabase: false };
+    return { openDatabase: 0 };
   }
 }
 
-function getOpenDatabase(): boolean {
+function getOpenDatabase(): Bit {
   try {
-    if (typeof window === "undefined") return false;
+    if (typeof window === "undefined") return 0;
 
     const dbAPIs = [
       "openDatabase",
@@ -26,15 +27,15 @@ function getOpenDatabase(): boolean {
       if (typeof fn === "function") {
         try {
           fn("test", "1.0", "test_db", 1);
-          return true;
+          return 1;
         } catch {
           continue;
         }
       }
     }
 
-    return false;
+    return 0;
   } catch (error) {
-    return false;
+    return 0;
   }
 }

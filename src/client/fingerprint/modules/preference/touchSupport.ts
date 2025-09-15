@@ -1,5 +1,5 @@
-import type { TouchSupportInfo } from "../../types";
-import { toInt } from "../../utils/data";
+import type { TouchSupportInfo, Bit } from "../../types";
+import { toInt, boolToBit } from "../../utils/data";
 
 export function collectTouchSupport(): TouchSupportInfo {
   try {
@@ -7,8 +7,8 @@ export function collectTouchSupport(): TouchSupportInfo {
   } catch (error) {
     return {
       maxTouchPoints: 0,
-      touchEvent: false,
-      touchStart: false,
+      touchEvent: 0,
+      touchStart: 0,
     };
   }
 }
@@ -18,7 +18,7 @@ function getTouchSupport(): TouchSupportInfo {
     const n = navigator;
 
     let maxTouchPoints = 0;
-    let touchEvent: boolean;
+    let touchEvent: Bit;
 
     if (n.maxTouchPoints !== undefined) {
       maxTouchPoints = toInt(n.maxTouchPoints);
@@ -28,12 +28,12 @@ function getTouchSupport(): TouchSupportInfo {
 
     try {
       document.createEvent('TouchEvent');
-      touchEvent = true;
+      touchEvent = 1;
     } catch {
-      touchEvent = false;
+      touchEvent = 0;
     }
 
-    const touchStart = 'ontouchstart' in window;
+    const touchStart = boolToBit('ontouchstart' in window);
 
     return {
       maxTouchPoints,
@@ -43,8 +43,8 @@ function getTouchSupport(): TouchSupportInfo {
   } catch {
     return {
       maxTouchPoints: 0,
-      touchEvent: false,
-      touchStart: false,
+      touchEvent: 0,
+      touchStart: 0,
     };
   }
 }

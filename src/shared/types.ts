@@ -1,6 +1,6 @@
-/**
- * Local types for fingerprint modules
- */
+// Bit type for boolean values as 0 or 1
+export type Bit = 0 | 1;
+
 export interface FingerprintData {
   HardwareFingerprint: HardwareGroupResult;
   GraphicsFingerprint: GraphicsGroupResult;
@@ -51,7 +51,7 @@ export interface BrowserGroupResult {
     description: string;
     filename: string;
   }>;
-  pdfViewerEnabled: boolean;
+  pdfViewerEnabled: Bit;
 }
 
 export interface GraphicsGroupResult {
@@ -151,17 +151,17 @@ export interface ColorDepthInfo {
   pixelDepth: number;
   bitsPerChannel: number;
   totalBits: number;
-  hasAlpha: boolean;
-  hasTransparency: boolean;
+  hasAlpha: Bit;
+  hasTransparency: Bit;
 }
 
 export interface ColorGamutInfo {
   colorGamut: string;
   supportedColorSpaces: string[];
-  p3Support: boolean;
-  rec2020Support: boolean;
-  srgbSupport: boolean;
-  displayP3Support: boolean;
+  p3Support: Bit;
+  rec2020Support: Bit;
+  srgbSupport: Bit;
+  displayP3Support: Bit;
 }
 
 export interface AudioGroupResult {
@@ -170,23 +170,23 @@ export interface AudioGroupResult {
 }
 
 export interface HardwareGroupResult {
-  plf: string;
-  arc: number;
-  osc: string;
-  ccl: string;
-  hwc: number | string;
-  dvm: number | string;
+  platform: string;
+  architecture: number;
+  oscpu: string;
+  cpuClass: string;
+  hardwareConcurrency: number | string;
+  deviceMemory: number | string;
 }
 
 export interface PreferencesGroupResult {
   languages: string[];
   timezone: string;
-  touchSupport: boolean;
-  cookiesEnabled: boolean;
-  localStorage: boolean;
-  sessionStorage: boolean;
-  openDatabase: boolean;
-  indexedDB: boolean;
+  touchSupport: Bit;
+  cookiesEnabled: Bit;
+  localStorage: Bit;
+  sessionStorage: Bit;
+  openDatabase: Bit;
+  indexedDB: Bit;
 }
 
 declare global {
@@ -211,7 +211,7 @@ declare global {
   interface Navigator {
     userAgentData?: {
       brands: any[];
-      mobile: boolean;
+      mobile: Bit;
       platform: string;
       getHighEntropyValues: (hints: string[]) => Promise<{
         architecture?: string;
@@ -224,22 +224,22 @@ declare global {
           brand: string;
           version: string;
         }>;
-        mobile?: boolean;
+        mobile?: Bit;
         model?: string;
         platform?: string;
         platformVersion?: string;
         uaFullVersion?: string;
-        wow64?: boolean;
+        wow64?: Bit;
       }>;
     };
     deviceMemory?: number;
     cpuClass?: string;
     oscpu?: string;
     buildID?: string;
-    pdfViewerEnabled?: boolean;
+    pdfViewerEnabled?: Bit;
     brave: any;
     msLaunchUri: any;
-    standalone: boolean;
+    standalone: Bit;
   }
 
   interface Screen {

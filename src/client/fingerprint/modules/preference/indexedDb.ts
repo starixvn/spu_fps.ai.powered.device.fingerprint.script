@@ -1,21 +1,21 @@
-import type { IndexedDBInfo } from "../../types";
+import type { IndexedDBInfo, Bit } from "../../types";
+import { boolToBit } from "../../utils/data";
 
 export async function collectIndexedDB(): Promise<IndexedDBInfo> {
   try {
     const indexedDBSupported = await getIndexedDB();
 
     return {
-      indexedDB:
-        typeof indexedDBSupported === "boolean" ? indexedDBSupported : false,
+      indexedDB: indexedDBSupported,
     };
   } catch (error) {
-    return { indexedDB: false };
+    return { indexedDB: 0 };
   }
 }
 
-async function getIndexedDB(): Promise<boolean> {
+async function getIndexedDB(): Promise<Bit> {
   if (typeof window === "undefined" || !window.indexedDB) {
-    return false;
+    return 0;
   }
 
   const testDBName = `fps_test_${Date.now()}_${Math.random()
@@ -36,7 +36,7 @@ async function getIndexedDB(): Promise<boolean> {
     const timeout = setTimeout(() => {
       if (!resolved) {
         resolved = true;
-        resolve(false);
+        resolve(0);
       }
     }, 4000); // 4s timeout to avoid hanging
 
@@ -47,7 +47,7 @@ async function getIndexedDB(): Promise<boolean> {
         if (!resolved) {
           resolved = true;
           clearTimeout(timeout);
-          resolve(false);
+          resolve(0);
         }
       };
 
@@ -56,7 +56,7 @@ async function getIndexedDB(): Promise<boolean> {
           resolved = true;
           clearTimeout(timeout);
           cleanup(request.result);
-          resolve(true);
+          resolve(1);
         }
       };
 
@@ -73,7 +73,7 @@ async function getIndexedDB(): Promise<boolean> {
       if (!resolved) {
         resolved = true;
         clearTimeout(timeout);
-        resolve(false);
+        resolve(0);
       }
     }
   });

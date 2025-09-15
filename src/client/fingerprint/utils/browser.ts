@@ -1,3 +1,6 @@
+import type { Bit } from '../types';
+import { boolToBit } from './data';
+
 /**
  * Counts truthy values in an array
  */
@@ -8,11 +11,11 @@ export function countTruthy(values: unknown[]): number {
 /**
  * Detects if browser is based on Chromium without using user-agent
  */
-export function isChromium(): boolean {
+export function isChromium(): Bit {
   const w = window;
   const n = navigator;
 
-  return (
+  return boolToBit(
     countTruthy([
       'webkitPersistentStorage' in n,
       'webkitTemporaryStorage' in n,
@@ -28,10 +31,10 @@ export function isChromium(): boolean {
 /**
  * Detects if browser is based on Chromium version ≥86 without using user-agent
  */
-export function isChromium86OrNewer(): boolean {
+export function isChromium86OrNewer(): Bit {
   const w = window;
 
-  return (
+  return boolToBit(
     countTruthy([
       !('MediaSettingsRange' in w),
       'RTCEncodedAudioFrame' in w,
@@ -44,7 +47,7 @@ export function isChromium86OrNewer(): boolean {
 /**
  * Detects if browser is WebKit-based
  */
-export function isWebKit(): boolean {
+export function isWebKit(): Bit {
   try {
     const w = window;
     const n = navigator;
@@ -61,30 +64,30 @@ export function isWebKit(): boolean {
     const truthyCount = countTruthy(checks);
     const result = truthyCount >= 4;
     
-    return result;
+    return boolToBit(result);
   } catch (error) {
-    return false;
+    return 0;
   }
 }
 
 /**
  * Detects if browser is Safari WebKit (not other WebKit browsers like Chrome)
  */
-export function isSafariWebKit(): boolean {
+export function isSafariWebKit(): Bit {
   try {
     const w = window;
     const n = navigator;
     const ua = n.userAgent;
 
     // Early returns for non-Safari browsers
-    if ('chrome' in w) return false;
-    if (ua.includes('Chrome')) return false;
-    if (ua.includes('Chromium')) return false;
-    if (ua.includes('Edge')) return false;
+    if ('chrome' in w) return 0;
+    if (ua.includes('Chrome')) return 0;
+    if (ua.includes('Chromium')) return 0;
+    if (ua.includes('Edge')) return 0;
 
     // Must be WebKit and have Safari indicators
-    return (
-      isWebKit() &&
+    return boolToBit(
+      isWebKit() === 1 &&
       countTruthy([
         'safari' in w,
         ua.includes('Safari'),
@@ -94,7 +97,7 @@ export function isSafariWebKit(): boolean {
       ]) >= 4
     );
   } catch {
-    return false;
+    return 0;
   }
 }
 
@@ -102,21 +105,21 @@ export function isSafariWebKit(): boolean {
  * Detects if WebKit version is 616 or newer (Safari 17+)
  * Based on WebKit version detection from user agent
  */
-export function isWebKit616OrNewer(): boolean {
+export function isWebKit616OrNewer(): Bit {
   try {
     const userAgent = navigator.userAgent;
     
     // Look for WebKit version in user agent
     const webkitMatch = userAgent.match(/WebKit\/(\d+)/);
     
-    if (!webkitMatch) return false;
+    if (!webkitMatch) return 0;
     
     const webkitVersion = parseInt(webkitMatch[1], 10);
     
     // WebKit 616+ corresponds to Safari 17+
-    return webkitVersion >= 616;
+    return boolToBit(webkitVersion >= 616);
   } catch {
-    return false;
+    return 0;
   }
 }
 
@@ -148,10 +151,10 @@ export function exitFullscreen(): Promise<void> {
 /**
  * Detects if browser is Gecko-based (Firefox)
  */
-export function isGecko(): boolean {
+export function isGecko(): Bit {
   const w = window;
 
-  return (
+  return boolToBit(
     countTruthy([
       'buildID' in navigator,
       'MozAppearance' in (document.documentElement?.style ?? {}),
@@ -166,13 +169,13 @@ export function isGecko(): boolean {
 /**
  * Checks whether the device runs on Android without using user-agent
  */
-export function isAndroid(): boolean {
+export function isAndroid(): Bit {
   try {
     const n = navigator;
     const w = window;
     const result = /android/i.test(n.userAgent) || 'ontouchstart' in w;
-    return result;
+    return boolToBit(result);
   } catch (error) {
-    return false;
+    return 0;
   }
 }

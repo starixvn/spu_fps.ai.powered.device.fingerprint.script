@@ -17,19 +17,45 @@ export class F5Fingerprint extends AbstractFingerprint {
     };
   }
 
-  protected extractAttributes(data: {graphics: GraphicsGroupInfo}, f4Attributes?: Record<string, any>): Record<string, any> {
-    const attributes = {
-      ...data.graphics,
+  private extractGraphicsAttributes(data: {graphics: GraphicsGroupInfo}): Record<string, GraphicsGroupInfo[keyof GraphicsGroupInfo]> {
+    const graphicsAliases = {
+      canvas: 'cnv',
+      webglBasics: 'wgb',
+      webglExtensions: 'wgx',
+      fonts: 'fnt',
+      fontPreferences: 'fpr',
+      screenResolution: 'scr',
+      screenFrame: 'sfr',
+      colorDepth: 'cld',
+      colorGamut: 'clg',
+    } as const;
+
+    return {
+      [graphicsAliases.canvas]: data.graphics.canvas,
+      [graphicsAliases.webglBasics]: data.graphics.webglBasics,
+      [graphicsAliases.webglExtensions]: data.graphics.webglExtensions,
+      [graphicsAliases.fonts]: data.graphics.fonts,
+      [graphicsAliases.fontPreferences]: data.graphics.fontPreferences,
+      [graphicsAliases.screenResolution]: data.graphics.screenResolution,
+      [graphicsAliases.screenFrame]: data.graphics.screenFrame,
+      [graphicsAliases.colorDepth]: data.graphics.colorDepth,
+      [graphicsAliases.colorGamut]: data.graphics.colorGamut,
     };
+  }
+
+  protected extractAttributes(data: {graphics: GraphicsGroupInfo}, f4Attributes?: Record<string, any>): Record<string, any> {
+    const mappedGraphics = this.extractGraphicsAttributes(data);
 
     if (f4Attributes) {
       return {
         ...f4Attributes,
-        ...attributes,
+        ...mappedGraphics,
       };
     }
 
-    return attributes;
+    return {
+      ...mappedGraphics,
+    };
   }
 
   protected buildPayload(

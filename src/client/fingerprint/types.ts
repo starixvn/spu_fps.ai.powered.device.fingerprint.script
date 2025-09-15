@@ -1,3 +1,6 @@
+// Bit type for boolean values as 0 or 1
+export type Bit = 0 | 1;
+
 export interface FingerprintData {
   HardwareFingerprint: HardwareGroupInfo;
   GraphicsFingerprint: GraphicsGroupInfo;
@@ -16,36 +19,36 @@ export interface F4Data {
 
 // #region Hardware
 export interface HardwareGroupInfo {
-  plf: string;
-  arc: number;
-  osc: string;
-  ccl: string;
-  hwc: number | string;
-  dvm: number | string;
+  platform: string;
+  architecture: number;
+  oscpu: string;
+  cpuClass: string;
+  hardwareConcurrency: number | string;
+  deviceMemory: number | string;
 }
 
 export interface DeviceMemoryInfo {
-  dvm: number | string;
+  deviceMemory: number | string;
 }
 
 export interface HardwareConcurrencyInfo {
-  hwc: number | string;
+  hardwareConcurrency: number | string;
 }
 
 export interface CpuClassInfo {
-  ccl: string;
+  cpuClass: string;
 }
 
 export interface PlatformInfo {
-  plf: string;
+  platform: string;
 }
 
 export interface ArchitectureInfo {
-  arc: number;
+  architecture: number;
 }
 
 export interface OSCpuInfo {
-  osc: string;
+  oscpu: string;
 }
 // #endregion
 
@@ -64,7 +67,7 @@ export interface GraphicsGroupInfo {
 
 export interface CanvasInfo {
   value: string;
-  canvasProtection: boolean;
+  canvasProtection: Bit;
 }
 
 export interface WebGLBasicsInfo {
@@ -124,7 +127,7 @@ export interface BrowserGroupInfo {
   vendor: string;
   vendorFlavors: string[];
   plugins: PluginData[];
-  pdfViewerEnabled: boolean;
+  pdfViewerEnabled: Bit;
 }
 
 export interface BrowserNameInfo {
@@ -163,7 +166,7 @@ export interface PluginsInfo {
 }
 
 export interface PdfViewerEnabledInfo {
-  pdfViewerEnabled: boolean;
+  pdfViewerEnabled: Bit;
 }
 // #endregion
 
@@ -172,11 +175,11 @@ export interface PreferencesGroupInfo {
   languages: string[][];
   timezone: string;
   touchSupport: TouchSupportInfo;
-  cookiesEnabled: boolean;
-  localStorage: boolean;
-  sessionStorage: boolean;
-  openDatabase: boolean;
-  indexedDB: boolean;
+  cookiesEnabled: Bit;
+  localStorage: Bit;
+  sessionStorage: Bit;
+  openDatabase: Bit;
+  indexedDB: Bit;
 }
 export interface LanguagesInfo {
   languages: string[][];
@@ -188,28 +191,28 @@ export interface TimezoneInfo {
 
 export interface TouchSupportInfo {
   maxTouchPoints: number;
-  touchEvent: boolean;
-  touchStart: boolean;
+  touchEvent: Bit;
+  touchStart: Bit;
 }
 
 export interface CookiesEnabledInfo {
-  cookiesEnabled: boolean;
+  cookiesEnabled: Bit;
 }
 
 export interface LocalStorageInfo {
-  localStorage: boolean;
+  localStorage: Bit;
 }
 
 export interface SessionStorageInfo {
-  sessionStorage: boolean;
+  sessionStorage: Bit;
 }
 
 export interface OpenDatabaseInfo {
-  openDatabase: boolean;
+  openDatabase: Bit;
 }
 
 export interface IndexedDBInfo {
-  indexedDB: boolean;
+  indexedDB: Bit;
 }
 // #endregion
 
@@ -234,7 +237,7 @@ declare global {
   interface Navigator {
     userAgentData?: {
       brands: any[];
-      mobile: boolean;
+      mobile: Bit;
       platform: string;
       getHighEntropyValues: (hints: string[]) => Promise<{
         architecture?: string;
@@ -247,22 +250,22 @@ declare global {
           brand: string;
           version: string;
         }>;
-        mobile?: boolean;
+        mobile?: Bit;
         model?: string;
         platform?: string;
         platformVersion?: string;
         uaFullVersion?: string;
-        wow64?: boolean;
+        wow64?: Bit;
       }>;
     };
     deviceMemory?: number;
     cpuClass?: string;
     oscpu?: string;
     buildID?: string;
-    pdfViewerEnabled?: boolean;
+    pdfViewerEnabled?: Bit;
     brave: any;
     msLaunchUri: any;
-    standalone: boolean;
+    standalone: Bit;
   }
 
   interface Screen {

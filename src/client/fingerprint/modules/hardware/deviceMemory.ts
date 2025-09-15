@@ -8,7 +8,7 @@ const KNOWN_POWER2_VALUES = [0.25, 0.5, 1, 2, 4, 8, 16, 32];
 
 export async function collectDeviceMemory(): Promise<DeviceMemoryInfo> {
   try {
-    if (!("deviceMemory" in navigator)) return { dvm: "" };
+    if (!("deviceMemory" in navigator)) return { deviceMemory: "" };
 
     const values: number[] = [];
 
@@ -19,27 +19,27 @@ export async function collectDeviceMemory(): Promise<DeviceMemoryInfo> {
       await deviceMemoryDelay(1);
     }
 
-    if (!values.length) return { dvm: "" };
+    if (!values.length) return { deviceMemory: "" };
 
     const stableValue = deviceMemoryMostFrequent(values);
 
-    if (deviceMemoryHasNoise(values, stableValue)) return { dvm: "" };
+    if (deviceMemoryHasNoise(values, stableValue)) return { deviceMemory: "" };
 
     const benchmark = await runCompositeBenchmark();
 
     if (stableValue < MIN_VALID_MEMORY || stableValue > MAX_VALID_MEMORY)
-      return { dvm: "" };
+      return { deviceMemory: "" };
 
     if (
       KNOWN_POWER2_VALUES.includes(stableValue) &&
       stableValue < Math.min(8, (benchmark / MIN_BENCHMARK_SCORE) * 8)
     ) {
-      return { dvm: "" };
+      return { deviceMemory: "" };
     }
 
-    return { dvm: stableValue };
+    return { deviceMemory: stableValue };
   } catch {
-    return { dvm: "" };
+    return { deviceMemory: "" };
   }
 }
 

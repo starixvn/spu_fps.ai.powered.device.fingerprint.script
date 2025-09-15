@@ -61,11 +61,11 @@ function getBrowserName(): string {
   }
 }
 
-function isMobile(): boolean {
+function isMobile(): Bit {
   try {
-    return /Mobi|Android/i.test(navigator.userAgent);
+    return boolToBit(/Mobi|Android/i.test(navigator.userAgent));
   } catch {
-    return false;
+    return 0;
   }
 }
 
@@ -95,7 +95,7 @@ function getBrowserVersion(): number {
   }
 }
 
-function detectFirefoxResistFingerprinting(): boolean {
+function detectFirefoxResistFingerprinting(): Bit {
   try {
     let indicators = 0;
     
@@ -187,24 +187,27 @@ function detectFirefoxResistFingerprinting(): boolean {
     }
     
     // Require at least 2 indicators for positive detection 
-    return indicators >= 2;
+    return boolToBit(indicators >= 2);
   } catch (err) {
-    return false;
+    return 0;
   }
 }
 
-function doesBrowserPerformAntifingerprinting(): boolean {
+import type { Bit } from '../../types';
+import { boolToBit } from '../../utils/data';
+
+function doesBrowserPerformAntifingerprinting(): Bit {
   const browserName = getBrowserName().toLowerCase();
   const version = getBrowserVersion();
   
   // Safari 17+ has Intelligent Tracking Prevention with audio normalization
   if (browserName === "safari" && version >= 17) {
-    return true;
+    return 1;
   }
   
   // Brave Browser has built-in fingerprinting protection
   if (browserName === "brave") {
-    return true;
+    return 1;
   }
   
   // Firefox with privacy.resistFingerprinting detection
@@ -214,10 +217,10 @@ function doesBrowserPerformAntifingerprinting(): boolean {
   
   // Samsung Browser 26+ has enhanced privacy
   if (navigator.userAgent.includes("SamsungBrowser") && version >= 26) {
-    return true;
+    return 1;
   }
   
-  return false;
+  return 0;
 }
 
 export async function collectAudio(): Promise<number | null> {

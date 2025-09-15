@@ -38,14 +38,14 @@ export class PreferencesFingerprint {
         timezone: "",
         touchSupport: {
           maxTouchPoints: 0,
-          touchEvent: false,
-          touchStart: false,
+          touchEvent: 0,
+          touchStart: 0,
         },
-        sessionStorage: false,
-        openDatabase: false,
-        localStorage: false,
-        indexedDB: false,
-        cookiesEnabled: false,
+        sessionStorage: 0,
+        openDatabase: 0,
+        localStorage: 0,
+        indexedDB: 0,
+        cookiesEnabled: 0,
       };
     }
   }

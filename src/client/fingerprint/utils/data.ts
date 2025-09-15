@@ -36,3 +36,7 @@ export function round(value: number, base = 1): number {
     return Math.round(value * counterBase) / counterBase;
   }
 }
+
+export function boolToBit(value: boolean): 0 | 1 {
+  return value ? 1 : 0;
+}

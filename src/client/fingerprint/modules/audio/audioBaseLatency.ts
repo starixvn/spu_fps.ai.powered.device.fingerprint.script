@@ -9,7 +9,7 @@ export enum SpecialFingerprint {
 
 export function collectAudioBaseLatency(): AudioBaseLatencyInfo {
   try {
-    const isAllowedPlatform = isAndroid() || isWebKit();
+    const isAllowedPlatform = isAndroid() === 1 || isWebKit() === 1;
     
     if (!isAllowedPlatform) {
       return { audioBaseLatency: SpecialFingerprint.Disabled };

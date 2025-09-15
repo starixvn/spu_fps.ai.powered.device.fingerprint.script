@@ -15,6 +15,7 @@ export class AudioFingerprint {
 
       return audioGroup;
     } catch (error) {
+      console.error('Error collecting audio fingerprint:', error);
       return {
         audio: null,
         audioBaseLatency: SpecialFingerprint.NotSupported,

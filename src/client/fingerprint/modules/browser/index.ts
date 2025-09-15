@@ -3,7 +3,8 @@ import { collectOSName } from "./osName";
 import { collectVendor } from "./vendor";
 import { collectVendorFlavors } from "./vendorFlavors";
 import { collectPlugins } from "./plugins";
-import type { BrowserGroupInfo } from "../../types";
+import type { BrowserGroupInfo, Bit } from "../../types";
+import { boolToBit } from "../../utils/data";
 
 export class BrowserFingerprint {
   public static collect(): BrowserGroupInfo {
@@ -35,7 +36,7 @@ export class BrowserFingerprint {
         vendor: "",
         vendorFlavors: [],
         plugins: [],
-        pdfViewerEnabled: false,
+        pdfViewerEnabled: 0,
       };
     }
   }
@@ -52,11 +53,11 @@ function collectUserAgentSync(): {
   }
 }
 
-function collectPdfViewerEnabledSync(): { pdfViewerEnabled: boolean } {
+function collectPdfViewerEnabledSync(): { pdfViewerEnabled: Bit } {
   try {
-    const pdfViewerEnabled = navigator.pdfViewerEnabled ?? false;
+    const pdfViewerEnabled = boolToBit(Boolean(navigator.pdfViewerEnabled));
     return { pdfViewerEnabled };
   } catch (error) {
-    return { pdfViewerEnabled: false };
+    return { pdfViewerEnabled: 0 };
   }
 }
