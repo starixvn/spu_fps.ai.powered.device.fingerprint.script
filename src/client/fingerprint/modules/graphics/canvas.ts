@@ -1,4 +1,4 @@
-import { murmurhash3_32_gc } from "../../utils/hash";
+import { MurmurHash128 } from "../../utils/hash";
 import type { CanvasInfo } from "../../types";
 
 const CANVAS_CACHE_KEY = "canvasCache";
@@ -37,7 +37,7 @@ export async function collectCanvas(): Promise<CanvasInfo> {
     }
 
     const stableFeatures = computeFeatureMedian(samples);
-    const value = murmurhash3_32_gc(JSON.stringify(stableFeatures)).toString(16);
+    const value = MurmurHash128.hash128(JSON.stringify(stableFeatures));
      
     if (cachedValue && cachedValue === value) {
       return {

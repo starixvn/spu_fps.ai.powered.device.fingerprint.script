@@ -14,7 +14,7 @@ export interface F4Data {
   preferences: PreferencesGroupInfo;
 }
 
-// Hardware
+// #region Hardware
 export interface HardwareGroupInfo {
   platform: string;
   architecture: number;
@@ -47,13 +47,14 @@ export interface ArchitectureInfo {
 export interface OSCpuInfo {
   oscpu: string;
 }
+// #endregion
 
-// Graphics
+// #region Graphics
 export interface GraphicsGroupInfo {
   canvas: CanvasInfo;
   webglBasics: WebGLBasicsInfo;
   webglExtensions: WebGLExtensionsInfo;
-  fonts: string[];
+  fonts: FontsInfo;
   fontPreferences: FontPreferencesInfo;
   screenResolution: [number, number];
   screenFrame: [number, number, number, number];
@@ -75,7 +76,9 @@ export interface WebGLBasicsInfo {
   shadingLanguageVersion: string;
 }
 
-export interface WebGLExtensionsInfo {
+export type WebGLExtensionsInfo = string;
+
+export interface WebGLExtensionsData {
   contextAttributes: string[];
   parameters: string[];
   shaderPrecisions: string[];
@@ -95,8 +98,9 @@ export interface FontPreferencesInfo {
   min: number;
   system: number;
 }
+// #endregion
 
-// Audio
+// #region Audio
 export interface AudioGroupInfo {
   audio: number | null;
   audioBaseLatency: number | -1 | -2 | -3;
@@ -110,8 +114,9 @@ export interface AudioInfo {
 export interface AudioBaseLatencyInfo {
   audioBaseLatency: number | -1 | -2 | -3;
 }
+// #endregion
 
-// Browser
+// #region Browser
 export interface BrowserGroupInfo {
   browserName: string;
   osName: string;
@@ -160,8 +165,9 @@ export interface PluginsInfo {
 export interface PdfViewerEnabledInfo {
   pdfViewerEnabled: boolean;
 }
+// #endregion
 
-// Preferences
+// #region Preferences
 export interface PreferencesGroupInfo {
   languages: string[][];
   timezone: string;
@@ -205,6 +211,7 @@ export interface OpenDatabaseInfo {
 export interface IndexedDBInfo {
   indexedDB: boolean;
 }
+// #endregion
 
 declare global {
   interface Window {

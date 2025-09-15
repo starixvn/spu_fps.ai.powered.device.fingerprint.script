@@ -1,6 +1,6 @@
-import type { WebGLExtensionsInfo } from "../../types";
+import type { WebGLExtensionsInfo, WebGLExtensionsData } from "../../types";
 import { countTruthy, isChromium, isWebKit, isGecko } from "../../utils/browser";
-
+import { MurmurHash128 } from "../../utils/hash";
 
 type CanvasContext = WebGLRenderingContext & { readonly canvas: HTMLCanvasElement }
 
@@ -45,8 +45,9 @@ export async function collectWebGLExtensions(): Promise<WebGLExtensionsInfo> {
     const cache = { webgl: { context: undefined } };
     const result = getWebGlExtensions({ cache });
     
+    let webglExtensionsData: WebGLExtensionsData;
     if (typeof result === 'number') {
-      return {
+      webglExtensionsData = {
         contextAttributes: [],
         parameters: [],
         shaderPrecisions: [],
@@ -54,18 +55,13 @@ export async function collectWebGLExtensions(): Promise<WebGLExtensionsInfo> {
         extensionParameters: [],
         unsupportedExtensions: [],
       };
+    } else {
+      webglExtensionsData = result;
     }
     
-    return {
-      contextAttributes: result.contextAttributes,
-      parameters: result.parameters,
-      shaderPrecisions: result.shaderPrecisions,
-      extensions: result.extensions,
-      extensionParameters: result.extensionParameters,
-      unsupportedExtensions: result.unsupportedExtensions,
-    };
+    return MurmurHash128.hash128(JSON.stringify(webglExtensionsData));
   } catch (error) {
-    return {
+    const emptyData: WebGLExtensionsData = {
       contextAttributes: [],
       parameters: [],
       shaderPrecisions: [],
@@ -73,10 +69,11 @@ export async function collectWebGLExtensions(): Promise<WebGLExtensionsInfo> {
       extensionParameters: [],
       unsupportedExtensions: [],
     };
+    return MurmurHash128.hash128(JSON.stringify(emptyData));
   }
 }
 
-export function getWebGlExtensions({ cache }: Options): WebGLExtensionsInfo | SpecialStatus {
+export function getWebGlExtensions({ cache }: Options): WebGLExtensionsData | SpecialStatus {
   const gl = getWebGLContextExt(cache)
   if (!gl) {
     return STATUS_NO_GL_CONTEXT_EXT
@@ -208,4 +205,5 @@ function shouldAvoidPolygonModeExtensionsExt(): boolean {
 function isValidParameterGetter(gl: WebGLRenderingContext) {
   return typeof gl.getParameter === 'function'
 }
+
 

@@ -49,14 +49,7 @@ export class GraphicsFingerprint {
           vendorUnmasked: "",
           rendererUnmasked: "",
         },
-        webglExtensions: {
-          contextAttributes: [],
-          parameters: [],
-          shaderPrecisions: [],
-          extensions: null,
-          extensionParameters: [],
-          unsupportedExtensions: [],
-        },
+        webglExtensions: "",
         fonts: [],
         fontPreferences: {
           default: 0,
