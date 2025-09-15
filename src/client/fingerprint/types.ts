@@ -119,7 +119,7 @@ export interface BrowserGroupInfo {
   userAgent: string;
   vendor: string;
   vendorFlavors: string[];
-  plugins: PluginData[];
+  plugins: string[]; 
   pdfViewerEnabled: Bit;
 }
 
@@ -154,9 +154,7 @@ export interface PluginData {
   mimeTypes: PluginMimeTypeData[];
 }
 
-export interface PluginsInfo {
-  plugins: PluginData[];
-}
+export type PluginsInfo = string[]; 
 
 export interface PdfViewerEnabledInfo {
   pdfViewerEnabled: Bit;

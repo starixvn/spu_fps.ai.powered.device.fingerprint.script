@@ -23,7 +23,7 @@ export class BrowserFingerprint {
         userAgent: userAgentResult.userAgent,
         vendor: vendorResult.vendor,
         vendorFlavors: vendorFlavorsResult.vendorFlavors,
-        plugins: pluginsResult.plugins,
+        plugins: pluginsResult,
         pdfViewerEnabled: pdfViewerResult.pdfViewerEnabled,
       };
 

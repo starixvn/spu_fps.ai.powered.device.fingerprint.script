@@ -3,9 +3,9 @@ import type { PluginsInfo, PluginData, PluginMimeTypeData } from "../../types";
 export function collectPlugins(): PluginsInfo {
   try {
     const plugins = getPlugins();
-    return { plugins };
+    return plugins.map(plugin => plugin.name);
   } catch (error) {
-    return { plugins: [] };
+    return [];
   }
 }
 
