@@ -2,10 +2,10 @@ import type { ArchitectureInfo } from "../../types";
 
 export function collectArchitecture(): ArchitectureInfo {
   try {
-    const architecture = getArchitecture();
-    return { architecture };
+    const arc = getArchitecture();
+    return { arc };
   } catch (error) {
-    return { architecture: 0 };
+    return { arc: 0 };
   }
 }
 

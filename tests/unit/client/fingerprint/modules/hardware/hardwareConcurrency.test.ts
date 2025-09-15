@@ -2,7 +2,7 @@ import { collectHardwareConcurrency } from "../../../../../../src/client/fingerp
 
 // Mock navigator object
 const mockNavigator: any = {
-  hardwareConcurrency: undefined,
+  hwc: undefined,
 };
 
 // Mock global navigator
@@ -26,7 +26,7 @@ describe("Hardware Concurrency Module", () => {
       const result = await collectHardwareConcurrency();
 
       // Assert
-      expect(result).toEqual({ hardwareConcurrency: "" });
+      expect(result).toEqual({ hwc: "" });
     }, 30000); // Increase timeout
 
     it("should handle undefined navigator gracefully", async () => {
@@ -40,7 +40,7 @@ describe("Hardware Concurrency Module", () => {
       const result = await collectHardwareConcurrency();
 
       // Assert
-      expect(result).toEqual({ hardwareConcurrency: "" });
+      expect(result).toEqual({ hwc: "" });
 
       // Restore navigator for other tests
       Object.defineProperty(global, "navigator", {

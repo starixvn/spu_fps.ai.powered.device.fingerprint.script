@@ -2,10 +2,10 @@ import type { CpuClassInfo } from "../../types";
 
 export function collectCpuClass(): CpuClassInfo {
   try {
-    const cpuClass = getCpuClass();
-    return { cpuClass };
+    const ccl = getCpuClass();
+    return { ccl };
   } catch (error) {
-    return { cpuClass: "" };
+    return { ccl: "" };
   }
 }
 

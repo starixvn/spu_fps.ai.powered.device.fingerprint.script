@@ -9,7 +9,7 @@ describe('Hardware Architecture Module', () => {
       // Assert
       // Current implementation uses Float32Array byte manipulation to detect x86 architecture
       // In most test environments, this should return 255 for x86/x86_64
-      expect(result).toEqual({ architecture: 255 });
+      expect(result).toEqual({ arc: 255 });
     });
 
     it('should handle errors gracefully and return 0', () => {
@@ -23,7 +23,7 @@ describe('Hardware Architecture Module', () => {
       const result = collectArchitecture();
 
       // Assert
-      expect(result).toEqual({ architecture: 0 });
+      expect(result).toEqual({ arc: 0 });
 
       // Cleanup
       global.Float32Array = originalFloat32Array;
@@ -40,7 +40,7 @@ describe('Hardware Architecture Module', () => {
       const result = collectArchitecture();
 
       // Assert
-      expect(result).toEqual({ architecture: 0 });
+      expect(result).toEqual({ arc: 0 });
 
       // Cleanup
       global.Uint8Array = originalUint8Array;
@@ -55,7 +55,7 @@ describe('Hardware Architecture Module', () => {
       // Assert
       expect(result1).toEqual(result2);
       expect(result2).toEqual(result3);
-      expect(typeof result1.architecture).toBe('number');
+      expect(typeof result1.arc).toBe('number');
     });
 
     it('should return number for architecture value', () => {
@@ -63,10 +63,10 @@ describe('Hardware Architecture Module', () => {
       const result = collectArchitecture();
 
       // Assert
-      expect(typeof result.architecture).toBe('number');
+      expect(typeof result.arc).toBe('number');
       // Architecture should be a number (typically 255 for x86, or 0 on error)
-      expect(result.architecture).toBeGreaterThanOrEqual(0);
-      expect(result.architecture).toBeLessThanOrEqual(255);
+      expect(result.arc).toBeGreaterThanOrEqual(0);
+      expect(result.arc).toBeLessThanOrEqual(255);
     });
   });
 });

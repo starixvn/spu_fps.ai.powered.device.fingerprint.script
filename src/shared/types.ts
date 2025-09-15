@@ -170,12 +170,12 @@ export interface AudioGroupResult {
 }
 
 export interface HardwareGroupResult {
-  platform: string;
-  architecture: string;
-  oscpu: string;
-  cpuClass: string;
-  hardwareConcurrency: number | string;
-  deviceMemory: number | string;
+  plf: string;
+  arc: number;
+  osc: string;
+  ccl: string;
+  hwc: number | string;
+  dvm: number | string;
 }
 
 export interface PreferencesGroupResult {

@@ -52,7 +52,7 @@ describe('Hardware Platform Module', () => {
       const result = collectPlatform();
 
       // Assert
-      expect(result).toEqual({ platform: 'Windows' });
+      expect(result).toEqual({ plf: 'Windows' });
     });
 
     it('should return empty string when navigator.platform not available', () => {
@@ -66,7 +66,7 @@ describe('Hardware Platform Module', () => {
       const result = collectPlatform();
 
       // Assert
-      expect(result).toEqual({ platform: '' });
+      expect(result).toEqual({ plf: '' });
     });
 
     it('should return MacIntel platform correctly in non-WebKit environment', () => {
@@ -85,7 +85,7 @@ describe('Hardware Platform Module', () => {
       const result = collectPlatform();
 
       // Assert  
-      expect(result).toEqual({ platform: 'MacIntel' });
+      expect(result).toEqual({ plf: 'MacIntel' });
     });
 
     it('should return empty string when navigator.platform is empty', () => {
@@ -99,25 +99,25 @@ describe('Hardware Platform Module', () => {
       const result = collectPlatform();
 
       // Assert
-      expect(result).toEqual({ platform: '' });
+      expect(result).toEqual({ plf: '' });
     });
 
     it('should return different platform values as-is', () => {
       // Test Windows platforms
       Object.defineProperty(navigator, 'platform', { writable: true, value: 'Win32' });
-      expect(collectPlatform()).toEqual({ platform: 'Win32' });
+      expect(collectPlatform()).toEqual({ plf: 'Win32' });
 
       Object.defineProperty(navigator, 'platform', { writable: true, value: 'Win64' });
-      expect(collectPlatform()).toEqual({ platform: 'Win64' });
+      expect(collectPlatform()).toEqual({ plf: 'Win64' });
 
       // Test Mac platforms (ensure non-Apple vendor to avoid special logic)
       Object.defineProperty(navigator, 'vendor', { writable: true, value: 'Google Inc.' });
       Object.defineProperty(navigator, 'platform', { writable: true, value: 'MacIntel' });
-      expect(collectPlatform()).toEqual({ platform: 'MacIntel' });
+      expect(collectPlatform()).toEqual({ plf: 'MacIntel' });
 
       // Test Linux platforms
       Object.defineProperty(navigator, 'platform', { writable: true, value: 'Linux x86_64' });
-      expect(collectPlatform()).toEqual({ platform: 'Linux x86_64' });
+      expect(collectPlatform()).toEqual({ plf: 'Linux x86_64' });
     });
 
     it('should handle error gracefully and return empty string', () => {
@@ -132,7 +132,7 @@ describe('Hardware Platform Module', () => {
       const result = collectPlatform();
 
       // Assert
-      expect(result).toEqual({ platform: '' });
+      expect(result).toEqual({ plf: '' });
 
       // Restore navigator for other tests
       Object.defineProperty(global, 'navigator', {

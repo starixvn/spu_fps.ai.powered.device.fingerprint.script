@@ -15,14 +15,14 @@ describe("Hardware Device Memory Module", () => {
 
   beforeEach(() => {
     Object.defineProperty(global, "navigator", {
-      value: { deviceMemory: undefined },
+      value: { dvm: undefined },
       writable: true,
     });
   });
 
   it("should return empty string when deviceMemory property is missing", async () => {
     const result = await collectDeviceMemory();
-    expect(result).toHaveProperty("deviceMemory", "");
+    expect(result).toHaveProperty("dvm", "");
   }, 30000); // Increase timeout
 
   it("should handle undefined navigator gracefully", async () => {
@@ -32,6 +32,6 @@ describe("Hardware Device Memory Module", () => {
     });
 
     const result = await collectDeviceMemory();
-    expect(result.deviceMemory).toBe("");
+    expect(result.dvm).toBe("");
   }, 30000);
 });

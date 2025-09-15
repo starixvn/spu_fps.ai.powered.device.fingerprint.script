@@ -7,51 +7,39 @@ import { collectDeviceMemory } from "./deviceMemory";
 import type { HardwareGroupInfo } from "../../types";
 
 export class HardwareFingerprint {
-  public static collect(): Promise<HardwareGroupInfo> {
-    let platformResult, cpuClassResult, architectureResult;
-
+  public static async collect(): Promise<HardwareGroupInfo> {
     try {
-      platformResult = collectPlatform();
-    } catch (error) {
-      platformResult = { platform: "" };
-    }
+      const platformResult = collectPlatform();
+      const cpuClassResult = collectCpuClass();
+      const architectureResult = collectArchitecture();
+      const osCpuResult = await collectOSCpu();
+      const hardwareConcurrencyResult = await collectHardwareConcurrency();
+      const deviceMemoryResult = await collectDeviceMemory();
 
-    try {
-      cpuClassResult = collectCpuClass();
-    } catch (error) {
-      cpuClassResult = { cpuClass: "" };
-    }
-
-    try {
-      architectureResult = collectArchitecture();
-    } catch (error) {
-      architectureResult = { architecture: 0 };
-    }
-
-    return collectOSCpu().then(function(osCpuResult) {
-      return collectHardwareConcurrency().then(function(hardwareConcurrencyResult) {
-        return collectDeviceMemory().then(function(deviceMemoryResult) {
-          const hardwareGroup: HardwareGroupInfo = {
-            platform: platformResult.platform || "",
-            cpuClass: cpuClassResult.cpuClass || "",
-            architecture: architectureResult.architecture || 0,
-            oscpu: osCpuResult.oscpu || "",
-            hardwareConcurrency: hardwareConcurrencyResult.hardwareConcurrency || "",
-            deviceMemory: deviceMemoryResult.deviceMemory || "",
-          };
-          return hardwareGroup;
-        });
-      });
-    }).catch(function(error) {
       const hardwareGroup: HardwareGroupInfo = {
-        platform: platformResult.platform || "",
-        cpuClass: cpuClassResult.cpuClass || "",
-        architecture: architectureResult.architecture || 0,
-        oscpu: "",
-        hardwareConcurrency: "",
-        deviceMemory: "",
+        plf: platformResult.plf || "",
+        ccl: cpuClassResult.ccl || "",
+        arc: architectureResult.arc || 0,
+        osc: osCpuResult.osc || "",
+        hwc: hardwareConcurrencyResult.hwc || "",
+        dvm: deviceMemoryResult.dvm || "",
       };
+
       return hardwareGroup;
-    });
+    } catch (error) {
+      const platformResult = { plf: "" };
+      const cpuClassResult = { ccl: "" };
+      const architectureResult = { arc: 0 };
+
+      const fallbackResult = {
+        plf: platformResult.plf,
+        ccl: cpuClassResult.ccl,
+        arc: architectureResult.arc,
+        osc: "",
+        hwc: "",
+        dvm: "",
+      };
+      return fallbackResult;
+    }
   }
 }

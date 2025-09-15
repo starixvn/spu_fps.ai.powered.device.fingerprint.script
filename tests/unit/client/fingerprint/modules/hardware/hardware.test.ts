@@ -9,11 +9,11 @@ import { collectDeviceMemory } from "../../../../../../src/client/fingerprint/mo
 // Mock navigator object for all tests
 const mockNavigator: any = {
   userAgentData: undefined,
-  platform: undefined,
-  cpuClass: undefined,
-  hardwareConcurrency: undefined,
-  deviceMemory: undefined,
-  oscpu: undefined,
+  plf: undefined,
+  ccl: undefined,
+  hwc: undefined,
+  dvm: undefined,
+  osc: undefined,
   userAgent: "",
 };
 
@@ -49,12 +49,12 @@ describe("Hardware Modules Integration Tests", () => {
 
       // Assert
       expect(result).toEqual({
-        platform: "Windows",  // Raw platform value from navigator.platform
-        cpuClass: "Intel x86",
-        architecture: 255,  // Changed: number value for x86
-        oscpu: "Windows NT 10.0; Win64; x64",
-        hardwareConcurrency: 16,
-        deviceMemory: 32,
+        plf: "Windows",  // Raw platform value from navigator.platform
+        ccl: "Intel x86",
+        arc: 255,  // Changed: number value for x86
+        osc: "Windows NT 10.0; Win64; x64",
+        hwc: 16,
+        dvm: 32,
       });
     });
   });
@@ -72,12 +72,12 @@ describe("Hardware Modules Integration Tests", () => {
 
       // Assert
       expect(result).toEqual({
-        platform: "",
-        cpuClass: "",
-        architecture: 255,  // Changed: still returns 255 even without navigator
-        oscpu: "",
-        hardwareConcurrency: "",
-        deviceMemory: "",
+        plf: "",
+        ccl: "",
+        arc: 255,  // Changed: still returns 255 even without navigator
+        osc: "",
+        hwc: "",
+        dvm: "",
       });
 
       // Restore navigator for other tests
@@ -97,7 +97,7 @@ describe("Hardware Modules Integration Tests", () => {
       const result = collectPlatform();
 
       // Assert
-      expect(result).toEqual({ platform: "Test Platform" });
+      expect(result).toEqual({ plf: "Test Platform" });
     });
 
     it("should test collectCpuClass function independently", () => {
@@ -108,7 +108,7 @@ describe("Hardware Modules Integration Tests", () => {
       const result = collectCpuClass();
 
       // Assert
-      expect(result).toEqual({ cpuClass: "Test CPU" });
+      expect(result).toEqual({ ccl: "Test CPU" });
     });
 
     it("should test collectHardwareConcurrency function independently", async () => {
@@ -119,7 +119,7 @@ describe("Hardware Modules Integration Tests", () => {
       const result = await collectHardwareConcurrency();
 
       // Assert - May return empty string due to validation logic
-      expect(result).toHaveProperty("hardwareConcurrency");
+      expect(result).toHaveProperty("hwc");
     });
 
     it("should test collectDeviceMemory function independently", async () => {
@@ -130,7 +130,7 @@ describe("Hardware Modules Integration Tests", () => {
       const result = await collectDeviceMemory();
 
       // Assert - May return empty string due to validation logic
-      expect(result).toHaveProperty("deviceMemory");
+      expect(result).toHaveProperty("dvm");
     });
 
     it("should test collectOSCpu function independently", async () => {
@@ -141,7 +141,7 @@ describe("Hardware Modules Integration Tests", () => {
       const result = await collectOSCpu();
 
       // Assert
-      expect(result).toEqual({ oscpu: "Windows NT 10.0; Win64; x64" });
+      expect(result).toEqual({ osc: "Windows NT 10.0; Win64; x64" });
     });
 
     it("should test collectArchitecture function independently", () => {
@@ -151,7 +151,7 @@ describe("Hardware Modules Integration Tests", () => {
       const result = collectArchitecture();
 
       // Assert
-      expect(result).toEqual({ architecture: 255 });  // Changed: number value
+      expect(result).toEqual({ arc: 255 });  // Changed: number value
     });
   });
 });

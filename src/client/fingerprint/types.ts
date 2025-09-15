@@ -16,36 +16,36 @@ export interface F4Data {
 
 // #region Hardware
 export interface HardwareGroupInfo {
-  platform: string;
-  architecture: number;
-  oscpu: string;
-  cpuClass: string;
-  hardwareConcurrency: number | string;
-  deviceMemory: number | string;
+  plf: string;
+  arc: number;
+  osc: string;
+  ccl: string;
+  hwc: number | string;
+  dvm: number | string;
 }
 
 export interface DeviceMemoryInfo {
-  deviceMemory: number | string;
+  dvm: number | string;
 }
 
 export interface HardwareConcurrencyInfo {
-  hardwareConcurrency: number | string;
+  hwc: number | string;
 }
 
 export interface CpuClassInfo {
-  cpuClass: string;
+  ccl: string;
 }
 
 export interface PlatformInfo {
-  platform: string;
+  plf: string;
 }
 
 export interface ArchitectureInfo {
-  architecture: number;
+  arc: number;
 }
 
 export interface OSCpuInfo {
-  oscpu: string;
+  osc: string;
 }
 // #endregion
 

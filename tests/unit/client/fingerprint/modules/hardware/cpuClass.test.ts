@@ -2,7 +2,7 @@ import { collectCpuClass } from '../../../../../../src/client/fingerprint/module
 
 // Mock navigator object
 const mockNavigator: any = {
-  cpuClass: undefined,
+  ccl: undefined,
 };
 
 // Mock global navigator
@@ -26,7 +26,7 @@ describe('Hardware CPU Class Module', () => {
       const result = collectCpuClass();
 
       // Assert
-      expect(result).toEqual({ cpuClass: 'Intel x86' });
+      expect(result).toEqual({ ccl: 'Intel x86' });
     });
 
     it('should trim whitespace from cpuClass string', () => {
@@ -37,7 +37,7 @@ describe('Hardware CPU Class Module', () => {
       const result = collectCpuClass();
 
       // Assert
-      expect(result).toEqual({ cpuClass: 'Intel x86' });
+      expect(result).toEqual({ ccl: 'Intel x86' });
     });
 
     it('should return empty string when navigator.cpuClass is undefined', () => {
@@ -48,7 +48,7 @@ describe('Hardware CPU Class Module', () => {
       const result = collectCpuClass();
 
       // Assert
-      expect(result).toEqual({ cpuClass: '' });
+      expect(result).toEqual({ ccl: '' });
     });
 
     it('should return empty string when navigator.cpuClass is null', () => {
@@ -59,7 +59,7 @@ describe('Hardware CPU Class Module', () => {
       const result = collectCpuClass();
 
       // Assert
-      expect(result).toEqual({ cpuClass: '' });
+      expect(result).toEqual({ ccl: '' });
     });
 
     it('should return empty string when navigator.cpuClass is not a string', () => {
@@ -70,7 +70,7 @@ describe('Hardware CPU Class Module', () => {
       const result = collectCpuClass();
 
       // Assert
-      expect(result).toEqual({ cpuClass: '' });
+      expect(result).toEqual({ ccl: '' });
     });
 
     it('should return empty string when navigator.cpuClass is empty string', () => {
@@ -81,7 +81,7 @@ describe('Hardware CPU Class Module', () => {
       const result = collectCpuClass();
 
       // Assert
-      expect(result).toEqual({ cpuClass: '' });
+      expect(result).toEqual({ ccl: '' });
     });
 
     it('should return empty string when navigator.cpuClass is whitespace only', () => {
@@ -92,7 +92,7 @@ describe('Hardware CPU Class Module', () => {
       const result = collectCpuClass();
 
       // Assert
-      expect(result).toEqual({ cpuClass: '' });
+      expect(result).toEqual({ ccl: '' });
     });
 
     it('should handle error gracefully and return empty string', () => {
@@ -106,7 +106,7 @@ describe('Hardware CPU Class Module', () => {
       const result = collectCpuClass();
 
       // Assert
-      expect(result).toEqual({ cpuClass: '' });
+      expect(result).toEqual({ ccl: '' });
 
       // Restore navigator for other tests
       Object.defineProperty(global, 'navigator', {

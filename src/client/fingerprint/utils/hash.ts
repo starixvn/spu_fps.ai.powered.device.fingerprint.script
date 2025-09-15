@@ -1,5 +1,3 @@
-import * as murmurhash from "murmurhash3js";
-
 export class MurmurHash128 {
   public static hash128(data: string, seed: number = 0): string {
     return murmurhash3_x86_128(data, seed);

@@ -2,7 +2,7 @@ import { collectOSCpu } from '../../../../../../src/client/fingerprint/modules/h
 
 // Mock navigator object
 const mockNavigator: any = {
-  oscpu: undefined,
+  osc: undefined,
   userAgentData: undefined,
 };
 
@@ -28,7 +28,7 @@ describe('Hardware OS CPU Module', () => {
       const result = await collectOSCpu();
 
       // Assert
-      expect(result).toEqual({ oscpu: 'Windows NT 10.0; Win64; x64' });
+      expect(result).toEqual({ osc: 'Windows NT 10.0; Win64; x64' });
     });
 
     it('should return empty string when navigator.oscpu not available', async () => {
@@ -39,7 +39,7 @@ describe('Hardware OS CPU Module', () => {
       const result = await collectOSCpu();
 
       // Assert
-      expect(result).toEqual({ oscpu: '' });
+      expect(result).toEqual({ osc: '' });
     });
 
     it('should return empty string when userAgentData returns incomplete data', async () => {
@@ -50,7 +50,7 @@ describe('Hardware OS CPU Module', () => {
       const result = await collectOSCpu();
 
       // Assert
-      expect(result).toEqual({ oscpu: '' });
+      expect(result).toEqual({ osc: '' });
     });
 
     it('should return empty string when userAgentData.getHighEntropyValues throws error', async () => {
@@ -61,7 +61,7 @@ describe('Hardware OS CPU Module', () => {
       const result = await collectOSCpu();
 
       // Assert
-      expect(result).toEqual({ oscpu: '' });
+      expect(result).toEqual({ osc: '' });
     });
 
     it('should return empty string when both navigator.oscpu and userAgentData are not available', async () => {
@@ -72,7 +72,7 @@ describe('Hardware OS CPU Module', () => {
       const result = await collectOSCpu();
 
       // Assert
-      expect(result).toEqual({ oscpu: '' });
+      expect(result).toEqual({ osc: '' });
     });
 
     it('should prioritize navigator.oscpu over userAgentData', async () => {
@@ -83,25 +83,25 @@ describe('Hardware OS CPU Module', () => {
       const result = await collectOSCpu();
 
       // Assert
-      expect(result).toEqual({ oscpu: 'Windows NT 10.0; Win64; x64' });
+      expect(result).toEqual({ osc: 'Windows NT 10.0; Win64; x64' });
     });
 
     it('should handle oscpu property that is not a string', async () => {
       // Test different cases of invalid oscpu values
       const testCases = [
-        { oscpu: null, expected: '' },
-        { oscpu: undefined, expected: '' },
-        { oscpu: 123, expected: '' },
-        { oscpu: {}, expected: '' },
-        { oscpu: '   ', expected: '' }, // Only whitespace
-        { oscpu: '  Windows NT 10.0  ', expected: 'Windows NT 10.0' }, // With whitespace
+        { osc: null, expected: '' },
+        { osc: undefined, expected: '' },
+        { osc: 123, expected: '' },
+        { osc: {}, expected: '' },
+        { osc: '   ', expected: '' }, // Only whitespace
+        { osc: '  Windows NT 10.0  ', expected: 'Windows NT 10.0' }, // With whitespace
       ];
 
       for (const testCase of testCases) {
-        mockNavigator.oscpu = testCase.oscpu;
+        mockNavigator.oscpu = testCase.osc;
 
         const result = await collectOSCpu();
-        expect(result).toEqual({ oscpu: testCase.expected });
+        expect(result).toEqual({ osc: testCase.expected });
       }
     });
 
@@ -116,7 +116,7 @@ describe('Hardware OS CPU Module', () => {
       const result = await collectOSCpu();
 
       // Assert
-      expect(result).toEqual({ oscpu: '' });
+      expect(result).toEqual({ osc: '' });
 
       // Restore navigator for other tests
       Object.defineProperty(global, 'navigator', {
@@ -137,7 +137,7 @@ describe('Hardware OS CPU Module', () => {
       const result = await collectOSCpu();
 
       // Assert
-      expect(result).toEqual({ oscpu: '' });
+      expect(result).toEqual({ osc: '' });
 
       // Restore navigator for other tests
       Object.defineProperty(global, 'navigator', {

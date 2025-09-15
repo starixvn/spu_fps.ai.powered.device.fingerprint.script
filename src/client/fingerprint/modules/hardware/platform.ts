@@ -3,10 +3,10 @@ import { countTruthy, isWebKit } from "../../utils/browser";
 
 export function collectPlatform(): PlatformInfo {
   try {
-    const platform = getPlatform();
-    return { platform };
+    const plf = getPlatform();
+    return { plf };
   } catch {
-    return { platform: "" };
+    return { plf: "" };
   }
 }
 

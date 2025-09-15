@@ -21,24 +21,24 @@ describe('Hardware Fingerprint Module', () => {
     jest.clearAllMocks();
     
     // Setup default mock return values
-    mockCollectPlatform.mockReturnValue({ platform: 'Windows' });
-    mockCollectCpuClass.mockReturnValue({ cpuClass: 'Intel x86' });
-    mockCollectArchitecture.mockReturnValue({ architecture: 255 });  // Changed to number
-    mockCollectOSCpu.mockResolvedValue({ oscpu: 'Windows NT 10.0; Win64; x64' });
-    mockCollectHardwareConcurrency.mockResolvedValue({ hardwareConcurrency: 8 });
-    mockCollectDeviceMemory.mockResolvedValue({ deviceMemory: 16 });  // Changed to Promise
+    mockCollectPlatform.mockReturnValue({ plf: 'Windows' });
+    mockCollectCpuClass.mockReturnValue({ ccl: 'Intel x86' });
+    mockCollectArchitecture.mockReturnValue({ arc: 255 });  // Changed to number
+    mockCollectOSCpu.mockResolvedValue({ osc: 'Windows NT 10.0; Win64; x64' });
+    mockCollectHardwareConcurrency.mockResolvedValue({ hwc: 8 });
+    mockCollectDeviceMemory.mockResolvedValue({ dvm: 16 });  // Changed to Promise
   });
 
   describe('HardwareFingerprint.collect', () => {
     it('should collect all hardware attributes successfully', async () => {
       // Arrange
       const expectedResult = {
-        platform: 'Windows',
-        cpuClass: 'Intel x86',
-        architecture: 255,  // Changed to number
-        oscpu: 'Windows NT 10.0; Win64; x64',
-        hardwareConcurrency: 8,
-        deviceMemory: 16,
+        plf: 'Windows',
+        ccl: 'Intel x86',
+        arc: 255,  // Changed to number
+        osc: 'Windows NT 10.0; Win64; x64',
+        hwc: 8,
+        dvm: 16,
       };
 
       // Act
@@ -56,20 +56,20 @@ describe('Hardware Fingerprint Module', () => {
 
     it('should handle empty values from individual collectors', async () => {
       // Arrange
-      mockCollectPlatform.mockReturnValue({ platform: '' });
-      mockCollectCpuClass.mockReturnValue({ cpuClass: '' });
-      mockCollectArchitecture.mockReturnValue({ architecture: 0 });  // Changed to number
-      mockCollectOSCpu.mockResolvedValue({ oscpu: '' });
-      mockCollectHardwareConcurrency.mockResolvedValue({ hardwareConcurrency: '' });
-      mockCollectDeviceMemory.mockResolvedValue({ deviceMemory: '' });
+      mockCollectPlatform.mockReturnValue({ plf: '' });
+      mockCollectCpuClass.mockReturnValue({ ccl: '' });
+      mockCollectArchitecture.mockReturnValue({ arc: 0 });  // Changed to number
+      mockCollectOSCpu.mockResolvedValue({ osc: '' });
+      mockCollectHardwareConcurrency.mockResolvedValue({ hwc: '' });
+      mockCollectDeviceMemory.mockResolvedValue({ dvm: '' });
 
       const expectedResult = {
-        platform: '',
-        cpuClass: '',
-        architecture: 0,  // Changed to number
-        oscpu: '',
-        hardwareConcurrency: '',
-        deviceMemory: '',
+        plf: '',
+        ccl: '',
+        arc: 0,  // Changed to number
+        osc: '',
+        hwc: '',
+        dvm: '',
       };
 
       // Act
@@ -81,20 +81,20 @@ describe('Hardware Fingerprint Module', () => {
 
     it('should handle mixed empty and non-empty values', async () => {
       // Arrange
-      mockCollectPlatform.mockReturnValue({ platform: 'Linux' });
-      mockCollectCpuClass.mockReturnValue({ cpuClass: '' });
-      mockCollectArchitecture.mockReturnValue({ architecture: 255 });  // Changed to number
-      mockCollectOSCpu.mockResolvedValue({ oscpu: '' });
-      mockCollectHardwareConcurrency.mockResolvedValue({ hardwareConcurrency: '' });  // Changed
-      mockCollectDeviceMemory.mockResolvedValue({ deviceMemory: '' });
+      mockCollectPlatform.mockReturnValue({ plf: 'Linux' });
+      mockCollectCpuClass.mockReturnValue({ ccl: '' });
+      mockCollectArchitecture.mockReturnValue({ arc: 255 });  // Changed to number
+      mockCollectOSCpu.mockResolvedValue({ osc: '' });
+      mockCollectHardwareConcurrency.mockResolvedValue({ hwc: '' });  // Changed
+      mockCollectDeviceMemory.mockResolvedValue({ dvm: '' });
 
       const expectedResult = {
-        platform: 'Linux',
-        cpuClass: '',
-        architecture: 255,  // Changed to number
-        oscpu: '',
-        hardwareConcurrency: '',  // Changed
-        deviceMemory: '',
+        plf: 'Linux',
+        ccl: '',
+        arc: 255,  // Changed to number
+        osc: '',
+        hwc: '',  // Changed
+        dvm: '',
       };
 
       // Act
@@ -106,20 +106,20 @@ describe('Hardware Fingerprint Module', () => {
 
     it('should handle different data types correctly', async () => {
       // Arrange
-      mockCollectPlatform.mockReturnValue({ platform: 'MacOS' });
-      mockCollectCpuClass.mockReturnValue({ cpuClass: 'Apple Silicon' });
-      mockCollectArchitecture.mockReturnValue({ architecture: 255 });  // Changed to number
-      mockCollectOSCpu.mockResolvedValue({ oscpu: '' });  // Changed
-      mockCollectHardwareConcurrency.mockResolvedValue({ hardwareConcurrency: '' });  // Changed
-      mockCollectDeviceMemory.mockResolvedValue({ deviceMemory: '' });  // Changed
+      mockCollectPlatform.mockReturnValue({ plf: 'MacOS' });
+      mockCollectCpuClass.mockReturnValue({ ccl: 'Apple Silicon' });
+      mockCollectArchitecture.mockReturnValue({ arc: 255 });  // Changed to number
+      mockCollectOSCpu.mockResolvedValue({ osc: '' });  // Changed
+      mockCollectHardwareConcurrency.mockResolvedValue({ hwc: '' });  // Changed
+      mockCollectDeviceMemory.mockResolvedValue({ dvm: '' });  // Changed
 
       const expectedResult = {
-        platform: 'MacOS',
-        cpuClass: 'Apple Silicon',
-        architecture: 255,  // Changed to number
-        oscpu: '',  // Changed
-        hardwareConcurrency: '',  // Changed
-        deviceMemory: '',  // Changed
+        plf: 'MacOS',
+        ccl: 'Apple Silicon',
+        arc: 255,  // Changed to number
+        osc: '',  // Changed
+        hwc: '',  // Changed
+        dvm: '',  // Changed
       };
 
       // Act
@@ -135,13 +135,14 @@ describe('Hardware Fingerprint Module', () => {
         throw new Error('API not supported');
       });
 
+      // When any collector throws, the entire collect() falls back to empty values
       const expectedResult = {
-        platform: 'Windows',
-        cpuClass: 'Intel x86',
-        architecture: 0,  // Changed to number for error case
-        oscpu: 'Windows NT 10.0; Win64; x64',
-        hardwareConcurrency: 8,
-        deviceMemory: 16,
+        plf: '',
+        ccl: '',
+        arc: 0,
+        osc: '',
+        hwc: '',
+        dvm: '',
       };
 
       // Act
@@ -152,9 +153,10 @@ describe('Hardware Fingerprint Module', () => {
       expect(mockCollectPlatform).toHaveBeenCalledTimes(1);
       expect(mockCollectCpuClass).toHaveBeenCalledTimes(1);
       expect(mockCollectArchitecture).toHaveBeenCalledTimes(1);
-      expect(mockCollectOSCpu).toHaveBeenCalledTimes(1);
-      expect(mockCollectHardwareConcurrency).toHaveBeenCalledTimes(1);
-      expect(mockCollectDeviceMemory).toHaveBeenCalledTimes(1);
+      // When collectArchitecture throws, subsequent collectors are not called
+      expect(mockCollectOSCpu).toHaveBeenCalledTimes(0);
+      expect(mockCollectHardwareConcurrency).toHaveBeenCalledTimes(0);
+      expect(mockCollectDeviceMemory).toHaveBeenCalledTimes(0);
     });
 
     it('should handle multiple errors in collectors gracefully', async () => {
@@ -166,13 +168,14 @@ describe('Hardware Fingerprint Module', () => {
         throw new Error('Architecture API error');
       });
 
+      // When any collector throws, the entire collect() falls back to empty values
       const expectedResult = {
-        platform: '',
-        cpuClass: 'Intel x86',
-        architecture: 0,  // Changed to number for error case
-        oscpu: 'Windows NT 10.0; Win64; x64',
-        hardwareConcurrency: 8,
-        deviceMemory: 16,
+        plf: '',
+        ccl: '',
+        arc: 0,
+        osc: '',
+        hwc: '',
+        dvm: '',
       };
 
       // Act
@@ -180,6 +183,13 @@ describe('Hardware Fingerprint Module', () => {
 
       // Assert
       expect(result).toEqual(expectedResult);
+      expect(mockCollectPlatform).toHaveBeenCalledTimes(1);
+      // When collectPlatform throws, subsequent collectors are not called
+      expect(mockCollectCpuClass).toHaveBeenCalledTimes(0);
+      expect(mockCollectArchitecture).toHaveBeenCalledTimes(0);
+      expect(mockCollectOSCpu).toHaveBeenCalledTimes(0);
+      expect(mockCollectHardwareConcurrency).toHaveBeenCalledTimes(0);
+      expect(mockCollectDeviceMemory).toHaveBeenCalledTimes(0);
     });
 
     it('should handle all collectors failing gracefully', async () => {
@@ -194,7 +204,7 @@ describe('Hardware Fingerprint Module', () => {
         throw new Error('Architecture API error');
       });
       mockCollectOSCpu.mockImplementation(() => {
-        return Promise.resolve({ oscpu: '' }); // Changed: return resolved promise instead of throw
+        return Promise.resolve({ osc: '' }); // Changed: return resolved promise instead of throw
       });
       mockCollectHardwareConcurrency.mockImplementation(() => {
         throw new Error('Hardware Concurrency API error');
@@ -204,12 +214,12 @@ describe('Hardware Fingerprint Module', () => {
       });
 
       const expectedResult = {
-        platform: '',
-        cpuClass: '',
-        architecture: 0,  // Changed to number
-        oscpu: '',
-        hardwareConcurrency: '',
-        deviceMemory: '',
+        plf: '',
+        ccl: '',
+        arc: 0,  // Changed to number
+        osc: '',
+        hwc: '',
+        dvm: '',
       };
 
       // Act
@@ -225,27 +235,27 @@ describe('Hardware Fingerprint Module', () => {
       
       mockCollectPlatform.mockImplementation(() => {
         callOrder.push('platform');
-        return { platform: 'Windows' };
+        return { plf: 'Windows' };
       });
       mockCollectCpuClass.mockImplementation(() => {
         callOrder.push('cpuClass');
-        return { cpuClass: 'Intel x86' };
+        return { ccl: 'Intel x86' };
       });
       mockCollectArchitecture.mockImplementation(() => {
         callOrder.push('architecture');
-        return { architecture: 255 };  // Changed to number
+        return { arc: 255 };  // Changed to number
       });
       mockCollectOSCpu.mockImplementation(async () => {
         callOrder.push('oscpu');
-        return { oscpu: 'Windows NT 10.0; Win64; x64' };
+        return { osc: 'Windows NT 10.0; Win64; x64' };
       });
       mockCollectHardwareConcurrency.mockImplementation(async () => {
         callOrder.push('hardwareConcurrency');
-        return { hardwareConcurrency: 8 };
+        return { hwc: 8 };
       });
       mockCollectDeviceMemory.mockImplementation(async () => {
         callOrder.push('deviceMemory');
-        return { deviceMemory: 16 };
+        return { dvm: 16 };
       });
 
       // Act
@@ -264,20 +274,20 @@ describe('Hardware Fingerprint Module', () => {
 
     it('should handle null and undefined values from collectors', async () => {
       // Arrange
-      mockCollectPlatform.mockReturnValue({ platform: null as any });
-      mockCollectCpuClass.mockReturnValue({ cpuClass: undefined as any });
-      mockCollectArchitecture.mockReturnValue({ architecture: 0 });  // Changed to valid number
-      mockCollectOSCpu.mockResolvedValue({ oscpu: undefined as any });
-      mockCollectHardwareConcurrency.mockResolvedValue({ hardwareConcurrency: null as any });
-      mockCollectDeviceMemory.mockResolvedValue({ deviceMemory: undefined as any });
+      mockCollectPlatform.mockReturnValue({ plf: null as any });
+      mockCollectCpuClass.mockReturnValue({ ccl: undefined as any });
+      mockCollectArchitecture.mockReturnValue({ arc: 0 });  // Changed to valid number
+      mockCollectOSCpu.mockResolvedValue({ osc: undefined as any });
+      mockCollectHardwareConcurrency.mockResolvedValue({ hwc: null as any });
+      mockCollectDeviceMemory.mockResolvedValue({ dvm: undefined as any });
 
       const expectedResult = {
-        platform: '',
-        cpuClass: '',
-        architecture: 0,  // Changed to number
-        oscpu: '',
-        hardwareConcurrency: '',
-        deviceMemory: '',
+        plf: '',
+        ccl: '',
+        arc: 0,  // Changed to number
+        osc: '',
+        hwc: '',
+        dvm: '',
       };
 
       // Act
