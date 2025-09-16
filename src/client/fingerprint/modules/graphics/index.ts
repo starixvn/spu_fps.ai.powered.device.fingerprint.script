@@ -37,10 +37,7 @@ export class GraphicsFingerprint {
       return graphicsGroup;
     } catch (error) {
       return {
-        canvas: {
-          value: "",
-          canvasProtection: 0
-        },
+        canvas: ["", 0],
         webglBasics: ["", "", "", "", "", ""],
         webglExtensions: "",
         fonts: [],

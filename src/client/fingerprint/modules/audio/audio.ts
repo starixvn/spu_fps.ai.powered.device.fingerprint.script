@@ -1,3 +1,6 @@
+import type { Bit } from '../../types';
+import { boolToBit } from '../../utils/data';
+
 export const enum AudioStatus {
   CLEAN = "clean",
   RANDOMIZE = "randomize", 
@@ -192,9 +195,6 @@ function detectFirefoxResistFingerprinting(): Bit {
     return 0;
   }
 }
-
-import type { Bit } from '../../types';
-import { boolToBit } from '../../utils/data';
 
 function doesBrowserPerformAntifingerprinting(): Bit {
   const browserName = getBrowserName().toLowerCase();

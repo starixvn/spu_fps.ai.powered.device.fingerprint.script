@@ -1,5 +1,6 @@
 import { MurmurHash128 } from "../../utils/hash";
 import type { CanvasInfo } from "../../types";
+import type { Bit } from '../../types';
 
 const CANVAS_CACHE_KEY = "canvasCache";
 const CANVAS_SNAPSHOTS = 5;
@@ -20,30 +21,21 @@ export async function collectCanvas(): Promise<CanvasInfo> {
     const canvasProtection = await detectCanvasProtection();
     
     if (canvasProtection) {
-      return {
-        value: "",
-        canvasProtection: 1
-      };
+      return ["", 1];
     }
 
     const snapshotPromises = Array.from({ length: CANVAS_SNAPSHOTS }, () => getCanvasFeatures());
     const samples = (await Promise.all(snapshotPromises)).filter(Boolean) as any[];
 
     if (samples.length === 0) {
-      return {
-        value: "",
-        canvasProtection: 0
-      };
+      return ["", 0];
     }
 
     const stableFeatures = computeFeatureMedian(samples);
     const value = MurmurHash128.hash128(JSON.stringify(stableFeatures));
      
     if (cachedValue && cachedValue === value) {
-      return {
-        value: cachedValue,
-        canvasProtection: 0
-      };
+      return [cachedValue, 0];
     }
 
     try {
@@ -51,15 +43,9 @@ export async function collectCanvas(): Promise<CanvasInfo> {
     } catch (e) {
     }
 
-    return {
-      value,
-      canvasProtection: 0
-    };
+    return [value, 0];
   } catch {
-    return {
-      value: "",
-      canvasProtection: 0
-    };
+    return ["", 0];
   }
 }
 
@@ -137,9 +123,6 @@ async function detectCanvasProtection(): Promise<Bit> {
     return 1; 
   }
 }
-
-import type { Bit } from '../../types';
-import { boolToBit } from '../../utils/data';
 
 // Detect CanvasBlocker extension specifically
 function detectCanvasBlockerExtension(): Bit {

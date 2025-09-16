@@ -12,20 +12,20 @@ type Options = {
   }
 }
 
-export const STATUS_NO_GL_CONTEXT = -1
-export const STATUS_GET_PARAMETER_NOT_A_FUNCTION = -2
-export type SpecialStatus = typeof STATUS_NO_GL_CONTEXT | typeof STATUS_GET_PARAMETER_NOT_A_FUNCTION
+export const STATUS_NO_GL_CONTEXT = -1;
+export const STATUS_GET_PARAMETER_NOT_A_FUNCTION = -2;
+export type SpecialStatus = typeof STATUS_NO_GL_CONTEXT | typeof STATUS_GET_PARAMETER_NOT_A_FUNCTION;
 
-const rendererInfoExtensionName = 'WEBGL_debug_renderer_info'
-const globalCache: Options['cache'] = {}
+const rendererInfoExtensionName = 'WEBGL_debug_renderer_info';
+const globalCache: Options['cache'] = {};
 
 export function collectWebGLBasics(): WebGLBasicsInfo {
   try {
-    const options = { cache: globalCache }
-    const basics = getWebGlBasics(options)
+    const options = { cache: globalCache };
+    const basics = getWebGlBasics(options);
     
     if (typeof basics === 'number') {
-      return getEmptyWebGLBasics()
+      return getEmptyWebGLBasics();
     }
 
     return [
@@ -37,21 +37,21 @@ export function collectWebGLBasics(): WebGLBasicsInfo {
       basics.shadingLanguageVersion
     ]
   } catch (error) {
-    return getEmptyWebGLBasics()
+    return getEmptyWebGLBasics();
   }
 }
 
 export function getWebGlBasics({ cache }: Options): { version: string; vendor: string; vendorUnmasked: string; renderer: string; rendererUnmasked: string; shadingLanguageVersion: string } | SpecialStatus {
-  const gl = getWebGLContext(cache)
+  const gl = getWebGLContext(cache);
   if (!gl) {
-    return STATUS_NO_GL_CONTEXT
+    return STATUS_NO_GL_CONTEXT;
   }
 
   if (!isValidParameterGetter(gl)) {
-    return STATUS_GET_PARAMETER_NOT_A_FUNCTION
+    return STATUS_GET_PARAMETER_NOT_A_FUNCTION;
   }
 
-  const debugExtension = shouldAvoidDebugRendererInfo() ? null : gl.getExtension(rendererInfoExtensionName)
+  const debugExtension = shouldAvoidDebugRendererInfo() ? null : gl.getExtension(rendererInfoExtensionName);
 
   return {
     version: gl.getParameter(gl.VERSION)?.toString() || '',
@@ -65,37 +65,37 @@ export function getWebGlBasics({ cache }: Options): { version: string; vendor: s
 
 export function getWebGLContext(cache: Options['cache']) {
   if (cache.webgl) {
-    return cache.webgl.context
+    return cache.webgl.context;
   }
 
-  const canvas = document.createElement('canvas')
-  let context: CanvasContext | undefined
+  const canvas = document.createElement('canvas');
+  let context: CanvasContext | undefined;
 
-  canvas.addEventListener('webglCreateContextError', () => (context = undefined))
+  canvas.addEventListener('webglCreateContextError', () => (context = undefined));
 
   for (const type of ['webgl', 'experimental-webgl']) {
     try {
-      context = canvas.getContext(type) as CanvasContext
+      context = canvas.getContext(type) as CanvasContext;
     } catch {
     }
     if (context) {
-      break
+      break;
     }
   }
 
-  cache.webgl = { context }
-  return context
+  cache.webgl = { context };
+  return context;
 }
 
 
 export function shouldAvoidDebugRendererInfo(): Bit {
-  return isGecko()
+  return isGecko();
 }
 
 function isValidParameterGetter(gl: WebGLRenderingContext) {
-  return typeof gl.getParameter === 'function'
+  return typeof gl.getParameter === 'function';
 }
 
 function getEmptyWebGLBasics(): WebGLBasicsInfo {
-  return ["", "", "", "", "", ""] // [version, vendor, vendorUnmasked, renderer, rendererUnmasked, shadingLanguageVersion]
+  return ["", "", "", "", "", ""]; // [version, vendor, vendorUnmasked, renderer, rendererUnmasked, shadingLanguageVersion]
 }

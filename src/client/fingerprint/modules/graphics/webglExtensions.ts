@@ -14,9 +14,9 @@ type Options = {
   }
 }
 
-export const STATUS_NO_GL_CONTEXT_EXT = -1
-export const STATUS_GET_PARAMETER_NOT_A_FUNCTION_EXT = -2
-export type SpecialStatus = typeof STATUS_NO_GL_CONTEXT_EXT | typeof STATUS_GET_PARAMETER_NOT_A_FUNCTION_EXT
+export const STATUS_NO_GL_CONTEXT_EXT = -1;
+export const STATUS_GET_PARAMETER_NOT_A_FUNCTION_EXT = -2;
+export type SpecialStatus = typeof STATUS_NO_GL_CONTEXT_EXT | typeof STATUS_GET_PARAMETER_NOT_A_FUNCTION_EXT;
 
 const validContextParameters = new Set([
   10752, 2849, 2884, 2885, 2886, 2928, 2929, 2930, 2931, 2932, 2960, 2961, 2962, 2963, 2964, 2965, 2966, 2967, 2968,
@@ -24,7 +24,7 @@ const validContextParameters = new Set([
   32970, 32971, 3317, 33170, 3333, 3379, 3386, 33901, 33902, 34016, 34024, 34076, 3408, 3410, 3411, 3412, 3413, 3414,
   3415, 34467, 34816, 34817, 34818, 34819, 34877, 34921, 34930, 35660, 35661, 35724, 35738, 35739, 36003, 36004, 36005,
   36347, 36348, 36349, 37440, 37441, 37443, 7936, 7937, 7938,
-])
+]);
 const validExtensionParams = new Set([
   34047, // MAX_TEXTURE_MAX_ANISOTROPY_EXT
   35723, // FRAGMENT_SHADER_DERIVATIVE_HINT_OES
@@ -36,74 +36,56 @@ const validExtensionParams = new Set([
   36392, // TIMESTAMP_EXT
   36795, // GPU_DISJOINT_EXT
   38449, // MAX_VIEWS_OVR
-])
-const shaderTypes = ['FRAGMENT_SHADER', 'VERTEX_SHADER'] as const
-const precisionTypes = ['LOW_FLOAT', 'MEDIUM_FLOAT', 'HIGH_FLOAT', 'LOW_INT', 'MEDIUM_INT', 'HIGH_INT'] as const
-const rendererInfoExtensionNameExt = 'WEBGL_debug_renderer_info'
-const polygonModeExtensionName = 'WEBGL_polygon_mode'
+]);
+const shaderTypes = ['FRAGMENT_SHADER', 'VERTEX_SHADER'] as const;
+const precisionTypes = ['LOW_FLOAT', 'MEDIUM_FLOAT', 'HIGH_FLOAT', 'LOW_INT', 'MEDIUM_INT', 'HIGH_INT'] as const;
+const rendererInfoExtensionNameExt = 'WEBGL_debug_renderer_info';
+const polygonModeExtensionName = 'WEBGL_polygon_mode';
 
 export async function collectWebGLExtensions(): Promise<WebGLExtensionsInfo> {
   try {
     const cache = { webgl: { context: undefined } };
     const result = getWebGlExtensions({ cache });
     
-    let webglExtensionsData: WebGLExtensionsData;
     if (typeof result === 'number') {
-      webglExtensionsData = {
-        contextAttributes: [],
-        parameters: [],
-        shaderPrecisions: [],
-        extensions: [],
-        extensionParameters: [],
-        unsupportedExtensions: [],
-      };
-    } else {
-      webglExtensionsData = result;
+      return "";
     }
     
-    return MurmurHash128.hash128(JSON.stringify(webglExtensionsData));
+    return MurmurHash128.hash128(JSON.stringify(result));
   } catch (error) {
-    const emptyData: WebGLExtensionsData = {
-      contextAttributes: [],
-      parameters: [],
-      shaderPrecisions: [],
-      extensions: [],
-      extensionParameters: [],
-      unsupportedExtensions: [],
-    };
-    return MurmurHash128.hash128(JSON.stringify(emptyData));
+    return "";
   }
 }
 
 export function getWebGlExtensions({ cache }: Options): WebGLExtensionsData | SpecialStatus {
-  const gl = getWebGLContextExt(cache)
+  const gl = getWebGLContextExt(cache);
   if (!gl) {
-    return STATUS_NO_GL_CONTEXT_EXT
+    return STATUS_NO_GL_CONTEXT_EXT;
   }
 
   if (!isValidParameterGetter(gl)) {
-    return STATUS_GET_PARAMETER_NOT_A_FUNCTION_EXT
+    return STATUS_GET_PARAMETER_NOT_A_FUNCTION_EXT;
   }
 
-  const extensions = gl.getSupportedExtensions()
-  const contextAttributes = gl.getContextAttributes()
-  const unsupportedExtensions: string[] = []
-  const attributes: string[] = []
-  const parameters: string[] = []
-  const extensionParameters: string[] = []
-  const shaderPrecisions: string[] = []
+  const extensions = gl.getSupportedExtensions();
+  const contextAttributes = gl.getContextAttributes();
+  const unsupportedExtensions: string[] = [];
+  const attributes: string[] = [];
+  const parameters: string[] = [];
+  const extensionParameters: string[] = [];
+  const shaderPrecisions: string[] = [];
 
   if (contextAttributes) {
     for (const attributeName of Object.keys(contextAttributes) as (keyof WebGLContextAttributes)[]) {
-      attributes.push(`${attributeName}=${contextAttributes[attributeName]}`)
+      attributes.push(`${attributeName}=${contextAttributes[attributeName]}`);
     }
   }
 
-  const constants = getConstantsFromPrototype(gl)
+  const constants = getConstantsFromPrototype(gl);
   
   for (const constant of constants) {
-    const code = gl[constant] as number
-    parameters.push(`${constant}=${code}${validContextParameters.has(code) ? `=${gl.getParameter(code)}` : ''}`)
+    const code = gl[constant] as number;
+    parameters.push(`${constant}=${code}${validContextParameters.has(code) ? `=${gl.getParameter(code)}` : ''}`);
   }
 
   // Extension parameters
@@ -113,17 +95,17 @@ export function getWebGlExtensions({ cache }: Options): WebGLExtensionsData | Sp
         (name === rendererInfoExtensionNameExt && shouldAvoidDebugRendererInfoExt()) ||
         (name === polygonModeExtensionName && shouldAvoidPolygonModeExtensionsExt())
       ) {
-        continue
+        continue;
       }
 
-      const extension = gl.getExtension(name)
+      const extension = gl.getExtension(name);
       if (!extension) {
-        unsupportedExtensions.push(name)
-        continue
+        unsupportedExtensions.push(name);
+        continue;
       }
 
       for (const constant of getConstantsFromPrototype(extension)) {
-        const code = extension[constant]
+        const code = extension[constant];
         extensionParameters.push(
           `${constant}=${code}${validExtensionParams.has(code) ? `=${gl.getParameter(code)}` : ''}`,
         )
@@ -134,14 +116,14 @@ export function getWebGlExtensions({ cache }: Options): WebGLExtensionsData | Sp
   // Shader precision
   for (const shaderType of shaderTypes) {
     for (const precisionType of precisionTypes) {
-      const shaderPrecision = getShaderPrecision(gl, shaderType, precisionType)
-      shaderPrecisions.push(`${shaderType}.${precisionType}=${shaderPrecision.join(',')}`)
+      const shaderPrecision = getShaderPrecision(gl, shaderType, precisionType);
+      shaderPrecisions.push(`${shaderType}.${precisionType}=${shaderPrecision.join(',')}`);
     }
   }
 
   // Postprocess
-  extensionParameters.sort()
-  parameters.sort()
+  extensionParameters.sort();
+  parameters.sort();
 
   return {
     contextAttributes: attributes,
@@ -170,7 +152,7 @@ function getWebGLContextExt(cache: Options['cache']): CanvasContext | undefined 
       context = canvas.getContext(type, { failIfMajorPerformanceCaveat: false }) as CanvasContext;
     } catch {
     }
-    if (context) break;
+    if (context) break;;
   }
 
   cache.webgl = { context };
@@ -183,29 +165,29 @@ function getShaderPrecision(
   shaderType: typeof shaderTypes[number],
   precisionType: typeof precisionTypes[number],
 ) {
-  const shaderPrecision = gl.getShaderPrecisionFormat(gl[shaderType], gl[precisionType])
-  return shaderPrecision ? [shaderPrecision.rangeMin, shaderPrecision.rangeMax, shaderPrecision.precision] : []
+  const shaderPrecision = gl.getShaderPrecisionFormat(gl[shaderType], gl[precisionType]);
+  return shaderPrecision ? [shaderPrecision.rangeMin, shaderPrecision.rangeMax, shaderPrecision.precision] : [];
 }
 
 function getConstantsFromPrototype<K>(obj: K): Array<Extract<keyof K, string>> {
-  const keys = Object.keys((obj as any).__proto__) as Array<keyof K>
-  return keys.filter(isConstantLike)
+  const keys = Object.keys((obj as any).__proto__) as Array<keyof K>;
+  return keys.filter(isConstantLike);
 }
 
 function isConstantLike<K>(key: K): key is Extract<K, string> {
-  return typeof key === 'string' && !key.match(/[^A-Z0-9_x]/)
+  return typeof key === 'string' && !key.match(/[^A-Z0-9_x]/);
 }
 
 function shouldAvoidDebugRendererInfoExt(): Bit {
-  return isGecko()
+  return isGecko();
 }
 
 function shouldAvoidPolygonModeExtensionsExt(): Bit {
-  return boolToBit(isChromium() === 1 || isWebKit() === 1)
+  return boolToBit(isChromium() === 1 || isWebKit() === 1);
 }
 
 function isValidParameterGetter(gl: WebGLRenderingContext) {
-  return typeof gl.getParameter === 'function'
+  return typeof gl.getParameter === 'function';
 }
 
 

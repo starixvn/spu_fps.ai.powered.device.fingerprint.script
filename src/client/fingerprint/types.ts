@@ -65,10 +65,7 @@ export interface GraphicsGroupInfo {
   colorGamut: 'srgb' | 'p3' | 'rec2020' | undefined;
 }
 
-export interface CanvasInfo {
-  value: string;
-  canvasProtection: Bit;
-}
+export type CanvasInfo = [string, Bit]; // [value, canvasProtection]
 
 export type WebGLBasicsInfo = [string, string, string, string, string, string]; // [version, vendor, vendorUnmasked, renderer, rendererUnmasked, shadingLanguageVersion]
 
