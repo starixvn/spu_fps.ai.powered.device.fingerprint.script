@@ -26,7 +26,7 @@ describe("Hardware Concurrency Module", () => {
       const result = await collectHardwareConcurrency();
 
       // Assert
-      expect(result).toEqual({ hwc: "" });
+      expect(result).toEqual({ hardwareConcurrency: "" });
     }, 30000); // Increase timeout
 
     it("should handle undefined navigator gracefully", async () => {
@@ -40,7 +40,7 @@ describe("Hardware Concurrency Module", () => {
       const result = await collectHardwareConcurrency();
 
       // Assert
-      expect(result).toEqual({ hwc: "" });
+      expect(result).toEqual({ hardwareConcurrency: "" });
 
       // Restore navigator for other tests
       Object.defineProperty(global, "navigator", {

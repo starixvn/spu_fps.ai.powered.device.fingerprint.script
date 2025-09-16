@@ -21,24 +21,24 @@ describe('Hardware Fingerprint Module', () => {
     jest.clearAllMocks();
     
     // Setup default mock return values
-    mockCollectPlatform.mockReturnValue({ plf: 'Windows' });
-    mockCollectCpuClass.mockReturnValue({ ccl: 'Intel x86' });
-    mockCollectArchitecture.mockReturnValue({ arc: 255 });  // Changed to number
-    mockCollectOSCpu.mockResolvedValue({ osc: 'Windows NT 10.0; Win64; x64' });
-    mockCollectHardwareConcurrency.mockResolvedValue({ hwc: 8 });
-    mockCollectDeviceMemory.mockResolvedValue({ dvm: 16 });  // Changed to Promise
+    mockCollectPlatform.mockReturnValue({ platform: 'Windows' });
+    mockCollectCpuClass.mockReturnValue({ cpuClass: 'Intel x86' });
+    mockCollectArchitecture.mockReturnValue({ architecture: 255 });  // Changed to number
+    mockCollectOSCpu.mockResolvedValue({ oscpu: 'Windows NT 10.0; Win64; x64' });
+    mockCollectHardwareConcurrency.mockResolvedValue({ hardwareConcurrency: 8 });
+    mockCollectDeviceMemory.mockResolvedValue({ deviceMemory: 16 });  // Changed to Promise
   });
 
   describe('HardwareFingerprint.collect', () => {
     it('should collect all hardware attributes successfully', async () => {
       // Arrange
       const expectedResult = {
-        plf: 'Windows',
-        ccl: 'Intel x86',
-        arc: 255,  // Changed to number
-        osc: 'Windows NT 10.0; Win64; x64',
-        hwc: 8,
-        dvm: 16,
+        platform: 'Windows',
+        cpuClass: 'Intel x86',
+        architecture: 255,  // Changed to number
+        oscpu: 'Windows NT 10.0; Win64; x64',
+        hardwareConcurrency: 8,
+        deviceMemory: 16,
       };
 
       // Act
@@ -56,20 +56,20 @@ describe('Hardware Fingerprint Module', () => {
 
     it('should handle empty values from individual collectors', async () => {
       // Arrange
-      mockCollectPlatform.mockReturnValue({ plf: '' });
-      mockCollectCpuClass.mockReturnValue({ ccl: '' });
-      mockCollectArchitecture.mockReturnValue({ arc: 0 });  // Changed to number
-      mockCollectOSCpu.mockResolvedValue({ osc: '' });
-      mockCollectHardwareConcurrency.mockResolvedValue({ hwc: '' });
-      mockCollectDeviceMemory.mockResolvedValue({ dvm: '' });
+      mockCollectPlatform.mockReturnValue({ platform: '' });
+      mockCollectCpuClass.mockReturnValue({ cpuClass: '' });
+      mockCollectArchitecture.mockReturnValue({ architecture: 0 });  // Changed to number
+      mockCollectOSCpu.mockResolvedValue({ oscpu: '' });
+      mockCollectHardwareConcurrency.mockResolvedValue({ hardwareConcurrency: '' });
+      mockCollectDeviceMemory.mockResolvedValue({ deviceMemory: '' });
 
       const expectedResult = {
-        plf: '',
-        ccl: '',
-        arc: 0,  // Changed to number
-        osc: '',
-        hwc: '',
-        dvm: '',
+        platform: '',
+        cpuClass: '',
+        architecture: 0,  // Changed to number
+        oscpu: '',
+        hardwareConcurrency: '',
+        deviceMemory: '',
       };
 
       // Act
@@ -81,20 +81,20 @@ describe('Hardware Fingerprint Module', () => {
 
     it('should handle mixed empty and non-empty values', async () => {
       // Arrange
-      mockCollectPlatform.mockReturnValue({ plf: 'Linux' });
-      mockCollectCpuClass.mockReturnValue({ ccl: '' });
-      mockCollectArchitecture.mockReturnValue({ arc: 255 });  // Changed to number
-      mockCollectOSCpu.mockResolvedValue({ osc: '' });
-      mockCollectHardwareConcurrency.mockResolvedValue({ hwc: '' });  // Changed
-      mockCollectDeviceMemory.mockResolvedValue({ dvm: '' });
+      mockCollectPlatform.mockReturnValue({ platform: 'Linux' });
+      mockCollectCpuClass.mockReturnValue({ cpuClass: '' });
+      mockCollectArchitecture.mockReturnValue({ architecture: 255 });  // Changed to number
+      mockCollectOSCpu.mockResolvedValue({ oscpu: '' });
+      mockCollectHardwareConcurrency.mockResolvedValue({ hardwareConcurrency: '' });  // Changed
+      mockCollectDeviceMemory.mockResolvedValue({ deviceMemory: '' });
 
       const expectedResult = {
-        plf: 'Linux',
-        ccl: '',
-        arc: 255,  // Changed to number
-        osc: '',
-        hwc: '',  // Changed
-        dvm: '',
+        platform: 'Linux',
+        cpuClass: '',
+        architecture: 255,  // Changed to number
+        oscpu: '',
+        hardwareConcurrency: '',  // Changed
+        deviceMemory: '',
       };
 
       // Act
@@ -106,20 +106,20 @@ describe('Hardware Fingerprint Module', () => {
 
     it('should handle different data types correctly', async () => {
       // Arrange
-      mockCollectPlatform.mockReturnValue({ plf: 'MacOS' });
-      mockCollectCpuClass.mockReturnValue({ ccl: 'Apple Silicon' });
-      mockCollectArchitecture.mockReturnValue({ arc: 255 });  // Changed to number
-      mockCollectOSCpu.mockResolvedValue({ osc: '' });  // Changed
-      mockCollectHardwareConcurrency.mockResolvedValue({ hwc: '' });  // Changed
-      mockCollectDeviceMemory.mockResolvedValue({ dvm: '' });  // Changed
+      mockCollectPlatform.mockReturnValue({ platform: 'MacOS' });
+      mockCollectCpuClass.mockReturnValue({ cpuClass: 'Apple Silicon' });
+      mockCollectArchitecture.mockReturnValue({ architecture: 255 });  // Changed to number
+      mockCollectOSCpu.mockResolvedValue({ oscpu: '' });  // Changed
+      mockCollectHardwareConcurrency.mockResolvedValue({ hardwareConcurrency: '' });  // Changed
+      mockCollectDeviceMemory.mockResolvedValue({ deviceMemory: '' });  // Changed
 
       const expectedResult = {
-        plf: 'MacOS',
-        ccl: 'Apple Silicon',
-        arc: 255,  // Changed to number
-        osc: '',  // Changed
-        hwc: '',  // Changed
-        dvm: '',  // Changed
+        platform: 'MacOS',
+        cpuClass: 'Apple Silicon',
+        architecture: 255,  // Changed to number
+        oscpu: '',  // Changed
+        hardwareConcurrency: '',  // Changed
+        deviceMemory: '',  // Changed
       };
 
       // Act
@@ -137,12 +137,12 @@ describe('Hardware Fingerprint Module', () => {
 
       // When any collector throws, the entire collect() falls back to empty values
       const expectedResult = {
-        plf: '',
-        ccl: '',
-        arc: 0,
-        osc: '',
-        hwc: '',
-        dvm: '',
+        platform: '',
+        cpuClass: '',
+        architecture: 0,
+        oscpu: '',
+        hardwareConcurrency: '',
+        deviceMemory: '',
       };
 
       // Act
@@ -170,12 +170,12 @@ describe('Hardware Fingerprint Module', () => {
 
       // When any collector throws, the entire collect() falls back to empty values
       const expectedResult = {
-        plf: '',
-        ccl: '',
-        arc: 0,
-        osc: '',
-        hwc: '',
-        dvm: '',
+        platform: '',
+        cpuClass: '',
+        architecture: 0,
+        oscpu: '',
+        hardwareConcurrency: '',
+        deviceMemory: '',
       };
 
       // Act
@@ -214,12 +214,12 @@ describe('Hardware Fingerprint Module', () => {
       });
 
       const expectedResult = {
-        plf: '',
-        ccl: '',
-        arc: 0,  // Changed to number
-        osc: '',
-        hwc: '',
-        dvm: '',
+        platform: '',
+        cpuClass: '',
+        architecture: 0,  // Changed to number
+        oscpu: '',
+        hardwareConcurrency: '',
+        deviceMemory: '',
       };
 
       // Act
@@ -274,20 +274,20 @@ describe('Hardware Fingerprint Module', () => {
 
     it('should handle null and undefined values from collectors', async () => {
       // Arrange
-      mockCollectPlatform.mockReturnValue({ plf: null as any });
-      mockCollectCpuClass.mockReturnValue({ ccl: undefined as any });
-      mockCollectArchitecture.mockReturnValue({ arc: 0 });  // Changed to valid number
-      mockCollectOSCpu.mockResolvedValue({ osc: undefined as any });
-      mockCollectHardwareConcurrency.mockResolvedValue({ hwc: null as any });
-      mockCollectDeviceMemory.mockResolvedValue({ dvm: undefined as any });
+      mockCollectPlatform.mockReturnValue({ platform: null as any });
+      mockCollectCpuClass.mockReturnValue({ cpuClass: undefined as any });
+      mockCollectArchitecture.mockReturnValue({ architecture: 0 });  // Changed to valid number
+      mockCollectOSCpu.mockResolvedValue({ oscpu: undefined as any });
+      mockCollectHardwareConcurrency.mockResolvedValue({ hardwareConcurrency: null as any });
+      mockCollectDeviceMemory.mockResolvedValue({ deviceMemory: undefined as any });
 
       const expectedResult = {
-        plf: '',
-        ccl: '',
-        arc: 0,  // Changed to number
-        osc: '',
-        hwc: '',
-        dvm: '',
+        platform: '',
+        cpuClass: '',
+        architecture: 0,  // Changed to number
+        oscpu: '',
+        hardwareConcurrency: '',
+        deviceMemory: '',
       };
 
       // Act

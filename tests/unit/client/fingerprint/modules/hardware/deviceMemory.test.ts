@@ -22,7 +22,7 @@ describe("Hardware Device Memory Module", () => {
 
   it("should return empty string when deviceMemory property is missing", async () => {
     const result = await collectDeviceMemory();
-    expect(result).toHaveProperty("dvm", "");
+    expect(result).toHaveProperty("deviceMemory", "");
   }, 30000); // Increase timeout
 
   it("should handle undefined navigator gracefully", async () => {
@@ -32,6 +32,6 @@ describe("Hardware Device Memory Module", () => {
     });
 
     const result = await collectDeviceMemory();
-    expect(result.dvm).toBe("");
+    expect(result.deviceMemory).toBe("");
   }, 30000);
 });
