@@ -14,6 +14,7 @@
     "start": "node dist/server/index.js",
     "start:local": "cross-env NODE_ENV=local node dist/server/index.js",
     "start:development": "cross-env NODE_ENV=development node dist/server/index.js",
+    "start:staging": "cross-env NODE_ENV=staging node dist/server/index.js",
     "start:production": "cross-env NODE_ENV=production node dist/server/index.js",
     "test": "jest",
     "test:watch": "jest --watch",
