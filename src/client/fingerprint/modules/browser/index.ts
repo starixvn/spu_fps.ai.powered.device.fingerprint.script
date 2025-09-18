@@ -12,7 +12,7 @@ export class BrowserFingerprint {
     try {
       const browserNameResult = collectBrowserName();
       const osNameResult = collectOSName();
-      const userAgentResult = await collectUserAgent();
+      const userAgentResult = collectUserAgent();
       const vendorResult = collectVendor();
       const vendorFlavorsResult = collectVendorFlavors();
       const pluginsResult = collectPlugins();
