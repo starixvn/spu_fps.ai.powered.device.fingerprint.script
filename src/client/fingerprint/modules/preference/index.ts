@@ -10,39 +10,26 @@ import type { PreferencesGroupInfo } from "../../types";
 
 export class PreferencesFingerprint {
   public static async collect(): Promise<PreferencesGroupInfo> {
-    try {
-      const languagesResult = collectLanguages();
-      const timezoneResult = collectTimezone();
-      const touchSupportResult = collectTouchSupport();
-      const sessionStorageResult = collectSessionStorage();
-      const openDatabaseResult = collectOpenDatabase();
-      const localStorageResult = collectLocalStorage();
-      const indexedDBResult = await collectIndexedDB();
-      const cookiesEnabledResult = collectCookiesEnabled();
+    const languagesResult = collectLanguages();
+    const timezoneResult = collectTimezone();
+    const touchSupportResult = collectTouchSupport();
+    const sessionStorageResult = collectSessionStorage();
+    const openDatabaseResult = collectOpenDatabase();
+    const localStorageResult = collectLocalStorage();
+    const indexedDBResult = await collectIndexedDB();
+    const cookiesEnabledResult = collectCookiesEnabled();
 
-      const preferencesGroup: PreferencesGroupInfo = {
-        languages: languagesResult.languages,
-        timezone: timezoneResult.timezone,
-        touchSupport: touchSupportResult,
-        sessionStorage: sessionStorageResult.sessionStorage,
-        openDatabase: openDatabaseResult.openDatabase,
-        localStorage: localStorageResult.localStorage,
-        indexedDB: indexedDBResult.indexedDB,
-        cookiesEnabled: cookiesEnabledResult.cookiesEnabled,
-      };
+    const preferencesGroup: PreferencesGroupInfo = {
+      languages: languagesResult.languages,
+      timezone: timezoneResult.timezone,
+      touchSupport: touchSupportResult,
+      sessionStorage: sessionStorageResult.sessionStorage,
+      openDatabase: openDatabaseResult.openDatabase,
+      localStorage: localStorageResult.localStorage,
+      indexedDB: indexedDBResult.indexedDB,
+      cookiesEnabled: cookiesEnabledResult.cookiesEnabled,
+    };
 
-      return preferencesGroup;
-    } catch (error) {
-      return {
-        languages: [[""]],
-        timezone: "",
-        touchSupport: [0, 0, 0],
-        sessionStorage: 0,
-        openDatabase: 0,
-        localStorage: 0,
-        indexedDB: 0,
-        cookiesEnabled: 0,
-      };
-    }
+    return preferencesGroup;
   }
 }

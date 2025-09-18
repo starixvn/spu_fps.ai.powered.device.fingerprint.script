@@ -1,15 +1,11 @@
 import type { IndexedDBInfo, Bit } from "../../types";
 
 export async function collectIndexedDB(): Promise<IndexedDBInfo> {
-  try {
-    const indexedDBSupported = await getIndexedDB();
+  const indexedDBSupported = await getIndexedDB();
 
-    return {
-      indexedDB: indexedDBSupported,
-    };
-  } catch (error) {
-    return { indexedDB: 0 };
-  }
+  return {
+    indexedDB: indexedDBSupported,
+  };
 }
 
 async function getIndexedDB(): Promise<Bit> {

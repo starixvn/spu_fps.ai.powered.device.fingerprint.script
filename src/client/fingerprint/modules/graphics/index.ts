@@ -11,50 +11,28 @@ import type { GraphicsGroupInfo } from "../../types";
 
 export class GraphicsFingerprint {
   public static async collect(): Promise<GraphicsGroupInfo> {
-    try {
-      const canvasResult = await collectCanvas();
-      const webglBasicsResult = collectWebGLBasics();
-      const webglExtensionsResult = await collectWebGLExtensions();
-      const fontsResult = await collectFonts();
-      const fontPreferencesResult = await collectFontPreferences();
-      const screenResolutionResult = collectScreenResolution();
-      const screenFrameResult = await collectScreenFrame();
-      const colorDepthResult = collectColorDepth();
-      const colorGamutResult = collectColorGamut();
+    const canvasResult = await collectCanvas();
+    const webglBasicsResult = collectWebGLBasics();
+    const webglExtensionsResult = await collectWebGLExtensions();
+    const fontsResult = await collectFonts();
+    const fontPreferencesResult = await collectFontPreferences();
+    const screenResolutionResult = collectScreenResolution();
+    const screenFrameResult = await collectScreenFrame();
+    const colorDepthResult = collectColorDepth();
+    const colorGamutResult = collectColorGamut();
 
-      const graphicsGroup: GraphicsGroupInfo = {
-        canvas: canvasResult,
-        webglBasics: webglBasicsResult,
-        webglExtensions: webglExtensionsResult,
-        fonts: fontsResult,
-        fontPreferences: fontPreferencesResult,
-        screenResolution: screenResolutionResult,
-        screenFrame: screenFrameResult,
-        colorDepth: colorDepthResult,
-        colorGamut: colorGamutResult,
-      };
+    const graphicsGroup: GraphicsGroupInfo = {
+      canvas: canvasResult,
+      webglBasics: webglBasicsResult,
+      webglExtensions: webglExtensionsResult,
+      fonts: fontsResult,
+      fontPreferences: fontPreferencesResult,
+      screenResolution: screenResolutionResult,
+      screenFrame: screenFrameResult,
+      colorDepth: colorDepthResult,
+      colorGamut: colorGamutResult,
+    };
 
-      return graphicsGroup;
-    } catch (error) {
-      return {
-        canvas: ["", 0],
-        webglBasics: ["", "", "", "", "", ""],
-        webglExtensions: "",
-        fonts: [],
-        fontPreferences: {
-          default: 0,
-          apple: 0,
-          serif: 0,
-          sans: 0,
-          mono: 0,
-          min: 0,
-          system: 0,
-        },
-        screenResolution: [0, 0],
-        screenFrame: [0, 0, 0, 0],
-        colorDepth: "",
-        colorGamut: undefined,
-      };
-    }
+    return graphicsGroup;
   }
 }

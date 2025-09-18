@@ -4,21 +4,14 @@ import type { AudioGroupInfo } from "../../types";
 
 export class AudioFingerprint {
   public static async collect(): Promise<AudioGroupInfo> {
-    try {
-      const audioResult = await collectAudio();
-      const audioBaseLatencyResult = collectAudioBaseLatency();
+    const audioResult = await collectAudio();
+    const audioBaseLatencyResult = collectAudioBaseLatency();
 
-      const audioGroup: AudioGroupInfo = {
-        audio: audioResult,
-        audioBaseLatency: audioBaseLatencyResult.audioBaseLatency,
-      };
+    const audioGroup: AudioGroupInfo = {
+      audio: audioResult,
+      audioBaseLatency: audioBaseLatencyResult.audioBaseLatency,
+    };
 
-      return audioGroup;
-    } catch (error) {
-      return {
-        audio: null,
-        audioBaseLatency: SpecialFingerprint.NotSupported,
-      };
-    }
+    return audioGroup;
   }
 }

@@ -1,12 +1,8 @@
 import type { CpuClassInfo } from "../../types";
 
 export function collectCpuClass(): CpuClassInfo {
-  try {
-    const cpuClass = getCpuClass();
-    return { cpuClass };
-  } catch (error) {
-    return { cpuClass: "" };
-  }
+  const cpuClass = getCpuClass();
+  return { cpuClass };
 }
 
 function getCpuClass(): string {

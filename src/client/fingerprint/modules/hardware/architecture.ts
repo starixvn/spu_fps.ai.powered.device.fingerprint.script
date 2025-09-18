@@ -1,12 +1,8 @@
 import type { ArchitectureInfo } from "../../types";
 
 export function collectArchitecture(): ArchitectureInfo {
-  try {
-    const architecture = getArchitecture();
-    return { architecture };
-  } catch (error) {
-    return { architecture: 0 };
-  }
+  const architecture = getArchitecture();
+  return { architecture };
 }
 
 function getArchitecture(): number {

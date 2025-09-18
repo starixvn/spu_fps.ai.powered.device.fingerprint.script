@@ -1,13 +1,8 @@
 import type { LocalStorageInfo, Bit } from "../../types";
 
 export function collectLocalStorage(): LocalStorageInfo {
-  try {
-    const localStorageSupported = getLocalStorage();
-    return { localStorage: localStorageSupported };
-  } catch (error) {
-    console.warn("collectLocalStorage error:", error);
-    return { localStorage: 0 };
-  }
+  const localStorageSupported = getLocalStorage();
+  return { localStorage: localStorageSupported };
 }
 
 function getLocalStorage(): Bit {

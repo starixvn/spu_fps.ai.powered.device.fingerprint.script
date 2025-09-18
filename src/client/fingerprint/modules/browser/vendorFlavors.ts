@@ -1,12 +1,8 @@
 import type { VendorFlavorsInfo } from "../../types";
 
 export function collectVendorFlavors(): VendorFlavorsInfo {
-  try {
-    const vendorFlavors = getVendorFlavors();
-    return { vendorFlavors };
-  } catch (error) {
-    return { vendorFlavors: [] };
-  }
+  const vendorFlavors = getVendorFlavors();
+  return { vendorFlavors };
 }
 
 function getVendorFlavors(): string[] {

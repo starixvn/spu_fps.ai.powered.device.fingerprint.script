@@ -10,23 +10,19 @@ let screenFrameBackup: Readonly<FrameSize> | undefined;
 let screenFrameSizeTimeoutId: number | undefined;
 
 export async function collectScreenFrame(): Promise<[number, number, number, number]> {
-  try {
-    const getFrameAsync = getScreenFrame();
-    const frameSize = await getFrameAsync();
+  const getFrameAsync = getScreenFrame();
+  const frameSize = await getFrameAsync();
 
-    if (!frameSize) {
-      return [0, 0, 0, 0];
-    }
-
-    return [
-      frameSize[0] === null ? 0 : frameSize[0],
-      frameSize[1] === null ? 0 : frameSize[1],
-      frameSize[2] === null ? 0 : frameSize[2],
-      frameSize[3] === null ? 0 : frameSize[3],
-    ];
-  } catch {
+  if (!frameSize) {
     return [0, 0, 0, 0];
   }
+
+  return [
+    frameSize[0] === null ? 0 : frameSize[0],
+    frameSize[1] === null ? 0 : frameSize[1],
+    frameSize[2] === null ? 0 : frameSize[2],
+    frameSize[3] === null ? 0 : frameSize[3],
+  ];
 }
 
 export function resetScreenFrameWatch(): void {

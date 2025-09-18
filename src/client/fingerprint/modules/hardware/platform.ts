@@ -3,12 +3,8 @@ import { countTruthy, isWebKit } from "../../utils/browser";
 import { boolToBit } from "../../utils/data";
 
 export function collectPlatform(): PlatformInfo {
-  try {
-    const platform = getPlatform();
-    return { platform };
-  } catch {
-    return { platform: "" };
-  }
+  const platform = getPlatform();
+  return { platform };
 }
 
 function getPlatform(): string {

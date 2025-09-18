@@ -1,12 +1,8 @@
 import type { VendorInfo } from "../../types";
 
 export function collectVendor(): VendorInfo {
-  try {
-    const vendor = getVendor();
-    return { vendor };
-  } catch {
-    return { vendor: "" };
-  }
+  const vendor = getVendor();
+  return { vendor };
 }
 
 function getVendor(): string {

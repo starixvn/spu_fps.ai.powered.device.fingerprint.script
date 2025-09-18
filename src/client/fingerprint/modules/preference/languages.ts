@@ -2,15 +2,11 @@ import type { LanguagesInfo } from "../../types";
 import { isChromium, isChromium86OrNewer } from "../../utils/browser";
 
 export function collectLanguages(): LanguagesInfo {
-  try {
-    const languages = getLanguages();
+  const languages = getLanguages();
 
-    return {
-      languages: languages.length > 0 ? languages : [[""]],
-    };
-  } catch (error) {
-    return { languages: [[""]]};
-  }
+  return {
+    languages: languages.length > 0 ? languages : [[""]],
+  };
 }
 
 function getLanguages(): string[][] {

@@ -1,12 +1,8 @@
 import type { TimezoneInfo } from "../../types";
 
 export function collectTimezone(): TimezoneInfo {
-  try {
-    const timezone = getTimezone();
-    return { timezone };
-  } catch (error) {
-    return { timezone: "" };
-  }
+  const timezone = getTimezone();
+  return { timezone };
 }
 
 function getTimezone(): string {

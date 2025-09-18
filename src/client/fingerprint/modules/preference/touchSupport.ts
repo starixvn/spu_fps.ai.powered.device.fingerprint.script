@@ -2,12 +2,8 @@ import type { TouchSupportInfo, Bit } from "../../types";
 import { toInt, boolToBit } from "../../utils/data";
 
 export function collectTouchSupport(): TouchSupportInfo {
-  try {
-    const result = getTouchSupport();
-    return [result.maxTouchPoints, result.touchEvent, result.touchStart];
-  } catch (error) {
-    return [0, 0, 0];
-  }
+  const result = getTouchSupport();
+  return [result.maxTouchPoints, result.touchEvent, result.touchStart];
 }
 
 function getTouchSupport(): { maxTouchPoints: number; touchEvent: Bit; touchStart: Bit } {

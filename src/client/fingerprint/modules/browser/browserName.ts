@@ -1,12 +1,8 @@
 import type { BrowserNameInfo } from "../../types";
 
 export function collectBrowserName(): BrowserNameInfo {
-  try {
-    const browserName = getBrowserName();
-    return { browserName };
-  } catch (error) {
-    return { browserName: "" };
-  }
+  const browserName = getBrowserName();
+  return { browserName };
 }
 
 function getBrowserName(): string {

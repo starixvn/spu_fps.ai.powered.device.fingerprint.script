@@ -229,43 +229,43 @@ export async function collectAudio(): Promise<number | null> {
       return SpecialFingerprint.KnownForAntifingerprinting;
     }
 
-    const AudioCtxClass =
-      (window as any).OfflineAudioContext ||
-      (window as any).webkitOfflineAudioContext;
-      
-    if (!AudioCtxClass) {
-      return SpecialFingerprint.NotSupported;
+  const AudioCtxClass =
+    (window as any).OfflineAudioContext ||
+    (window as any).webkitOfflineAudioContext;
+    
+  if (!AudioCtxClass) {
+    return SpecialFingerprint.NotSupported;
+  }
+
+  if (audioCache) {
+    return audioCache;
+  }
+
+  // Generate multiple audio samples for analysis
+  const samples: number[] = [];
+  const snapshotsRMS: number[] = [];
+
+  for (let i = 0; i < SNAPSHOTS; i++) {
+    const result = await getAudioSampleWithRMSAndRetry();
+
+    if (result !== null) {
+      samples.push(result.sample);     
+      snapshotsRMS.push(result.rms);   
     }
+  }
 
-    if (audioCache) {
-      return audioCache;
-    }
+  if (samples.length === 0) {
+    return SpecialFingerprint.Timeout;
+  }
 
-    // Generate multiple audio samples for analysis
-    const samples: number[] = [];
-    const snapshotsRMS: number[] = [];
+  // Statistical analysis and noise detection
+  const median = computeMedian(samples);
+  const status = detectNoise(samples, median, snapshotsRMS);
 
-    for (let i = 0; i < SNAPSHOTS; i++) {
-      const result = await getAudioSampleWithRMSAndRetry();
-
-      if (result !== null) {
-        samples.push(result.sample);     
-        snapshotsRMS.push(result.rms);   
-      }
-    }
-
-    if (samples.length === 0) {
-      return SpecialFingerprint.Timeout;
-    }
-
-    // Statistical analysis and noise detection
-    const median = computeMedian(samples);
-    const status = detectNoise(samples, median, snapshotsRMS);
-
-    // Cache clean results
-    if (status === "clean") {
-      audioCache = median;
-    }
+  // Cache clean results
+  if (status === "clean") {
+    audioCache = median;
+  }
 
     return median;
   } catch (error) {

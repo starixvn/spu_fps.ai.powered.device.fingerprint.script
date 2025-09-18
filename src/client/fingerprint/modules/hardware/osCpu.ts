@@ -1,12 +1,8 @@
 import type { OSCpuInfo } from "../../types";
 
 export async function collectOSCpu(): Promise<OSCpuInfo> {
-  try {
-    const oscpu = await getOSCpu();
-    return { oscpu };
-  } catch (error) {
-    return { oscpu: "" };
-  }
+  const oscpu = await getOSCpu();
+  return { oscpu };
 }
 
 async function getOSCpu(): Promise<string> {

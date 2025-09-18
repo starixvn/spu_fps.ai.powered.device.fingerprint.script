@@ -3,15 +3,15 @@ import { replaceNaN, toInt } from '../../utils/data';
 type ScreenResolution = [number | null, number | null];
 
 export function collectScreenResolution(): [number, number] {
-  try {
-    return getScreenResolution();
-  } catch (error) {
-    return [0, 0];
-  }
+  return getScreenResolution();
 }
 
 function getScreenResolution(): [number, number] {
-  return formatScreenResolution(getUnstableScreenResolution());
+  try {
+    return formatScreenResolution(getUnstableScreenResolution());
+  } catch {
+    return [0, 0];
+  }
 }
 
 export function getUnstableScreenResolution(): ScreenResolution {

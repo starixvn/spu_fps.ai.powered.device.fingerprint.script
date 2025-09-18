@@ -1,12 +1,8 @@
 import type { OpenDatabaseInfo, Bit } from "../../types";
 
 export function collectOpenDatabase(): OpenDatabaseInfo {
-  try {
-    const openDatabaseSupported = getOpenDatabase();
-    return { openDatabase: openDatabaseSupported };
-  } catch (error) {
-    return { openDatabase: 0 };
-  }
+  const openDatabaseSupported = getOpenDatabase();
+  return { openDatabase: openDatabaseSupported };
 }
 
 function getOpenDatabase(): Bit {

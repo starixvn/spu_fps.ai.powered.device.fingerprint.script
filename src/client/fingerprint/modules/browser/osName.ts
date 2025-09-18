@@ -1,12 +1,8 @@
 import type { OSNameInfo } from "../../types";
 
 export function collectOSName(): OSNameInfo {
-  try {
-    const osName = getOSName();
-    return { osName };
-  } catch (error) {
-    return { osName: "" };
-  }
+  const osName = getOSName();
+  return { osName };
 }
 
 function getOSName(): string {

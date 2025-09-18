@@ -1,21 +1,22 @@
 import { collectBrowserName } from "./browserName";
 import { collectOSName } from "./osName";
+import { collectUserAgent } from "./userAgent";
 import { collectVendor } from "./vendor";
 import { collectVendorFlavors } from "./vendorFlavors";
 import { collectPlugins } from "./plugins";
-import type { BrowserGroupInfo, Bit } from "../../types";
-import { boolToBit } from "../../utils/data";
+import { collectPdfViewerEnabled } from "./pdfViewerEnabled";
+import type { BrowserGroupInfo } from "../../types";
 
 export class BrowserFingerprint {
-  public static collect(): BrowserGroupInfo {
+  public static async collect(): Promise<BrowserGroupInfo> {
     try {
       const browserNameResult = collectBrowserName();
       const osNameResult = collectOSName();
-      const userAgentResult = collectUserAgentSync();
+      const userAgentResult = await collectUserAgent();
       const vendorResult = collectVendor();
       const vendorFlavorsResult = collectVendorFlavors();
       const pluginsResult = collectPlugins();
-      const pdfViewerResult = collectPdfViewerEnabledSync();
+      const pdfViewerResult = await collectPdfViewerEnabled();
 
       const browserGroup: BrowserGroupInfo = {
         browserName: browserNameResult.browserName,
@@ -42,22 +43,3 @@ export class BrowserFingerprint {
   }
 }
 
-function collectUserAgentSync(): {
-  userAgent: string;
-} {
-  try {
-    const userAgent = navigator.userAgent || "";
-    return { userAgent };
-  } catch {
-    return { userAgent: "" };
-  }
-}
-
-function collectPdfViewerEnabledSync(): { pdfViewerEnabled: Bit } {
-  try {
-    const pdfViewerEnabled = boolToBit(Boolean(navigator.pdfViewerEnabled));
-    return { pdfViewerEnabled };
-  } catch (error) {
-    return { pdfViewerEnabled: 0 };
-  }
-}

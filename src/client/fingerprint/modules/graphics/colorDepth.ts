@@ -1,11 +1,11 @@
 export function collectColorDepth(): number | "" {
-  try {
-    return getColorDepth();
-  } catch {
-    return "";
-  }
+  return getColorDepth();
 }
 
 function getColorDepth(): number | "" {
-  return window?.screen?.colorDepth ?? "";
+  try {
+    return window?.screen?.colorDepth ?? "";
+  } catch {
+    return "";
+  }
 }

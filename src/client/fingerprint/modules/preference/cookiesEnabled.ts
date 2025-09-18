@@ -2,15 +2,11 @@ import type { CookiesEnabledInfo, Bit } from "../../types";
 import { boolToBit } from "../../utils/data";
 
 export function collectCookiesEnabled(): CookiesEnabledInfo {
-  try {
-    const cookiesEnabled = getCookiesEnabled();
+  const cookiesEnabled = getCookiesEnabled();
 
-    return {
-      cookiesEnabled: cookiesEnabled,
-    };
-  } catch (error) {
-    return { cookiesEnabled: 0 };
-  }
+  return {
+    cookiesEnabled: cookiesEnabled,
+  };
 }
 
 function getCookiesEnabled(): Bit {

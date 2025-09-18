@@ -23,11 +23,7 @@ const fontsToTest = [
 ] as const;
 
 export async function collectFonts(): Promise<FontsInfo> {
-  try {
-    return await getFontsInfo();
-  } catch {
-    return [];
-  }
+  return await getFontsInfo();
 }
 
 function getFontsInfo(): Promise<FontsInfo> {

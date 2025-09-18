@@ -2,12 +2,8 @@ import type { SessionStorageInfo, Bit } from "../../types";
 import { boolToBit } from "../../utils/data";
 
 export function collectSessionStorage(): SessionStorageInfo {
-  try {
-    const supported = getSessionStorage();
-    return { sessionStorage: supported };
-  } catch (error) {
-    return { sessionStorage: 0 };
-  }
+  const supported = getSessionStorage();
+  return { sessionStorage: supported };
 }
 
 function getSessionStorage(): Bit {

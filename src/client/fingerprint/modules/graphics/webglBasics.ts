@@ -20,25 +20,21 @@ const rendererInfoExtensionName = 'WEBGL_debug_renderer_info';
 const globalCache: Options['cache'] = {};
 
 export function collectWebGLBasics(): WebGLBasicsInfo {
-  try {
-    const options = { cache: globalCache };
-    const basics = getWebGlBasics(options);
-    
-    if (typeof basics === 'number') {
-      return getEmptyWebGLBasics();
-    }
-
-    return [
-      basics.version,
-      basics.vendor, 
-      basics.vendorUnmasked,
-      basics.renderer,
-      basics.rendererUnmasked,
-      basics.shadingLanguageVersion
-    ]
-  } catch (error) {
+  const options = { cache: globalCache };
+  const basics = getWebGlBasics(options);
+  
+  if (typeof basics === 'number') {
     return getEmptyWebGLBasics();
   }
+
+  return [
+    basics.version,
+    basics.vendor, 
+    basics.vendorUnmasked,
+    basics.renderer,
+    basics.rendererUnmasked,
+    basics.shadingLanguageVersion
+  ]
 }
 
 export function getWebGlBasics({ cache }: Options): { version: string; vendor: string; vendorUnmasked: string; renderer: string; rendererUnmasked: string; shadingLanguageVersion: string } | SpecialStatus {
