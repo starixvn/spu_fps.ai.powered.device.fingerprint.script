@@ -27,7 +27,13 @@ export abstract class AbstractFingerprint {
 
     protected generateGroupHashes(fingerprint: any): string {
         try {
-            return MurmurHash128.hash128(JSON.stringify(fingerprint));
+            const values = Object.values(fingerprint);
+            
+            const processedValues = values.map(v => 
+                typeof v === 'object' ? JSON.stringify(v) : String(v ?? '')
+            );
+
+            return MurmurHash128.hash128(JSON.stringify(processedValues));
         } catch (error) {
             // console.log('Hash generation error', error);
             return '';
