@@ -127,17 +127,33 @@
       let scriptsLoaded = false;
 
       function loadMainScript() {
-        const mainScript = document.createElement("script");
-        mainScript.src = "/libs/apd-express.min.js";
+        // Load fingerprint script first
+        const taggingScript = document.createElement("script");
+        taggingScript.src = "/libs/apd-express.min.js";
 
-        mainScript.onload = async () => {
-          try {
+        taggingScript.onload = () => {
+          // Load tagging script after fingerprint script loads
+          const fingerprintScript = document.createElement("script");
+          fingerprintScript.src = "/libs/apd-routing.min.js";
+          
+          fingerprintScript.onload = () => {
             scriptsLoaded = true;
             toggleStorageButton(true);
-          } catch (error) {}
+            console.log('✅ Both fingerprint and tagging scripts loaded successfully');
+          };
+          
+          fingerprintScript.onerror = () => {
+            console.error('❌ Failed to load tagging script');
+          };
+          
+          document.head.appendChild(fingerprintScript);
         };
 
-        document.head.appendChild(mainScript);
+        taggingScript.onerror = () => {
+          console.error('❌ Failed to load fingerprint script');
+        };
+
+        document.head.appendChild(taggingScript);
       }
 
       async function collectFingerprint() {

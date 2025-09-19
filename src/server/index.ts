@@ -4,7 +4,8 @@ import cookieParser from 'cookie-parser';
 import * as path from 'path';
 import config from '../config/environment';
 import { TaggingService } from './services/taggingService';
-import { ScriptService } from './services/scriptService';
+import { FingerprintScriptService } from './services/fingerprintScriptService';
+import { TaggingScriptService } from './services/taggingScriptService';
 
 const app = express();
 
@@ -16,7 +17,8 @@ app.use(express.static('.'));
 app.use('/examples', express.static(path.join(__dirname, '../../examples')));
 app.set('etag', false);
 
-const scriptService = new ScriptService();
+const fingerprintScript = new FingerprintScriptService();
+const taggingScript = new TaggingScriptService();
 
 // Middleware to restrict development endpoints in production
 const restrictInProduction = (req: Request, res: Response, next: NextFunction) => {
@@ -26,9 +28,9 @@ const restrictInProduction = (req: Request, res: Response, next: NextFunction) =
   next();
 };
 
-app.get('/libs/apd-express.js', restrictInProduction, (req: Request, res: Response) => {
+app.get('/api/taggingScript', restrictInProduction, (req: Request, res: Response) => {
   try {
-    const script = scriptService.getClientScript();
+    const script = taggingScript.getTaggingScript();
 
     res.setHeader('Content-Type', 'application/javascript');
     res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
@@ -41,9 +43,24 @@ app.get('/libs/apd-express.js', restrictInProduction, (req: Request, res: Respon
   }
 });
 
-app.get('/api/script', restrictInProduction, (req: Request, res: Response) => {
+app.get('/api/fingerprintScript', restrictInProduction, (req: Request, res: Response) => {
   try {
-    const script = scriptService.getClientScript();
+    const script = fingerprintScript.getFingerprintScript();
+
+    res.setHeader('Content-Type', 'application/javascript');
+    res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+    res.send(script);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to deliver script'
+    });
+  }
+});
+
+app.get('/libs/apd-express.js', restrictInProduction, (req: Request, res: Response) => {
+  try {
+    const script = taggingScript.getTaggingScript();
 
     res.setHeader('Content-Type', 'application/javascript');
     res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
@@ -58,7 +75,37 @@ app.get('/api/script', restrictInProduction, (req: Request, res: Response) => {
 
 app.get('/libs/apd-express.min.js', async (req: Request, res: Response) => {
   try {
-    const script = await scriptService.getMinifiedScript();
+    const script = await taggingScript.getMinifiedTaggingScript();
+
+    res.setHeader('Content-Type', 'application/javascript');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.send(script);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to deliver minified script'
+    });
+  }
+});
+
+app.get('/libs/apd-routing.js', restrictInProduction, (req: Request, res: Response) => {
+  try {
+    const script = fingerprintScript.getFingerprintScript();
+
+    res.setHeader('Content-Type', 'application/javascript');
+    res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+    res.send(script);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to deliver script'
+    });
+  }
+});
+
+app.get('/libs/apd-routing.min.js', async (req: Request, res: Response) => {
+  try {
+    const script = await fingerprintScript.getMinifiedFingerprintScript();
 
     res.setHeader('Content-Type', 'application/javascript');
     res.setHeader('Cache-Control', 'public, max-age=86400');
@@ -138,78 +185,6 @@ app.get('/test', restrictInProduction, (req: Request, res: Response) => {
 // Root route - redirect to examples
 app.get('/', (req: Request, res: Response) => {
   res.redirect('/healthz');
-});
-
-app.get('/api/script-info', restrictInProduction, async (req: Request, res: Response) => {
-  try {
-    const info = await scriptService.getScriptInfo();
-    res.json({
-      success: true,
-      data: info
-    });
-  } catch (error) {
-    console.error('Error getting script info:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get script info'
-    });
-  }
-});
-
-// Compare async vs sync minification
-app.get('/api/minify-compare', restrictInProduction, async (req: Request, res: Response) => {
-  try {
-    const originalScript = scriptService.getClientScript();
-    const [asyncMinified, syncMinified] = await Promise.all([
-      scriptService.getMinifiedScript(),
-      Promise.resolve(scriptService.getMinifiedScriptSync())
-    ]);
-
-    const comparison = {
-      original: {
-        size: originalScript.length,
-        lines: originalScript.split('\n').length
-      },
-      async: {
-        size: asyncMinified.length,
-        compression: ((originalScript.length - asyncMinified.length) / originalScript.length * 100).toFixed(2) + '%',
-        method: 'Terser'
-      },
-      sync: {
-        size: syncMinified.length,
-        compression: ((originalScript.length - syncMinified.length) / originalScript.length * 100).toFixed(2) + '%',
-        method: 'Fallback regex'
-      },
-      recommendation: asyncMinified.length < syncMinified.length ? 'async' : 'sync'
-    };
-
-    res.json({
-      success: true,
-      data: comparison
-    });
-  } catch (error) {
-    console.error('Error comparing minification:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to compare minification methods'
-    });
-  }
-});
-
-app.post('/api/rebuild-script', restrictInProduction, (req: Request, res: Response) => {
-  try {
-    scriptService.rebuildScript();
-    res.json({
-      success: true,
-      message: 'Script rebuilt successfully',
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: 'Failed to rebuild script'
-    });
-  }
 });
 
 // Serve HTML demo pages

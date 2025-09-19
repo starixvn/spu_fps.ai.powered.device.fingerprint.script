@@ -220,67 +220,60 @@ describe('F4Fingerprint', () => {
       // Act
       const result = (f4Fingerprint as any).extractAttributes(mockData);
 
-      // Assert - extractAttributes should spread all nested properties
+      // Assert - extractAttributes should spread all nested properties with aliased field names
       expect(result).toEqual({
-        audio: { audio: 0.5, status: 'ok' },
-        audioBaseLatency: 0.01,
-        browserName: 'Chrome',
-        userAgent: 'Chrome/90.0',
-        vendor: 'Google',
-        platform: 'Win32',
-        hardwareConcurrency: 8,
-        architecture: 'x64',
-        oscpu: 'Intel',
-        cpuClass: 'x86',
-        deviceMemory: 16,
-        languages: ['en-US'],
-        timezone: 'UTC',
-        touchSupport: false,
-        cookiesEnabled: true,
-        localStorage: true,
-        sessionStorage: true,
-        openDatabase: false,
-        indexedDB: true
-      });
-    });
-
-    it('should handle missing properties gracefully', () => {
-      // Arrange
-      const mockData = {
-        audio: { audio: { audio: 0.5, status: 'ok' } },
-        browser: {},
-        hardware: null,
-        preferences: undefined
-      };
-
-      // Act
-      const result = (f4Fingerprint as any).extractAttributes(mockData);
-
-      // Assert
-      expect(result).toEqual({
-        audio: { audio: 0.5, status: 'ok' }
+        // Hardware aliases
+        plf: 'Win32',          // platform
+        hwc: 8,                // hardwareConcurrency
+        arc: 'x64',            // architecture
+        osc: 'Intel',          // oscpu
+        ccl: 'x86',            // cpuClass
+        dvm: 16,               // deviceMemory
+        // Audio aliases
+        aud: { audio: 0.5, status: 'ok' }, // audio
+        abl: 0.01,             // audioBaseLatency
+        // Browser aliases
+        brn: 'Chrome',         // browserName
+        uag: 'Chrome/90.0',    // userAgent
+        vdr: 'Google',         // vendor
+        osn: undefined,        // osName (not provided in mock)
+        vfl: undefined,        // vendorFlavors (not provided in mock)
+        plg: undefined,        // plugins (not provided in mock)
+        pve: undefined,        // pdfViewerEnabled (not provided in mock)
+        // Preferences aliases
+        lng: ['en-US'],        // languages
+        tze: 'UTC',            // timezone
+        tsp: false,            // touchSupport
+        cke: true,             // cookiesEnabled
+        lst: true,             // localStorage
+        ssg: true,             // sessionStorage
+        odb: false,            // openDatabase
+        idb: true              // indexedDB
       });
     });
 
     it('should handle duplicate keys by using spread operator precedence', () => {
-      // Arrange
+      // Arrange - Create a scenario where the same aliased key could come from different sources
       const mockData = {
-        audio: { commonKey: 'audio-value', audioSpecific: 'audio' },
-        browser: { commonKey: 'browser-value', browserSpecific: 'browser' },
-        hardware: { commonKey: 'hardware-value', hardwareSpecific: 'hardware' },
-        preferences: { commonKey: 'preferences-value', prefSpecific: 'pref' }
+        audio: { audio: 'audio-value', audioBaseLatency: 0.01 },
+        browser: { browserName: 'browser-value', userAgent: 'ua', vendor: 'vendor', osName: 'os', vendorFlavors: [], plugins: [], pdfViewerEnabled: 1 },
+        hardware: { platform: 'hardware-value', cpuClass: 'cpu', architecture: 1, oscpu: 'oscpu', hardwareConcurrency: 8, deviceMemory: 16 },
+        preferences: { languages: [['en']], timezone: 'preferences-value', touchSupport: [1, 1, 1], sessionStorage: 1, openDatabase: 0, localStorage: 1, indexedDB: 1, cookiesEnabled: 1 }
       };
 
       // Act
       const result = (f4Fingerprint as any).extractAttributes(mockData);
 
       // Assert
-      // Later spread operations should override earlier ones
-      expect(result.commonKey).toBe('preferences-value');
-      expect(result.audioSpecific).toBe('audio');
-      expect(result.browserSpecific).toBe('browser');
-      expect(result.hardwareSpecific).toBe('hardware');
-      expect(result.prefSpecific).toBe('pref');
+      // Each aliased field should have its proper value since they don't actually conflict
+      expect(result.aud).toBe('audio-value');        // Audio alias
+      expect(result.brn).toBe('browser-value');      // Browser alias
+      expect(result.plf).toBe('hardware-value');     // Hardware alias
+      expect(result.tze).toBe('preferences-value');  // Preferences alias
+      expect(result.abl).toBe(0.01);                 // Audio specific
+      expect(result.uag).toBe('ua');                 // Browser specific
+      expect(result.hwc).toBe(8);                    // Hardware specific
+      expect(result.lng).toEqual([['en']]);          // Preferences specific
     });
   });
 
@@ -288,11 +281,12 @@ describe('F4Fingerprint', () => {
     it('should build correct payload structure', () => {
       // Arrange
       const sessionKey = 'test-session-key';
+      // Use proper F4Data structure that matches the interfaces
       const fingerprintData = {
-        audio: { audioCodecs: ['mp3'] },
-        browser: { userAgent: 'Chrome' },
-        hardware: { platform: 'Win32' },
-        preferences: { timezone: 'UTC' }
+        audio: { audio: { audio: 0.5, status: 'ok' }, audioBaseLatency: 0.01 },
+        browser: { browserName: 'Chrome', osName: 'Windows', userAgent: 'Chrome/90.0', vendor: 'Google', vendorFlavors: ['chromium'], plugins: [], pdfViewerEnabled: 1 },
+        hardware: { platform: 'Win32', cpuClass: 'x86', architecture: 64, oscpu: 'Intel', hardwareConcurrency: 8, deviceMemory: 16 },
+        preferences: { languages: [['en-US']], timezone: 'UTC', touchSupport: [1, 1, 1], sessionStorage: 1, openDatabase: 0, localStorage: 1, indexedDB: 1, cookiesEnabled: 1 }
       };
 
       mockBase64Encoder.encodeBase64.mockReturnValue('encoded-payload');
@@ -303,16 +297,20 @@ describe('F4Fingerprint', () => {
       // Assert
       expect(result).toBe('encoded-payload');
       expect(mockBase64Encoder.encodeBase64).toHaveBeenCalledTimes(1);
+      
+      // The buildPayload method uses extractXXXAttributes methods which return aliased data
+      const expectedPayload = JSON.stringify({
+        sk: sessionKey, 
+        fp: {
+          au: JSON.stringify({ aud: { audio: 0.5, status: 'ok' }, abl: 0.01 }),
+          br: JSON.stringify({ brn: 'Chrome', osn: 'Windows', uag: 'Chrome/90.0', vdr: 'Google', vfl: ['chromium'], plg: [], pve: 1 }),
+          hw: JSON.stringify({ plf: 'Win32', ccl: 'x86', arc: 64, osc: 'Intel', hwc: 8, dvm: 16 }),
+          pf: JSON.stringify({ lng: [['en-US']], tze: 'UTC', tsp: [1, 1, 1], ssg: 1, odb: 0, lst: 1, idb: 1, cke: 1 })
+        }
+      });
+      
       expect(mockBase64Encoder.encodeBase64).toHaveBeenCalledWith(
-        JSON.stringify({
-          sk: sessionKey, 
-          fp: {
-            au: JSON.stringify(fingerprintData.audio), 
-            br: JSON.stringify(fingerprintData.browser), 
-            hw: JSON.stringify(fingerprintData.hardware), 
-            pf: JSON.stringify(fingerprintData.preferences)
-          }
-        }), 
+        expectedPayload,
         CONFIG.ENCODING_KEY
       );
     });

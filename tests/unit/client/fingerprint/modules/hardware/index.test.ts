@@ -135,21 +135,10 @@ describe('Hardware Fingerprint Module', () => {
         throw new Error('API not supported');
       });
 
-      // When any collector throws, the entire collect() falls back to empty values
-      const expectedResult = {
-        platform: '',
-        cpuClass: '',
-        architecture: 0,
-        oscpu: '',
-        hardwareConcurrency: '',
-        deviceMemory: '',
-      };
-
-      // Act
-      const result = await HardwareFingerprint.collect();
-
-      // Assert
-      expect(result).toEqual(expectedResult);
+      // When any collector throws, the entire collect() should throw the error
+      // Act & Assert
+      await expect(HardwareFingerprint.collect()).rejects.toThrow('API not supported');
+      
       expect(mockCollectPlatform).toHaveBeenCalledTimes(1);
       expect(mockCollectCpuClass).toHaveBeenCalledTimes(1);
       expect(mockCollectArchitecture).toHaveBeenCalledTimes(1);
@@ -168,21 +157,10 @@ describe('Hardware Fingerprint Module', () => {
         throw new Error('Architecture API error');
       });
 
-      // When any collector throws, the entire collect() falls back to empty values
-      const expectedResult = {
-        platform: '',
-        cpuClass: '',
-        architecture: 0,
-        oscpu: '',
-        hardwareConcurrency: '',
-        deviceMemory: '',
-      };
-
-      // Act
-      const result = await HardwareFingerprint.collect();
-
-      // Assert
-      expect(result).toEqual(expectedResult);
+      // When any collector throws, the entire collect() should throw the first error encountered
+      // Act & Assert
+      await expect(HardwareFingerprint.collect()).rejects.toThrow('Platform API error');
+      
       expect(mockCollectPlatform).toHaveBeenCalledTimes(1);
       // When collectPlatform throws, subsequent collectors are not called
       expect(mockCollectCpuClass).toHaveBeenCalledTimes(0);
@@ -204,7 +182,7 @@ describe('Hardware Fingerprint Module', () => {
         throw new Error('Architecture API error');
       });
       mockCollectOSCpu.mockImplementation(() => {
-        return Promise.resolve({ osc: '' }); // Changed: return resolved promise instead of throw
+        return Promise.reject(new Error('OS CPU API error')); // Changed to properly reject
       });
       mockCollectHardwareConcurrency.mockImplementation(() => {
         throw new Error('Hardware Concurrency API error');
@@ -213,20 +191,9 @@ describe('Hardware Fingerprint Module', () => {
         throw new Error('Device Memory API error');
       });
 
-      const expectedResult = {
-        platform: '',
-        cpuClass: '',
-        architecture: 0,  // Changed to number
-        oscpu: '',
-        hardwareConcurrency: '',
-        deviceMemory: '',
-      };
-
-      // Act
-      const result = await HardwareFingerprint.collect();
-
-      // Assert
-      expect(result).toEqual(expectedResult);
+      // When any collector throws, the entire collect() should throw the first error encountered
+      // Act & Assert
+      await expect(HardwareFingerprint.collect()).rejects.toThrow('Platform API error');
     });
 
     it('should call collectors in the correct order', async () => {
@@ -235,27 +202,27 @@ describe('Hardware Fingerprint Module', () => {
       
       mockCollectPlatform.mockImplementation(() => {
         callOrder.push('platform');
-        return { plf: 'Windows' };
+        return { platform: 'Windows' }; // Fixed: use correct property name
       });
       mockCollectCpuClass.mockImplementation(() => {
         callOrder.push('cpuClass');
-        return { ccl: 'Intel x86' };
+        return { cpuClass: 'Intel x86' }; // Fixed: use correct property name
       });
       mockCollectArchitecture.mockImplementation(() => {
         callOrder.push('architecture');
-        return { arc: 255 };  // Changed to number
+        return { architecture: 255 }; // Fixed: use correct property name
       });
       mockCollectOSCpu.mockImplementation(async () => {
         callOrder.push('oscpu');
-        return { osc: 'Windows NT 10.0; Win64; x64' };
+        return { oscpu: 'Windows NT 10.0; Win64; x64' }; // Fixed: use correct property name
       });
       mockCollectHardwareConcurrency.mockImplementation(async () => {
         callOrder.push('hardwareConcurrency');
-        return { hwc: 8 };
+        return { hardwareConcurrency: 8 }; // Fixed: use correct property name
       });
       mockCollectDeviceMemory.mockImplementation(async () => {
         callOrder.push('deviceMemory');
-        return { dvm: 16 };
+        return { deviceMemory: 16 }; // Fixed: use correct property name
       });
 
       // Act

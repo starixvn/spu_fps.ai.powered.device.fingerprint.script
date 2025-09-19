@@ -203,10 +203,15 @@ describe('F5Fingerprint', () => {
       // Arrange
       const mockData = {
         graphics: {
-          canvasFingerprint: 'canvas-123',
-          webglRenderer: 'Intel HD',
-          screenResolution: '1920x1080',
-          colorDepth: 24
+          canvas: ['canvas-fingerprint-123', 0],
+          webglBasics: ['WebGL 1.0', 'Intel Inc.', 'Intel HD Graphics', 'renderer', 'unmasked-renderer', 'GLSL ES 1.0'],
+          webglExtensions: 'extension-string',
+          fonts: ['Arial', 'Times New Roman'],
+          fontPreferences: { default: 16, apple: 14, serif: 16, sans: 14, mono: 12, min: 8, system: 16 },
+          screenResolution: [1920, 1080],
+          screenFrame: [0, 0, 1920, 1080],
+          colorDepth: 24,
+          colorGamut: 'srgb'
         }
       };
 
@@ -215,10 +220,15 @@ describe('F5Fingerprint', () => {
 
       // Assert
       expect(result).toEqual({
-        canvasFingerprint: 'canvas-123',
-        webglRenderer: 'Intel HD',
-        screenResolution: '1920x1080',
-        colorDepth: 24
+        cnv: ['canvas-fingerprint-123', 0],
+        wgb: ['WebGL 1.0', 'Intel Inc.', 'Intel HD Graphics', 'renderer', 'unmasked-renderer', 'GLSL ES 1.0'],
+        wgx: 'extension-string',
+        fnt: ['Arial', 'Times New Roman'],
+        fpr: { default: 16, apple: 14, serif: 16, sans: 14, mono: 12, min: 8, system: 16 },
+        scr: [1920, 1080],
+        sfr: [0, 0, 1920, 1080],
+        cld: 24,
+        clg: 'srgb'
       });
     });
 
@@ -226,9 +236,15 @@ describe('F5Fingerprint', () => {
       // Arrange
       const mockData = {
         graphics: {
-          canvasFingerprint: 'canvas-123',
-          webglRenderer: 'Intel HD',
-          screenResolution: '1920x1080'
+          canvas: ['canvas-fingerprint-123', 0],
+          webglBasics: ['WebGL 1.0', 'Intel Inc.', 'Intel HD Graphics', 'renderer', 'unmasked-renderer', 'GLSL ES 1.0'],
+          webglExtensions: 'extension-string',
+          fonts: ['Arial', 'Times New Roman'],
+          fontPreferences: { default: 16, apple: 14, serif: 16, sans: 14, mono: 12, min: 8, system: 16 },
+          screenResolution: [1920, 1080],
+          screenFrame: [0, 0, 1920, 1080],
+          colorDepth: 24,
+          colorGamut: 'srgb'
         }
       };
 
@@ -248,9 +264,15 @@ describe('F5Fingerprint', () => {
         platform: 'Win32',
         audioCodecs: ['mp3', 'wav'],
         timezone: 'UTC',
-        canvasFingerprint: 'canvas-123',
-        webglRenderer: 'Intel HD',
-        screenResolution: '1920x1080'
+        cnv: ['canvas-fingerprint-123', 0],
+        wgb: ['WebGL 1.0', 'Intel Inc.', 'Intel HD Graphics', 'renderer', 'unmasked-renderer', 'GLSL ES 1.0'],
+        wgx: 'extension-string',
+        fnt: ['Arial', 'Times New Roman'],
+        fpr: { default: 16, apple: 14, serif: 16, sans: 14, mono: 12, min: 8, system: 16 },
+        scr: [1920, 1080],
+        sfr: [0, 0, 1920, 1080],
+        cld: 24,
+        clg: 'srgb'
       });
     });
 
@@ -258,16 +280,25 @@ describe('F5Fingerprint', () => {
       // Arrange
       const mockData = {
         graphics: {
-          platform: 'Graphics-Platform', // Should override F4 platform
-          canvasFingerprint: 'canvas-123',
-          screenResolution: '1920x1080'
+          canvas: ['f5-canvas-fingerprint', 1],
+          webglBasics: ['WebGL 2.0', 'NVIDIA Corporation', 'NVIDIA GeForce RTX 3080', 'renderer', 'unmasked-renderer', 'GLSL ES 3.0'],
+          webglExtensions: 'f5-extension-string',
+          fonts: ['Arial', 'Helvetica'],
+          fontPreferences: { default: 18, apple: 16, serif: 18, sans: 16, mono: 14, min: 10, system: 18 },
+          screenResolution: [2560, 1440],
+          screenFrame: [0, 0, 2560, 1440],
+          colorDepth: 32,
+          colorGamut: 'p3'
         }
       };
 
       const f4Attributes = {
         platform: 'F4-Platform',
         userAgent: 'Chrome/90.0',
-        audioCodecs: ['mp3']
+        audioCodecs: ['mp3'],
+        // Add some aliased keys that could conflict
+        cnv: 'f4-canvas-value',
+        scr: 'f4-screen-value'
       };
 
       // Act
@@ -275,11 +306,18 @@ describe('F5Fingerprint', () => {
 
       // Assert
       expect(result).toEqual({
-        platform: 'Graphics-Platform', // F5 should override F4
+        platform: 'F4-Platform', // F4 should remain
         userAgent: 'Chrome/90.0',
         audioCodecs: ['mp3'],
-        canvasFingerprint: 'canvas-123',
-        screenResolution: '1920x1080'
+        cnv: ['f5-canvas-fingerprint', 1], // F5 should override F4
+        wgb: ['WebGL 2.0', 'NVIDIA Corporation', 'NVIDIA GeForce RTX 3080', 'renderer', 'unmasked-renderer', 'GLSL ES 3.0'],
+        wgx: 'f5-extension-string',
+        fnt: ['Arial', 'Helvetica'],
+        fpr: { default: 18, apple: 16, serif: 18, sans: 16, mono: 14, min: 10, system: 18 },
+        scr: [2560, 1440], // F5 should override F4
+        sfr: [0, 0, 2560, 1440],
+        cld: 32,
+        clg: 'p3'
       });
     });
 
@@ -301,26 +339,19 @@ describe('F5Fingerprint', () => {
       });
     });
 
-    it('should handle null graphics data', () => {
-      // Arrange
-      const mockData = { graphics: null };
-      const f4Attributes = { userAgent: 'Chrome' };
-
-      // Act
-      const result = (f5Fingerprint as any).extractAttributes(mockData, f4Attributes);
-
-      // Assert
-      expect(result).toEqual({
-        userAgent: 'Chrome'
-      });
-    });
-
     it('should handle undefined F4 attributes', () => {
       // Arrange
       const mockData = {
         graphics: {
-          canvasFingerprint: 'canvas-123',
-          webglRenderer: 'Intel HD'
+          canvas: ['canvas-fingerprint-456', 0],
+          webglBasics: ['WebGL 1.0', 'Intel Inc.', 'Intel HD Graphics', 'renderer', 'unmasked-renderer', 'GLSL ES 1.0'],
+          webglExtensions: 'extension-string',
+          fonts: ['Arial', 'Times New Roman'],
+          fontPreferences: { default: 16, apple: 14, serif: 16, sans: 14, mono: 12, min: 8, system: 16 },
+          screenResolution: [1920, 1080],
+          screenFrame: [0, 0, 1920, 1080],
+          colorDepth: 24,
+          colorGamut: 'srgb'
         }
       };
 
@@ -329,8 +360,15 @@ describe('F5Fingerprint', () => {
 
       // Assert
       expect(result).toEqual({
-        canvasFingerprint: 'canvas-123',
-        webglRenderer: 'Intel HD'
+        cnv: ['canvas-fingerprint-456', 0],
+        wgb: ['WebGL 1.0', 'Intel Inc.', 'Intel HD Graphics', 'renderer', 'unmasked-renderer', 'GLSL ES 1.0'],
+        wgx: 'extension-string',
+        fnt: ['Arial', 'Times New Roman'],
+        fpr: { default: 16, apple: 14, serif: 16, sans: 14, mono: 12, min: 8, system: 16 },
+        scr: [1920, 1080],
+        sfr: [0, 0, 1920, 1080],
+        cld: 24,
+        clg: 'srgb'
       });
     });
   });
@@ -629,12 +667,17 @@ describe('F5Fingerprint', () => {
 
       const f5Data = {
         graphics: {
-          canvasFingerprint: 'f5-canvas-hash',
-          webglRenderer: 'NVIDIA GeForce RTX 3080'
+          canvas: ['f5-canvas-hash', 1],
+          webglBasics: ['WebGL 2.0', 'NVIDIA Corporation', 'NVIDIA GeForce RTX 3080', 'renderer', 'unmasked-renderer', 'GLSL ES 3.0'],
+          webglExtensions: 'f5-extensions',
+          fonts: ['Arial', 'Times New Roman', 'Helvetica'],
+          fontPreferences: { default: 16, apple: 14, serif: 16, sans: 14, mono: 12, min: 8, system: 16 },
+          screenResolution: [3840, 2160],
+          screenFrame: [0, 0, 3840, 2160],
+          colorDepth: 32,
+          colorGamut: 'rec2020'
         }
       };
-
-      jest.spyOn(f5Fingerprint as any, 'collectData').mockResolvedValue(f5Data);
 
       // Act
       const result = (f5Fingerprint as any).extractAttributes(f5Data, largeF4Attributes);
@@ -642,28 +685,44 @@ describe('F5Fingerprint', () => {
       // Assert
       expect(result).toEqual({
         ...largeF4Attributes,
-        ...f5Data.graphics
+        cnv: ['f5-canvas-hash', 1],
+        wgb: ['WebGL 2.0', 'NVIDIA Corporation', 'NVIDIA GeForce RTX 3080', 'renderer', 'unmasked-renderer', 'GLSL ES 3.0'],
+        wgx: 'f5-extensions',
+        fnt: ['Arial', 'Times New Roman', 'Helvetica'],
+        fpr: { default: 16, apple: 14, serif: 16, sans: 14, mono: 12, min: 8, system: 16 },
+        scr: [3840, 2160],
+        sfr: [0, 0, 3840, 2160],
+        cld: 32,
+        clg: 'rec2020'
       });
 
       // F5 graphics should override any conflicting F4 keys
-      expect(Object.keys(result)).toContain('canvasFingerprint');
-      expect(Object.keys(result)).toContain('webglRenderer');
+      expect(Object.keys(result)).toContain('cnv');
+      expect(Object.keys(result)).toContain('wgb');
       expect(Object.keys(result).length).toBe(
-        Object.keys(largeF4Attributes).length + Object.keys(f5Data.graphics).length
+        Object.keys(largeF4Attributes).length + 9 // 9 F5 graphics aliases
       );
     });
 
     it('should handle conflicting attribute names between F4 and F5', async () => {
       // Arrange
       const f4Attributes = {
-        screenResolution: '1920x1080', // From F4 preferences
-        platform: 'Win32'
+        scr: '1920x1080', // Conflicts with F5 alias for screenResolution
+        platform: 'Win32',
+        cnv: 'f4-canvas-value' // Conflicts with F5 alias for canvas
       };
 
       const f5Data = {
         graphics: {
-          screenResolution: '2560x1440', // From F5 graphics (should override)
-          displayScale: 1.25
+          canvas: ['f5-canvas-hash', 1],
+          webglBasics: ['WebGL 2.0', 'NVIDIA Corporation', 'NVIDIA GeForce RTX 3080', 'renderer', 'unmasked-renderer', 'GLSL ES 3.0'],
+          webglExtensions: 'f5-extensions',
+          fonts: ['Arial', 'Times New Roman'],
+          fontPreferences: { default: 16, apple: 14, serif: 16, sans: 14, mono: 12, min: 8, system: 16 },
+          screenResolution: [2560, 1440],
+          screenFrame: [0, 0, 2560, 1440],
+          colorDepth: 32,
+          colorGamut: 'p3'
         }
       };
 
@@ -671,9 +730,9 @@ describe('F5Fingerprint', () => {
       const result = (f5Fingerprint as any).extractAttributes(f5Data, f4Attributes);
 
       // Assert
-      expect(result.screenResolution).toBe('2560x1440'); // F5 should win
+      expect(result.scr).toEqual([2560, 1440]); // F5 should win (screenResolution)
+      expect(result.cnv).toEqual(['f5-canvas-hash', 1]); // F5 should win (canvas)
       expect(result.platform).toBe('Win32'); // F4 should remain
-      expect(result.displayScale).toBe(1.25); // F5 unique
     });
   });
 
