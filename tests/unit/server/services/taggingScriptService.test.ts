@@ -117,7 +117,6 @@ describe('TaggingScriptService', () => {
       
       // Check for key tagging files
       expect(scriptFiles).toContain('deviceFactory.js');
-      expect(scriptFiles).toContain('tagging/utils/hash.js');
       expect(scriptFiles).toContain('tagging/tagging.js');
       expect(scriptFiles).toContain('tagging/index.js');
       
@@ -133,16 +132,16 @@ describe('TaggingScriptService', () => {
     it('should have proper file ordering in script files array', () => {
       const scriptFiles = (taggingScriptService as any).getScriptFiles();
       
-      // Verify deviceFactory comes first
-      expect(scriptFiles[0]).toBe('deviceFactory.js');
+      // Verify utils/hash.js comes first
+      expect(scriptFiles[0]).toBe('utils/hash.js');
       
       // Verify tagging/index.js comes last
       expect(scriptFiles[scriptFiles.length - 1]).toBe('tagging/index.js');
       
       // Verify utils comes before modules
-      const hashUtilIndex = scriptFiles.indexOf('tagging/utils/hash.js');
+      const utilsHashIndex = scriptFiles.indexOf('utils/hash.js');
       const cacheApiIndex = scriptFiles.indexOf('tagging/modules/cacheApi.js');
-      expect(hashUtilIndex).toBeLessThan(cacheApiIndex);
+      expect(utilsHashIndex).toBeLessThan(cacheApiIndex);
     });
   });
 
@@ -356,15 +355,15 @@ describe('TaggingScriptService', () => {
       const scriptFiles = (taggingScriptService as any).getScriptFiles();
       
       const expectedFiles = [
+        'utils/hash.js',
         'deviceFactory.js',
-        'tagging/utils/hash.js',
         'tagging/modules/cacheApi.js',
         'tagging/modules/cookie.js',
         'tagging/modules/etag.js',
         'tagging/modules/indexedDB.js',
         'tagging/modules/localStorage.js',
-        'tagging/tagging.js',
         'tagging/modules/windowName.js',
+        'tagging/tagging.js',
         'tagging/index.js'
       ];
 
@@ -380,12 +379,13 @@ describe('TaggingScriptService', () => {
       const scriptFiles = (taggingScriptService as any).getScriptFiles();
       
       // Verify key ordering constraints
-      expect(scriptFiles.indexOf('deviceFactory.js')).toBe(0);
-      expect(scriptFiles.indexOf('tagging/utils/hash.js')).toBe(1);
+      expect(scriptFiles.indexOf('utils/hash.js')).toBe(0);
+      expect(scriptFiles.indexOf('deviceFactory.js')).toBe(1);
+      expect(scriptFiles.indexOf('tagging/modules/cacheApi.js')).toBe(2);
       expect(scriptFiles.indexOf('tagging/index.js')).toBe(scriptFiles.length - 1);
       
       // Verify utils comes before core tagging
-      const utilsIndex = scriptFiles.indexOf('tagging/utils/hash.js');
+      const utilsIndex = scriptFiles.indexOf('utils/hash.js');
       const taggingIndex = scriptFiles.indexOf('tagging/tagging.js');
       expect(utilsIndex).toBeLessThan(taggingIndex);
       

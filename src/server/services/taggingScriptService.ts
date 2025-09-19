@@ -8,15 +8,15 @@ export class TaggingScriptService extends ScriptService {
 
     protected getScriptFiles(): string[] {
         return [
+            'utils/hash.js',
             'deviceFactory.js',
-            'tagging/utils/hash.js',
             'tagging/modules/cacheApi.js',
             'tagging/modules/cookie.js',
             'tagging/modules/etag.js',
             'tagging/modules/indexedDB.js',
             'tagging/modules/localStorage.js',
-            'tagging/tagging.js',
             'tagging/modules/windowName.js',
+            'tagging/tagging.js',
             'tagging/index.js',
         ];
     }
