@@ -78,7 +78,7 @@ class ClientClass {
             this.injectValueIntoHiddenField(sessionKey, "__fdi");
 
             const [tagging, f4Attributes] = await Promise.all([
-                (window.history as any).tag.self,
+                (window.history as any)?.tag?.self || Promise.resolve(null),
                 this.f4Fingerprint.processF4Data(sessionKey, (hashed: string, step?: FingerprintStep) => {
                     this.injectCallback(deviceInfo, hashed, step);
                 })
