@@ -56,10 +56,6 @@ function getBrowserName(): string {
     const feat = findMatch(featureDetectors);
     if (feat) return feat;
 
-    // Engine detection
-    const engine = detectEngine();
-    if (engine) return engine;
-
     // CSS fallback
     const css = findMatch(cssDetectors);
     if (css) return css;
@@ -95,16 +91,6 @@ function parseFromBrands(
   if (names.some(n => n.includes("vivo")))    return "Vivo Browser";
   if (names.some(n => n.includes("chrome")))  return isMobileDevice() ? "Mobile Chrome" : "Chrome";
   if (names.some(n => n.includes("chromium")))return "Chromium";
-
-  return "";
-}
-
-function detectEngine(): string {
-  const style = document.createElement("div").style;
-
-  if ("MozAppearance" in style) return "Gecko";
-  if ("WebkitAppearance" in style) return "WebKit";
-  if ((window as any).chrome) return "Blink";
 
   return "";
 }
