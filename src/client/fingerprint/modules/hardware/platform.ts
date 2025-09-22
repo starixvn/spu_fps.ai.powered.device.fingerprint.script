@@ -7,7 +7,7 @@ export function collectPlatform(): PlatformInfo {
   return { platform };
 }
 
-function getPlatform(): string {
+export function getPlatform(): string {
   try {
     const platform = navigator.platform;
    

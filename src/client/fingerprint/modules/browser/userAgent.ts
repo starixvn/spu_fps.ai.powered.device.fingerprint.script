@@ -1,7 +1,7 @@
-import type { Bit, UserAgentInfo } from "../../types";
-import { countTruthy, isWebKit } from "../../utils/browser";
-import { boolToBit } from "../../utils/data";
+import type { UserAgentInfo } from "../../types";
+import { getPlatform } from "../hardware/platform";
 
+// Reference: http://detectmobilebrowsers.com/
 const legacyMobileRegex = new RegExp(
   [
     "(android|bb\\d+|meego).+mobile", "avantgo", "bada\\/", "blackberry", "blazer", "compal", "elaine",
@@ -35,7 +35,7 @@ const legacyMobileRegex = new RegExp(
     "zte\\-"
   ].join("|"),
   "i"
-);
+); 
 
 export async function collectUserAgent(): Promise<UserAgentInfo> {
   const userAgent = await getUserAgent();
@@ -55,7 +55,7 @@ async function getUserAgent(): Promise<UserAgentInfo> {
         .map(b => `${b.brand}/${b.version}`)
         .join(" ");
 
-      platform = detectPlatform() || (uaData.platform ?? "");
+      platform = getPlatform() || (uaData.platform ?? "");
       mobile   = Number(navigator.userAgentData.mobile);
 
     } else {
@@ -64,7 +64,7 @@ async function getUserAgent(): Promise<UserAgentInfo> {
       const m = ua.match(/(Chrome|Edg|Firefox|Safari)\/([\d.]+)/i);
 
       brands = m ? `${m[1]}/${m[2]}` : "Unknown/0";
-      platform = detectPlatform() || ((navigator.platform ?? "").replace(/\s+/g, "_"));
+      platform = getPlatform() || ((navigator.platform ?? "").replace(/\s+/g, "_"));
 
       mobile = Number(
         /Mobile|iPhone|Android|iPad|iPod/i.test(ua) ||
@@ -77,51 +77,4 @@ async function getUserAgent(): Promise<UserAgentInfo> {
   } catch {
     return { userAgent: "" };
   }
-}
-
-function detectPlatform(): string {
-  try {
-    const platform = navigator.platform;
-
-    if (platform === "MacIntel") {
-      if (isWebKit() === 1 && isDesktopWebKit() === 0) {
-        return isIPad() === 1 ? "iPad" : "iPhone";
-      }
-    }
-
-    return platform || "";
-  } catch {
-    return "";
-  }
-}
-
-function isDesktopWebKit(): Bit {
-  const w = window;
-  const { HTMLElement, Document } = w;
-
-  return boolToBit(
-    countTruthy([
-      "safari" in w,
-      !("ongestureend" in w),
-      !("TouchEvent" in w),
-      !("orientation" in w),
-      HTMLElement && !("autocapitalize" in HTMLElement.prototype),
-      Document && "pointerLockElement" in Document.prototype,
-    ]) >= 4
-  );
-}
-
-function isIPad(): Bit {
-  if (navigator.platform === "iPad") return 1;
-
-  const s = screen;
-  const screenRatio = s.width / s.height;
-
-  return boolToBit(
-    countTruthy([
-      "MediaSource" in window,
-      !!(Element.prototype as any).webkitRequestFullscreen,
-      screenRatio > 0.65 && screenRatio < 1.53,
-    ]) >= 2
-  );
 }
