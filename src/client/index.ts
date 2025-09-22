@@ -68,6 +68,8 @@ class ClientClass {
 
     public async start(): Promise<void> {
         try {
+            console.log('v' + CONFIG.VERSION);
+
             const sessionKey = SessionKeyManager.getSessionKey();
             const deviceInfo: CollectedDeviceInfo = { sk: sessionKey, v: CONFIG.VERSION };
 
