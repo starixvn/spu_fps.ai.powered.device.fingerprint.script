@@ -3,7 +3,7 @@
  */
 
 import { collectPlatform } from '../../../../../../src/client/fingerprint/modules/hardware/platform';
-import { FINGERPRINT_SPECIAL_VALUES } from '../../../../../../src/client/fingerprint/utils/consts';
+import { FingerprintSpecialValue } from '../../../../../../src/client/fingerprint/utils/consts';
 
 // Setup mock values in beforeEach
 const setupMocks = () => {
@@ -67,7 +67,7 @@ describe('Hardware Platform Module', () => {
       const result = collectPlatform();
 
       // Assert
-      expect(result).toEqual({ platform: FINGERPRINT_SPECIAL_VALUES.UNDEFINED });
+      expect(result).toEqual({ platform: FingerprintSpecialValue.UNDEFINED });
     });
 
     it('should return MacIntel platform correctly in non-WebKit environment', () => {
@@ -100,7 +100,7 @@ describe('Hardware Platform Module', () => {
       const result = collectPlatform();
 
       // Assert
-      expect(result).toEqual({ platform: FINGERPRINT_SPECIAL_VALUES.UNDEFINED });
+      expect(result).toEqual({ platform: FingerprintSpecialValue.UNDEFINED });
     });
 
     it('should return different platform values as-is', () => {
@@ -137,7 +137,7 @@ describe('Hardware Platform Module', () => {
       const result = collectPlatform();
 
       // Assert
-      expect(result).toEqual({ platform: FINGERPRINT_SPECIAL_VALUES.ERROR });
+      expect(result).toEqual({ platform: FingerprintSpecialValue.ERROR });
 
       // Restore navigator for other tests
       Object.defineProperty(global, 'navigator', {

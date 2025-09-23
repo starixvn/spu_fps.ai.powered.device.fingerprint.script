@@ -1,5 +1,5 @@
 import { collectArchitecture } from '../../../../../../src/client/fingerprint/modules/hardware/architecture';
-import { FINGERPRINT_SPECIAL_VALUES } from '../../../../../../src/client/fingerprint/utils/consts';
+import { FingerprintSpecialValue } from '../../../../../../src/client/fingerprint/utils/consts';
 
 describe('Hardware Architecture Module', () => {
   describe('collectArchitecture', () => {
@@ -24,7 +24,7 @@ describe('Hardware Architecture Module', () => {
       const result = collectArchitecture();
 
       // Assert
-      expect(result).toEqual({ architecture: FINGERPRINT_SPECIAL_VALUES.ERROR });
+      expect(result).toEqual({ architecture: FingerprintSpecialValue.ERROR });
 
       // Cleanup
       global.Float32Array = originalFloat32Array;
@@ -41,7 +41,7 @@ describe('Hardware Architecture Module', () => {
       const result = collectArchitecture();
 
       // Assert
-      expect(result).toEqual({ architecture: FINGERPRINT_SPECIAL_VALUES.ERROR });
+      expect(result).toEqual({ architecture: FingerprintSpecialValue.ERROR });
 
       // Cleanup
       global.Uint8Array = originalUint8Array;
@@ -66,7 +66,7 @@ describe('Hardware Architecture Module', () => {
       // Assert
       expect(typeof result.architecture).toBe('number');
       // Architecture should be a number (typically 255 for x86, special values, or valid byte range)
-      const isSpecialValue = Object.values(FINGERPRINT_SPECIAL_VALUES).includes(result.architecture as any);
+      const isSpecialValue = Object.values(FingerprintSpecialValue).includes(result.architecture as any);
       const isValidRange = result.architecture >= 0 && result.architecture <= 255;
       expect(isSpecialValue || isValidRange).toBe(true);
     });

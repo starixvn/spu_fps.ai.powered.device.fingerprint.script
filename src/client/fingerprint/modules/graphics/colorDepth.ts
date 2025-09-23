@@ -1,11 +1,14 @@
-export function collectColorDepth(): number | "" {
+import { FingerprintSpecialValue } from "../../utils/consts";
+
+export function collectColorDepth(): number | FingerprintSpecialValue {
   return getColorDepth();
 }
 
-function getColorDepth(): number | "" {
+function getColorDepth(): number | FingerprintSpecialValue {
   try {
-    return window?.screen?.colorDepth ?? "";
+    const colorDepth = window?.screen?.colorDepth;
+    return typeof colorDepth === 'number' ? colorDepth : FingerprintSpecialValue.UNDEFINED;
   } catch {
-    return "";
+    return FingerprintSpecialValue.ERROR;
   }
 }

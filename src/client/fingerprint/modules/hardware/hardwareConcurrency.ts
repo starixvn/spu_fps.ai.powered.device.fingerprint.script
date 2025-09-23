@@ -1,5 +1,5 @@
 import type { HardwareConcurrencyInfo } from "../../types";
-import { FINGERPRINT_SPECIAL_VALUES, FingerprintSpecialValue } from "../../utils/consts";
+import { FingerprintSpecialValue } from "../../utils/consts";
 
 const HARDWARE_CONCURRENCY_RUNS = 5;
 const MIN_VALID_CORES = 1;
@@ -9,47 +9,47 @@ const HARDWARE_CONCURRENCY_MIN_BENCHMARK_SCORE = 180000;
 export async function collectHardwareConcurrency(): Promise<HardwareConcurrencyInfo> {
   try {
     if (!("hardwareConcurrency" in navigator))
-      return { hardwareConcurrency: FINGERPRINT_SPECIAL_VALUES.UNDEFINED };
+      return { hardwareConcurrency: FingerprintSpecialValue.UNDEFINED };
 
     const values: number[] = [];
 
     for (let i = 0; i < HARDWARE_CONCURRENCY_RUNS; i++) {
       const v = getHardwareConcurrencyOnce();
 
-      if (v !== FINGERPRINT_SPECIAL_VALUES.UNDEFINED) values.push(v as number);
+      if (v !== FingerprintSpecialValue.UNDEFINED) values.push(v as number);
       await delay(1);
     }
 
-    if (!values.length) return { hardwareConcurrency: FINGERPRINT_SPECIAL_VALUES.TIMEOUT };
+    if (!values.length) return { hardwareConcurrency: FingerprintSpecialValue.TIMEOUT };
 
     const stableValue = mostFrequent(values);
 
-    if (hasNoise(values, stableValue)) return { hardwareConcurrency: FINGERPRINT_SPECIAL_VALUES.KNOWN_FOR_ANTI_FINGERPRINTING };
+    if (hasNoise(values, stableValue)) return { hardwareConcurrency: FingerprintSpecialValue.KNOWN_FOR_ANTI_FINGERPRINTING };
 
     const benchmark = await runCompositeBenchmark();
 
     if (stableValue < MIN_VALID_CORES || stableValue > MAX_VALID_CORES)
-      return { hardwareConcurrency: FINGERPRINT_SPECIAL_VALUES.KNOWN_FOR_ANTI_FINGERPRINTING };
+      return { hardwareConcurrency: FingerprintSpecialValue.KNOWN_FOR_ANTI_FINGERPRINTING };
 
     const expectedMinCores = Math.max(
       MIN_VALID_CORES,
       (benchmark / HARDWARE_CONCURRENCY_MIN_BENCHMARK_SCORE) * stableValue
     );
 
-    if (stableValue < expectedMinCores) return { hardwareConcurrency: FINGERPRINT_SPECIAL_VALUES.KNOWN_FOR_ANTI_FINGERPRINTING };
+    if (stableValue < expectedMinCores) return { hardwareConcurrency: FingerprintSpecialValue.KNOWN_FOR_ANTI_FINGERPRINTING };
 
     return { hardwareConcurrency: stableValue };
   } catch {
-    return { hardwareConcurrency: FINGERPRINT_SPECIAL_VALUES.ERROR };
+    return { hardwareConcurrency: FingerprintSpecialValue.ERROR };
   }
 }
 
 function getHardwareConcurrencyOnce(): number | FingerprintSpecialValue {
   try {
     const val = navigator.hardwareConcurrency;
-    return typeof val === "number" && val > 0 ? val : FINGERPRINT_SPECIAL_VALUES.UNDEFINED;
+    return typeof val === "number" && val > 0 ? val : FingerprintSpecialValue.UNDEFINED;
   } catch {
-    return FINGERPRINT_SPECIAL_VALUES.ERROR;
+    return FingerprintSpecialValue.ERROR;
   }
 }
 

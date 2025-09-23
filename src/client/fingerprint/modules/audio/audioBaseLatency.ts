@@ -1,4 +1,4 @@
-import { FINGERPRINT_SPECIAL_VALUES, FingerprintSpecialValue } from "../../utils/consts";
+import { FingerprintSpecialValue } from "../../utils/consts";
 import { isAndroid, isWebKit } from "../../utils/browser";
 
 export function collectAudioBaseLatency(): number | FingerprintSpecialValue {
@@ -6,7 +6,7 @@ export function collectAudioBaseLatency(): number | FingerprintSpecialValue {
     const isAllowedPlatform = isAndroid() === 1 || isWebKit() === 1;
     
     if (!isAllowedPlatform) {
-      return FINGERPRINT_SPECIAL_VALUES.DISABLED;
+      return FingerprintSpecialValue.DISABLED;
     }
 
     const AudioContextClass =
@@ -14,37 +14,37 @@ export function collectAudioBaseLatency(): number | FingerprintSpecialValue {
       (window as any).webkitAudioContext;
 
     if (!AudioContextClass) {
-      return FINGERPRINT_SPECIAL_VALUES.UNDEFINED;
+      return FingerprintSpecialValue.UNDEFINED;
     }
 
     let ctx: AudioContext;
     try {
       ctx = new AudioContextClass();
     } catch (err) {
-      return FINGERPRINT_SPECIAL_VALUES.UNDEFINED;
+      return FingerprintSpecialValue.UNDEFINED;
     }
 
 
     if ((ctx as any).baseLatency === undefined) {
       ctx.close?.();
-      return FINGERPRINT_SPECIAL_VALUES.UNDEFINED;
+      return FingerprintSpecialValue.UNDEFINED;
     }
 
     const latency = (ctx as any).baseLatency;
 
     if (latency === null || latency === undefined) {
       ctx.close?.();
-      return FINGERPRINT_SPECIAL_VALUES.UNDEFINED;
+      return FingerprintSpecialValue.UNDEFINED;
     }
 
     if (!isFinite(latency)) {
       ctx.close?.();
-      return FINGERPRINT_SPECIAL_VALUES.NOT_FINITE;
+      return FingerprintSpecialValue.NOT_FINITE;
     }
 
     ctx.close?.();
     return latency;
   } catch (error) {
-    return FINGERPRINT_SPECIAL_VALUES.ERROR;
+    return FingerprintSpecialValue.ERROR;
   }
 }

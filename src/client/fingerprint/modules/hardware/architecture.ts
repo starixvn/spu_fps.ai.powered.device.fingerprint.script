@@ -1,5 +1,5 @@
 import type { ArchitectureInfo } from "../../types";
-import { FINGERPRINT_SPECIAL_VALUES, FingerprintSpecialValue } from "../../utils/consts";
+import { FingerprintSpecialValue } from "../../utils/consts";
 
 export function collectArchitecture(): ArchitectureInfo {
   const architecture = getArchitecture();
@@ -16,6 +16,6 @@ function getArchitecture(): number | FingerprintSpecialValue {
 
     return u8[3];
   } catch {
-    return FINGERPRINT_SPECIAL_VALUES.ERROR;
+    return FingerprintSpecialValue.ERROR;
   }
 }

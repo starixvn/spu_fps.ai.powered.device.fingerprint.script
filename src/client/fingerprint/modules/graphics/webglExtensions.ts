@@ -3,6 +3,7 @@ import { isChromium, isWebKit, isGecko } from "../../utils/browser";
 import { MurmurHash128 } from "../../utils/hash";
 import type { Bit } from '../../types';
 import { boolToBit } from '../../utils/data';
+import { FingerprintSpecialValue } from "../../utils/consts";
 
 type CanvasContext = WebGLRenderingContext & { readonly canvas: HTMLCanvasElement }
 
@@ -14,10 +15,6 @@ type Options = {
   }
 }
 
-export const STATUS_NO_GL_CONTEXT_EXT = -1;
-export const STATUS_GET_PARAMETER_NOT_A_FUNCTION_EXT = -2;
-export type SpecialStatus = typeof STATUS_NO_GL_CONTEXT_EXT | typeof STATUS_GET_PARAMETER_NOT_A_FUNCTION_EXT;
-
 const validContextParameters = new Set([
   10752, 2849, 2884, 2885, 2886, 2928, 2929, 2930, 2931, 2932, 2960, 2961, 2962, 2963, 2964, 2965, 2966, 2967, 2968,
   2978, 3024, 3042, 3088, 3089, 3106, 3107, 32773, 32777, 32777, 32823, 32824, 32936, 32937, 32938, 32939, 32968, 32969,
@@ -25,6 +22,7 @@ const validContextParameters = new Set([
   3415, 34467, 34816, 34817, 34818, 34819, 34877, 34921, 34930, 35660, 35661, 35724, 35738, 35739, 36003, 36004, 36005,
   36347, 36348, 36349, 37440, 37441, 37443, 7936, 7937, 7938,
 ]);
+
 const validExtensionParams = new Set([
   34047, // MAX_TEXTURE_MAX_ANISOTROPY_EXT
   35723, // FRAGMENT_SHADER_DERIVATIVE_HINT_OES
@@ -37,34 +35,35 @@ const validExtensionParams = new Set([
   36795, // GPU_DISJOINT_EXT
   38449, // MAX_VIEWS_OVR
 ]);
+
 const shaderTypes = ['FRAGMENT_SHADER', 'VERTEX_SHADER'] as const;
 const precisionTypes = ['LOW_FLOAT', 'MEDIUM_FLOAT', 'HIGH_FLOAT', 'LOW_INT', 'MEDIUM_INT', 'HIGH_INT'] as const;
 const rendererInfoExtensionNameExt = 'WEBGL_debug_renderer_info';
 const polygonModeExtensionName = 'WEBGL_polygon_mode';
 
-export async function collectWebGLExtensions(): Promise<WebGLExtensionsInfo> {
+export async function collectWebGLExtensions(): Promise<WebGLExtensionsInfo | FingerprintSpecialValue> {
   try {
     const cache = { webgl: { context: undefined } };
     const result = getWebGlExtensions({ cache });
     
-    if (typeof result === 'number') {
-      return "";
+    if (result === FingerprintSpecialValue.UNDEFINED) {
+      return FingerprintSpecialValue.UNDEFINED;
     }
     
     return MurmurHash128.hash128(JSON.stringify(result));
   } catch (error) {
-    return "";
+    return FingerprintSpecialValue.ERROR;
   }
 }
 
-export function getWebGlExtensions({ cache }: Options): WebGLExtensionsData | SpecialStatus {
+export function getWebGlExtensions({ cache }: Options): WebGLExtensionsData | FingerprintSpecialValue {
   const gl = getWebGLContextExt(cache);
   if (!gl) {
-    return STATUS_NO_GL_CONTEXT_EXT;
+    return FingerprintSpecialValue.UNDEFINED;
   }
 
   if (!isValidParameterGetter(gl)) {
-    return STATUS_GET_PARAMETER_NOT_A_FUNCTION_EXT;
+    return FingerprintSpecialValue.UNDEFINED;
   }
 
   const extensions = gl.getSupportedExtensions();
@@ -106,8 +105,16 @@ export function getWebGlExtensions({ cache }: Options): WebGLExtensionsData | Sp
 
       for (const constant of getConstantsFromPrototype(extension)) {
         const code = extension[constant];
+        let val: any = '';
+        if (validExtensionParams.has(code)) {
+          try {
+            val = gl.getParameter(code);
+          } catch {
+            val = FingerprintSpecialValue.UNDEFINED;
+          }
+        }
         extensionParameters.push(
-          `${constant}=${code}${validExtensionParams.has(code) ? `=${gl.getParameter(code)}` : ''}`,
+          `${constant}=${code}${validExtensionParams.has(code) ? `=${val}` : ''}`,
         )
       }
     }
@@ -158,6 +165,7 @@ function getWebGLContextExt(cache: Options['cache']): CanvasContext | undefined 
   cache.webgl = { context };
   return context;
 }
+
 
 
 function getShaderPrecision(

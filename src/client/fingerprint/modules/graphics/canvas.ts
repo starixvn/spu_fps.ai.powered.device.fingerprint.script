@@ -1,6 +1,7 @@
 import { MurmurHash128 } from "../../utils/hash";
 import type { CanvasInfo } from "../../types";
 import type { Bit } from '../../types';
+import { FingerprintSpecialValue } from "../../utils/consts";
 
 const CANVAS_CACHE_KEY = "canvasCache";
 const CANVAS_SNAPSHOTS = 5;
@@ -21,14 +22,14 @@ export async function collectCanvas(): Promise<CanvasInfo> {
     const canvasProtection = await detectCanvasProtection();
     
     if (canvasProtection) {
-      return ["", 1];
+      return [FingerprintSpecialValue.KNOWN_FOR_ANTI_FINGERPRINTING, 1];
     }
 
     const snapshotPromises = Array.from({ length: CANVAS_SNAPSHOTS }, () => getCanvasFeatures());
     const samples = (await Promise.all(snapshotPromises)).filter(Boolean) as any[];
 
     if (samples.length === 0) {
-      return ["", 0];
+      return [FingerprintSpecialValue.TIMEOUT, 0];
     }
 
     const stableFeatures = computeFeatureMedian(samples);
@@ -45,7 +46,7 @@ export async function collectCanvas(): Promise<CanvasInfo> {
 
     return [value, 0];
   } catch {
-    return ["", 0];
+    return [FingerprintSpecialValue.ERROR, 0];
   }
 }
 
@@ -212,20 +213,32 @@ async function getCanvasFeatures(): Promise<Record<string, any> | null> {
 }
 
 function computeFeatureMedian(samples: any[]): any {
-  if (samples.length === 1) return samples[0];
-  
-  const median: any = {};
-  const keys = Object.keys(samples[0]);
-  
+  const validSamples = samples.filter((s): s is Record<string, any> => s && typeof s === 'object');
+  if (validSamples.length === 0) return {};
+
+  if (validSamples.length === 1) return validSamples[0];
+
+  const median: Record<string, any> = {};
+  const keys = Object.keys(validSamples[0]);
+
   for (const key of keys) {
-    const vals = samples.map(s => JSON.stringify(s[key]));
+    const vals = validSamples.map(s => JSON.stringify(s[key]));
     const counts = new Map<string, number>();
+
     vals.forEach(v => counts.set(v, (counts.get(v) || 0) + 1));
-    let maxCount = 0, mostCommon = vals[0];
-    counts.forEach((c, v) => { if(c > maxCount){maxCount=c;mostCommon=v;} });
+
+    let maxCount = 0;
+    let mostCommon = vals[0];
+
+    counts.forEach((c, v) => { 
+      if(c > maxCount){
+        maxCount=c;mostCommon=v;
+      } 
+    });
+
     median[key] = JSON.parse(mostCommon);
   }
-  
+
   return median;
 }
 

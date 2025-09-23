@@ -1,5 +1,6 @@
 import type { FontPreferencesInfo } from "../../types";
 import { withNaturalFonts } from "../../utils/dom";
+import { FingerprintSpecialValue } from "../../utils/consts";
 
 const defaultText = "mmMwWLliI0fiflO&1";
 
@@ -53,13 +54,13 @@ export async function collectFontPreferences(): Promise<FontPreferencesInfo> {
     });
   } catch {
     return {
-      default: 0,
-      apple: 0,
-      serif: 0,
-      sans: 0,
-      mono: 0,
-      min: 0,
-      system: 0,
+      default: FingerprintSpecialValue.ERROR,
+      apple: FingerprintSpecialValue.ERROR,
+      serif: FingerprintSpecialValue.ERROR,
+      sans: FingerprintSpecialValue.ERROR,
+      mono: FingerprintSpecialValue.ERROR,
+      min: FingerprintSpecialValue.ERROR,
+      system: FingerprintSpecialValue.ERROR,
     };
   }
 }

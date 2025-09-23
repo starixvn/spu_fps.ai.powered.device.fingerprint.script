@@ -1,6 +1,7 @@
 import type { WebGLBasicsInfo } from "../../types";
 import { isGecko } from "../../utils/browser";
 import type { Bit } from '../../types';
+import { FingerprintSpecialValue } from "../../utils/consts";
 
 type CanvasContext = WebGLRenderingContext & { readonly canvas: HTMLCanvasElement }
 
@@ -12,51 +13,48 @@ type Options = {
   }
 }
 
-export const STATUS_NO_GL_CONTEXT = -1;
-export const STATUS_GET_PARAMETER_NOT_A_FUNCTION = -2;
-export type SpecialStatus = typeof STATUS_NO_GL_CONTEXT | typeof STATUS_GET_PARAMETER_NOT_A_FUNCTION;
-
 const rendererInfoExtensionName = 'WEBGL_debug_renderer_info';
 const globalCache: Options['cache'] = {};
 
-export function collectWebGLBasics(): WebGLBasicsInfo {
+export function collectWebGLBasics(): WebGLBasicsInfo | FingerprintSpecialValue {
   const options = { cache: globalCache };
   const basics = getWebGlBasics(options);
   
-  if (typeof basics === 'number') {
+  if (!basics) {
     return getEmptyWebGLBasics();
   }
 
-  return [
-    basics.version,
-    basics.vendor, 
-    basics.vendorUnmasked,
-    basics.renderer,
-    basics.rendererUnmasked,
-    basics.shadingLanguageVersion
-  ]
+  return basics;
 }
 
-export function getWebGlBasics({ cache }: Options): { version: string; vendor: string; vendorUnmasked: string; renderer: string; rendererUnmasked: string; shadingLanguageVersion: string } | SpecialStatus {
+export function getWebGlBasics({ cache }: Options): WebGLBasicsInfo | FingerprintSpecialValue {
   const gl = getWebGLContext(cache);
   if (!gl) {
-    return STATUS_NO_GL_CONTEXT;
+    return FingerprintSpecialValue.UNDEFINED;
   }
 
   if (!isValidParameterGetter(gl)) {
-    return STATUS_GET_PARAMETER_NOT_A_FUNCTION;
+    return FingerprintSpecialValue.UNDEFINED;
   }
 
   const debugExtension = shouldAvoidDebugRendererInfo() ? null : gl.getExtension(rendererInfoExtensionName);
+  const safeGet = (p: number): string | FingerprintSpecialValue => {
+      try {
+        const v = gl.getParameter(p);
+        return v != null ? v.toString() : FingerprintSpecialValue.UNDEFINED;
+      } catch {
+        return FingerprintSpecialValue.ERROR;
+      }
+  };
 
-  return {
-    version: gl.getParameter(gl.VERSION)?.toString() || '',
-    vendor: gl.getParameter(gl.VENDOR)?.toString() || '',
-    vendorUnmasked: debugExtension ? gl.getParameter(debugExtension.UNMASKED_VENDOR_WEBGL)?.toString() || '' : '',
-    renderer: gl.getParameter(gl.RENDERER)?.toString() || '',
-    rendererUnmasked: debugExtension ? gl.getParameter(debugExtension.UNMASKED_RENDERER_WEBGL)?.toString() || '' : '',
-    shadingLanguageVersion: gl.getParameter(gl.SHADING_LANGUAGE_VERSION)?.toString() || '',
-  }
+  return [
+    safeGet(gl.VERSION),
+    safeGet(gl.VENDOR),
+    debugExtension ? safeGet(debugExtension.UNMASKED_VENDOR_WEBGL) : FingerprintSpecialValue.UNDEFINED,
+    safeGet(gl.RENDERER),
+    debugExtension ? safeGet(debugExtension.UNMASKED_RENDERER_WEBGL) : FingerprintSpecialValue.UNDEFINED,
+    safeGet(gl.SHADING_LANGUAGE_VERSION)
+  ];
 }
 
 export function getWebGLContext(cache: Options['cache']) {
@@ -74,6 +72,7 @@ export function getWebGLContext(cache: Options['cache']) {
       context = canvas.getContext(type) as CanvasContext;
     } catch {
     }
+    
     if (context) {
       break;
     }
@@ -93,5 +92,12 @@ function isValidParameterGetter(gl: WebGLRenderingContext) {
 }
 
 function getEmptyWebGLBasics(): WebGLBasicsInfo {
-  return ["", "", "", "", "", ""]; // [version, vendor, vendorUnmasked, renderer, rendererUnmasked, shadingLanguageVersion]
+  return [
+    FingerprintSpecialValue.UNDEFINED,
+    FingerprintSpecialValue.UNDEFINED,
+    FingerprintSpecialValue.UNDEFINED,
+    FingerprintSpecialValue.UNDEFINED,
+    FingerprintSpecialValue.UNDEFINED,
+    FingerprintSpecialValue.UNDEFINED,
+  ];
 }

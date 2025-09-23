@@ -57,21 +57,21 @@ export interface OSCpuInfo {
 // #region Graphics
 export interface GraphicsGroupInfo {
   canvas: CanvasInfo;
-  webglBasics: WebGLBasicsInfo;
+  webglBasics: WebGLBasicsInfo | FingerprintSpecialValue;
   webglExtensions: WebGLExtensionsInfo;
   fonts: FontsInfo;
   fontPreferences: FontPreferencesInfo;
   screenResolution: [number, number];
   screenFrame: [number, number, number, number];
-  colorDepth: number | "";
-  colorGamut: 'srgb' | 'p3' | 'rec2020' | undefined;
+  colorDepth: number | FingerprintSpecialValue;
+  colorGamut: 'srgb' | 'p3' | 'rec2020' | FingerprintSpecialValue;
 }
 
-export type CanvasInfo = [string, Bit]; // [value, canvasProtection]
+export type CanvasInfo = [string | FingerprintSpecialValue, Bit]; // [value, canvasProtection]
 
-export type WebGLBasicsInfo = [string, string, string, string, string, string]; // [version, vendor, vendorUnmasked, renderer, rendererUnmasked, shadingLanguageVersion]
+export type WebGLBasicsInfo = [string | FingerprintSpecialValue, string | FingerprintSpecialValue, string | FingerprintSpecialValue, string | FingerprintSpecialValue, string | FingerprintSpecialValue, string | FingerprintSpecialValue]; // [version, vendor, vendorUnmasked, renderer, rendererUnmasked, shadingLanguageVersion]
 
-export type WebGLExtensionsInfo = string;
+export type WebGLExtensionsInfo = string | FingerprintSpecialValue;
 
 export interface WebGLExtensionsData {
   contextAttributes: string[];
@@ -85,13 +85,13 @@ export interface WebGLExtensionsData {
 export type FontsInfo = string[];
 
 export interface FontPreferencesInfo {
-  default: number;
-  apple: number;
-  serif: number;
-  sans: number;
-  mono: number;
-  min: number;
-  system: number;
+  default: number | FingerprintSpecialValue;
+  apple: number | FingerprintSpecialValue;
+  serif: number | FingerprintSpecialValue;
+  sans: number | FingerprintSpecialValue;
+  mono: number | FingerprintSpecialValue;
+  min: number | FingerprintSpecialValue;
+  system: number | FingerprintSpecialValue;
 }
 // #endregion
 

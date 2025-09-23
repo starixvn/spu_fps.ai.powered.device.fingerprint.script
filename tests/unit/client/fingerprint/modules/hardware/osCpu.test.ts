@@ -1,5 +1,5 @@
 import { collectOSCpu } from '../../../../../../src/client/fingerprint/modules/hardware/osCpu';
-import { FINGERPRINT_SPECIAL_VALUES } from '../../../../../../src/client/fingerprint/utils/consts';
+import { FingerprintSpecialValue } from '../../../../../../src/client/fingerprint/utils/consts';
 
 // Mock navigator object
 const mockNavigator: any = {
@@ -40,7 +40,7 @@ describe('Hardware OS CPU Module', () => {
       const result = await collectOSCpu();
 
       // Assert
-      expect(result).toEqual({ oscpu: FINGERPRINT_SPECIAL_VALUES.UNDEFINED });
+      expect(result).toEqual({ oscpu: FingerprintSpecialValue.UNDEFINED });
     });
 
     it('should return empty string when userAgentData returns incomplete data', async () => {
@@ -51,7 +51,7 @@ describe('Hardware OS CPU Module', () => {
       const result = await collectOSCpu();
 
       // Assert
-      expect(result).toEqual({ oscpu: FINGERPRINT_SPECIAL_VALUES.UNDEFINED });
+      expect(result).toEqual({ oscpu: FingerprintSpecialValue.UNDEFINED });
     });
 
     it('should return empty string when userAgentData.getHighEntropyValues throws error', async () => {
@@ -62,7 +62,7 @@ describe('Hardware OS CPU Module', () => {
       const result = await collectOSCpu();
 
       // Assert
-      expect(result).toEqual({ oscpu: FINGERPRINT_SPECIAL_VALUES.UNDEFINED });
+      expect(result).toEqual({ oscpu: FingerprintSpecialValue.UNDEFINED });
     });
 
     it('should return empty string when both navigator.oscpu and userAgentData are not available', async () => {
@@ -73,7 +73,7 @@ describe('Hardware OS CPU Module', () => {
       const result = await collectOSCpu();
 
       // Assert
-      expect(result).toEqual({ oscpu: FINGERPRINT_SPECIAL_VALUES.UNDEFINED });
+      expect(result).toEqual({ oscpu: FingerprintSpecialValue.UNDEFINED });
     });
 
     it('should prioritize navigator.oscpu over userAgentData', async () => {
@@ -90,11 +90,11 @@ describe('Hardware OS CPU Module', () => {
     it('should handle oscpu property that is not a string', async () => {
       // Test different cases of invalid oscpu values
       const testCases = [
-        { osc: null, expected: FINGERPRINT_SPECIAL_VALUES.UNDEFINED },
-        { osc: undefined, expected: FINGERPRINT_SPECIAL_VALUES.UNDEFINED },
-        { osc: 123, expected: FINGERPRINT_SPECIAL_VALUES.UNDEFINED },
-        { osc: {}, expected: FINGERPRINT_SPECIAL_VALUES.UNDEFINED },
-        { osc: '   ', expected: FINGERPRINT_SPECIAL_VALUES.UNDEFINED }, // Only whitespace
+        { osc: null, expected: FingerprintSpecialValue.UNDEFINED },
+        { osc: undefined, expected: FingerprintSpecialValue.UNDEFINED },
+        { osc: 123, expected: FingerprintSpecialValue.UNDEFINED },
+        { osc: {}, expected: FingerprintSpecialValue.UNDEFINED },
+        { osc: '   ', expected: FingerprintSpecialValue.UNDEFINED }, // Only whitespace
         { osc: '  Windows NT 10.0  ', expected: 'Windows NT 10.0' }, // With whitespace
       ];
 
@@ -117,7 +117,7 @@ describe('Hardware OS CPU Module', () => {
       const result = await collectOSCpu();
 
       // Assert
-      expect(result).toEqual({ oscpu: FINGERPRINT_SPECIAL_VALUES.ERROR });
+      expect(result).toEqual({ oscpu: FingerprintSpecialValue.ERROR });
 
       // Restore navigator for other tests
       Object.defineProperty(global, 'navigator', {
@@ -138,7 +138,7 @@ describe('Hardware OS CPU Module', () => {
       const result = await collectOSCpu();
 
       // Assert
-      expect(result).toEqual({ oscpu: FINGERPRINT_SPECIAL_VALUES.UNDEFINED });
+      expect(result).toEqual({ oscpu: FingerprintSpecialValue.UNDEFINED });
 
       // Restore navigator for other tests
       Object.defineProperty(global, 'navigator', {

@@ -5,7 +5,7 @@ import { collectArchitecture } from "../../../../../../src/client/fingerprint/mo
 import { collectOSCpu } from "../../../../../../src/client/fingerprint/modules/hardware/osCpu";
 import { collectHardwareConcurrency } from "../../../../../../src/client/fingerprint/modules/hardware/hardwareConcurrency";
 import { collectDeviceMemory } from "../../../../../../src/client/fingerprint/modules/hardware/deviceMemory";
-import { FINGERPRINT_SPECIAL_VALUES } from "../../../../../../src/client/fingerprint/utils/consts";
+import { FingerprintSpecialValue } from "../../../../../../src/client/fingerprint/utils/consts";
 
 // Mock navigator object for all tests
 const mockNavigator: any = {
@@ -73,12 +73,12 @@ describe("Hardware Modules Integration Tests", () => {
 
       // Assert
       expect(result).toEqual({
-        platform: FINGERPRINT_SPECIAL_VALUES.UNDEFINED,
-        cpuClass: FINGERPRINT_SPECIAL_VALUES.UNDEFINED,
+        platform: FingerprintSpecialValue.UNDEFINED,
+        cpuClass: FingerprintSpecialValue.UNDEFINED,
         architecture: 255,  // Changed: still returns 255 even without navigator
-        oscpu: FINGERPRINT_SPECIAL_VALUES.UNDEFINED,
-        hardwareConcurrency: FINGERPRINT_SPECIAL_VALUES.UNDEFINED,
-        deviceMemory: FINGERPRINT_SPECIAL_VALUES.UNDEFINED,
+        oscpu: FingerprintSpecialValue.UNDEFINED,
+        hardwareConcurrency: FingerprintSpecialValue.UNDEFINED,
+        deviceMemory: FingerprintSpecialValue.UNDEFINED,
       });
 
       // Restore navigator for other tests

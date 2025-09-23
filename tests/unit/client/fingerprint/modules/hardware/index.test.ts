@@ -1,5 +1,5 @@
 import { HardwareFingerprint } from '../../../../../../src/client/fingerprint/modules/hardware';
-import { FINGERPRINT_SPECIAL_VALUES } from '../../../../../../src/client/fingerprint/utils/consts';
+import { FingerprintSpecialValue } from '../../../../../../src/client/fingerprint/utils/consts';
 
 // Mock all hardware modules
 jest.mock('../../../../../../src/client/fingerprint/modules/hardware/platform');
@@ -18,28 +18,34 @@ const mockCollectDeviceMemory = jest.mocked(require('../../../../../../src/clien
 
 describe('Hardware Fingerprint Module', () => {
   beforeEach(() => {
-    // Reset all mocks before each test
+    // Reset all mocks
     jest.clearAllMocks();
-    
-    // Setup default mock return values
-    mockCollectPlatform.mockReturnValue({ platform: 'Windows' });
-    mockCollectCpuClass.mockReturnValue({ cpuClass: 'Intel x86' });
-    mockCollectArchitecture.mockReturnValue({ architecture: 255 });  // Changed to number
-    mockCollectOSCpu.mockResolvedValue({ oscpu: 'Windows NT 10.0; Win64; x64' });
-    mockCollectHardwareConcurrency.mockResolvedValue({ hardwareConcurrency: 8 });
-    mockCollectDeviceMemory.mockResolvedValue({ deviceMemory: 16 });  // Changed to Promise
   });
 
   describe('HardwareFingerprint.collect', () => {
-    it('should collect all hardware attributes successfully', async () => {
+    it('should collect complete hardware information successfully', async () => {
       // Arrange
+      const mockPlatformResult = { platform: 'Win32' };
+      const mockCpuClassResult = { cpuClass: 'x86' };
+      const mockArchitectureResult = { architecture: 255 };
+      const mockOSCpuResult = { oscpu: 'Windows NT 10.0; Win64; x64' };
+      const mockHardwareConcurrencyResult = { hardwareConcurrency: 8 };
+      const mockDeviceMemoryResult = { deviceMemory: 8 };
+
+      mockCollectPlatform.mockReturnValue(mockPlatformResult);
+      mockCollectCpuClass.mockReturnValue(mockCpuClassResult);
+      mockCollectArchitecture.mockReturnValue(mockArchitectureResult);
+      mockCollectOSCpu.mockResolvedValue(mockOSCpuResult);
+      mockCollectHardwareConcurrency.mockResolvedValue(mockHardwareConcurrencyResult);
+      mockCollectDeviceMemory.mockResolvedValue(mockDeviceMemoryResult);
+
       const expectedResult = {
-        platform: 'Windows',
-        cpuClass: 'Intel x86',
-        architecture: 255,  // Changed to number
+        platform: 'Win32',
+        cpuClass: 'x86',
+        architecture: 255,
         oscpu: 'Windows NT 10.0; Win64; x64',
         hardwareConcurrency: 8,
-        deviceMemory: 16,
+        deviceMemory: 8,
       };
 
       // Act
@@ -55,22 +61,22 @@ describe('Hardware Fingerprint Module', () => {
       expect(mockCollectDeviceMemory).toHaveBeenCalledTimes(1);
     });
 
-    it('should handle empty values from individual collectors', async () => {
+    it('should handle mixed valid and invalid values from collectors', async () => {
       // Arrange
-      mockCollectPlatform.mockReturnValue({ platform: '' });
-      mockCollectCpuClass.mockReturnValue({ cpuClass: '' });
-      mockCollectArchitecture.mockReturnValue({ architecture: 0 });  // Changed to number
-      mockCollectOSCpu.mockResolvedValue({ oscpu: '' });
-      mockCollectHardwareConcurrency.mockResolvedValue({ hardwareConcurrency: '' });
-      mockCollectDeviceMemory.mockResolvedValue({ deviceMemory: '' });
+      mockCollectPlatform.mockReturnValue({ platform: 'Linux x86_64' });
+      mockCollectCpuClass.mockReturnValue({ cpuClass: FingerprintSpecialValue.UNDEFINED });
+      mockCollectArchitecture.mockReturnValue({ architecture: 255 });
+      mockCollectOSCpu.mockResolvedValue({ oscpu: 'Linux x86_64' });
+      mockCollectHardwareConcurrency.mockResolvedValue({ hardwareConcurrency: FingerprintSpecialValue.UNDEFINED });
+      mockCollectDeviceMemory.mockResolvedValue({ deviceMemory: 16 });
 
       const expectedResult = {
-        platform: '',
-        cpuClass: '',
-        architecture: 0,  // Changed to number
-        oscpu: '',
-        hardwareConcurrency: '',
-        deviceMemory: '',
+        platform: 'Linux x86_64',
+        cpuClass: FingerprintSpecialValue.UNDEFINED,
+        architecture: 255,
+        oscpu: 'Linux x86_64',
+        hardwareConcurrency: FingerprintSpecialValue.UNDEFINED,
+        deviceMemory: 16,
       };
 
       // Act
@@ -80,22 +86,22 @@ describe('Hardware Fingerprint Module', () => {
       expect(result).toEqual(expectedResult);
     });
 
-    it('should handle mixed empty and non-empty values', async () => {
+    it('should handle all special values from collectors', async () => {
       // Arrange
-      mockCollectPlatform.mockReturnValue({ platform: 'Linux' });
-      mockCollectCpuClass.mockReturnValue({ cpuClass: '' });
-      mockCollectArchitecture.mockReturnValue({ architecture: 255 });  // Changed to number
-      mockCollectOSCpu.mockResolvedValue({ oscpu: '' });
-      mockCollectHardwareConcurrency.mockResolvedValue({ hardwareConcurrency: '' });  // Changed
-      mockCollectDeviceMemory.mockResolvedValue({ deviceMemory: '' });
+      mockCollectPlatform.mockReturnValue({ platform: FingerprintSpecialValue.UNDEFINED });
+      mockCollectCpuClass.mockReturnValue({ cpuClass: FingerprintSpecialValue.UNDEFINED });
+      mockCollectArchitecture.mockReturnValue({ architecture: FingerprintSpecialValue.ERROR });
+      mockCollectOSCpu.mockResolvedValue({ oscpu: FingerprintSpecialValue.UNDEFINED });
+      mockCollectHardwareConcurrency.mockResolvedValue({ hardwareConcurrency: FingerprintSpecialValue.TIMEOUT });
+      mockCollectDeviceMemory.mockResolvedValue({ deviceMemory: FingerprintSpecialValue.UNDEFINED });
 
       const expectedResult = {
-        platform: 'Linux',
-        cpuClass: '',
-        architecture: 255,  // Changed to number
-        oscpu: '',
-        hardwareConcurrency: '',  // Changed
-        deviceMemory: '',
+        platform: FingerprintSpecialValue.UNDEFINED,
+        cpuClass: FingerprintSpecialValue.UNDEFINED,
+        architecture: FingerprintSpecialValue.ERROR,
+        oscpu: FingerprintSpecialValue.UNDEFINED,
+        hardwareConcurrency: FingerprintSpecialValue.TIMEOUT,
+        deviceMemory: FingerprintSpecialValue.UNDEFINED,
       };
 
       // Act
@@ -105,164 +111,139 @@ describe('Hardware Fingerprint Module', () => {
       expect(result).toEqual(expectedResult);
     });
 
-    it('should handle different data types correctly', async () => {
+    it('should handle errors from individual collectors gracefully', async () => {
       // Arrange
-      mockCollectPlatform.mockReturnValue({ platform: 'MacOS' });
-      mockCollectCpuClass.mockReturnValue({ cpuClass: 'Apple Silicon' });
-      mockCollectArchitecture.mockReturnValue({ architecture: 255 });  // Changed to number
-      mockCollectOSCpu.mockResolvedValue({ oscpu: '' });  // Changed
-      mockCollectHardwareConcurrency.mockResolvedValue({ hardwareConcurrency: '' });  // Changed
-      mockCollectDeviceMemory.mockResolvedValue({ deviceMemory: '' });  // Changed
-
-      const expectedResult = {
-        platform: 'MacOS',
-        cpuClass: 'Apple Silicon',
-        architecture: 255,  // Changed to number
-        oscpu: '',  // Changed
-        hardwareConcurrency: '',  // Changed
-        deviceMemory: '',  // Changed
-      };
-
-      // Act
-      const result = await HardwareFingerprint.collect();
-
-      // Assert
-      expect(result).toEqual(expectedResult);
-    });
-
-    it('should handle error in individual collectors gracefully', async () => {
-      // Arrange
-      mockCollectArchitecture.mockImplementation(() => {
-        throw new Error('API not supported');
-      });
-
-      // When any collector throws, the entire collect() should throw the error
-      // Act & Assert
-      await expect(HardwareFingerprint.collect()).rejects.toThrow('API not supported');
-      
-      expect(mockCollectPlatform).toHaveBeenCalledTimes(1);
-      expect(mockCollectCpuClass).toHaveBeenCalledTimes(1);
-      expect(mockCollectArchitecture).toHaveBeenCalledTimes(1);
-      // When collectArchitecture throws, subsequent collectors are not called
-      expect(mockCollectOSCpu).toHaveBeenCalledTimes(0);
-      expect(mockCollectHardwareConcurrency).toHaveBeenCalledTimes(0);
-      expect(mockCollectDeviceMemory).toHaveBeenCalledTimes(0);
-    });
-
-    it('should handle multiple errors in collectors gracefully', async () => {
-      // Arrange
-      mockCollectPlatform.mockImplementation(() => {
-        throw new Error('Platform API error');
-      });
-      mockCollectArchitecture.mockImplementation(() => {
-        throw new Error('Architecture API error');
-      });
-
-      // When any collector throws, the entire collect() should throw the first error encountered
-      // Act & Assert
-      await expect(HardwareFingerprint.collect()).rejects.toThrow('Platform API error');
-      
-      expect(mockCollectPlatform).toHaveBeenCalledTimes(1);
-      // When collectPlatform throws, subsequent collectors are not called
-      expect(mockCollectCpuClass).toHaveBeenCalledTimes(0);
-      expect(mockCollectArchitecture).toHaveBeenCalledTimes(0);
-      expect(mockCollectOSCpu).toHaveBeenCalledTimes(0);
-      expect(mockCollectHardwareConcurrency).toHaveBeenCalledTimes(0);
-      expect(mockCollectDeviceMemory).toHaveBeenCalledTimes(0);
-    });
-
-    it('should handle all collectors failing gracefully', async () => {
-      // Arrange
-      mockCollectPlatform.mockImplementation(() => {
-        throw new Error('Platform API error');
-      });
+      mockCollectPlatform.mockReturnValue({ platform: 'Darwin' });
       mockCollectCpuClass.mockImplementation(() => {
-        throw new Error('CPU Class API error');
+        throw new Error('CPU Class collection failed');
       });
-      mockCollectArchitecture.mockImplementation(() => {
-        throw new Error('Architecture API error');
-      });
-      mockCollectOSCpu.mockImplementation(() => {
-        return Promise.reject(new Error('OS CPU API error')); // Changed to properly reject
-      });
-      mockCollectHardwareConcurrency.mockImplementation(() => {
-        throw new Error('Hardware Concurrency API error');
-      });
-      mockCollectDeviceMemory.mockImplementation(() => {
-        throw new Error('Device Memory API error');
-      });
+      mockCollectArchitecture.mockReturnValue({ architecture: 255 });
+      mockCollectOSCpu.mockRejectedValue(new Error('OS CPU collection failed'));
+      mockCollectHardwareConcurrency.mockResolvedValue({ hardwareConcurrency: 4 });
+      mockCollectDeviceMemory.mockResolvedValue({ deviceMemory: 8 });
 
-      // When any collector throws, the entire collect() should throw the first error encountered
       // Act & Assert
-      await expect(HardwareFingerprint.collect()).rejects.toThrow('Platform API error');
+      await expect(HardwareFingerprint.collect()).rejects.toThrow();
     });
 
-    it('should call collectors in the correct order', async () => {
+    it('should maintain proper data types for all collectors', async () => {
       // Arrange
-      const callOrder: string[] = [];
+      mockCollectPlatform.mockReturnValue({ platform: 'Win32' });
+      mockCollectCpuClass.mockReturnValue({ cpuClass: 'x86' });
+      mockCollectArchitecture.mockReturnValue({ architecture: 255 });
+      mockCollectOSCpu.mockResolvedValue({ oscpu: 'Windows NT 10.0; Win64; x64' });
+      mockCollectHardwareConcurrency.mockResolvedValue({ hardwareConcurrency: 8 });
+      mockCollectDeviceMemory.mockResolvedValue({ deviceMemory: 16 });
+
+      // Act
+      const result = await HardwareFingerprint.collect();
+
+      // Assert
+      expect(typeof result.platform).toBe('string');
+      expect(typeof result.cpuClass).toBe('string');
+      expect(typeof result.architecture).toBe('number');
+      expect(typeof result.oscpu).toBe('string');
+      expect(typeof result.hardwareConcurrency).toBe('number');
+      expect(typeof result.deviceMemory).toBe('number');
+    });
+
+    it('should handle asynchronous collectors properly', async () => {
+      // Arrange
+      const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
       
-      mockCollectPlatform.mockImplementation(() => {
-        callOrder.push('platform');
-        return { platform: 'Windows' }; // Fixed: use correct property name
-      });
-      mockCollectCpuClass.mockImplementation(() => {
-        callOrder.push('cpuClass');
-        return { cpuClass: 'Intel x86' }; // Fixed: use correct property name
-      });
-      mockCollectArchitecture.mockImplementation(() => {
-        callOrder.push('architecture');
-        return { architecture: 255 }; // Fixed: use correct property name
-      });
+      mockCollectPlatform.mockReturnValue({ platform: 'Darwin' });
+      mockCollectCpuClass.mockReturnValue({ cpuClass: 'x64' });
+      mockCollectArchitecture.mockReturnValue({ architecture: 255 });
       mockCollectOSCpu.mockImplementation(async () => {
-        callOrder.push('oscpu');
-        return { oscpu: 'Windows NT 10.0; Win64; x64' }; // Fixed: use correct property name
+        await delay(10);
+        return { oscpu: 'macOS' };
       });
       mockCollectHardwareConcurrency.mockImplementation(async () => {
-        callOrder.push('hardwareConcurrency');
-        return { hardwareConcurrency: 8 }; // Fixed: use correct property name
+        await delay(5);
+        return { hardwareConcurrency: 8 };
       });
       mockCollectDeviceMemory.mockImplementation(async () => {
-        callOrder.push('deviceMemory');
-        return { deviceMemory: 16 }; // Fixed: use correct property name
+        await delay(15);
+        return { deviceMemory: 16 };
       });
 
-      // Act
-      await HardwareFingerprint.collect();
-
-      // Assert
-      expect(callOrder).toEqual([
-        'platform',
-        'cpuClass', 
-        'architecture',
-        'oscpu',
-        'hardwareConcurrency',
-        'deviceMemory'
-      ]);
-    });
-
-    it('should handle null and undefined values from collectors', async () => {
-      // Arrange
-      mockCollectPlatform.mockReturnValue({ platform: null as any });
-      mockCollectCpuClass.mockReturnValue({ cpuClass: undefined as any });
-      mockCollectArchitecture.mockReturnValue({ architecture: 0 });  // Changed to valid number
-      mockCollectOSCpu.mockResolvedValue({ oscpu: undefined as any });
-      mockCollectHardwareConcurrency.mockResolvedValue({ hardwareConcurrency: null as any });
-      mockCollectDeviceMemory.mockResolvedValue({ deviceMemory: undefined as any });
-
-      const expectedResult = {
-        platform: null,
-        cpuClass: undefined,
-        architecture: 0,  // Changed to number
-        oscpu: undefined,
-        hardwareConcurrency: null,
-        deviceMemory: undefined,
-      };
+      const startTime = Date.now();
 
       // Act
       const result = await HardwareFingerprint.collect();
 
       // Assert
-      expect(result).toEqual(expectedResult);
+      const endTime = Date.now();
+      expect(endTime - startTime).toBeGreaterThanOrEqual(15); // Should take at least 15ms due to the longest delay
+      
+      expect(result).toEqual({
+        platform: 'Darwin',
+        cpuClass: 'x64',
+        architecture: 255,
+        oscpu: 'macOS',
+        hardwareConcurrency: 8,
+        deviceMemory: 16,
+      });
+    });
+
+    it('should return the exact structure from individual collectors', async () => {
+      // Arrange
+      const mockResults = {
+        platform: { platform: 'Test Platform' },
+        cpuClass: { cpuClass: 'Test CPU' },
+        architecture: { architecture: 128 },
+        oscpu: { oscpu: 'Test OS' },
+        hardwareConcurrency: { hardwareConcurrency: 16 },
+        deviceMemory: { deviceMemory: 32 },
+      };
+
+      mockCollectPlatform.mockReturnValue(mockResults.platform);
+      mockCollectCpuClass.mockReturnValue(mockResults.cpuClass);
+      mockCollectArchitecture.mockReturnValue(mockResults.architecture);
+      mockCollectOSCpu.mockResolvedValue(mockResults.oscpu);
+      mockCollectHardwareConcurrency.mockResolvedValue(mockResults.hardwareConcurrency);
+      mockCollectDeviceMemory.mockResolvedValue(mockResults.deviceMemory);
+
+      // Act
+      const result = await HardwareFingerprint.collect();
+
+      // Assert
+      expect(result.platform).toBe(mockResults.platform.platform);
+      expect(result.cpuClass).toBe(mockResults.cpuClass.cpuClass);
+      expect(result.architecture).toBe(mockResults.architecture.architecture);
+      expect(result.oscpu).toBe(mockResults.oscpu.oscpu);
+      expect(result.hardwareConcurrency).toBe(mockResults.hardwareConcurrency.hardwareConcurrency);
+      expect(result.deviceMemory).toBe(mockResults.deviceMemory.deviceMemory);
+    });
+
+    it('should handle special fingerprint values correctly', async () => {
+      // Arrange
+      const specialValues = [
+        FingerprintSpecialValue.UNDEFINED,
+        FingerprintSpecialValue.ERROR,
+        FingerprintSpecialValue.TIMEOUT,
+        FingerprintSpecialValue.KNOWN_FOR_ANTI_FINGERPRINTING
+      ];
+
+      for (const specialValue of specialValues) {
+        mockCollectPlatform.mockReturnValue({ platform: specialValue });
+        mockCollectCpuClass.mockReturnValue({ cpuClass: specialValue });
+        mockCollectArchitecture.mockReturnValue({ architecture: specialValue });
+        mockCollectOSCpu.mockResolvedValue({ oscpu: specialValue });
+        mockCollectHardwareConcurrency.mockResolvedValue({ hardwareConcurrency: specialValue });
+        mockCollectDeviceMemory.mockResolvedValue({ deviceMemory: specialValue });
+
+        // Act
+        const result = await HardwareFingerprint.collect();
+
+        // Assert
+        expect(result.platform).toBe(specialValue);
+        expect(result.cpuClass).toBe(specialValue);
+        expect(result.architecture).toBe(specialValue);
+        expect(result.oscpu).toBe(specialValue);
+        expect(result.hardwareConcurrency).toBe(specialValue);
+        expect(result.deviceMemory).toBe(specialValue);
+      }
     });
   });
 });

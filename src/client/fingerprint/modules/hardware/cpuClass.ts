@@ -1,5 +1,5 @@
 import type { CpuClassInfo } from "../../types";
-import { FINGERPRINT_SPECIAL_VALUES, FingerprintSpecialValue } from "../../utils/consts";
+import { FingerprintSpecialValue } from "../../utils/consts";
 
 export function collectCpuClass(): CpuClassInfo {
   const cpuClass = getCpuClass();
@@ -8,15 +8,15 @@ export function collectCpuClass(): CpuClassInfo {
 
 function getCpuClass(): string | FingerprintSpecialValue {
   try {
-    if (!("cpuClass" in navigator)) return FINGERPRINT_SPECIAL_VALUES.UNDEFINED;
+    if (!("cpuClass" in navigator)) return FingerprintSpecialValue.UNDEFINED;
 
     const rawCpuClass = (navigator as any).cpuClass;
 
-    if (typeof rawCpuClass !== "string") return FINGERPRINT_SPECIAL_VALUES.UNDEFINED;
+    if (typeof rawCpuClass !== "string") return FingerprintSpecialValue.UNDEFINED;
 
     const trimmed = rawCpuClass.trim();
-    return trimmed || FINGERPRINT_SPECIAL_VALUES.UNDEFINED;
+    return trimmed || FingerprintSpecialValue.UNDEFINED;
   } catch {
-    return FINGERPRINT_SPECIAL_VALUES.ERROR;
+    return FingerprintSpecialValue.ERROR;
   }
 }

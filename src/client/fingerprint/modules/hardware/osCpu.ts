@@ -1,5 +1,5 @@
 import type { OSCpuInfo } from "../../types";
-import { FINGERPRINT_SPECIAL_VALUES, FingerprintSpecialValue } from "../../utils/consts";
+import { FingerprintSpecialValue } from "../../utils/consts";
 
 export async function collectOSCpu(): Promise<OSCpuInfo> {
   const oscpu = await getOSCpu();
@@ -8,15 +8,15 @@ export async function collectOSCpu(): Promise<OSCpuInfo> {
 
 async function getOSCpu(): Promise<string | FingerprintSpecialValue> {
   try {
-    if (!("oscpu" in navigator)) return FINGERPRINT_SPECIAL_VALUES.UNDEFINED;
+    if (!("oscpu" in navigator)) return FingerprintSpecialValue.UNDEFINED;
 
     const rawOSCpu = (navigator as any).oscpu;
     
-    if (typeof rawOSCpu !== "string") return FINGERPRINT_SPECIAL_VALUES.UNDEFINED;
+    if (typeof rawOSCpu !== "string") return FingerprintSpecialValue.UNDEFINED;
 
     const trimmed = rawOSCpu.trim();
-    return trimmed || FINGERPRINT_SPECIAL_VALUES.UNDEFINED;
+    return trimmed || FingerprintSpecialValue.UNDEFINED;
   } catch {
-    return FINGERPRINT_SPECIAL_VALUES.ERROR;
+    return FingerprintSpecialValue.ERROR;
   }
 }

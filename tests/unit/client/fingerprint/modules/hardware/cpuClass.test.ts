@@ -1,5 +1,5 @@
 import { collectCpuClass } from '../../../../../../src/client/fingerprint/modules/hardware/cpuClass';
-import { FINGERPRINT_SPECIAL_VALUES } from '../../../../../../src/client/fingerprint/utils/consts';
+import { FingerprintSpecialValue } from '../../../../../../src/client/fingerprint/utils/consts';
 
 // Mock navigator object
 const mockNavigator: any = {
@@ -49,7 +49,7 @@ describe('Hardware CPU Class Module', () => {
       const result = collectCpuClass();
 
       // Assert
-      expect(result).toEqual({ cpuClass: FINGERPRINT_SPECIAL_VALUES.UNDEFINED });
+      expect(result).toEqual({ cpuClass: FingerprintSpecialValue.UNDEFINED });
     });
 
     it('should return empty string when navigator.cpuClass is null', () => {
@@ -60,7 +60,7 @@ describe('Hardware CPU Class Module', () => {
       const result = collectCpuClass();
 
       // Assert
-      expect(result).toEqual({ cpuClass: FINGERPRINT_SPECIAL_VALUES.UNDEFINED });
+      expect(result).toEqual({ cpuClass: FingerprintSpecialValue.UNDEFINED });
     });
 
     it('should return empty string when navigator.cpuClass is not a string', () => {
@@ -71,7 +71,7 @@ describe('Hardware CPU Class Module', () => {
       const result = collectCpuClass();
 
       // Assert
-      expect(result).toEqual({ cpuClass: FINGERPRINT_SPECIAL_VALUES.UNDEFINED });
+      expect(result).toEqual({ cpuClass: FingerprintSpecialValue.UNDEFINED });
     });
 
     it('should return empty string when navigator.cpuClass is empty string', () => {
@@ -82,7 +82,7 @@ describe('Hardware CPU Class Module', () => {
       const result = collectCpuClass();
 
       // Assert
-      expect(result).toEqual({ cpuClass: FINGERPRINT_SPECIAL_VALUES.UNDEFINED });
+      expect(result).toEqual({ cpuClass: FingerprintSpecialValue.UNDEFINED });
     });
 
     it('should return empty string when navigator.cpuClass is whitespace only', () => {
@@ -93,7 +93,7 @@ describe('Hardware CPU Class Module', () => {
       const result = collectCpuClass();
 
       // Assert
-      expect(result).toEqual({ cpuClass: FINGERPRINT_SPECIAL_VALUES.UNDEFINED });
+      expect(result).toEqual({ cpuClass: FingerprintSpecialValue.UNDEFINED });
     });
 
     it('should handle error gracefully and return ERROR', () => {
@@ -107,7 +107,7 @@ describe('Hardware CPU Class Module', () => {
       const result = collectCpuClass();
 
       // Assert
-      expect(result).toEqual({ cpuClass: FINGERPRINT_SPECIAL_VALUES.ERROR });
+      expect(result).toEqual({ cpuClass: FingerprintSpecialValue.ERROR });
 
       // Restore navigator for other tests
       Object.defineProperty(global, 'navigator', {

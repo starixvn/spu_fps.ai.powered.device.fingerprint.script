@@ -1,5 +1,5 @@
 import type { DeviceMemoryInfo } from "../../types";
-import { FINGERPRINT_SPECIAL_VALUES, FingerprintSpecialValue } from "../../utils/consts";
+import { FingerprintSpecialValue } from "../../utils/consts";
 
 const DEVICE_MEMORY_RUNS = 5;
 const MIN_BENCHMARK_SCORE = 180000;
@@ -9,38 +9,38 @@ const KNOWN_POWER2_VALUES = [0.25, 0.5, 1, 2, 4, 8, 16, 32];
 
 export async function collectDeviceMemory(): Promise<DeviceMemoryInfo> {
   try {
-    if (!("deviceMemory" in navigator)) return { deviceMemory: FINGERPRINT_SPECIAL_VALUES.UNDEFINED };
+    if (!("deviceMemory" in navigator)) return { deviceMemory: FingerprintSpecialValue.UNDEFINED };
 
     const values: number[] = [];
 
     for (let i = 0; i < DEVICE_MEMORY_RUNS; i++) {
       const v = getDeviceMemoryOnce();
 
-      if (v !== FINGERPRINT_SPECIAL_VALUES.UNDEFINED) values.push(v as number);
+      if (v !== FingerprintSpecialValue.UNDEFINED) values.push(v as number);
       await deviceMemoryDelay(1);
     }
 
-    if (!values.length) return { deviceMemory: FINGERPRINT_SPECIAL_VALUES.TIMEOUT };
+    if (!values.length) return { deviceMemory: FingerprintSpecialValue.TIMEOUT };
 
     const stableValue = deviceMemoryMostFrequent(values);
 
-    if (deviceMemoryHasNoise(values, stableValue)) return { deviceMemory: FINGERPRINT_SPECIAL_VALUES.KNOWN_FOR_ANTI_FINGERPRINTING };
+    if (deviceMemoryHasNoise(values, stableValue)) return { deviceMemory: FingerprintSpecialValue.KNOWN_FOR_ANTI_FINGERPRINTING };
 
     const benchmark = await runCompositeBenchmark();
 
     if (stableValue < MIN_VALID_MEMORY || stableValue > MAX_VALID_MEMORY)
-      return { deviceMemory: FINGERPRINT_SPECIAL_VALUES.KNOWN_FOR_ANTI_FINGERPRINTING };
+      return { deviceMemory: FingerprintSpecialValue.KNOWN_FOR_ANTI_FINGERPRINTING };
 
     if (
       KNOWN_POWER2_VALUES.includes(stableValue) &&
       stableValue < Math.min(8, (benchmark / MIN_BENCHMARK_SCORE) * 8)
     ) {
-      return { deviceMemory: FINGERPRINT_SPECIAL_VALUES.KNOWN_FOR_ANTI_FINGERPRINTING };
+      return { deviceMemory: FingerprintSpecialValue.KNOWN_FOR_ANTI_FINGERPRINTING };
     }
 
     return { deviceMemory: stableValue };
   } catch {
-    return { deviceMemory: FINGERPRINT_SPECIAL_VALUES.ERROR };
+    return { deviceMemory: FingerprintSpecialValue.ERROR };
   }
 }
 
@@ -49,9 +49,9 @@ function getDeviceMemoryOnce(): number | FingerprintSpecialValue {
     const val = (navigator as any).deviceMemory;
     const n = typeof val === "string" ? parseFloat(val) : val;
 
-    return typeof n === "number" && n > 0 ? n : FINGERPRINT_SPECIAL_VALUES.UNDEFINED;
+    return typeof n === "number" && n > 0 ? n : FingerprintSpecialValue.UNDEFINED;
   } catch {
-    return FINGERPRINT_SPECIAL_VALUES.ERROR;
+    return FingerprintSpecialValue.ERROR;
   }
 }
 

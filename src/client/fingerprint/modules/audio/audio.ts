@@ -1,5 +1,5 @@
 import type { Bit } from '../../types';
-import { FINGERPRINT_SPECIAL_VALUES, FingerprintSpecialValue } from "../../utils/consts";
+import { FingerprintSpecialValue } from "../../utils/consts";
 import { boolToBit } from '../../utils/data';
 import { getBrowserName } from '../browser/browserName';
 import { isMobile } from '../../utils/browser';
@@ -36,7 +36,7 @@ const RMS_DIFF_THRESHOLD = 3;
 export async function collectAudio(): Promise<number | FingerprintSpecialValue> {
   try {
     if (doesBrowserPerformAntifingerprinting()) {
-      return FINGERPRINT_SPECIAL_VALUES.KNOWN_FOR_ANTI_FINGERPRINTING;
+      return FingerprintSpecialValue.KNOWN_FOR_ANTI_FINGERPRINTING;
     }
 
     const AudioCtxClass =
@@ -44,7 +44,7 @@ export async function collectAudio(): Promise<number | FingerprintSpecialValue> 
       (window as any).webkitOfflineAudioContext;
       
     if (!AudioCtxClass) {
-      return FINGERPRINT_SPECIAL_VALUES.UNDEFINED;
+      return FingerprintSpecialValue.UNDEFINED;
     }
 
     if (audioCache) {
@@ -65,7 +65,7 @@ export async function collectAudio(): Promise<number | FingerprintSpecialValue> 
     }
 
     if (samples.length === 0) {
-      return FINGERPRINT_SPECIAL_VALUES.TIMEOUT;
+      return FingerprintSpecialValue.TIMEOUT;
     }
 
     // Statistical analysis and noise detection
@@ -79,7 +79,7 @@ export async function collectAudio(): Promise<number | FingerprintSpecialValue> 
 
     return median;
   } catch (error) {
-    return FINGERPRINT_SPECIAL_VALUES.ERROR;
+    return FingerprintSpecialValue.ERROR;
   }
 }
 

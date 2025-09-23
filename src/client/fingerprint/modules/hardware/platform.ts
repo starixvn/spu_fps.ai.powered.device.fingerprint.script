@@ -1,6 +1,6 @@
 import type { PlatformInfo } from "../../types";
 import { isWebKit, isDesktopWebKit, isIPad } from "../../utils/browser";
-import { FINGERPRINT_SPECIAL_VALUES, FingerprintSpecialValue } from "../../utils/consts";
+import { FingerprintSpecialValue } from "../../utils/consts";
 
 export function collectPlatform(): PlatformInfo {
   const platform = getPlatform();
@@ -17,8 +17,8 @@ export function getPlatform(): string | FingerprintSpecialValue {
       }
     }
 
-    return platform || FINGERPRINT_SPECIAL_VALUES.UNDEFINED;
+    return platform || FingerprintSpecialValue.UNDEFINED;
   } catch {
-    return FINGERPRINT_SPECIAL_VALUES.ERROR;
+    return FingerprintSpecialValue.ERROR;
   }
 }

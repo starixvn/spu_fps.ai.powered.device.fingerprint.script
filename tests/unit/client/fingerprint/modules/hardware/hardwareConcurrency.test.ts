@@ -1,5 +1,5 @@
 import { collectHardwareConcurrency } from "../../../../../../src/client/fingerprint/modules/hardware/hardwareConcurrency";
-import { FINGERPRINT_SPECIAL_VALUES } from "../../../../../../src/client/fingerprint/utils/consts";
+import { FingerprintSpecialValue } from "../../../../../../src/client/fingerprint/utils/consts";
 
 // Mock navigator object
 const mockNavigator: any = {
@@ -27,7 +27,7 @@ describe("Hardware Concurrency Module", () => {
       const result = await collectHardwareConcurrency();
 
       // Assert
-      expect(result).toEqual({ hardwareConcurrency: FINGERPRINT_SPECIAL_VALUES.UNDEFINED });
+      expect(result).toEqual({ hardwareConcurrency: FingerprintSpecialValue.UNDEFINED });
     }, 30000); // Increase timeout
 
     it("should handle undefined navigator gracefully", async () => {
@@ -41,7 +41,7 @@ describe("Hardware Concurrency Module", () => {
       const result = await collectHardwareConcurrency();
 
       // Assert
-      expect(result).toEqual({ hardwareConcurrency: FINGERPRINT_SPECIAL_VALUES.ERROR });
+      expect(result).toEqual({ hardwareConcurrency: FingerprintSpecialValue.ERROR });
 
       // Restore navigator for other tests
       Object.defineProperty(global, "navigator", {
