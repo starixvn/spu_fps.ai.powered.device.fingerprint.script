@@ -1,17 +1,14 @@
 import type { Bit } from '../../types';
+import { FINGERPRINT_SPECIAL_VALUES, FingerprintSpecialValue } from "../../utils/consts";
 import { boolToBit } from '../../utils/data';
+import { getBrowserName } from '../browser/browserName';
+import { isMobile } from '../../utils/browser';
 
 export const enum AudioStatus {
   CLEAN = "clean",
   RANDOMIZE = "randomize", 
   SPOOF = "spoof",
   BLOCK = "block",
-}
-
-const enum SpecialFingerprint {
-  NotSupported = -1,
-  Timeout = -2,
-  KnownForAntifingerprinting = -3,
 }
 
 const enum InnerErrorName {
@@ -36,40 +33,156 @@ const VARIANCE_THRESHOLD = 25;
 const MEDIAN_DIFF_THRESHOLD = 5;   
 const RMS_DIFF_THRESHOLD = 3;     
 
-function getBrowserName(): string {
+export async function collectAudio(): Promise<number | FingerprintSpecialValue> {
   try {
-    const userAgent = (navigator.userAgent || "").toLowerCase();
+    if (doesBrowserPerformAntifingerprinting()) {
+      return FINGERPRINT_SPECIAL_VALUES.KNOWN_FOR_ANTI_FINGERPRINTING;
+    }
+
+  const AudioCtxClass =
+    (window as any).OfflineAudioContext ||
+    (window as any).webkitOfflineAudioContext;
     
-    if (window.chrome && !window.opr && !navigator.brave) 
-      return "Chrome";
-    
-    if (navigator.brave && navigator.brave.isBrave) 
-      return "Brave";
-    
-    if (typeof window.InstallTrigger !== "undefined") 
-      return "Firefox";
-    
-    if (window.safari && window.safari.pushNotification) 
-      return "Safari";
-    
-    if (/safari(?!.*chrome)/.test(userAgent)) return "Safari";
-    if (/edg\//.test(userAgent)) return "Edge";
-    if (/opr|opera/.test(userAgent)) return "Opera";
-    if (/chrome/.test(userAgent)) return "Chrome";
-    if (/firefox/.test(userAgent)) return "Firefox";
-    
-    return "";
-  } catch {
-    return "";
+  if (!AudioCtxClass) {
+    return FINGERPRINT_SPECIAL_VALUES.UNDEFINED;
+  }
+
+  if (audioCache) {
+    return audioCache;
+  }
+
+  // Generate multiple audio samples for analysis
+  const samples: number[] = [];
+  const snapshotsRMS: number[] = [];
+
+  for (let i = 0; i < SNAPSHOTS; i++) {
+    const result = await getAudioSampleWithRMSAndRetry();
+
+    if (result !== null) {
+      samples.push(result.sample);     
+      snapshotsRMS.push(result.rms);   
+    }
+  }
+
+  if (samples.length === 0) {
+    return FINGERPRINT_SPECIAL_VALUES.TIMEOUT;
+  }
+
+  // Statistical analysis and noise detection
+  const median = computeMedian(samples);
+  const status = detectNoise(samples, median, snapshotsRMS);
+
+  // Cache clean results
+  if (status === "clean") {
+    audioCache = median;
+  }
+
+    return median;
+  } catch (error) {
+    return FINGERPRINT_SPECIAL_VALUES.TIMEOUT;
   }
 }
 
-function isMobile(): Bit {
-  try {
-    return boolToBit(/Mobi|Android/i.test(navigator.userAgent));
-  } catch {
-    return 0;
+function doesBrowserPerformAntifingerprinting(): Bit {
+  const browserName = getBrowserName().toLowerCase();
+  const version = getBrowserVersion();
+  
+  // Safari 17+ has Intelligent Tracking Prevention with audio normalization
+  if (browserName === "safari" && version >= 17) {
+    return 1;
   }
+  
+  // Brave Browser has built-in fingerprinting protection
+  if (browserName === "brave") {
+    return 1;
+  }
+  
+  // Firefox with privacy.resistFingerprinting detection
+  if (browserName === "firefox") {
+    return detectFirefoxResistFingerprinting();
+  }
+  
+  // Samsung Browser 26+ has enhanced privacy
+  if (navigator.userAgent.includes("SamsungBrowser") && version >= 26) {
+    return 1;
+  }
+  
+  return 0;
+}
+
+async function getAudioSampleWithRMSAndRetry(): Promise<{
+  sample: number;
+  rms: number;
+} | null> {
+  const maxRetries = 3;
+  const retryDelay = 500;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const result = await getAudioSampleWithRMS();
+
+      if (result !== null) return result;
+      
+      if (isMobile() && document.hidden) {
+        await new Promise(resolve => setTimeout(resolve, retryDelay * 2));
+      } else {
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+      }
+    } catch (err: any) {
+      if (err.name === "NotAllowedError" || 
+          err.message?.includes("user gesture")) {
+        return null;
+      }
+      
+      if (attempt === maxRetries - 1) throw err;
+      await new Promise(resolve => setTimeout(resolve, retryDelay));
+    }
+  }
+  
+  return null;
+}
+
+function computeMedian(arr: number[]): number {
+  const sorted = [...arr].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+
+  return sorted.length % 2 === 1
+    ? sorted[mid]
+    : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+function detectNoise(
+  cleanSamples: number[],
+  median: number,
+  snapshotsRMS: number[]
+): AudioStatus {
+  if (SPOOF_VALUES.includes(Math.round(median))) return AudioStatus.SPOOF;
+  
+  if (SPOOF_RANGES.some(([min, max]) => median >= min && median <= max))
+    return AudioStatus.SPOOF;
+
+  // Variance => randomization
+  const variance =
+    cleanSamples.reduce((acc, v) => acc + Math.pow(v - median, 2), 0) /
+    cleanSamples.length;
+
+  if (variance > VARIANCE_THRESHOLD) return AudioStatus.RANDOMIZE;
+
+  // RMS stability => randomization
+  const maxRMS = Math.max(...snapshotsRMS);
+  const minRMS = Math.min(...snapshotsRMS);
+
+  if (maxRMS - minRMS > RMS_DIFF_THRESHOLD) return AudioStatus.RANDOMIZE;
+
+  // Temporal consistency with last run
+  if (
+    lastMedian !== null &&
+    Math.abs(median - lastMedian) > MEDIAN_DIFF_THRESHOLD
+  )
+    return AudioStatus.RANDOMIZE;
+
+  lastMedian = median;
+  return AudioStatus.CLEAN;
 }
 
 function getBrowserVersion(): number {
@@ -196,115 +309,6 @@ function detectFirefoxResistFingerprinting(): Bit {
   }
 }
 
-function doesBrowserPerformAntifingerprinting(): Bit {
-  const browserName = getBrowserName().toLowerCase();
-  const version = getBrowserVersion();
-  
-  // Safari 17+ has Intelligent Tracking Prevention with audio normalization
-  if (browserName === "safari" && version >= 17) {
-    return 1;
-  }
-  
-  // Brave Browser has built-in fingerprinting protection
-  if (browserName === "brave") {
-    return 1;
-  }
-  
-  // Firefox with privacy.resistFingerprinting detection
-  if (browserName === "firefox") {
-    return detectFirefoxResistFingerprinting();
-  }
-  
-  // Samsung Browser 26+ has enhanced privacy
-  if (navigator.userAgent.includes("SamsungBrowser") && version >= 26) {
-    return 1;
-  }
-  
-  return 0;
-}
-
-export async function collectAudio(): Promise<number | null> {
-  try {
-    if (doesBrowserPerformAntifingerprinting()) {
-      return SpecialFingerprint.KnownForAntifingerprinting;
-    }
-
-  const AudioCtxClass =
-    (window as any).OfflineAudioContext ||
-    (window as any).webkitOfflineAudioContext;
-    
-  if (!AudioCtxClass) {
-    return SpecialFingerprint.NotSupported;
-  }
-
-  if (audioCache) {
-    return audioCache;
-  }
-
-  // Generate multiple audio samples for analysis
-  const samples: number[] = [];
-  const snapshotsRMS: number[] = [];
-
-  for (let i = 0; i < SNAPSHOTS; i++) {
-    const result = await getAudioSampleWithRMSAndRetry();
-
-    if (result !== null) {
-      samples.push(result.sample);     
-      snapshotsRMS.push(result.rms);   
-    }
-  }
-
-  if (samples.length === 0) {
-    return SpecialFingerprint.Timeout;
-  }
-
-  // Statistical analysis and noise detection
-  const median = computeMedian(samples);
-  const status = detectNoise(samples, median, snapshotsRMS);
-
-  // Cache clean results
-  if (status === "clean") {
-    audioCache = median;
-  }
-
-    return median;
-  } catch (error) {
-    return SpecialFingerprint.Timeout;
-  }
-}
-
-async function getAudioSampleWithRMSAndRetry(): Promise<{
-  sample: number;
-  rms: number;
-} | null> {
-  const maxRetries = 3;
-  const retryDelay = 500;
-  
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      const result = await getAudioSampleWithRMS();
-
-      if (result !== null) return result;
-      
-      if (isMobile() && document.hidden) {
-        await new Promise(resolve => setTimeout(resolve, retryDelay * 2));
-      } else {
-        await new Promise(resolve => setTimeout(resolve, retryDelay));
-      }
-    } catch (err: any) {
-      if (err.name === "NotAllowedError" || 
-          err.message?.includes("user gesture")) {
-        return null;
-      }
-      
-      if (attempt === maxRetries - 1) throw err;
-      await new Promise(resolve => setTimeout(resolve, retryDelay));
-    }
-  }
-  
-  return null;
-}
-
 async function getAudioSampleWithRMS(): Promise<{
   sample: number;
   rms: number;
@@ -381,47 +385,4 @@ async function getAudioSampleWithRMS(): Promise<{
   } catch {
     return null;
   }
-}
-
-function computeMedian(arr: number[]): number {
-  const sorted = [...arr].sort((a, b) => a - b);
-  const mid = Math.floor(sorted.length / 2);
-
-  return sorted.length % 2 === 1
-    ? sorted[mid]
-    : (sorted[mid - 1] + sorted[mid]) / 2;
-}
-
-function detectNoise(
-  cleanSamples: number[],
-  median: number,
-  snapshotsRMS: number[]
-): AudioStatus {
-  if (SPOOF_VALUES.includes(Math.round(median))) return AudioStatus.SPOOF;
-  
-  if (SPOOF_RANGES.some(([min, max]) => median >= min && median <= max))
-    return AudioStatus.SPOOF;
-
-  // Variance => randomization
-  const variance =
-    cleanSamples.reduce((acc, v) => acc + Math.pow(v - median, 2), 0) /
-    cleanSamples.length;
-
-  if (variance > VARIANCE_THRESHOLD) return AudioStatus.RANDOMIZE;
-
-  // RMS stability => randomization
-  const maxRMS = Math.max(...snapshotsRMS);
-  const minRMS = Math.min(...snapshotsRMS);
-
-  if (maxRMS - minRMS > RMS_DIFF_THRESHOLD) return AudioStatus.RANDOMIZE;
-
-  // Temporal consistency with last run
-  if (
-    lastMedian !== null &&
-    Math.abs(median - lastMedian) > MEDIAN_DIFF_THRESHOLD
-  )
-    return AudioStatus.RANDOMIZE;
-
-  lastMedian = median;
-  return AudioStatus.CLEAN;
 }

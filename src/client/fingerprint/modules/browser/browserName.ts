@@ -41,7 +41,7 @@ const cssDetectors: Detector[] = [
                                        !(window as any).chrome },
 ];
 
-function getBrowserName(): string {
+export function getBrowserName(): string {
   try {
     // Mobile browsers 
     const mobile = findMatch(mobileDetectors);

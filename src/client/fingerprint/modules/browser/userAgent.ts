@@ -69,7 +69,7 @@ async function getUserAgent(): Promise<UserAgentInfo> {
       platform = getPlatform() || ((navigator.platform ?? "").replace(/\s+/g, "_"));
 
       mobile = Number(
-        mobileRegex.test(ua) || legacyMobileRegex.test(ua)
+        mobileRegex.test(ua) || legacyMobileRegex.test(ua.substr(0, 4))
       );
     }
 

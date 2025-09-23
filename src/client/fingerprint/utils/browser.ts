@@ -179,3 +179,15 @@ export function isAndroid(): Bit {
     return 0;
   }
 }
+
+/**
+ * Detects if the device is mobile
+ */
+export function isMobile(): Bit {
+  try {
+    const ua = navigator.userAgent.toLowerCase();
+    return boolToBit(ua.includes("mobi") || ua.includes("android"));
+  } catch {
+    return 0;
+  }
+}

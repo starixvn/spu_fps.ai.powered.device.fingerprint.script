@@ -1,3 +1,5 @@
+import { FingerprintSpecialValue } from "./utils/consts";
+
 // Bit type for boolean values as 0 or 1
 export type Bit = 0 | 1;
 
@@ -95,17 +97,8 @@ export interface FontPreferencesInfo {
 
 // #region Audio
 export interface AudioGroupInfo {
-  audio: number | null;
-  audioBaseLatency: number | -1 | -2 | -3;
-}
-
-export interface AudioInfo {
-  audio: number | null;
-  status: string;
-}
-
-export interface AudioBaseLatencyInfo {
-  audioBaseLatency: number | -1 | -2 | -3;
+  audio: number | FingerprintSpecialValue;
+  audioBaseLatency: number | FingerprintSpecialValue;
 }
 // #endregion
 

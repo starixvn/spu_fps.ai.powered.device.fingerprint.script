@@ -1,0 +1,10 @@
+export const FINGERPRINT_SPECIAL_VALUES = {
+  UNDEFINED: -1,
+  KNOWN_FOR_ANTI_FINGERPRINTING: -2,
+  ERROR: -3,
+  TIMEOUT: -4,
+  DISABLED: -5,
+  NOT_FINITE: -6,
+} as const;
+
+export type FingerprintSpecialValue = (typeof FINGERPRINT_SPECIAL_VALUES)[keyof typeof FINGERPRINT_SPECIAL_VALUES];

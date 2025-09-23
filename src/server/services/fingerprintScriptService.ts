@@ -13,6 +13,7 @@ export class FingerprintScriptService extends ScriptService {
       "utils/data.js",
       "utils/browser.js",
       "utils/dom.js",
+      "utils/consts.js",
       "deviceFactory.js",
       
       // Session
@@ -23,6 +24,7 @@ export class FingerprintScriptService extends ScriptService {
       "fingerprint/utils/data.js", 
       "fingerprint/utils/browser.js",
       "fingerprint/utils/dom.js",
+      "fingerprint/utils/consts.js",
       
       // Hardware modules
       "fingerprint/modules/hardware/platform.js",

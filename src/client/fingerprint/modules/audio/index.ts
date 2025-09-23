@@ -1,4 +1,4 @@
-import { collectAudioBaseLatency, SpecialFingerprint } from "./audioBaseLatency";
+import { collectAudioBaseLatency } from "./audioBaseLatency";
 import { collectAudio } from "./audio";
 import type { AudioGroupInfo } from "../../types";
 
@@ -9,7 +9,7 @@ export class AudioFingerprint {
 
     const audioGroup: AudioGroupInfo = {
       audio: audioResult,
-      audioBaseLatency: audioBaseLatencyResult.audioBaseLatency,
+      audioBaseLatency: audioBaseLatencyResult,
     };
 
     return audioGroup;
