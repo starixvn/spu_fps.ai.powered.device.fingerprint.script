@@ -59,7 +59,7 @@ export interface GraphicsGroupInfo {
   canvas: CanvasInfo;
   webglBasics: WebGLBasicsInfo | FingerprintSpecialValue;
   webglExtensions: WebGLExtensionsInfo;
-  fonts: FontsInfo;
+  fonts: FontsInfo | FingerprintSpecialValue;
   fontPreferences: FontPreferencesInfo;
   screenResolution: [number, number];
   screenFrame: [number, number, number, number];
