@@ -1,11 +1,6 @@
 import type { VendorFlavorsInfo } from "../../types";
 
 export function collectVendorFlavors(): VendorFlavorsInfo {
-  const vendorFlavors = getVendorFlavors();
-  return { vendorFlavors };
-}
-
-function getVendorFlavors(): string[] {
   const flavors: string[] = [];
 
   const browserGlobals = [
@@ -33,5 +28,5 @@ function getVendorFlavors(): string[] {
     }
   }
 
-  return flavors.sort();
+  return { vendorFlavors: flavors.sort() };
 }
