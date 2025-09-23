@@ -37,6 +37,8 @@ const legacyMobileRegex = new RegExp(
   "i"
 ); 
 
+const mobileRegex = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
+
 export async function collectUserAgent(): Promise<UserAgentInfo> {
   const userAgent = await getUserAgent();
   return userAgent;
@@ -67,8 +69,7 @@ async function getUserAgent(): Promise<UserAgentInfo> {
       platform = getPlatform() || ((navigator.platform ?? "").replace(/\s+/g, "_"));
 
       mobile = Number(
-        /Mobile|iPhone|Android|iPad|iPod/i.test(ua) ||
-        legacyMobileRegex.test(ua)
+        mobileRegex.test(ua) || legacyMobileRegex.test(ua)
       );
     }
 
