@@ -36,7 +36,7 @@ const RMS_DIFF_THRESHOLD = 3;
 export async function collectAudio(): Promise<number | FingerprintSpecialValue> {
   try {
     if (doesBrowserPerformAntifingerprinting()) {
-      return FingerprintSpecialValue.KNOWN_FOR_ANTI_FINGERPRINTING;
+      return FingerprintSpecialValue.ANTI_FINGERPRINTED;
     }
 
     const AudioCtxClass =

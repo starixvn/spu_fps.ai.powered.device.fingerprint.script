@@ -24,18 +24,18 @@ export async function collectDeviceMemory(): Promise<DeviceMemoryInfo> {
 
     const stableValue = deviceMemoryMostFrequent(values);
 
-    if (deviceMemoryHasNoise(values, stableValue)) return { deviceMemory: FingerprintSpecialValue.KNOWN_FOR_ANTI_FINGERPRINTING };
+    if (deviceMemoryHasNoise(values, stableValue)) return { deviceMemory: FingerprintSpecialValue.ANTI_FINGERPRINTED };
 
     const benchmark = await runCompositeBenchmark();
 
     if (stableValue < MIN_VALID_MEMORY || stableValue > MAX_VALID_MEMORY)
-      return { deviceMemory: FingerprintSpecialValue.KNOWN_FOR_ANTI_FINGERPRINTING };
+      return { deviceMemory: FingerprintSpecialValue.ANTI_FINGERPRINTED };
 
     if (
       KNOWN_POWER2_VALUES.includes(stableValue) &&
       stableValue < Math.min(8, (benchmark / MIN_BENCHMARK_SCORE) * 8)
     ) {
-      return { deviceMemory: FingerprintSpecialValue.KNOWN_FOR_ANTI_FINGERPRINTING };
+      return { deviceMemory: FingerprintSpecialValue.ANTI_FINGERPRINTED };
     }
 
     return { deviceMemory: stableValue };

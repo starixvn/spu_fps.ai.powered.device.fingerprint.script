@@ -22,7 +22,7 @@ export async function collectCanvas(): Promise<CanvasInfo> {
     const canvasProtection = await detectCanvasProtection();
     
     if (canvasProtection) {
-      return [FingerprintSpecialValue.KNOWN_FOR_ANTI_FINGERPRINTING, 1];
+      return [FingerprintSpecialValue.ANTI_FINGERPRINTED, 1];
     }
 
     const snapshotPromises = Array.from({ length: CANVAS_SNAPSHOTS }, () => getCanvasFeatures());

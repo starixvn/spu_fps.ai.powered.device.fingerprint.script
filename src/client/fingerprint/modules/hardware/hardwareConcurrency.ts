@@ -24,19 +24,19 @@ export async function collectHardwareConcurrency(): Promise<HardwareConcurrencyI
 
     const stableValue = mostFrequent(values);
 
-    if (hasNoise(values, stableValue)) return { hardwareConcurrency: FingerprintSpecialValue.KNOWN_FOR_ANTI_FINGERPRINTING };
+    if (hasNoise(values, stableValue)) return { hardwareConcurrency: FingerprintSpecialValue.ANTI_FINGERPRINTED };
 
     const benchmark = await runCompositeBenchmark();
 
     if (stableValue < MIN_VALID_CORES || stableValue > MAX_VALID_CORES)
-      return { hardwareConcurrency: FingerprintSpecialValue.KNOWN_FOR_ANTI_FINGERPRINTING };
+      return { hardwareConcurrency: FingerprintSpecialValue.ANTI_FINGERPRINTED };
 
     const expectedMinCores = Math.max(
       MIN_VALID_CORES,
       (benchmark / HARDWARE_CONCURRENCY_MIN_BENCHMARK_SCORE) * stableValue
     );
 
-    if (stableValue < expectedMinCores) return { hardwareConcurrency: FingerprintSpecialValue.KNOWN_FOR_ANTI_FINGERPRINTING };
+    if (stableValue < expectedMinCores) return { hardwareConcurrency: FingerprintSpecialValue.ANTI_FINGERPRINTED };
 
     return { hardwareConcurrency: stableValue };
   } catch {
