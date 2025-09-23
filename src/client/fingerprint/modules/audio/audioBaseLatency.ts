@@ -45,6 +45,6 @@ export function collectAudioBaseLatency(): number | FingerprintSpecialValue {
     ctx.close?.();
     return latency;
   } catch (error) {
-    return FINGERPRINT_SPECIAL_VALUES.UNDEFINED;
+    return FINGERPRINT_SPECIAL_VALUES.ERROR;
   }
 }

@@ -3,6 +3,7 @@
  */
 
 import { collectPlatform } from '../../../../../../src/client/fingerprint/modules/hardware/platform';
+import { FINGERPRINT_SPECIAL_VALUES } from '../../../../../../src/client/fingerprint/utils/consts';
 
 // Setup mock values in beforeEach
 const setupMocks = () => {
@@ -66,7 +67,7 @@ describe('Hardware Platform Module', () => {
       const result = collectPlatform();
 
       // Assert
-      expect(result).toEqual({ platform: '' });
+      expect(result).toEqual({ platform: FINGERPRINT_SPECIAL_VALUES.UNDEFINED });
     });
 
     it('should return MacIntel platform correctly in non-WebKit environment', () => {
@@ -99,7 +100,7 @@ describe('Hardware Platform Module', () => {
       const result = collectPlatform();
 
       // Assert
-      expect(result).toEqual({ platform: '' });
+      expect(result).toEqual({ platform: FINGERPRINT_SPECIAL_VALUES.UNDEFINED });
     });
 
     it('should return different platform values as-is', () => {
@@ -120,11 +121,15 @@ describe('Hardware Platform Module', () => {
       expect(collectPlatform()).toEqual({ platform: 'Linux x86_64' });
     });
 
-    it('should handle error gracefully and return empty string', () => {
-      // Arrange - Create a scenario where navigator access throws
+    it('should handle error gracefully and return ERROR', () => {
+      // Arrange - Create a scenario where navigator access throws during platform access
       const originalNavigator = global.navigator;
       Object.defineProperty(global, 'navigator', {
-        get() { throw new Error('Navigator not available'); },
+        value: {
+          get platform() { throw new Error('Platform access denied'); },
+          vendor: 'Apple Computer, Inc.', // Keep other properties accessible
+          userAgent: 'test'
+        },
         configurable: true
       });
 
@@ -132,7 +137,7 @@ describe('Hardware Platform Module', () => {
       const result = collectPlatform();
 
       // Assert
-      expect(result).toEqual({ platform: '' });
+      expect(result).toEqual({ platform: FINGERPRINT_SPECIAL_VALUES.ERROR });
 
       // Restore navigator for other tests
       Object.defineProperty(global, 'navigator', {

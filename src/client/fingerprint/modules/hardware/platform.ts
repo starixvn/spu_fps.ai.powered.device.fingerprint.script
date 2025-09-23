@@ -1,13 +1,13 @@
-import type { PlatformInfo, Bit } from "../../types";
-import { countTruthy, isWebKit } from "../../utils/browser";
-import { boolToBit } from "../../utils/data";
+import type { PlatformInfo } from "../../types";
+import { isWebKit, isDesktopWebKit, isIPad } from "../../utils/browser";
+import { FINGERPRINT_SPECIAL_VALUES, FingerprintSpecialValue } from "../../utils/consts";
 
 export function collectPlatform(): PlatformInfo {
   const platform = getPlatform();
   return { platform };
 }
 
-export function getPlatform(): string {
+export function getPlatform(): string | FingerprintSpecialValue {
   try {
     const platform = navigator.platform;
    
@@ -17,42 +17,8 @@ export function getPlatform(): string {
       }
     }
 
-    return platform || "";
+    return platform || FINGERPRINT_SPECIAL_VALUES.UNDEFINED;
   } catch {
-    return "";
+    return FINGERPRINT_SPECIAL_VALUES.ERROR;
   }
 }
-
-function isDesktopWebKit(): Bit {
-  const w = window;
-  const { HTMLElement, Document } = w;
-
-  return boolToBit(
-    countTruthy([
-      'safari' in w, 
-      !('ongestureend' in w),
-      !('TouchEvent' in w),
-      !('orientation' in w),
-      HTMLElement && !('autocapitalize' in HTMLElement.prototype),
-      Document && 'pointerLockElement' in Document.prototype,
-    ]) >= 4
-  );
-}
-
-function isIPad(): Bit {
-  if (navigator.platform === 'iPad') {
-    return 1;
-  }
-
-  const s = screen;
-  const screenRatio = s.width / s.height;
-
-  return boolToBit(
-    countTruthy([
-      'MediaSource' in window,
-      !!(Element.prototype as any).webkitRequestFullscreen,
-      screenRatio > 0.65 && screenRatio < 1.53,
-    ]) >= 2
-  );
-}
-

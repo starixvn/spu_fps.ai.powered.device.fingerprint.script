@@ -16,12 +16,12 @@ export class HardwareFingerprint {
     const deviceMemoryResult = await collectDeviceMemory();
 
     const hardwareGroup: HardwareGroupInfo = {
-      platform: platformResult.platform || "",
-      cpuClass: cpuClassResult.cpuClass || "",
-      architecture: architectureResult.architecture || 0,
-      oscpu: osCpuResult.oscpu || "",
-      hardwareConcurrency: hardwareConcurrencyResult.hardwareConcurrency || "",
-      deviceMemory: deviceMemoryResult.deviceMemory || "",
+      platform: platformResult.platform,
+      cpuClass: cpuClassResult.cpuClass,
+      architecture: architectureResult.architecture,
+      oscpu: osCpuResult.oscpu,
+      hardwareConcurrency: hardwareConcurrencyResult.hardwareConcurrency,
+      deviceMemory: deviceMemoryResult.deviceMemory,
     };
 
     return hardwareGroup;

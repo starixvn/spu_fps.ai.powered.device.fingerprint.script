@@ -1,4 +1,5 @@
 import type { UserAgentInfo } from "../../types";
+import { FingerprintSpecialValue } from "../../utils/consts";
 import { getPlatform } from "../hardware/platform";
 
 // Reference: http://detectmobilebrowsers.com/
@@ -46,7 +47,7 @@ export async function collectUserAgent(): Promise<UserAgentInfo> {
 
 async function getUserAgent(): Promise<UserAgentInfo> {
   try {
-    let brands: string, platform: string, mobile: number;
+    let brands: string, platform: string | FingerprintSpecialValue, mobile: number;
 
     if (navigator.userAgentData?.getHighEntropyValues) {
       const uaData = await navigator.userAgentData.getHighEntropyValues(["platform"]);
@@ -62,7 +63,7 @@ async function getUserAgent(): Promise<UserAgentInfo> {
 
     } else {
       // fallback
-      const ua       = navigator.userAgent;
+      const ua = navigator.userAgent;
       const m = ua.match(/(Chrome|Edg|Firefox|Safari)\/([\d.]+)/i);
 
       brands = m ? `${m[1]}/${m[2]}` : "Unknown/0";

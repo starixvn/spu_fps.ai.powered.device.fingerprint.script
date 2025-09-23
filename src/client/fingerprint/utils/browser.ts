@@ -191,3 +191,42 @@ export function isMobile(): Bit {
     return 0;
   }
 }
+
+/**
+ * Detects if browser is desktop WebKit (not mobile WebKit)
+ */
+export function isDesktopWebKit(): Bit {
+  const w = window;
+  const { HTMLElement, Document } = w;
+
+  return boolToBit(
+    countTruthy([
+      'safari' in w, 
+      !('ongestureend' in w),
+      !('TouchEvent' in w),
+      !('orientation' in w),
+      HTMLElement && !('autocapitalize' in HTMLElement.prototype),
+      Document && 'pointerLockElement' in Document.prototype,
+    ]) >= 4
+  );
+}
+
+/**
+ * Detects if device is iPad
+ */
+export function isIPad(): Bit {
+  if (navigator.platform === 'iPad') {
+    return 1;
+  }
+
+  const s = screen;
+  const screenRatio = s.width / s.height;
+
+  return boolToBit(
+    countTruthy([
+      'MediaSource' in window,
+      !!(Element.prototype as any).webkitRequestFullscreen,
+      screenRatio > 0.65 && screenRatio < 1.53,
+    ]) >= 2
+  );
+}

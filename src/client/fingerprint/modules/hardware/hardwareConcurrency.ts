@@ -1,4 +1,5 @@
 import type { HardwareConcurrencyInfo } from "../../types";
+import { FINGERPRINT_SPECIAL_VALUES, FingerprintSpecialValue } from "../../utils/consts";
 
 const HARDWARE_CONCURRENCY_RUNS = 5;
 const MIN_VALID_CORES = 1;
@@ -8,47 +9,47 @@ const HARDWARE_CONCURRENCY_MIN_BENCHMARK_SCORE = 180000;
 export async function collectHardwareConcurrency(): Promise<HardwareConcurrencyInfo> {
   try {
     if (!("hardwareConcurrency" in navigator))
-      return { hardwareConcurrency: "" };
+      return { hardwareConcurrency: FINGERPRINT_SPECIAL_VALUES.UNDEFINED };
 
     const values: number[] = [];
 
     for (let i = 0; i < HARDWARE_CONCURRENCY_RUNS; i++) {
       const v = getHardwareConcurrencyOnce();
 
-      if (v !== "") values.push(v);
+      if (v !== FINGERPRINT_SPECIAL_VALUES.UNDEFINED) values.push(v as number);
       await delay(1);
     }
 
-    if (!values.length) return { hardwareConcurrency: "" };
+    if (!values.length) return { hardwareConcurrency: FINGERPRINT_SPECIAL_VALUES.TIMEOUT };
 
     const stableValue = mostFrequent(values);
 
-    if (hasNoise(values, stableValue)) return { hardwareConcurrency: "" };
+    if (hasNoise(values, stableValue)) return { hardwareConcurrency: FINGERPRINT_SPECIAL_VALUES.KNOWN_FOR_ANTI_FINGERPRINTING };
 
     const benchmark = await runCompositeBenchmark();
 
     if (stableValue < MIN_VALID_CORES || stableValue > MAX_VALID_CORES)
-      return { hardwareConcurrency: "" };
+      return { hardwareConcurrency: FINGERPRINT_SPECIAL_VALUES.KNOWN_FOR_ANTI_FINGERPRINTING };
 
     const expectedMinCores = Math.max(
       MIN_VALID_CORES,
       (benchmark / HARDWARE_CONCURRENCY_MIN_BENCHMARK_SCORE) * stableValue
     );
 
-    if (stableValue < expectedMinCores) return { hardwareConcurrency: "" };
+    if (stableValue < expectedMinCores) return { hardwareConcurrency: FINGERPRINT_SPECIAL_VALUES.KNOWN_FOR_ANTI_FINGERPRINTING };
 
     return { hardwareConcurrency: stableValue };
   } catch {
-    return { hardwareConcurrency: "" };
+    return { hardwareConcurrency: FINGERPRINT_SPECIAL_VALUES.ERROR };
   }
 }
 
-function getHardwareConcurrencyOnce(): number | "" {
+function getHardwareConcurrencyOnce(): number | FingerprintSpecialValue {
   try {
     const val = navigator.hardwareConcurrency;
-    return typeof val === "number" && val > 0 ? val : "";
+    return typeof val === "number" && val > 0 ? val : FINGERPRINT_SPECIAL_VALUES.UNDEFINED;
   } catch {
-    return "";
+    return FINGERPRINT_SPECIAL_VALUES.ERROR;
   }
 }
 

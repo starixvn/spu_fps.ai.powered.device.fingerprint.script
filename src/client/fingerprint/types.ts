@@ -21,36 +21,36 @@ export interface F4Data {
 
 // #region Hardware
 export interface HardwareGroupInfo {
-  platform: string;
-  architecture: number;
-  oscpu: string;
-  cpuClass: string;
-  hardwareConcurrency: number | string;
-  deviceMemory: number | string;
+  platform: string | FingerprintSpecialValue;
+  architecture: number | FingerprintSpecialValue;
+  oscpu: string | FingerprintSpecialValue;
+  cpuClass: string | FingerprintSpecialValue;
+  hardwareConcurrency: number | string | FingerprintSpecialValue;
+  deviceMemory: number | string | FingerprintSpecialValue;
 }
 
 export interface DeviceMemoryInfo {
-  deviceMemory: number | string;
+  deviceMemory: number | string | FingerprintSpecialValue;
 }
 
 export interface HardwareConcurrencyInfo {
-  hardwareConcurrency: number | string;
+  hardwareConcurrency: number | string | FingerprintSpecialValue;
 }
 
 export interface CpuClassInfo {
-  cpuClass: string;
+  cpuClass: string | FingerprintSpecialValue;
 }
 
 export interface PlatformInfo {
-  platform: string;
+  platform: string | FingerprintSpecialValue;
 }
 
 export interface ArchitectureInfo {
-  architecture: number;
+  architecture: number | FingerprintSpecialValue;
 }
 
 export interface OSCpuInfo {
-  oscpu: string;
+  oscpu: string | FingerprintSpecialValue;
 }
 // #endregion
 

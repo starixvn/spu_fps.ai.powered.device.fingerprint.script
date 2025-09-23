@@ -1,4 +1,5 @@
 import { HardwareFingerprint } from '../../../../../../src/client/fingerprint/modules/hardware';
+import { FINGERPRINT_SPECIAL_VALUES } from '../../../../../../src/client/fingerprint/utils/consts';
 
 // Mock all hardware modules
 jest.mock('../../../../../../src/client/fingerprint/modules/hardware/platform');
@@ -249,12 +250,12 @@ describe('Hardware Fingerprint Module', () => {
       mockCollectDeviceMemory.mockResolvedValue({ deviceMemory: undefined as any });
 
       const expectedResult = {
-        platform: '',
-        cpuClass: '',
+        platform: null,
+        cpuClass: undefined,
         architecture: 0,  // Changed to number
-        oscpu: '',
-        hardwareConcurrency: '',
-        deviceMemory: '',
+        oscpu: undefined,
+        hardwareConcurrency: null,
+        deviceMemory: undefined,
       };
 
       // Act

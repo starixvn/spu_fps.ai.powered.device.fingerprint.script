@@ -39,47 +39,47 @@ export async function collectAudio(): Promise<number | FingerprintSpecialValue> 
       return FINGERPRINT_SPECIAL_VALUES.KNOWN_FOR_ANTI_FINGERPRINTING;
     }
 
-  const AudioCtxClass =
-    (window as any).OfflineAudioContext ||
-    (window as any).webkitOfflineAudioContext;
-    
-  if (!AudioCtxClass) {
-    return FINGERPRINT_SPECIAL_VALUES.UNDEFINED;
-  }
-
-  if (audioCache) {
-    return audioCache;
-  }
-
-  // Generate multiple audio samples for analysis
-  const samples: number[] = [];
-  const snapshotsRMS: number[] = [];
-
-  for (let i = 0; i < SNAPSHOTS; i++) {
-    const result = await getAudioSampleWithRMSAndRetry();
-
-    if (result !== null) {
-      samples.push(result.sample);     
-      snapshotsRMS.push(result.rms);   
+    const AudioCtxClass =
+      (window as any).OfflineAudioContext ||
+      (window as any).webkitOfflineAudioContext;
+      
+    if (!AudioCtxClass) {
+      return FINGERPRINT_SPECIAL_VALUES.UNDEFINED;
     }
-  }
 
-  if (samples.length === 0) {
-    return FINGERPRINT_SPECIAL_VALUES.TIMEOUT;
-  }
+    if (audioCache) {
+      return audioCache;
+    }
 
-  // Statistical analysis and noise detection
-  const median = computeMedian(samples);
-  const status = detectNoise(samples, median, snapshotsRMS);
+    // Generate multiple audio samples for analysis
+    const samples: number[] = [];
+    const snapshotsRMS: number[] = [];
 
-  // Cache clean results
-  if (status === "clean") {
-    audioCache = median;
-  }
+    for (let i = 0; i < SNAPSHOTS; i++) {
+      const result = await getAudioSampleWithRMSAndRetry();
+
+      if (result !== null) {
+        samples.push(result.sample);     
+        snapshotsRMS.push(result.rms);   
+      }
+    }
+
+    if (samples.length === 0) {
+      return FINGERPRINT_SPECIAL_VALUES.TIMEOUT;
+    }
+
+    // Statistical analysis and noise detection
+    const median = computeMedian(samples);
+    const status = detectNoise(samples, median, snapshotsRMS);
+
+    // Cache clean results
+    if (status === "clean") {
+      audioCache = median;
+    }
 
     return median;
   } catch (error) {
-    return FINGERPRINT_SPECIAL_VALUES.TIMEOUT;
+    return FINGERPRINT_SPECIAL_VALUES.ERROR;
   }
 }
 

@@ -1,4 +1,5 @@
 import { collectDeviceMemory } from "../../../../../../src/client/fingerprint/modules/hardware/deviceMemory";
+import { FINGERPRINT_SPECIAL_VALUES } from "../../../../../../src/client/fingerprint/utils/consts";
 
 describe("Hardware Device Memory Module", () => {
   let originalNavigator: any;
@@ -22,7 +23,7 @@ describe("Hardware Device Memory Module", () => {
 
   it("should return empty string when deviceMemory property is missing", async () => {
     const result = await collectDeviceMemory();
-    expect(result).toHaveProperty("deviceMemory", "");
+    expect(result).toHaveProperty("deviceMemory", FINGERPRINT_SPECIAL_VALUES.UNDEFINED);
   }, 30000); // Increase timeout
 
   it("should handle undefined navigator gracefully", async () => {
@@ -32,6 +33,6 @@ describe("Hardware Device Memory Module", () => {
     });
 
     const result = await collectDeviceMemory();
-    expect(result.deviceMemory).toBe("");
+    expect(result.deviceMemory).toBe(FINGERPRINT_SPECIAL_VALUES.ERROR);
   }, 30000);
 });
