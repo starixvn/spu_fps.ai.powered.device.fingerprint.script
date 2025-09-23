@@ -25,7 +25,7 @@ export class F4Fingerprint extends AbstractFingerprint {
   private static readonly audioAliases = {
     audio: 'aud',
     audioBaseLatency: 'abl',
-  } as const;
+  };
 
   private static readonly browserAliases = {
     browserName: 'brn',
@@ -35,7 +35,7 @@ export class F4Fingerprint extends AbstractFingerprint {
     vendorFlavors: 'vfl',
     plugins: 'plg',
     pdfViewerEnabled: 'pve',
-  } as const;
+  };
 
   private static readonly hardwareAliases = {
     platform:            'plf',
@@ -44,7 +44,7 @@ export class F4Fingerprint extends AbstractFingerprint {
     oscpu:               'osc',
     hardwareConcurrency: 'hwc',
     deviceMemory:        'dvm',
-  } as const;
+  };
 
   private static readonly preferencesAliases = {
     languages: 'lng',
@@ -55,7 +55,7 @@ export class F4Fingerprint extends AbstractFingerprint {
     localStorage: 'lst',
     indexedDB: 'idb',
     cookiesEnabled: 'cke',
-  } as const;
+  };
   
   protected readonly step: FingerprintStep = "F4";
   protected readonly endpoint: string = CONFIG.ENDPOINTS.F4;
@@ -76,55 +76,55 @@ export class F4Fingerprint extends AbstractFingerprint {
     };
   }
 
-  private extractAudioAttributes(data: F4Data): Record<string, AudioGroupInfo[keyof AudioGroupInfo]> {
+  private extractAudioAttributes(data: AudioGroupInfo): Record<string, AudioGroupInfo[keyof AudioGroupInfo]> {
     return {
-      [F4Fingerprint.audioAliases.audio]: data.audio.audio,
-      [F4Fingerprint.audioAliases.audioBaseLatency]: data.audio.audioBaseLatency,
+      [F4Fingerprint.audioAliases.audio]: data.audio,
+      [F4Fingerprint.audioAliases.audioBaseLatency]: data.audioBaseLatency,
     };
   }
 
-  private extractBrowserAttributes(data: F4Data): Record<string, BrowserGroupInfo[keyof BrowserGroupInfo]> {
+  private extractBrowserAttributes(data: BrowserGroupInfo): Record<string, BrowserGroupInfo[keyof BrowserGroupInfo]> {
     return {
-      [F4Fingerprint.browserAliases.browserName]: data.browser.browserName,
-      [F4Fingerprint.browserAliases.osName]: data.browser.osName,
-      [F4Fingerprint.browserAliases.userAgent]: data.browser.userAgent,
-      [F4Fingerprint.browserAliases.vendor]: data.browser.vendor,
-      [F4Fingerprint.browserAliases.vendorFlavors]: data.browser.vendorFlavors,
-      [F4Fingerprint.browserAliases.plugins]: data.browser.plugins,
-      [F4Fingerprint.browserAliases.pdfViewerEnabled]: data.browser.pdfViewerEnabled,
+      [F4Fingerprint.browserAliases.browserName]: data.browserName,
+      [F4Fingerprint.browserAliases.osName]: data.osName,
+      [F4Fingerprint.browserAliases.userAgent]: data.userAgent,
+      [F4Fingerprint.browserAliases.vendor]: data.vendor,
+      [F4Fingerprint.browserAliases.vendorFlavors]: data.vendorFlavors,
+      [F4Fingerprint.browserAliases.plugins]: data.plugins,
+      [F4Fingerprint.browserAliases.pdfViewerEnabled]: data.pdfViewerEnabled,
     };
   }
 
-  private extractHardwareAttributes(data: F4Data): Record<string, HardwareGroupInfo[keyof HardwareGroupInfo]> {
+  private extractHardwareAttributes(data: HardwareGroupInfo): Record<string, HardwareGroupInfo[keyof HardwareGroupInfo]> {
     return {
-      [F4Fingerprint.hardwareAliases.platform]:            data.hardware.platform,
-      [F4Fingerprint.hardwareAliases.cpuClass]:            data.hardware.cpuClass,
-      [F4Fingerprint.hardwareAliases.architecture]:        data.hardware.architecture,
-      [F4Fingerprint.hardwareAliases.oscpu]:               data.hardware.oscpu,
-      [F4Fingerprint.hardwareAliases.hardwareConcurrency]: data.hardware.hardwareConcurrency,
-      [F4Fingerprint.hardwareAliases.deviceMemory]:        data.hardware.deviceMemory,
+      [F4Fingerprint.hardwareAliases.platform]:            data.platform,
+      [F4Fingerprint.hardwareAliases.cpuClass]:            data.cpuClass,
+      [F4Fingerprint.hardwareAliases.architecture]:        data.architecture,
+      [F4Fingerprint.hardwareAliases.oscpu]:               data.oscpu,
+      [F4Fingerprint.hardwareAliases.hardwareConcurrency]: data.hardwareConcurrency,
+      [F4Fingerprint.hardwareAliases.deviceMemory]:        data.deviceMemory,
     };
   }
 
-  private extractPreferencesAttributes(data: F4Data): Record<string, PreferencesGroupInfo[keyof PreferencesGroupInfo]> {
+  private extractPreferencesAttributes(data: PreferencesGroupInfo): Record<string, PreferencesGroupInfo[keyof PreferencesGroupInfo]> {
     return {
-      [F4Fingerprint.preferencesAliases.languages]: data.preferences.languages,
-      [F4Fingerprint.preferencesAliases.timezone]: data.preferences.timezone,
-      [F4Fingerprint.preferencesAliases.touchSupport]: data.preferences.touchSupport,
-      [F4Fingerprint.preferencesAliases.sessionStorage]: data.preferences.sessionStorage,
-      [F4Fingerprint.preferencesAliases.openDatabase]: data.preferences.openDatabase,
-      [F4Fingerprint.preferencesAliases.localStorage]: data.preferences.localStorage,
-      [F4Fingerprint.preferencesAliases.indexedDB]: data.preferences.indexedDB,
-      [F4Fingerprint.preferencesAliases.cookiesEnabled]: data.preferences.cookiesEnabled,
+      [F4Fingerprint.preferencesAliases.languages]: data.languages,
+      [F4Fingerprint.preferencesAliases.timezone]: data.timezone,
+      [F4Fingerprint.preferencesAliases.touchSupport]: data.touchSupport,
+      [F4Fingerprint.preferencesAliases.sessionStorage]: data.sessionStorage,
+      [F4Fingerprint.preferencesAliases.openDatabase]: data.openDatabase,
+      [F4Fingerprint.preferencesAliases.localStorage]: data.localStorage,
+      [F4Fingerprint.preferencesAliases.indexedDB]: data.indexedDB,
+      [F4Fingerprint.preferencesAliases.cookiesEnabled]: data.cookiesEnabled,
     };
   }
 
   protected extractAttributes(data: F4Data): Record<string, any> {
     return {
-      ...this.extractHardwareAttributes(data),
-      ...this.extractAudioAttributes(data),
-      ...this.extractBrowserAttributes(data),
-      ...this.extractPreferencesAttributes(data),
+      ...this.extractHardwareAttributes(data.hardware),
+      ...this.extractAudioAttributes(data.audio),
+      ...this.extractBrowserAttributes(data.browser),
+      ...this.extractPreferencesAttributes(data.preferences),
     };
   }
 
@@ -132,10 +132,10 @@ export class F4Fingerprint extends AbstractFingerprint {
     sessionKey: string,
     fingerprintData: F4Data,
   ): any {
-    const aliasedAudio = this.extractAudioAttributes(fingerprintData);
-    const aliasedBrowser = this.extractBrowserAttributes(fingerprintData);
-    const aliasedHardware = this.extractHardwareAttributes(fingerprintData);
-    const aliasedPreferences = this.extractPreferencesAttributes(fingerprintData);
+    const aliasedAudio = this.extractAudioAttributes(fingerprintData.audio);
+    const aliasedBrowser = this.extractBrowserAttributes(fingerprintData.browser);
+    const aliasedHardware = this.extractHardwareAttributes(fingerprintData.hardware);
+    const aliasedPreferences = this.extractPreferencesAttributes(fingerprintData.preferences);
 
     const serverPayload = {
       sk: sessionKey, 

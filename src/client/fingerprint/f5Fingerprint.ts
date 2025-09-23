@@ -6,6 +6,18 @@ import { AbstractFingerprint, InjectValueCallback } from "./abstract/abstractFin
 import { CONFIG, FingerprintStep } from "../index";
 
 export class F5Fingerprint extends AbstractFingerprint {
+  private static readonly graphicsAliases = {
+    canvas: 'cnv',
+    webglBasics: 'wgb',
+    webglExtensions: 'wgx',
+    fonts: 'fnt',
+    fontPreferences: 'fpr',
+    screenResolution: 'scr',
+    screenFrame: 'sfr',
+    colorDepth: 'cld',
+    colorGamut: 'clg',
+  };
+
   protected readonly step: FingerprintStep = "F5";
   protected readonly endpoint: string = CONFIG.ENDPOINTS.F5;
 
@@ -17,53 +29,43 @@ export class F5Fingerprint extends AbstractFingerprint {
     };
   }
 
-  private extractGraphicsAttributes(data: {graphics: GraphicsGroupInfo}): Record<string, GraphicsGroupInfo[keyof GraphicsGroupInfo]> {
-    const graphicsAliases = {
-      canvas: 'cnv',
-      webglBasics: 'wgb',
-      webglExtensions: 'wgx',
-      fonts: 'fnt',
-      fontPreferences: 'fpr',
-      screenResolution: 'scr',
-      screenFrame: 'sfr',
-      colorDepth: 'cld',
-      colorGamut: 'clg',
-    } as const;
+  private extractGraphicsAttributes(data: GraphicsGroupInfo): Record<string, GraphicsGroupInfo[keyof GraphicsGroupInfo]> {
 
     return {
-      [graphicsAliases.canvas]: data.graphics.canvas,
-      [graphicsAliases.webglBasics]: data.graphics.webglBasics,
-      [graphicsAliases.webglExtensions]: data.graphics.webglExtensions,
-      [graphicsAliases.fonts]: data.graphics.fonts,
-      [graphicsAliases.fontPreferences]: data.graphics.fontPreferences,
-      [graphicsAliases.screenResolution]: data.graphics.screenResolution,
-      [graphicsAliases.screenFrame]: data.graphics.screenFrame,
-      [graphicsAliases.colorDepth]: data.graphics.colorDepth,
-      [graphicsAliases.colorGamut]: data.graphics.colorGamut,
+      [F5Fingerprint.graphicsAliases.canvas]: data.canvas,
+      [F5Fingerprint.graphicsAliases.webglBasics]: data.webglBasics,
+      [F5Fingerprint.graphicsAliases.webglExtensions]: data.webglExtensions,
+      [F5Fingerprint.graphicsAliases.fonts]: data.fonts,
+      [F5Fingerprint.graphicsAliases.fontPreferences]: data.fontPreferences,
+      [F5Fingerprint.graphicsAliases.screenResolution]: data.screenResolution,
+      [F5Fingerprint.graphicsAliases.screenFrame]: data.screenFrame,
+      [F5Fingerprint.graphicsAliases.colorDepth]: data.colorDepth,
+      [F5Fingerprint.graphicsAliases.colorGamut]: data.colorGamut,
     };
   }
 
   protected extractAttributes(data: {graphics: GraphicsGroupInfo}, f4Attributes?: Record<string, any>): Record<string, any> {
-    const mappedGraphics = this.extractGraphicsAttributes(data);
+    const attributes = {
+      ...this.extractGraphicsAttributes(data.graphics),
+    };
 
     if (f4Attributes) {
       return {
         ...f4Attributes,
-        ...mappedGraphics,
+        ...attributes,
       };
     }
 
-    return {
-      ...mappedGraphics,
-    };
+    return attributes;
   }
 
   protected buildPayload(
     sessionKey: string,
     fingerprintData: {graphics: GraphicsGroupInfo}
   ): any {
+    const graphicsAttributes = this.extractGraphicsAttributes(fingerprintData.graphics);
    
-    const payload = this.encodeData({sk: sessionKey, fp: {gp: JSON.stringify(fingerprintData.graphics)}});
+    const payload = this.encodeData({sk: sessionKey, fp: {gp: JSON.stringify(graphicsAttributes)}});
 
     return payload;
   }
