@@ -68,7 +68,6 @@ async function getUserAgent(): Promise<UserAgentInfo> {
 
       mobile = Number(
         /Mobile|iPhone|Android|iPad|iPod/i.test(ua) ||
-        legacyMobileRegex.test(ua.substr(0,4)) ||
         legacyMobileRegex.test(ua)
       );
     }
