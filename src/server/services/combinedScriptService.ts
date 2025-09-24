@@ -73,15 +73,16 @@ export class CombinedScriptService extends ScriptService {
             "fingerprint/modules/preference/indexedDb.js",
             "fingerprint/modules/preference/index.js",
             
-            // Fingerprint Core
-            "fingerprint/abstract/abstractFingerprint.js",
-            "fingerprint/f4Fingerprint.js",
-            "fingerprint/f5Fingerprint.js",
-            
             // IP modules
             "ip/modules/webrtc/ipCollector.js",
             "ip/modules/webrtc/index.js",
             "ip/index.js",
+
+            // Fingerprint Core
+            "fingerprint/abstract/abstractFingerprint.js",
+            "fingerprint/f4Fingerprint.js",
+            "fingerprint/f5Fingerprint.js",
+            "fingerprint/index.js",
 
             // Tagging modules
             "tagging/modules/cacheApi.js",

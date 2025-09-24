@@ -11,13 +11,6 @@ import { AbstractFingerprint } from "./abstract/abstractFingerprint";
 import { CONFIG, FingerprintStep } from "../index";
 
 export class F4Fingerprint extends AbstractFingerprint {
-  private readonly f4Directory = {
-    audio: "au",
-    browser: "br",
-    hardware: "hw",
-    preferences: "pf",
-  };
-
   private static readonly audioAliases = {
     audio: 'aud',
     audioBaseLatency: 'abl',
@@ -53,7 +46,6 @@ export class F4Fingerprint extends AbstractFingerprint {
     cookiesEnabled: 'cke',
   };
   
-  protected readonly step: FingerprintStep = "F4";
   protected readonly endpoint: string = CONFIG.ENDPOINTS.F4;
 
   protected async collectData(): Promise<F4Data> {
@@ -90,38 +82,10 @@ export class F4Fingerprint extends AbstractFingerprint {
     };
   }
 
-  protected buildPayload(
-    sessionKey: string,
-    fingerprintData: Record<string, any>,
-  ): any {
-
-    const serverPayload = {
-      sk: sessionKey, 
-      fp: {
-        [this.f4Directory.audio]: JSON.stringify(fingerprintData.audio), 
-        [this.f4Directory.browser]: JSON.stringify(fingerprintData.browser), 
-        [this.f4Directory.hardware]: JSON.stringify(fingerprintData.hardware), 
-        [this.f4Directory.preferences]: JSON.stringify(fingerprintData.preferences)
-      }
-    };
-
-    const payload = this.encodeData(serverPayload);
-
-    return payload;
-  }
-
-  public async start(sessionKey: string, callback:Function): Promise<Record<string, any>> {
+  public async start(callback:Function): Promise<Record<string, any>> {
     const result = await this.process();
 
     callback(result);
-
-    const payload = this.buildPayload(sessionKey, result.attributes);
-
-    await this.sendToServer(this.endpoint, payload);
-
-    if(window !== undefined) {
-      (window as any).f4Attributes = result.attributes;
-    }
 
     return result.attributes;
   }

@@ -18,7 +18,6 @@ export class F5Fingerprint extends AbstractFingerprint {
     colorGamut: 'clg',
   };
 
-  protected readonly step: FingerprintStep = "F5";
   protected readonly endpoint: string = CONFIG.ENDPOINTS.F5;
 
   protected async collectData(): Promise<{graphics: GraphicsGroupInfo}> {
@@ -54,32 +53,12 @@ export class F5Fingerprint extends AbstractFingerprint {
     return graphicsAttributes;
   }
 
-  protected buildPayload(
-    sessionKey: string,
-    fingerprintData: Record<string, any>
-  ): any {
-    const payload = this.encodeData({sk: sessionKey, fp: {gp: JSON.stringify(fingerprintData.graphics)}});
-
-    return payload;
-  }
-
   public async start(
-    sessionKey: string,
     f4Attributes: Record<string, any>,
     callback: Function
-  ): Promise<Record<string, any>> {
+  ): Promise<void> {
     const result = await this.process(f4Attributes);
 
     callback(result);
-
-    const payload = this.buildPayload(sessionKey, result.attributes);
-
-    await this.sendToServer(this.endpoint, payload);
-
-    if(window !== undefined) {
-      (window as any).f5Attributes = result.attributes;
-    }
-
-    return result.attributes;
   }
 }

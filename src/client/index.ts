@@ -4,10 +4,9 @@ import { Base64Encoder } from "./fingerprint/utils/hash";
 import { IPClass } from "./ip";
 import { PacketTransformer } from "./utils/hash";
 import { SessionKeyManager } from "./sessionKey";   
-import { F4Fingerprint } from "./fingerprint/f4Fingerprint";
-import { F5Fingerprint } from "./fingerprint/f5Fingerprint";
 import { TaggingClass } from "./tagging";
 import { FingerprintResult } from "./fingerprint/abstract/abstractFingerprint";
+import { FingerprintClass } from "./fingerprint";
 
 export const CONFIG = {
     VERSION: "__VERSION__",
@@ -25,15 +24,19 @@ export const CONFIG = {
 export type FingerprintStep = 'F4' | 'F5';
   
 class ClientClass {
-
-    private readonly f4Fingerprint: F4Fingerprint;
-    private readonly f5Fingerprint: F5Fingerprint;
+    private readonly directory = {
+        audio: "au",
+        browser: "br",
+        hardware: "hw",
+        preferences: "pf",
+        graphics: "gp",
+      };
+    private readonly fingerprint: FingerprintClass;
     private readonly tagging: TaggingClass;
     private readonly ip: IPClass;
 
     constructor() {
-        this.f4Fingerprint = new F4Fingerprint();
-        this.f5Fingerprint = new F5Fingerprint();
+        this.fingerprint = new FingerprintClass();
         this.tagging = new TaggingClass();
         this.ip = new IPClass();
     }
@@ -50,17 +53,6 @@ class ClientClass {
         }
     }
 
-    private injectCallback(deviceInfo: CollectedDeviceInfo, hashed: string, step?: FingerprintStep): void {
-        if (step === 'F4') {
-            deviceInfo.f4 = hashed;
-        } else if (step === 'F5') {
-            deviceInfo.f5 = hashed;
-        }
-
-        const encodedData = Base64Encoder.encodeBase64(JSON.stringify(deviceInfo), CONFIG.ENCODING_KEY);
-        this.injectValueIntoHiddenField(encodedData);
-    }
-
     private updateDeviceInfo(deviceInfo: CollectedDeviceInfo): void {
         const finalEncodedData = Base64Encoder.encodeBase64(JSON.stringify(deviceInfo), CONFIG.ENCODING_KEY);
         this.injectValueIntoHiddenField(finalEncodedData);
@@ -69,6 +61,60 @@ class ClientClass {
             (window as any).deviceInfo = deviceInfo;
         }
     }
+
+    private handleF4(deviceInfo: CollectedDeviceInfo, result: FingerprintResult): void {
+        deviceInfo.f4 = result.hashed;
+        this.updateDeviceInfo(deviceInfo);
+
+        const payload = this.buildF4Payload(deviceInfo.sk, result.attributes);
+        this.fingerprint.sendToServer(CONFIG.ENDPOINTS.F4, payload);
+
+        if(window !== undefined) {
+            (window as any).f4Attributes = result.attributes;
+        }
+    }
+
+    private handleF5(deviceInfo: CollectedDeviceInfo, result: FingerprintResult): void {
+        deviceInfo.f5 = result.hashed;
+        this.updateDeviceInfo(deviceInfo);
+
+        const payload = this.buildF5Payload(deviceInfo.sk, result.attributes);
+        this.fingerprint.sendToServer(CONFIG.ENDPOINTS.F5, payload);
+
+        if(window !== undefined) {
+            (window as any).f5Attributes = result.attributes;
+        }
+    }
+
+    private handleIP(deviceInfo: CollectedDeviceInfo, rtc: any): void {
+        deviceInfo.rtc = rtc;
+        this.updateDeviceInfo(deviceInfo);
+    }
+
+    private buildF4Payload(
+        sessionKey: string,
+        fingerprintData: Record<string, any>
+      ): any {
+            const payload = Base64Encoder.encodeBase64(JSON.stringify({sk: sessionKey, fp: {
+                [this.directory.audio]: JSON.stringify(fingerprintData.audio), 
+                [this.directory.browser]: JSON.stringify(fingerprintData.browser), 
+                [this.directory.hardware]: JSON.stringify(fingerprintData.hardware), 
+                [this.directory.preferences]: JSON.stringify(fingerprintData.preferences)
+            }}), CONFIG.ENCODING_KEY);
+    
+        return payload;
+      }
+
+    private buildF5Payload(
+        sessionKey: string,
+        fingerprintData: Record<string, any>
+      ): any {
+        const payload = Base64Encoder.encodeBase64(JSON.stringify({sk: sessionKey, fp: {
+            [this.directory.graphics]: JSON.stringify(fingerprintData.graphics)
+        }}), CONFIG.ENCODING_KEY);
+    
+        return payload;
+      }
 
     public async start(): Promise<void> {
         try {
@@ -81,23 +127,17 @@ class ClientClass {
             
             this.injectValueIntoHiddenField(sessionKey, "__fdi");
 
-            const [tagging, f4Attributes] = await Promise.all([
-                this.tagging.start(),
-                this.f4Fingerprint.start(sessionKey, (result: FingerprintResult) => {
-                    this.injectCallback(deviceInfo, result.hashed, result.step);
-                })
-            ]);
-
-            deviceInfo.tag = PacketTransformer.unwrapMessage(tagging);
-            this.updateDeviceInfo(deviceInfo);
-
             await Promise.all([
-                this.f5Fingerprint.start(sessionKey, f4Attributes, (result: FingerprintResult) => {
-                    this.injectCallback(deviceInfo, result.hashed, result.step);
-                }),
-                this.ip.start((webRTC: any) => {
-                    deviceInfo.rtc = webRTC;
+                this.tagging.start().then((tagging: string) => {
+                    deviceInfo.tag = PacketTransformer.unwrapMessage(tagging);
                     this.updateDeviceInfo(deviceInfo);
+                }),
+                this.fingerprint.start((result: FingerprintResult) => {
+                    this.handleF4(deviceInfo, result);
+                }, (result: FingerprintResult) => {
+                    this.handleF5(deviceInfo, result);
+                }, (rtc: any) => {
+                    this.handleIP(deviceInfo, rtc);
                 })
             ]);
         } catch (error) {

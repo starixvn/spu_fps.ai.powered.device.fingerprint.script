@@ -1,25 +1,6 @@
 import { F4Fingerprint } from "./f4Fingerprint";
 import { F5Fingerprint } from "./f5Fingerprint";
-import { FingerprintStep } from "..";
-import { DOMUtils } from "../dom";
-import { CollectedDeviceInfo } from "./types";
-import { SessionKeyManager } from "../sessionKey";
-import { Base64Encoder } from "./utils/hash";
-import { FingerprintResult } from "./abstract/abstractFingerprint";
 import { IPClass } from "../ip";
-
-export const CONFIG = {
-    VERSION: "__VERSION__",
-    ENCODING_KEY: "__ENCODE_KEY__",
-    GATEWAY_URL: "__GATEWAY_URL__",
-    ENDPOINTS: {
-      F4: "/meta-data",
-      F5: "/logs-sync"
-    },
-    FIELD_NAMES: {
-      DEVICE_INFO: "__di"
-    }
-}
 
 export class FingerprintClass {
     private readonly f4Fingerprint: F4Fingerprint;
@@ -32,79 +13,68 @@ export class FingerprintClass {
         this.ip = new IPClass();
     }
 
-    private injectValueIntoHiddenField(value: string, hiddenField?: string): void {
+    
+    public async sendViaBeacon(
+        endpoint: string,
+        payload: any
+    ): Promise<boolean> {
         try {
-            if(hiddenField) {
-                DOMUtils.injectValueIntoHiddenField(hiddenField, value);
-            } else {
-                DOMUtils.injectValueIntoHiddenField(CONFIG.FIELD_NAMES.DEVICE_INFO, value);
+            if (!navigator.sendBeacon) {
+                return false;
             }
+            const formData = new FormData();
+            formData.append('request', payload);
+            return navigator.sendBeacon(endpoint, formData);
         } catch (error) {
-          // console.error(`Failed to inject value into field ${fieldName}:`, error);
+            // console.error('Failed to send data via sendBeacon:', error);
+            return false;
         }
     }
 
-    private injectCallback(deviceInfo: CollectedDeviceInfo, hashed?: string, step?: FingerprintStep): void {
-        if (step === 'F4') {
-            deviceInfo.f4 = hashed;
-        } else if (step === 'F5') {
-            deviceInfo.f5 = hashed;
-        }
+    public async sendViaFetch(
+        endpoint: string,
+        payload: any
+    ): Promise<boolean> {
+        try {
+            const formData = new FormData();
+            formData.append('request', payload);
 
-        const encodedData = Base64Encoder.encodeBase64(JSON.stringify(deviceInfo), CONFIG.ENCODING_KEY);
-        this.injectValueIntoHiddenField(encodedData);
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                body: formData,
+            });
+
+            return response.ok;
+        } catch (error) {
+            // console.error('Failed to send data via fetch:', error);
+            return false;
+        }
     }
 
-    private async ensureDOMReady(): Promise<void> {
-        return new Promise((resolve) => {
-            if (document.readyState === 'complete' || document.readyState === 'interactive') {
-                setTimeout(resolve, 10);
-            } else {
-                const handler = () => {
-                    document.removeEventListener('DOMContentLoaded', handler);
-                    setTimeout(resolve, 10);
-                };
-                document.addEventListener('DOMContentLoaded', handler);
+    public async sendToServer(
+        endpoint: string,
+        payload: any
+    ): Promise<boolean> {
+        try {
+            const beaconSuccess = await this.sendViaBeacon(endpoint, payload);
+            if (beaconSuccess) {
+                return true;
             }
-        });
-    }
 
-    public async start(): Promise<void> {
-        console.log('v' + CONFIG.VERSION);
-
-        const sessionKey = SessionKeyManager.getSessionKey();
-        const deviceInfo: CollectedDeviceInfo = { sk: sessionKey, v: CONFIG.VERSION };
-
-        await this.ensureDOMReady();
-        
-        this.injectValueIntoHiddenField(sessionKey, "__fdi");
-
-        const f4Attributes = await this.f4Fingerprint.start(sessionKey, (result: FingerprintResult) => {
-            this.injectCallback(deviceInfo, result.hashed, result.step);
-        });
-
-        await Promise.all([
-            this.f5Fingerprint.start(sessionKey, f4Attributes, (result: FingerprintResult) => {
-                this.injectCallback(deviceInfo, result.hashed, result.step);
-            }),
-            this.ip.start((webRTC: any) => {
-                deviceInfo.rtc = webRTC;
-                this.injectCallback(deviceInfo);
-            })
-        ]);
-
-        if (typeof window !== "undefined") {
-            (window as any).deviceInfo = deviceInfo;
+            return await this.sendViaFetch(endpoint, payload);
+        } catch (error) {
+            // console.error('Failed to send data to server:', error);
+            return false;
         }
     }
-}
 
-const fingerprint = new FingerprintClass();
+    public async start(callbackF4:Function, callbackF5:Function, callbackIP:Function): Promise<void> {
 
-if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => {
-        fingerprint.start();
-    });
-} else {
-    fingerprint.start();
+        await this.f4Fingerprint.start(callbackF4).then((f4Attributes: Record<string, any>) => {
+            Promise.all([
+                this.f5Fingerprint.start(f4Attributes, callbackF5),
+                this.ip.start(callbackIP)
+            ])
+        });
+    }
 }

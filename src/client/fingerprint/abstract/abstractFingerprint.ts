@@ -1,16 +1,14 @@
 /// <reference lib="dom" />
 
 import { MurmurHash128, Base64Encoder } from '../utils/hash';
-import { CONFIG, FingerprintStep } from '../../index';
+import { CONFIG } from '../../index';
 
 export interface FingerprintResult {
     attributes: Record<string, any>;
     hashed: string;
-    step: FingerprintStep;
 }
 
 export abstract class AbstractFingerprint {
-    protected abstract readonly step: FingerprintStep;
     protected abstract readonly endpoint: string;
 
     protected abstract collectData(): Promise<any>;
@@ -23,18 +21,6 @@ export abstract class AbstractFingerprint {
     protected abstract extractFlatAttributes(
         data: any
     ): Record<string, any>;
-
-    protected abstract buildPayload(
-        sessionKey: string,
-        fingerprintData: Record<string, any>,
-    ): any;
-    
-    protected encodeData(obj: any): string {
-        return Base64Encoder.encodeBase64(
-            JSON.stringify(obj),
-            CONFIG.ENCODING_KEY
-        );
-    }
 
     protected generateGroupHashes(fingerprint: any): string {
         try {
@@ -55,60 +41,6 @@ export abstract class AbstractFingerprint {
         } catch (error) {
             // console.log('Hash generation error', error);
             return '';
-        }
-    }
-
-    protected async sendViaBeacon(
-        endpoint: string,
-        payload: any
-    ): Promise<boolean> {
-        try {
-            if (!navigator.sendBeacon) {
-                return false;
-            }
-            const formData = new FormData();
-            formData.append('request', payload);
-            return navigator.sendBeacon(endpoint, formData);
-        } catch (error) {
-            // console.error('Failed to send data via sendBeacon:', error);
-            return false;
-        }
-    }
-
-    protected async sendViaFetch(
-        endpoint: string,
-        payload: any
-    ): Promise<boolean> {
-        try {
-            const formData = new FormData();
-            formData.append('request', payload);
-
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                body: formData,
-            });
-
-            return response.ok;
-        } catch (error) {
-            // console.error('Failed to send data via fetch:', error);
-            return false;
-        }
-    }
-
-    protected async sendToServer(
-        endpoint: string,
-        payload: any
-    ): Promise<boolean> {
-        try {
-            const beaconSuccess = await this.sendViaBeacon(endpoint, payload);
-            if (beaconSuccess) {
-                return true;
-            }
-
-            return await this.sendViaFetch(endpoint, payload);
-        } catch (error) {
-            // console.error('Failed to send data to server:', error);
-            return false;
         }
     }
 
@@ -139,7 +71,6 @@ export abstract class AbstractFingerprint {
             return {
                 attributes,
                 hashed,
-                step: this.step,
             };
         } catch (error) {
             // console.error(`${this.step} fingerprint collection failed:`, error);
