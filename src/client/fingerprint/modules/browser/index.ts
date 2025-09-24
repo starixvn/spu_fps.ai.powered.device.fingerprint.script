@@ -16,7 +16,7 @@ export class BrowserFingerprint {
       const vendorResult = collectVendor();
       const vendorFlavorsResult = collectVendorFlavors();
       const pluginsResult = collectPlugins();
-      const pdfViewerResult = await collectPdfViewerEnabled();
+      const pdfViewerResult = collectPdfViewerEnabled();
 
       const browserGroup: BrowserGroupInfo = {
         browserName: browserNameResult.browserName,
@@ -25,7 +25,7 @@ export class BrowserFingerprint {
         vendor: vendorResult.vendor,
         vendorFlavors: vendorFlavorsResult.vendorFlavors,
         plugins: pluginsResult,
-        pdfViewerEnabled: pdfViewerResult.pdfViewerEnabled,
+        pdfViewerEnabled: pdfViewerResult,
       };
 
       return browserGroup;

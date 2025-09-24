@@ -119,7 +119,7 @@ export interface BrowserGroupInfo {
   vendor: string;
   vendorFlavors: string[];
   plugins: string[]; 
-  pdfViewerEnabled: Bit;
+  pdfViewerEnabled: Bit | FingerprintSpecialValue;
 }
 
 export interface BrowserNameInfo {
@@ -155,9 +155,6 @@ export interface PluginData {
 
 export type PluginsInfo = string[]; 
 
-export interface PdfViewerEnabledInfo {
-  pdfViewerEnabled: Bit;
-}
 // #endregion
 
 // #region Preferences
