@@ -2,7 +2,7 @@
 
 import { GraphicsGroupInfo } from "./types";
 import { GraphicsFingerprint } from "./modules/graphics/index";
-import { AbstractFingerprint } from "./abstract/abstractFingerprint";
+import { AbstractFingerprint, FingerprintResult } from "./abstract/abstractFingerprint";
 import { CONFIG, FingerprintStep } from "../index";
 
 export class F5Fingerprint extends AbstractFingerprint {
@@ -57,8 +57,8 @@ export class F5Fingerprint extends AbstractFingerprint {
     f4Attributes: Record<string, any>,
     callback: Function
   ): Promise<void> {
-    const result = await this.process(f4Attributes);
-
-    callback(result);
+    return this.process(f4Attributes).then((result: FingerprintResult) => {
+      callback(result);
+    });
   }
 }

@@ -67,7 +67,7 @@ class ClientClass {
         this.updateDeviceInfo(deviceInfo);
 
         const payload = this.buildF4Payload(deviceInfo.sk, result.attributes);
-        this.fingerprint.sendToServer(CONFIG.ENDPOINTS.F4, payload);
+        this.fingerprint.sendToServer(`${CONFIG.GATEWAY_URL}${CONFIG.ENDPOINTS.F4}`, payload);
 
         if(window !== undefined) {
             (window as any).f4Attributes = result.attributes;
@@ -79,7 +79,7 @@ class ClientClass {
         this.updateDeviceInfo(deviceInfo);
 
         const payload = this.buildF5Payload(deviceInfo.sk, result.attributes);
-        this.fingerprint.sendToServer(CONFIG.ENDPOINTS.F5, payload);
+        this.fingerprint.sendToServer(`${CONFIG.GATEWAY_URL}${CONFIG.ENDPOINTS.F5}`, payload);
 
         if(window !== undefined) {
             (window as any).f5Attributes = result.attributes;

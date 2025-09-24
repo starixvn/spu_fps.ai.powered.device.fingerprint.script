@@ -70,11 +70,11 @@ export class FingerprintClass {
 
     public async start(callbackF4:Function, callbackF5:Function, callbackIP:Function): Promise<void> {
 
-        await this.f4Fingerprint.start(callbackF4).then((f4Attributes: Record<string, any>) => {
-            Promise.all([
-                this.f5Fingerprint.start(f4Attributes, callbackF5),
-                this.ip.start(callbackIP)
-            ])
-        });
+       await Promise.all([
+        this.f4Fingerprint.start(callbackF4).then((f4Attributes: Record<string, any>) => {
+            this.f5Fingerprint.start(f4Attributes, callbackF5);
+        }),
+        this.ip.start(callbackIP)
+       ]);
     }
 }

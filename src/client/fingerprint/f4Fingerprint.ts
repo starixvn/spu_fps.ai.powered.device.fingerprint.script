@@ -7,7 +7,7 @@ import { HardwareFingerprint } from "./modules/hardware/index";
 import { AudioFingerprint } from "./modules/audio/index";
 import { BrowserFingerprint } from "./modules/browser/index";
 import { PreferencesFingerprint } from "./modules/preference/index";
-import { AbstractFingerprint } from "./abstract/abstractFingerprint";
+import { AbstractFingerprint, FingerprintResult } from "./abstract/abstractFingerprint";
 import { CONFIG, FingerprintStep } from "../index";
 
 export class F4Fingerprint extends AbstractFingerprint {
@@ -83,11 +83,10 @@ export class F4Fingerprint extends AbstractFingerprint {
   }
 
   public async start(callback:Function): Promise<Record<string, any>> {
-    const result = await this.process();
-
-    callback(result);
-
-    return result.attributes;
+    return this.process().then((result: FingerprintResult) => {
+      callback(result);
+      return result.attributes;
+    });
   }
 
 }
