@@ -1,13 +1,16 @@
 import type { LocalStorageInfo, Bit } from "../../types";
+import { FingerprintSpecialValue } from "../../utils/consts";
+import { boolToBit } from "../../utils/data";
 
 export function collectLocalStorage(): LocalStorageInfo {
   const localStorageSupported = getLocalStorage();
   return { localStorage: localStorageSupported };
 }
 
-function getLocalStorage(): Bit {
+function getLocalStorage(): Bit | FingerprintSpecialValue {
   try {
-    if (typeof window === "undefined" || !window.localStorage) return 0;
+    if (typeof window === "undefined" || !window.localStorage) 
+      return FingerprintSpecialValue.UNDEFINED;
 
     const testKey = `localstorage_test_${Math.random().toString(36).slice(2)}`;
     const testValue = "test_value";
@@ -15,19 +18,16 @@ function getLocalStorage(): Bit {
     window.localStorage.setItem(testKey, testValue);
 
     const storedValue = window.localStorage.getItem(testKey);
+    const isValid = storedValue === testValue;
 
     window.localStorage.removeItem(testKey);
 
-    if (storedValue !== testValue) return 0;
-
-    return 1;
-  } catch (error) {
-    if (
-      error instanceof DOMException &&
-      (error.name === "QuotaExceededError" || error.name === "SecurityError")
-    ) {
-      return 0;
+    return boolToBit(isValid);
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "SecurityError") {
+      return 1;
     }
-    return 0;
+
+    return FingerprintSpecialValue.ERROR;
   }
 }

@@ -157,9 +157,9 @@ export interface PreferencesGroupInfo {
   timezone: string;
   touchSupport: TouchSupportInfo;
   cookiesEnabled: Bit;
-  localStorage: Bit;
-  sessionStorage: Bit;
-  openDatabase: Bit;
+  localStorage: Bit | FingerprintSpecialValue;
+  sessionStorage: Bit | FingerprintSpecialValue;
+  openDatabase: Bit | FingerprintSpecialValue;
   indexedDB: Bit | FingerprintSpecialValue;
 }
 export interface LanguagesInfo {
@@ -177,15 +177,15 @@ export interface CookiesEnabledInfo {
 }
 
 export interface LocalStorageInfo {
-  localStorage: Bit;
+  localStorage: Bit | FingerprintSpecialValue;
 }
 
 export interface SessionStorageInfo {
-  sessionStorage: Bit;
+  sessionStorage: Bit | FingerprintSpecialValue;
 }
 
 export interface OpenDatabaseInfo {
-  openDatabase: Bit;
+  openDatabase: Bit | FingerprintSpecialValue;
 }
 
 export interface IndexedDBInfo {

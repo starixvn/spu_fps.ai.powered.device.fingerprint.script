@@ -1,13 +1,15 @@
 import type { OpenDatabaseInfo, Bit } from "../../types";
+import { FingerprintSpecialValue } from "../../utils/consts";
 
 export function collectOpenDatabase(): OpenDatabaseInfo {
   const openDatabaseSupported = getOpenDatabase();
   return { openDatabase: openDatabaseSupported };
 }
 
-function getOpenDatabase(): Bit {
+function getOpenDatabase(): Bit | FingerprintSpecialValue {
   try {
-    if (typeof window === "undefined") return 0;
+    if (typeof window === "undefined") 
+      return FingerprintSpecialValue.UNDEFINED;
 
     const dbAPIs = [
       "openDatabase",
@@ -24,13 +26,13 @@ function getOpenDatabase(): Bit {
           fn("test", "1.0", "test_db", 1);
           return 1;
         } catch {
-          continue;
         }
+        return 1;
       }
     }
 
     return 0;
-  } catch (error) {
+  } catch (e) {
     return 0;
   }
 }

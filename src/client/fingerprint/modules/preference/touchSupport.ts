@@ -9,7 +9,6 @@ export function collectTouchSupport(): TouchSupportInfo {
 function getTouchSupport(): { maxTouchPoints: number; touchEvent: Bit; touchStart: Bit } {
   try {
     const n = navigator;
-
     let maxTouchPoints = 0;
     let touchEvent: Bit;
 
@@ -26,18 +25,10 @@ function getTouchSupport(): { maxTouchPoints: number; touchEvent: Bit; touchStar
       touchEvent = 0;
     }
 
-    const touchStart = boolToBit('ontouchstart' in window);
+    const touchStart: Bit = boolToBit('ontouchstart' in window);
 
-    return {
-      maxTouchPoints,
-      touchEvent,
-      touchStart,
-    };
+    return { maxTouchPoints, touchEvent, touchStart };
   } catch {
-    return {
-      maxTouchPoints: 0,
-      touchEvent: 0,
-      touchStart: 0,
-    };
+    return { maxTouchPoints: 0, touchEvent: 0, touchStart: 0 };
   }
 }
