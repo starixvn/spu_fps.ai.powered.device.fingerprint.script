@@ -45,6 +45,39 @@ export function isChromium86OrNewer(): Bit {
 }
 
 /**
+ * Checks whether the browser is based on Trident (the Internet Explorer engine) without using user-agent.
+ */
+export function isTrident(): boolean {
+  const w = window
+  const n = navigator
+
+  // The properties are checked to be in IE 10, IE 11 and not to be in other browsers in October 2020
+  return (
+    countTruthy([
+      'MSCSSMatrix' in w,
+      'msSetImmediate' in w,
+      'msIndexedDB' in w,
+      'msMaxTouchPoints' in n,
+      'msPointerEnabled' in n,
+    ]) >= 4
+  )
+}
+
+/**
+ * Checks whether the browser is based on EdgeHTML (the pre-Chromium Edge engine) without using user-agent.
+ */
+export function isEdgeHTML(): boolean {
+  // Based on research in October 2020
+  const w = window
+  const n = navigator
+
+  return (
+    countTruthy(['msWriteProfilerMark' in w, 'MSStream' in w, 'msLaunchUri' in n, 'msSaveBlob' in n]) >= 3 &&
+    !isTrident()
+  )
+}
+
+/**
  * Detects if browser is WebKit-based
  */
 export function isWebKit(): Bit {

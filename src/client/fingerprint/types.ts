@@ -160,7 +160,7 @@ export interface PreferencesGroupInfo {
   localStorage: Bit;
   sessionStorage: Bit;
   openDatabase: Bit;
-  indexedDB: Bit;
+  indexedDB: Bit | FingerprintSpecialValue;
 }
 export interface LanguagesInfo {
   languages: string[][];
@@ -189,7 +189,7 @@ export interface OpenDatabaseInfo {
 }
 
 export interface IndexedDBInfo {
-  indexedDB: Bit;
+  indexedDB: Bit | FingerprintSpecialValue;
 }
 // #endregion
 

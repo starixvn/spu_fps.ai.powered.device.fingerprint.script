@@ -7,12 +7,12 @@ export function collectSessionStorage(): SessionStorageInfo {
 }
 
 function getSessionStorage(): Bit {
-  if (typeof window === "undefined" || !window.sessionStorage) return 0;
-
-  const testKey = `sessionstorage_test_${Math.random().toString(36).slice(2)}`;
-  const testValue = "test_value";
-
   try {
+    if (typeof window === "undefined" || !window.sessionStorage) return 0;
+
+    const testKey = `sessionstorage_test_${Math.random().toString(36).slice(2)}`;
+    const testValue = "test_value";
+
     window.sessionStorage.setItem(testKey, testValue);
 
     const readValue = window.sessionStorage.getItem(testKey);

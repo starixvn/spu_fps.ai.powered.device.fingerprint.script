@@ -29,7 +29,6 @@ export async function collectFonts(): Promise<FontsInfo | FingerprintSpecialValu
 
 function getFontsInfo(): Promise<FontsInfo | FingerprintSpecialValue> {
   return withNaturalFonts(async (document, holder) => {
-    try {
       holder.style.fontSize = textSize;
 
       // div to load spans for the default fonts and the fonts to detect
@@ -97,8 +96,8 @@ function getFontsInfo(): Promise<FontsInfo | FingerprintSpecialValue> {
       const availableFonts = fontsToTest.filter((font) => isFontAvailable(fontsSpans[font]));
       
       return availableFonts as FontsInfo;
-    } catch {
-      return FingerprintSpecialValue.ERROR;
-    }
+      
+  }).catch(() => {
+    return FingerprintSpecialValue.ERROR;
   });
 }
