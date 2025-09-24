@@ -17,7 +17,11 @@ jest.mock('../../../src/client/fingerprint/utils/hash', () => ({
 
 jest.mock('../../../src/client/utils/hash', () => ({
   PacketTransformer: {
-    unwrapMessage: jest.fn()
+    unwrapMessage: jest.fn(),
+    wrapMessage: jest.fn()
+  },
+  GuidGenerator: {
+    generateGuid: jest.fn()
   }
 }));
 
@@ -29,13 +33,13 @@ jest.mock('../../../src/client/sessionKey', () => ({
 
 jest.mock('../../../src/client/fingerprint/f4Fingerprint', () => ({
   F4Fingerprint: jest.fn().mockImplementation(() => ({
-    processF4Data: jest.fn()
+    start: jest.fn()
   }))
 }));
 
 jest.mock('../../../src/client/fingerprint/f5Fingerprint', () => ({
   F5Fingerprint: jest.fn().mockImplementation(() => ({
-    processF5Data: jest.fn()
+    start: jest.fn()
   }))
 }));
 
@@ -45,23 +49,32 @@ jest.mock('../../../src/client/ip', () => ({
   }))
 }));
 
+jest.mock('../../../src/client/tagging', () => ({
+  TaggingClass: jest.fn().mockImplementation(() => ({
+    start: jest.fn()
+  }))
+}));
+
 // Import mocked modules
 import { DOMUtils } from '../../../src/client/dom';
 import { Base64Encoder } from '../../../src/client/fingerprint/utils/hash';
-import { PacketTransformer } from '../../../src/client/utils/hash';
+import { PacketTransformer, GuidGenerator } from '../../../src/client/utils/hash';
 import { SessionKeyManager } from '../../../src/client/sessionKey';
 import { F4Fingerprint } from '../../../src/client/fingerprint/f4Fingerprint';
 import { F5Fingerprint } from '../../../src/client/fingerprint/f5Fingerprint';
 import { IPClass } from '../../../src/client/ip';
+import { TaggingClass } from '../../../src/client/tagging';
 
 // Get mocked instances
 const mockDOMUtils = DOMUtils as any;
 const mockBase64Encoder = Base64Encoder as any;
 const mockPacketTransformer = PacketTransformer as any;
+const mockGuidGenerator = GuidGenerator as any;
 const mockSessionKeyManager = SessionKeyManager as any;
 const mockF4Fingerprint = F4Fingerprint as any;
 const mockF5Fingerprint = F5Fingerprint as any;
 const mockIPClass = IPClass as any;
+const mockTaggingClass = TaggingClass as any;
 
 // Import the CONFIG
 import { CONFIG } from '../../../src/client/index';
@@ -85,6 +98,13 @@ describe('Client Module Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     delete (window as any).deviceInfo;
+    
+    // Setup default mock return values
+    mockGuidGenerator.generateGuid.mockReturnValue('test-guid-123');
+    mockPacketTransformer.wrapMessage.mockReturnValue('wrapped-message');
+    mockPacketTransformer.unwrapMessage.mockReturnValue('unwrapped-message');
+    mockSessionKeyManager.getSessionKey.mockReturnValue('test-session-key');
+    mockBase64Encoder.encodeBase64.mockReturnValue('encoded-data');
   });
 
   describe('CONFIG', () => {
@@ -94,6 +114,7 @@ describe('Client Module Tests', () => {
       expect(CONFIG.ENDPOINTS.F4).toBe('/meta-data');
       expect(CONFIG.ENDPOINTS.F5).toBe('/logs-sync');
       expect(CONFIG.FIELD_NAMES.DEVICE_INFO).toBe('__di');
+      expect(CONFIG.VERSION).toBe('__VERSION__');
     });
   });
 
@@ -102,10 +123,12 @@ describe('Client Module Tests', () => {
       expect(DOMUtils).toBeDefined();
       expect(Base64Encoder).toBeDefined();
       expect(PacketTransformer).toBeDefined();
+      expect(GuidGenerator).toBeDefined();
       expect(SessionKeyManager).toBeDefined();
       expect(F4Fingerprint).toBeDefined();
       expect(F5Fingerprint).toBeDefined();
       expect(IPClass).toBeDefined();
+      expect(TaggingClass).toBeDefined();
     });
   });
 
@@ -142,6 +165,16 @@ describe('Client Module Tests', () => {
       expect(result).toBe(expectedPlaintext);
     });
 
+    it('should call GuidGenerator.generateGuid when mocked', () => {
+      const expectedGuid = 'test-guid-123';
+      
+      mockGuidGenerator.generateGuid.mockReturnValue(expectedGuid);
+      const result = mockGuidGenerator.generateGuid();
+      
+      expect(mockGuidGenerator.generateGuid).toHaveBeenCalled();
+      expect(result).toBe(expectedGuid);
+    });
+
     it('should call SessionKeyManager.getSessionKey when mocked', () => {
       const expectedSessionKey = 'session-key-123';
       
@@ -153,23 +186,23 @@ describe('Client Module Tests', () => {
     });
 
     it('should instantiate F4Fingerprint correctly', () => {
-      const mockProcessF4Data = jest.fn();
+      const mockStart = jest.fn();
       mockF4Fingerprint.mockImplementation(() => ({
-        processF4Data: mockProcessF4Data
+        start: mockStart
       }));
 
       const f4Instance = new mockF4Fingerprint();
-      expect(f4Instance.processF4Data).toBe(mockProcessF4Data);
+      expect(f4Instance.start).toBe(mockStart);
     });
 
     it('should instantiate F5Fingerprint correctly', () => {
-      const mockProcessF5Data = jest.fn();
+      const mockStart = jest.fn();
       mockF5Fingerprint.mockImplementation(() => ({
-        processF5Data: mockProcessF5Data
+        start: mockStart
       }));
 
       const f5Instance = new mockF5Fingerprint();
-      expect(f5Instance.processF5Data).toBe(mockProcessF5Data);
+      expect(f5Instance.start).toBe(mockStart);
     });
 
     it('should instantiate IPClass correctly', () => {
@@ -180,6 +213,16 @@ describe('Client Module Tests', () => {
 
       const ipInstance = new mockIPClass();
       expect(ipInstance.start).toBe(mockStart);
+    });
+
+    it('should instantiate TaggingClass correctly', () => {
+      const mockStart = jest.fn();
+      mockTaggingClass.mockImplementation(() => ({
+        start: mockStart
+      }));
+
+      const taggingInstance = new mockTaggingClass();
+      expect(taggingInstance.start).toBe(mockStart);
     });
   });
 

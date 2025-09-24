@@ -129,29 +129,35 @@
       function loadMainScript() {
         // Load fingerprint script first
         const taggingScript = document.createElement("script");
-        taggingScript.src = "/libs/apd-express.min.js";
+        taggingScript.src = "/libs/apd-unified.js";
 
         taggingScript.onload = () => {
-          // Load tagging script after fingerprint script loads
-          const fingerprintScript = document.createElement("script");
-          fingerprintScript.src = "/libs/apd-routing.min.js";
-          
-          fingerprintScript.onload = () => {
-            scriptsLoaded = true;
-            toggleStorageButton(true);
-            console.log('✅ Both fingerprint and tagging scripts loaded successfully');
-          };
-          
-          fingerprintScript.onerror = () => {
-            console.error('❌ Failed to load tagging script');
-          };
-          
-          document.head.appendChild(fingerprintScript);
-        };
+          scriptsLoaded = true;
+          toggleStorageButton(true);
+          console.log('✅ Fingerprint script loaded successfully');
+        }
 
-        taggingScript.onerror = () => {
-          console.error('❌ Failed to load fingerprint script');
-        };
+        // taggingScript.onload = () => {
+        //   // Load tagging script after fingerprint script loads
+        //   const fingerprintScript = document.createElement("script");
+        //   fingerprintScript.src = "/libs/apd-routing.min.js";
+          
+        //   fingerprintScript.onload = () => {
+        //     scriptsLoaded = true;
+        //     toggleStorageButton(true);
+        //     console.log('✅ Both fingerprint and tagging scripts loaded successfully');
+        //   };
+          
+        //   fingerprintScript.onerror = () => {
+        //     console.error('❌ Failed to load tagging script');
+        //   };
+          
+        //   document.head.appendChild(fingerprintScript);
+        // };
+
+        // taggingScript.onerror = () => {
+        //   console.error('❌ Failed to load fingerprint script');
+        // };
 
         document.head.appendChild(taggingScript);
       }
@@ -267,50 +273,50 @@
 
         // Define groups data
         const hardwareData = {
-          plf: f5Data.plf,
-          ccl: f5Data.ccl,
-          arc: f5Data.arc,
-          osc: f5Data.osc,
-          hwc: f5Data.hwc,
-          dvm: f5Data.dvm
+          plf: f5Data.hardware.plf,
+          ccl: f5Data.hardware.ccl,
+          arc: f5Data.hardware.arc,
+          osc: f5Data.hardware.osc,
+          hwc: f5Data.hardware.hwc,
+          dvm: f5Data.hardware.dvm
         };
 
         const browserData = {
-          brn: f5Data.brn,
-          osn: f5Data.osn,
-          uag: f5Data.uag,
-          vdr: f5Data.vdr,
-          vfl: f5Data.vfl,
-          plg: f5Data.plg,
-          pve: f5Data.pve
+          brn: f5Data.browser.brn,
+          osn: f5Data.browser.osn,
+          uag: f5Data.browser.uag,
+          vdr: f5Data.browser.vdr,
+          vfl: f5Data.browser.vfl,
+          plg: f5Data.browser.plg,
+          pve: f5Data.browser.pve
         };
 
         const audioData = {
-          aud: f5Data.aud,
-          abl: f5Data.abl
+          aud: f5Data.audio.aud,
+          abl: f5Data.audio.abl
         };
 
         const preferencesData = {
-          lng: f5Data.lng,
-          tze: f5Data.tze,
-          tsp: f5Data.tsp,
-          ssg: f5Data.ssg,
-          odb: f5Data.odb,
-          lst: f5Data.lst,
-          idb: f5Data.idb,
-          cke: f5Data.cke
+          lng: f5Data.preferences.lng,
+          tze: f5Data.preferences.tze,
+          tsp: f5Data.preferences.tsp,
+          ssg: f5Data.preferences.ssg,
+          odb: f5Data.preferences.odb,
+          lst: f5Data.preferences.lst,
+          idb: f5Data.preferences.idb,
+          cke: f5Data.preferences.cke
         };
 
         const graphicsData = {
-          cnv: f5Data.cnv,
-          wgb: f5Data.wgb,
-          wgx: f5Data.wgx,
-          fnt: f5Data.fnt,
-          fpr: f5Data.fpr,
-          scr: f5Data.scr,
-          sfr: f5Data.sfr,
-          cld: f5Data.cld,
-          clg: f5Data.clg
+          cnv: f5Data.graphics.cnv,
+          wgb: f5Data.graphics.wgb,
+          wgx: f5Data.graphics.wgx,
+          fnt: f5Data.graphics.fnt,
+          fpr: f5Data.graphics.fpr,
+          scr: f5Data.graphics.scr,
+          sfr: f5Data.graphics.sfr,
+          cld: f5Data.graphics.cld,
+          clg: f5Data.graphics.clg
         };
 
         // Extract all groups from f5Attributes - simple format

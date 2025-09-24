@@ -6,6 +6,8 @@ import { PacketTransformer } from "./utils/hash";
 import { SessionKeyManager } from "./sessionKey";   
 import { F4Fingerprint } from "./fingerprint/f4Fingerprint";
 import { F5Fingerprint } from "./fingerprint/f5Fingerprint";
+import { TaggingClass } from "./tagging";
+import { FingerprintResult } from "./fingerprint/abstract/abstractFingerprint";
 
 export const CONFIG = {
     VERSION: "__VERSION__",
@@ -26,11 +28,13 @@ class ClientClass {
 
     private readonly f4Fingerprint: F4Fingerprint;
     private readonly f5Fingerprint: F5Fingerprint;
+    private readonly tagging: TaggingClass;
     private readonly ip: IPClass;
 
     constructor() {
         this.f4Fingerprint = new F4Fingerprint();
         this.f5Fingerprint = new F5Fingerprint();
+        this.tagging = new TaggingClass();
         this.ip = new IPClass();
     }
 
@@ -78,9 +82,9 @@ class ClientClass {
             this.injectValueIntoHiddenField(sessionKey, "__fdi");
 
             const [tagging, f4Attributes] = await Promise.all([
-                (window.history as any)?.tag?.self || Promise.resolve(null),
-                this.f4Fingerprint.processF4Data(sessionKey, (hashed: string, step?: FingerprintStep) => {
-                    this.injectCallback(deviceInfo, hashed, step);
+                this.tagging.start(),
+                this.f4Fingerprint.start(sessionKey, (result: FingerprintResult) => {
+                    this.injectCallback(deviceInfo, result.hashed, result.step);
                 })
             ]);
 
@@ -88,8 +92,8 @@ class ClientClass {
             this.updateDeviceInfo(deviceInfo);
 
             await Promise.all([
-                this.f5Fingerprint.processF5Data(sessionKey, f4Attributes, (hashed: string, step?: FingerprintStep) => {
-                    this.injectCallback(deviceInfo, hashed, step);
+                this.f5Fingerprint.start(sessionKey, f4Attributes, (result: FingerprintResult) => {
+                    this.injectCallback(deviceInfo, result.hashed, result.step);
                 }),
                 this.ip.start((webRTC: any) => {
                     deviceInfo.rtc = webRTC;

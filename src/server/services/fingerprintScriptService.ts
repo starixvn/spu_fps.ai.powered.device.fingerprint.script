@@ -72,19 +72,19 @@ export class FingerprintScriptService extends ScriptService {
       "fingerprint/modules/preference/openDatabase.js",
       "fingerprint/modules/preference/indexedDb.js",
       "fingerprint/modules/preference/index.js",
+
+      // IP modules
+      "ip/modules/webrtc/ipCollector.js",
+      "ip/modules/webrtc/index.js",
+      "ip/index.js",
       
       // Fingerprint Core
       "fingerprint/abstract/abstractFingerprint.js",
       "fingerprint/f4Fingerprint.js",
       "fingerprint/f5Fingerprint.js",
-      
-      // IP modules
-      "ip/modules/webrtc/ipCollector.js",
-      "ip/modules/webrtc/index.js",
-      "ip/index.js",
+      "fingerprint/index.js",
 
       // Core
-      "index.js", 
       "dom.js"
     ];
   }

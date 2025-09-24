@@ -264,15 +264,17 @@ describe('F5Fingerprint', () => {
         platform: 'Win32',
         audioCodecs: ['mp3', 'wav'],
         timezone: 'UTC',
-        cnv: ['canvas-fingerprint-123', 0],
-        wgb: ['WebGL 1.0', 'Intel Inc.', 'Intel HD Graphics', 'renderer', 'unmasked-renderer', 'GLSL ES 1.0'],
-        wgx: 'extension-string',
-        fnt: ['Arial', 'Times New Roman'],
-        fpr: { default: 16, apple: 14, serif: 16, sans: 14, mono: 12, min: 8, system: 16 },
-        scr: [1920, 1080],
-        sfr: [0, 0, 1920, 1080],
-        cld: 24,
-        clg: 'srgb'
+        graphics: {
+          cnv: ['canvas-fingerprint-123', 0],
+          wgb: ['WebGL 1.0', 'Intel Inc.', 'Intel HD Graphics', 'renderer', 'unmasked-renderer', 'GLSL ES 1.0'],
+          wgx: 'extension-string',
+          fnt: ['Arial', 'Times New Roman'],
+          fpr: { default: 16, apple: 14, serif: 16, sans: 14, mono: 12, min: 8, system: 16 },
+          scr: [1920, 1080],
+          sfr: [0, 0, 1920, 1080],
+          cld: 24,
+          clg: 'srgb'
+        }
       });
     });
 
@@ -309,15 +311,19 @@ describe('F5Fingerprint', () => {
         platform: 'F4-Platform', // F4 should remain
         userAgent: 'Chrome/90.0',
         audioCodecs: ['mp3'],
-        cnv: ['f5-canvas-fingerprint', 1], // F5 should override F4
-        wgb: ['WebGL 2.0', 'NVIDIA Corporation', 'NVIDIA GeForce RTX 3080', 'renderer', 'unmasked-renderer', 'GLSL ES 3.0'],
-        wgx: 'f5-extension-string',
-        fnt: ['Arial', 'Helvetica'],
-        fpr: { default: 18, apple: 16, serif: 18, sans: 16, mono: 14, min: 10, system: 18 },
-        scr: [2560, 1440], // F5 should override F4
-        sfr: [0, 0, 2560, 1440],
-        cld: 32,
-        clg: 'p3'
+        cnv: 'f4-canvas-value', // F4 values remain at top level
+        scr: 'f4-screen-value', // F4 values remain at top level
+        graphics: {
+          cnv: ['f5-canvas-fingerprint', 1], // F5 graphics are nested
+          wgb: ['WebGL 2.0', 'NVIDIA Corporation', 'NVIDIA GeForce RTX 3080', 'renderer', 'unmasked-renderer', 'GLSL ES 3.0'],
+          wgx: 'f5-extension-string',
+          fnt: ['Arial', 'Helvetica'],
+          fpr: { default: 18, apple: 16, serif: 18, sans: 16, mono: 14, min: 10, system: 18 },
+          scr: [2560, 1440],
+          sfr: [0, 0, 2560, 1440],
+          cld: 32,
+          clg: 'p3'
+        }
       });
     });
 
@@ -335,7 +341,18 @@ describe('F5Fingerprint', () => {
       // Assert
       expect(result).toEqual({
         userAgent: 'Chrome/90.0',
-        platform: 'Win32'
+        platform: 'Win32',
+        graphics: {
+          cnv: undefined,
+          wgb: undefined,
+          wgx: undefined,
+          fnt: undefined,
+          fpr: undefined,
+          scr: undefined,
+          sfr: undefined,
+          cld: undefined,
+          clg: undefined
+        }
       });
     });
 
@@ -395,20 +412,15 @@ describe('F5Fingerprint', () => {
       expect(result).toBe('encoded-graphics-data');
       expect(mockBase64Encoder.encodeBase64).toHaveBeenCalledTimes(1);
       
-      // The buildPayload method uses extractGraphicsAttributes which returns aliased field names
+      // The buildPayload method expects raw graphics properties, not aliases
       const expectedPayload = JSON.stringify({
         sk: sessionKey, 
         fp: {
           gp: JSON.stringify({
-            cnv: 'canvas-123',           // canvas -> cnv
-            wgb: 'Intel HD Graphics',    // webglBasics -> wgb
-            wgx: undefined,              // webglExtensions -> wgx
-            fnt: undefined,              // fonts -> fnt  
-            fpr: undefined,              // fontPreferences -> fpr
-            scr: '1920x1080',           // screenResolution -> scr
-            sfr: undefined,              // screenFrame -> sfr
-            cld: 24,                    // colorDepth -> cld
-            clg: undefined               // colorGamut -> clg
+            canvas: 'canvas-123',
+            webglBasics: 'Intel HD Graphics',
+            screenResolution: '1920x1080',
+            colorDepth: 24
           })
         }
       });
@@ -442,16 +454,21 @@ describe('F5Fingerprint', () => {
       const sessionKey = 'test-session-key';
       const fingerprintData = { graphics: null };
 
-      // Act & Assert
-      // The extractGraphicsAttributes method doesn't handle null data properly
-      // This test should fail because the implementation tries to access properties on null
-      expect(() => {
-        (f5Fingerprint as any).buildPayload(sessionKey, fingerprintData);
-      }).toThrow("Cannot read properties of null");
+      mockBase64Encoder.encodeBase64.mockReturnValue('encoded-null-graphics');
+
+      // Act
+      const result = (f5Fingerprint as any).buildPayload(sessionKey, fingerprintData);
+
+      // Assert
+      expect(result).toBe('encoded-null-graphics');
+      expect(mockBase64Encoder.encodeBase64).toHaveBeenCalledWith(
+        JSON.stringify({sk: sessionKey, fp: {gp: JSON.stringify(null)}}),
+        CONFIG.ENCODING_KEY
+      );
     });
   });
 
-  describe('processF5Data', () => {
+  describe('start', () => {
     it('should process F5 data with F4 attributes and return combined attributes', async () => {
       // Arrange
       const sessionKey = 'test-f5-session-key';
@@ -473,20 +490,25 @@ describe('F5Fingerprint', () => {
       // Mock the process method to return expected result
       jest.spyOn(f5Fingerprint as any, 'process').mockResolvedValue({
         attributes: expectedCombinedAttributes,
+        data: { graphics: {} },
         hashed: 'test-f5-hash',
         step: 'F5'
       });
 
+      // Mock sendToServer to avoid actual network calls
+      jest.spyOn(f5Fingerprint as any, 'sendToServer').mockResolvedValue(true);
+
       // Act
-      const result = await f5Fingerprint.processF5Data(sessionKey, f4Attributes, mockInjectCallback);
+      const result = await f5Fingerprint.start(sessionKey, f4Attributes, mockInjectCallback);
 
       // Assert
       expect(result).toEqual(expectedCombinedAttributes);
-      expect((f5Fingerprint as any).process).toHaveBeenCalledWith(
-        sessionKey,
-        mockInjectCallback,
-        f4Attributes
-      );
+      expect(mockInjectCallback).toHaveBeenCalledWith({
+        attributes: expectedCombinedAttributes,
+        data: { graphics: {} },
+        hashed: 'test-f5-hash',
+        step: 'F5'
+      });
       expect((window as any).f5Attributes).toEqual(expectedCombinedAttributes);
     });
 
@@ -502,12 +524,16 @@ describe('F5Fingerprint', () => {
 
       jest.spyOn(f5Fingerprint as any, 'process').mockResolvedValue({
         attributes: expectedAttributes,
+        data: { graphics: {} },
         hashed: 'test-hash',
         step: 'F5'
       });
 
+      // Mock sendToServer to avoid actual network calls
+      jest.spyOn(f5Fingerprint as any, 'sendToServer').mockResolvedValue(true);
+
       // Act
-      const result = await f5Fingerprint.processF5Data(sessionKey, f4Attributes, mockInjectCallback);
+      const result = await f5Fingerprint.start(sessionKey, f4Attributes, mockInjectCallback);
 
       // Assert
       expect(result).toEqual(expectedAttributes);
@@ -523,7 +549,7 @@ describe('F5Fingerprint', () => {
       jest.spyOn(f5Fingerprint as any, 'process').mockRejectedValue(error);
 
       // Act & Assert
-      await expect(f5Fingerprint.processF5Data(sessionKey, f4Attributes, mockInjectCallback))
+      await expect(f5Fingerprint.start(sessionKey, f4Attributes, mockInjectCallback))
         .rejects.toThrow('F5 Process failed');
     });
 
@@ -538,12 +564,16 @@ describe('F5Fingerprint', () => {
 
       jest.spyOn(f5Fingerprint as any, 'process').mockResolvedValue({
         attributes: expectedAttributes,
+        data: { graphics: {} },
         hashed: 'test-hash',
         step: 'F5'
       });
 
+      // Mock sendToServer to avoid actual network calls
+      jest.spyOn(f5Fingerprint as any, 'sendToServer').mockResolvedValue(true);
+
       // Act & Assert
-      await expect(f5Fingerprint.processF5Data(sessionKey, f4Attributes, mockInjectCallback))
+      await expect(f5Fingerprint.start(sessionKey, f4Attributes, mockInjectCallback))
         .resolves.toEqual(expectedAttributes);
 
       // Cleanup
@@ -566,7 +596,7 @@ describe('F5Fingerprint', () => {
       });
 
       // Act
-      await f5Fingerprint.processF5Data(sessionKey, f4Attributes, mockInjectCallback);
+      await f5Fingerprint.start(sessionKey, f4Attributes, mockInjectCallback);
 
       // Assert
       expect((window as any).f5Attributes).toEqual(expectedAttributes);
@@ -589,7 +619,7 @@ describe('F5Fingerprint', () => {
       jest.spyOn(f5Fingerprint as any, 'sendToServer').mockResolvedValue(true);
 
       // Act
-      await (f5Fingerprint as any).process(sessionKey, mockInjectCallback, f4Attributes);
+      await (f5Fingerprint as any).process(f4Attributes);
 
       // Assert
       expect(extractAttributesSpy).toHaveBeenCalledWith(
@@ -634,7 +664,7 @@ describe('F5Fingerprint', () => {
 
       // Assert
       expect(fingerprint).toBeInstanceOf(F5Fingerprint);
-      expect(typeof fingerprint.processF5Data).toBe('function');
+      expect(typeof fingerprint.start).toBe('function');
     });
 
     // it('should enforce readonly properties', () => {
@@ -699,29 +729,32 @@ describe('F5Fingerprint', () => {
       // Assert
       expect(result).toEqual({
         ...largeF4Attributes,
-        cnv: ['f5-canvas-hash', 1],
-        wgb: ['WebGL 2.0', 'NVIDIA Corporation', 'NVIDIA GeForce RTX 3080', 'renderer', 'unmasked-renderer', 'GLSL ES 3.0'],
-        wgx: 'f5-extensions',
-        fnt: ['Arial', 'Times New Roman', 'Helvetica'],
-        fpr: { default: 16, apple: 14, serif: 16, sans: 14, mono: 12, min: 8, system: 16 },
-        scr: [3840, 2160],
-        sfr: [0, 0, 3840, 2160],
-        cld: 32,
-        clg: 'rec2020'
+        graphics: {
+          cnv: ['f5-canvas-hash', 1],
+          wgb: ['WebGL 2.0', 'NVIDIA Corporation', 'NVIDIA GeForce RTX 3080', 'renderer', 'unmasked-renderer', 'GLSL ES 3.0'],
+          wgx: 'f5-extensions',
+          fnt: ['Arial', 'Times New Roman', 'Helvetica'],
+          fpr: { default: 16, apple: 14, serif: 16, sans: 14, mono: 12, min: 8, system: 16 },
+          scr: [3840, 2160],
+          sfr: [0, 0, 3840, 2160],
+          cld: 32,
+          clg: 'rec2020'
+        }
       });
 
-      // F5 graphics should override any conflicting F4 keys
-      expect(Object.keys(result)).toContain('cnv');
-      expect(Object.keys(result)).toContain('wgb');
+      // F5 graphics should be nested under graphics key
+      expect(Object.keys(result)).toContain('graphics');
+      expect(Object.keys(result.graphics)).toContain('cnv');
+      expect(Object.keys(result.graphics)).toContain('wgb');
       expect(Object.keys(result).length).toBe(
-        Object.keys(largeF4Attributes).length + 9 // 9 F5 graphics aliases
+        Object.keys(largeF4Attributes).length + 1 // 1 additional graphics key
       );
     });
 
     it('should handle conflicting attribute names between F4 and F5', async () => {
       // Arrange
       const f4Attributes = {
-        scr: '1920x1080', // Conflicts with F5 alias for screenResolution
+        scr: 'f4-screen-value', // Conflicts with F5 alias for screenResolution
         platform: 'Win32',
         cnv: 'f4-canvas-value' // Conflicts with F5 alias for canvas
       };
@@ -744,8 +777,10 @@ describe('F5Fingerprint', () => {
       const result = (f5Fingerprint as any).extractAttributes(f5Data, f4Attributes);
 
       // Assert
-      expect(result.scr).toEqual([2560, 1440]); // F5 should win (screenResolution)
-      expect(result.cnv).toEqual(['f5-canvas-hash', 1]); // F5 should win (canvas)
+      expect(result.scr).toBe('f4-screen-value'); // F4 top-level should remain
+      expect(result.cnv).toBe('f4-canvas-value'); // F4 top-level should remain
+      expect(result.graphics.scr).toEqual([2560, 1440]); // F5 graphics nested
+      expect(result.graphics.cnv).toEqual(['f5-canvas-hash', 1]); // F5 graphics nested
       expect(result.platform).toBe('Win32'); // F4 should remain
     });
   });

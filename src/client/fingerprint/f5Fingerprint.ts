@@ -2,7 +2,7 @@
 
 import { GraphicsGroupInfo } from "./types";
 import { GraphicsFingerprint } from "./modules/graphics/index";
-import { AbstractFingerprint, InjectValueCallback } from "./abstract/abstractFingerprint";
+import { AbstractFingerprint } from "./abstract/abstractFingerprint";
 import { CONFIG, FingerprintStep } from "../index";
 
 export class F5Fingerprint extends AbstractFingerprint {
@@ -29,53 +29,52 @@ export class F5Fingerprint extends AbstractFingerprint {
     };
   }
 
-  private extractGraphicsAttributes(data: GraphicsGroupInfo): Record<string, GraphicsGroupInfo[keyof GraphicsGroupInfo]> {
-
+  protected extractFlatAttributes(data: any): Record<string, any> {
     return {
-      [F5Fingerprint.graphicsAliases.canvas]: data.canvas,
-      [F5Fingerprint.graphicsAliases.webglBasics]: data.webglBasics,
-      [F5Fingerprint.graphicsAliases.webglExtensions]: data.webglExtensions,
-      [F5Fingerprint.graphicsAliases.fonts]: data.fonts,
-      [F5Fingerprint.graphicsAliases.fontPreferences]: data.fontPreferences,
-      [F5Fingerprint.graphicsAliases.screenResolution]: data.screenResolution,
-      [F5Fingerprint.graphicsAliases.screenFrame]: data.screenFrame,
-      [F5Fingerprint.graphicsAliases.colorDepth]: data.colorDepth,
-      [F5Fingerprint.graphicsAliases.colorGamut]: data.colorGamut,
+      ...data.audio,
+      ...data.browser,
+      ...data.hardware,
+      ...data.preferences,
+      ...data.graphics,
     };
   }
 
   protected extractAttributes(data: {graphics: GraphicsGroupInfo}, f4Attributes?: Record<string, any>): Record<string, any> {
-    const attributes = {
-      ...this.extractGraphicsAttributes(data.graphics),
+    const graphicsAttributes = {
+      ...this.mapAttributes(F5Fingerprint.graphicsAliases, data.graphics),
     };
 
     if (f4Attributes) {
       return {
         ...f4Attributes,
-        ...attributes,
+        graphics: graphicsAttributes,
       };
     }
 
-    return attributes;
+    return graphicsAttributes;
   }
 
   protected buildPayload(
     sessionKey: string,
-    fingerprintData: {graphics: GraphicsGroupInfo}
+    fingerprintData: Record<string, any>
   ): any {
-    const graphicsAttributes = this.extractGraphicsAttributes(fingerprintData.graphics);
-   
-    const payload = this.encodeData({sk: sessionKey, fp: {gp: JSON.stringify(graphicsAttributes)}});
+    const payload = this.encodeData({sk: sessionKey, fp: {gp: JSON.stringify(fingerprintData.graphics)}});
 
     return payload;
   }
 
-  public async processF5Data(
+  public async start(
     sessionKey: string,
     f4Attributes: Record<string, any>,
-    callback: InjectValueCallback
+    callback: Function
   ): Promise<Record<string, any>> {
-    const result = await this.process(sessionKey, callback, f4Attributes);
+    const result = await this.process(f4Attributes);
+
+    callback(result);
+
+    const payload = this.buildPayload(sessionKey, result.attributes);
+
+    await this.sendToServer(this.endpoint, payload);
 
     if(window !== undefined) {
       (window as any).f5Attributes = result.attributes;

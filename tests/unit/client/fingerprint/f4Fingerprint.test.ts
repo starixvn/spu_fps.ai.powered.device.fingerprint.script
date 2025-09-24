@@ -220,35 +220,39 @@ describe('F4Fingerprint', () => {
       // Act
       const result = (f4Fingerprint as any).extractAttributes(mockData);
 
-      // Assert - extractAttributes should spread all nested properties with aliased field names
+      // Assert - extractAttributes returns nested structure with aliased field names
       expect(result).toEqual({
-        // Hardware aliases
-        plf: 'Win32',          // platform
-        hwc: 8,                // hardwareConcurrency
-        arc: 'x64',            // architecture
-        osc: 'Intel',          // oscpu
-        ccl: 'x86',            // cpuClass
-        dvm: 16,               // deviceMemory
-        // Audio aliases
-        aud: { audio: 0.5, status: 'ok' }, // audio
-        abl: 0.01,             // audioBaseLatency
-        // Browser aliases
-        brn: 'Chrome',         // browserName
-        uag: 'Chrome/90.0',    // userAgent
-        vdr: 'Google',         // vendor
-        osn: undefined,        // osName (not provided in mock)
-        vfl: undefined,        // vendorFlavors (not provided in mock)
-        plg: undefined,        // plugins (not provided in mock)
-        pve: undefined,        // pdfViewerEnabled (not provided in mock)
-        // Preferences aliases
-        lng: ['en-US'],        // languages
-        tze: 'UTC',            // timezone
-        tsp: false,            // touchSupport
-        cke: true,             // cookiesEnabled
-        lst: true,             // localStorage
-        ssg: true,             // sessionStorage
-        odb: false,            // openDatabase
-        idb: true              // indexedDB
+        hardware: {
+          plf: 'Win32',          // platform
+          hwc: 8,                // hardwareConcurrency
+          arc: 'x64',            // architecture
+          osc: 'Intel',          // oscpu
+          ccl: 'x86',            // cpuClass
+          dvm: 16                // deviceMemory
+        },
+        audio: {
+          aud: { audio: 0.5, status: 'ok' }, // audio
+          abl: 0.01              // audioBaseLatency
+        },
+        browser: {
+          brn: 'Chrome',         // browserName
+          uag: 'Chrome/90.0',    // userAgent
+          vdr: 'Google',         // vendor
+          osn: undefined,        // osName (not provided in mock)
+          vfl: undefined,        // vendorFlavors (not provided in mock)
+          plg: undefined,        // plugins (not provided in mock)
+          pve: undefined         // pdfViewerEnabled (not provided in mock)
+        },
+        preferences: {
+          lng: ['en-US'],        // languages
+          tze: 'UTC',            // timezone
+          tsp: false,            // touchSupport
+          cke: true,             // cookiesEnabled
+          lst: true,             // localStorage
+          ssg: true,             // sessionStorage
+          odb: false,            // openDatabase
+          idb: true              // indexedDB
+        }
       });
     });
 
@@ -265,56 +269,19 @@ describe('F4Fingerprint', () => {
       const result = (f4Fingerprint as any).extractAttributes(mockData);
 
       // Assert
-      // Each aliased field should have its proper value since they don't actually conflict
-      expect(result.aud).toBe('audio-value');        // Audio alias
-      expect(result.brn).toBe('browser-value');      // Browser alias
-      expect(result.plf).toBe('hardware-value');     // Hardware alias
-      expect(result.tze).toBe('preferences-value');  // Preferences alias
-      expect(result.abl).toBe(0.01);                 // Audio specific
-      expect(result.uag).toBe('ua');                 // Browser specific
-      expect(result.hwc).toBe(8);                    // Hardware specific
-      expect(result.lng).toEqual([['en']]);          // Preferences specific
+      // Each group should have its aliased fields properly nested
+      expect(result.audio.aud).toBe('audio-value');        // Audio alias
+      expect(result.browser.brn).toBe('browser-value');    // Browser alias
+      expect(result.hardware.plf).toBe('hardware-value');  // Hardware alias
+      expect(result.preferences.tze).toBe('preferences-value'); // Preferences alias
+      expect(result.audio.abl).toBe(0.01);                 // Audio specific
+      expect(result.browser.uag).toBe('ua');               // Browser specific
+      expect(result.hardware.hwc).toBe(8);                 // Hardware specific
+      expect(result.preferences.lng).toEqual([['en']]);    // Preferences specific
     });
   });
 
   describe('buildPayload', () => {
-    it('should build correct payload structure', () => {
-      // Arrange
-      const sessionKey = 'test-session-key';
-      // Use proper F4Data structure that matches the interfaces
-      const fingerprintData = {
-        audio: { audio: { audio: 0.5, status: 'ok' }, audioBaseLatency: 0.01 },
-        browser: { browserName: 'Chrome', osName: 'Windows', userAgent: 'Chrome/90.0', vendor: 'Google', vendorFlavors: ['chromium'], plugins: [], pdfViewerEnabled: 1 },
-        hardware: { platform: 'Win32', cpuClass: 'x86', architecture: 64, oscpu: 'Intel', hardwareConcurrency: 8, deviceMemory: 16 },
-        preferences: { languages: [['en-US']], timezone: 'UTC', touchSupport: [1, 1, 1], sessionStorage: 1, openDatabase: 0, localStorage: 1, indexedDB: 1, cookiesEnabled: 1 }
-      };
-
-      mockBase64Encoder.encodeBase64.mockReturnValue('encoded-payload');
-
-      // Act
-      const result = (f4Fingerprint as any).buildPayload(sessionKey, fingerprintData);
-
-      // Assert
-      expect(result).toBe('encoded-payload');
-      expect(mockBase64Encoder.encodeBase64).toHaveBeenCalledTimes(1);
-      
-      // The buildPayload method uses extractXXXAttributes methods which return aliased data
-      const expectedPayload = JSON.stringify({
-        sk: sessionKey, 
-        fp: {
-          au: JSON.stringify({ aud: { audio: 0.5, status: 'ok' }, abl: 0.01 }),
-          br: JSON.stringify({ brn: 'Chrome', osn: 'Windows', uag: 'Chrome/90.0', vdr: 'Google', vfl: ['chromium'], plg: [], pve: 1 }),
-          hw: JSON.stringify({ plf: 'Win32', ccl: 'x86', arc: 64, osc: 'Intel', hwc: 8, dvm: 16 }),
-          pf: JSON.stringify({ lng: [['en-US']], tze: 'UTC', tsp: [1, 1, 1], ssg: 1, odb: 0, lst: 1, idb: 1, cke: 1 })
-        }
-      });
-      
-      expect(mockBase64Encoder.encodeBase64).toHaveBeenCalledWith(
-        expectedPayload,
-        CONFIG.ENCODING_KEY
-      );
-    });
-
     it('should handle empty fingerprint data', () => {
       // Arrange
       const sessionKey = 'test-session-key';
@@ -332,22 +299,25 @@ describe('F4Fingerprint', () => {
 
       // Assert
       expect(result).toBe('encoded-empty-payload');
+      // The buildPayload method uses extractXXXAttributes methods which return aliased data for empty objects too
+      const expectedPayload = JSON.stringify({
+        sk: sessionKey, 
+        fp: {
+          au: JSON.stringify({ aud: undefined, abl: undefined }),
+          br: JSON.stringify({ brn: undefined, osn: undefined, uag: undefined, vdr: undefined, vfl: undefined, plg: undefined, pve: undefined }),
+          hw: JSON.stringify({ plf: undefined, ccl: undefined, arc: undefined, osc: undefined, hwc: undefined, dvm: undefined }),
+          pf: JSON.stringify({ lng: undefined, tze: undefined, tsp: undefined, ssg: undefined, odb: undefined, lst: undefined, idb: undefined, cke: undefined })
+        }
+      });
+      
       expect(mockBase64Encoder.encodeBase64).toHaveBeenCalledWith(
-        JSON.stringify({
-          sk: sessionKey, 
-          fp: {
-            au: JSON.stringify(fingerprintData.audio), 
-            br: JSON.stringify(fingerprintData.browser), 
-            hw: JSON.stringify(fingerprintData.hardware), 
-            pf: JSON.stringify(fingerprintData.preferences)
-          }
-        }), 
+        expectedPayload,
         CONFIG.ENCODING_KEY
       );
     });
   });
 
-  describe('processF4Data', () => {
+  describe('start', () => {
     it('should process F4 data and return attributes', async () => {
       // Arrange
       const sessionKey = 'test-session-key';
@@ -361,16 +331,25 @@ describe('F4Fingerprint', () => {
       // Mock the process method to return expected result
       jest.spyOn(f4Fingerprint as any, 'process').mockResolvedValue({
         attributes: expectedAttributes,
+        data: { audio: {}, browser: {}, hardware: {}, preferences: {} },
         hashed: 'test-hash',
         step: 'F4'
       });
 
+      // Mock sendToServer to avoid actual network calls
+      jest.spyOn(f4Fingerprint as any, 'sendToServer').mockResolvedValue(true);
+
       // Act
-      const result = await f4Fingerprint.processF4Data(sessionKey, mockInjectCallback);
+      const result = await f4Fingerprint.start(sessionKey, mockInjectCallback);
 
       // Assert
       expect(result).toEqual(expectedAttributes);
-      expect((f4Fingerprint as any).process).toHaveBeenCalledWith(sessionKey, mockInjectCallback);
+      expect(mockInjectCallback).toHaveBeenCalledWith({
+        attributes: expectedAttributes,
+        data: { audio: {}, browser: {}, hardware: {}, preferences: {} },
+        hashed: 'test-hash',
+        step: 'F4'
+      });
       expect((window as any).f4Attributes).toEqual(expectedAttributes);
     });
 
@@ -382,7 +361,7 @@ describe('F4Fingerprint', () => {
       jest.spyOn(f4Fingerprint as any, 'process').mockRejectedValue(error);
 
       // Act & Assert
-      await expect(f4Fingerprint.processF4Data(sessionKey, mockInjectCallback))
+      await expect(f4Fingerprint.start(sessionKey, mockInjectCallback))
         .rejects.toThrow('Process failed');
     });
 
@@ -393,12 +372,16 @@ describe('F4Fingerprint', () => {
 
       jest.spyOn(f4Fingerprint as any, 'process').mockResolvedValue({
         attributes: expectedAttributes,
+        data: { audio: {}, browser: {}, hardware: {}, preferences: {} },
         hashed: 'test-hash',
         step: 'F4'
       });
 
+      // Mock sendToServer to avoid actual network calls
+      jest.spyOn(f4Fingerprint as any, 'sendToServer').mockResolvedValue(true);
+
       // Act
-      await f4Fingerprint.processF4Data(sessionKey, mockInjectCallback);
+      await f4Fingerprint.start(sessionKey, mockInjectCallback);
 
       // Assert
       expect((window as any).f4Attributes).toEqual(expectedAttributes);
@@ -414,12 +397,16 @@ describe('F4Fingerprint', () => {
 
       jest.spyOn(f4Fingerprint as any, 'process').mockResolvedValue({
         attributes: expectedAttributes,
+        data: { audio: {}, browser: {}, hardware: {}, preferences: {} },
         hashed: 'test-hash',
         step: 'F4'
       });
 
+      // Mock sendToServer to avoid actual network calls
+      jest.spyOn(f4Fingerprint as any, 'sendToServer').mockResolvedValue(true);
+
       // Act & Assert
-      await expect(f4Fingerprint.processF4Data(sessionKey, mockInjectCallback))
+      await expect(f4Fingerprint.start(sessionKey, mockInjectCallback))
         .resolves.toEqual(expectedAttributes);
 
       // Cleanup
@@ -430,10 +417,9 @@ describe('F4Fingerprint', () => {
   describe('Integration with AbstractFingerprint', () => {
     it('should call abstract methods in correct order during process', async () => {
       // Arrange
-      const sessionKey = 'test-session-key';
       const callOrder: string[] = [];
 
-      // Spy on all abstract methods
+      // Spy on methods that are actually called in the process method
       jest.spyOn(f4Fingerprint as any, 'collectData').mockImplementation(async () => {
         callOrder.push('collectData');
         return { audio: {}, browser: {}, hardware: {}, preferences: {} };
@@ -449,29 +435,21 @@ describe('F4Fingerprint', () => {
         return 'test-hash';
       });
 
-      jest.spyOn(f4Fingerprint as any, 'buildPayload').mockImplementation(() => {
-        callOrder.push('buildPayload');
-        return { payload: 'data' };
-      });
-
-      jest.spyOn(f4Fingerprint as any, 'sendToServer').mockImplementation(async () => {
-        callOrder.push('sendToServer');
-        return true;
-      });
-
       // Act
-      await (f4Fingerprint as any).process(sessionKey, mockInjectCallback);
+      const result = await (f4Fingerprint as any).process();
 
       // Assert
       expect(callOrder).toEqual([
         'collectData',
         'extractAttributes',
-        'generateGroupHashes',
-        'buildPayload',
-        'sendToServer'
+        'generateGroupHashes'
       ]);
 
-      expect(mockInjectCallback).toHaveBeenCalledWith('test-hash', 'F4');
+      expect(result).toEqual({
+        attributes: { extracted: 'attributes' },
+        hashed: 'test-hash',
+        step: 'F4'
+      });
     });
 
     it('should handle errors in abstract method chain', async () => {
@@ -536,7 +514,7 @@ describe('F4Fingerprint', () => {
 
       // Assert
       expect(fingerprint).toBeInstanceOf(F4Fingerprint);
-      expect(typeof fingerprint.processF4Data).toBe('function');
+      expect(typeof fingerprint.start).toBe('function');
     });
 
     // it('should enforce readonly properties', () => {

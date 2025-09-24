@@ -30,6 +30,41 @@ jest.mock('../../../../src/client/tagging/tagging', () => ({
   }
 }));
 
+// Mock global document and window BEFORE importing the main module
+const mockDocument = {
+  readyState: 'complete',
+  addEventListener: jest.fn()
+};
+
+const mockWindow = {
+  location: {
+    protocol: 'https:',
+    hostname: 'example.com',
+    port: '8080'
+  },
+  history: {
+    tag: {
+      self: null,
+      sessionId: `session_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+      timestamp: Date.now(),
+      userAgent: 'test-user-agent'
+    }
+  },
+  performance: {},
+  navigator: {
+    userAgent: 'test-user-agent'
+  }
+};
+
+const mockNavigator = {
+  userAgent: 'test-user-agent'
+};
+
+// Set up global mocks before importing
+(global as any).document = mockDocument;
+(global as any).window = mockWindow;
+(global as any).navigator = mockNavigator;
+
 import { CacheApiHandler } from '../../../../src/client/tagging/modules/cacheApi';
 import { CookiesHandler } from '../../../../src/client/tagging/modules/cookie';
 import { ETagHandler } from '../../../../src/client/tagging/modules/etag';
@@ -106,42 +141,11 @@ describe('Tagging Index', () => {
     
     // Create TaggingClass instance
     taggingInstance = new TaggingClass();
-    
-    // Setup window mock with document
-    const mockWindow = {
-      location: {
-        protocol: 'https:',
-        hostname: 'example.com',
-        port: '8080'
-      },
-      history: {
-        tag: {
-          self: null,
-          sessionId: `session_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-          timestamp: Date.now(),
-          userAgent: 'test-user-agent'
-        }
-      },
-      performance: {},
-      navigator: {
-        userAgent: 'test-user-agent'
-      }
-    };
-    
-    const mockDocument = {
-      addEventListener: jest.fn()
-    };
-    
-    (global as any).window = mockWindow;
-    (global as any).document = mockDocument;
-    (global as any).navigator = { userAgent: 'test-user-agent' };
   });
 
   afterEach(() => {
-    // Clean up global mocks
-    delete (global as any).window;
-    delete (global as any).document;
-    delete (global as any).navigator;
+    // Reset mocks but don't delete them as they're needed for the module
+    jest.clearAllMocks();
   });
 
   describe('TaggingClass Constructor', () => {

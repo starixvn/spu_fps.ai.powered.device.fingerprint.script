@@ -6,6 +6,7 @@ import config from '../config/environment';
 import { TaggingService } from './services/taggingService';
 import { FingerprintScriptService } from './services/fingerprintScriptService';
 import { TaggingScriptService } from './services/taggingScriptService';
+import { CombinedScriptService } from './services/combinedScriptService';
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.set('etag', false);
 
 const fingerprintScript = new FingerprintScriptService();
 const taggingScript = new TaggingScriptService();
+const combinedScript = new CombinedScriptService();
 
 // Middleware to restrict development endpoints in production
 const restrictInProduction = (req: Request, res: Response, next: NextFunction) => {
@@ -114,6 +116,52 @@ app.get('/libs/apd-routing.min.js', async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       error: 'Failed to deliver minified script'
+    });
+  }
+});
+
+// Combined Script Endpoints
+app.get('/api/combinedScript', restrictInProduction, (req: Request, res: Response) => {
+  try {
+    const script = combinedScript.getCombinedScript();
+
+    res.setHeader('Content-Type', 'application/javascript');
+    res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+    res.send(script);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to deliver combined script'
+    });
+  }
+});
+
+app.get('/libs/apd-unified.js', restrictInProduction, (req: Request, res: Response) => {
+  try {
+    const script = combinedScript.getCombinedScript();
+
+    res.setHeader('Content-Type', 'application/javascript');
+    res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+    res.send(script);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to deliver combined script'
+    });
+  }
+});
+
+app.get('/libs/apd-unified.min.js', async (req: Request, res: Response) => {
+  try {
+    const script = await combinedScript.getMinifiedCombinedScript();
+
+    res.setHeader('Content-Type', 'application/javascript');
+    res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
+    res.send(script);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to deliver minified combined script'
     });
   }
 });

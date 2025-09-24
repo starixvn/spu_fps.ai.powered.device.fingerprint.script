@@ -19,6 +19,15 @@ export interface F4Data {
   preferences: PreferencesGroupInfo;
 }
 
+export interface CollectedDeviceInfo {
+  sk: string;
+  tag?: string;
+  f4?: string;
+  f5?: string;
+  rtc?: any;
+  v?: string;
+}
+
 // #region Hardware
 export interface HardwareGroupInfo {
   platform: string | FingerprintSpecialValue;
