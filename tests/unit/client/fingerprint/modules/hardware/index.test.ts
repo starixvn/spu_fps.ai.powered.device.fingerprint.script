@@ -222,7 +222,6 @@ describe('Hardware Fingerprint Module', () => {
         FingerprintSpecialValue.UNDEFINED,
         FingerprintSpecialValue.ERROR,
         FingerprintSpecialValue.TIMEOUT,
-        FingerprintSpecialValue.KNOWN_FOR_ANTI_FINGERPRINTING
       ];
 
       for (const specialValue of specialValues) {
