@@ -38,8 +38,8 @@ jest.mock('../../../../src/client/index', () => ({
     ENCODING_KEY: "__ENCODE_KEY__",
     GATEWAY_URL: "__GATEWAY_URL__",
     ENDPOINTS: {
-      F4: "/meta_data",
-      F5: "/logs_sync"
+      F4: "/meta-data",
+      F5: "/logs-sync"
     },
     FIELD_NAMES: {
       DEVICE_INFO: "__di"
@@ -96,10 +96,7 @@ describe('F4Fingerprint', () => {
 
     // Setup default mock return values matching the proper interfaces
     mockAudioFingerprint.collect.mockResolvedValue({
-      audio: {
-        audio: 0.5,
-        status: 'ok'
-      },
+      audio: 0.5,
       audioBaseLatency: 0.01
     });
 
@@ -110,12 +107,12 @@ describe('F4Fingerprint', () => {
       vendor: 'Google Inc.',
       vendorFlavors: ['chromium'],
       plugins: [],
-      pdfViewerEnabled: true
+      pdfViewerEnabled: 1
     });
 
     mockHardwareFingerprint.collect.mockResolvedValue({
       platform: 'Win32',
-      architecture: 'x64',
+      architecture: 64,
       oscpu: 'Intel Mac OS X 10_15_7',
       cpuClass: 'x86',
       hardwareConcurrency: 8,
@@ -123,14 +120,14 @@ describe('F4Fingerprint', () => {
     });
 
     mockPreferencesFingerprint.collect.mockResolvedValue({
-      languages: ['en-US', 'en'],
+      languages: [['en-US'], ['en']],
       timezone: 'Asia/Ho_Chi_Minh',
-      touchSupport: false,
-      cookiesEnabled: true,
-      localStorage: true,
-      sessionStorage: true,
-      openDatabase: false,
-      indexedDB: true
+      touchSupport: [0, 0, 0],
+      cookiesEnabled: 1,
+      localStorage: 1,
+      sessionStorage: 1,
+      openDatabase: 0,
+      indexedDB: 1
     });
 
     mockMurmurHash.hash128.mockReturnValue('mocked-hash-value');
@@ -142,9 +139,8 @@ describe('F4Fingerprint', () => {
   });
 
   describe('Constructor', () => {
-    it('should initialize with correct step and endpoint', () => {
-      expect((f4Fingerprint as any).step).toBe('F4');
-      expect((f4Fingerprint as any).endpoint).toBe('/meta_data');
+    it('should initialize with correct endpoint', () => {
+      expect((f4Fingerprint as any).endpoint).toBe('/meta-data');
     });
   });
 
@@ -156,10 +152,7 @@ describe('F4Fingerprint', () => {
       // Assert
       expect(result).toEqual({
         audio: {
-          audio: {
-            audio: 0.5,
-            status: 'ok'
-          },
+          audio: 0.5,
           audioBaseLatency: 0.01
         },
         browser: {
@@ -169,25 +162,25 @@ describe('F4Fingerprint', () => {
           vendor: 'Google Inc.',
           vendorFlavors: ['chromium'],
           plugins: [],
-          pdfViewerEnabled: true
+          pdfViewerEnabled: 1
         },
         hardware: {
           platform: 'Win32',
-          architecture: 'x64',
+          architecture: 64,
           oscpu: 'Intel Mac OS X 10_15_7',
           cpuClass: 'x86',
           hardwareConcurrency: 8,
           deviceMemory: 16
         },
         preferences: {
-          languages: ['en-US', 'en'],
+          languages: [['en-US'], ['en']],
           timezone: 'Asia/Ho_Chi_Minh',
-          touchSupport: false,
-          cookiesEnabled: true,
-          localStorage: true,
-          sessionStorage: true,
-          openDatabase: false,
-          indexedDB: true
+          touchSupport: [0, 0, 0],
+          cookiesEnabled: 1,
+          localStorage: 1,
+          sessionStorage: 1,
+          openDatabase: 0,
+          indexedDB: 1
         }
       });
 
@@ -211,10 +204,10 @@ describe('F4Fingerprint', () => {
     it('should merge all attributes from F4 data', () => {
       // Arrange
       const mockData = {
-        audio: { audio: { audio: 0.5, status: 'ok' }, audioBaseLatency: 0.01 },
-        browser: { browserName: 'Chrome', userAgent: 'Chrome/90.0', vendor: 'Google' },
-        hardware: { platform: 'Win32', hardwareConcurrency: 8, architecture: 'x64', oscpu: 'Intel', cpuClass: 'x86', deviceMemory: 16 },
-        preferences: { languages: ['en-US'], timezone: 'UTC', touchSupport: false, cookiesEnabled: true, localStorage: true, sessionStorage: true, openDatabase: false, indexedDB: true }
+        audio: { audio: 0.5, audioBaseLatency: 0.01 },
+        browser: { browserName: 'Chrome', osName: 'Windows', userAgent: 'Chrome/90.0', vendor: 'Google', vendorFlavors: ['chromium'], plugins: [], pdfViewerEnabled: 1 },
+        hardware: { platform: 'Win32', hardwareConcurrency: 8, architecture: 64, oscpu: 'Intel', cpuClass: 'x86', deviceMemory: 16 },
+        preferences: { languages: [['en-US']], timezone: 'UTC', touchSupport: [0, 0, 0], cookiesEnabled: 1, localStorage: 1, sessionStorage: 1, openDatabase: 0, indexedDB: 1 }
       };
 
       // Act
@@ -225,43 +218,43 @@ describe('F4Fingerprint', () => {
         hardware: {
           plf: 'Win32',          // platform
           hwc: 8,                // hardwareConcurrency
-          arc: 'x64',            // architecture
+          arc: 64,               // architecture
           osc: 'Intel',          // oscpu
           ccl: 'x86',            // cpuClass
           dvm: 16                // deviceMemory
         },
         audio: {
-          aud: { audio: 0.5, status: 'ok' }, // audio
+          aud: 0.5,              // audio
           abl: 0.01              // audioBaseLatency
         },
         browser: {
           brn: 'Chrome',         // browserName
+          osn: 'Windows',        // osName
           uag: 'Chrome/90.0',    // userAgent
           vdr: 'Google',         // vendor
-          osn: undefined,        // osName (not provided in mock)
-          vfl: undefined,        // vendorFlavors (not provided in mock)
-          plg: undefined,        // plugins (not provided in mock)
-          pve: undefined         // pdfViewerEnabled (not provided in mock)
+          vfl: ['chromium'],     // vendorFlavors
+          plg: [],               // plugins
+          pve: 1                 // pdfViewerEnabled
         },
         preferences: {
-          lng: ['en-US'],        // languages
+          lng: [['en-US']],      // languages
           tze: 'UTC',            // timezone
-          tsp: false,            // touchSupport
-          cke: true,             // cookiesEnabled
-          lst: true,             // localStorage
-          ssg: true,             // sessionStorage
-          odb: false,            // openDatabase
-          idb: true              // indexedDB
+          tsp: [0, 0, 0],        // touchSupport
+          cke: 1,                // cookiesEnabled
+          lst: 1,                // localStorage
+          ssg: 1,                // sessionStorage
+          odb: 0,                // openDatabase
+          idb: 1                 // indexedDB
         }
       });
     });
 
-    it('should handle duplicate keys by using spread operator precedence', () => {
-      // Arrange - Create a scenario where the same aliased key could come from different sources
+    it('should properly map attributes using aliases', () => {
+      // Arrange - Create a scenario with actual data values
       const mockData = {
         audio: { audio: 'audio-value', audioBaseLatency: 0.01 },
         browser: { browserName: 'browser-value', userAgent: 'ua', vendor: 'vendor', osName: 'os', vendorFlavors: [], plugins: [], pdfViewerEnabled: 1 },
-        hardware: { platform: 'hardware-value', cpuClass: 'cpu', architecture: 1, oscpu: 'oscpu', hardwareConcurrency: 8, deviceMemory: 16 },
+        hardware: { platform: 'hardware-value', cpuClass: 'cpu', architecture: 64, oscpu: 'oscpu', hardwareConcurrency: 8, deviceMemory: 16 },
         preferences: { languages: [['en']], timezone: 'preferences-value', touchSupport: [1, 1, 1], sessionStorage: 1, openDatabase: 0, localStorage: 1, indexedDB: 1, cookiesEnabled: 1 }
       };
 
@@ -281,136 +274,44 @@ describe('F4Fingerprint', () => {
     });
   });
 
-  describe('buildPayload', () => {
-    it('should handle empty fingerprint data', () => {
-      // Arrange
-      const sessionKey = 'test-session-key';
-      const fingerprintData = {
-        audio: {},
-        browser: {},
-        hardware: {},
-        preferences: {}
-      };
 
-      mockBase64Encoder.encodeBase64.mockReturnValue('encoded-empty-payload');
-
-      // Act
-      const result = (f4Fingerprint as any).buildPayload(sessionKey, fingerprintData);
-
-      // Assert
-      expect(result).toBe('encoded-empty-payload');
-      // The buildPayload method uses extractXXXAttributes methods which return aliased data for empty objects too
-      const expectedPayload = JSON.stringify({
-        sk: sessionKey, 
-        fp: {
-          au: JSON.stringify({ aud: undefined, abl: undefined }),
-          br: JSON.stringify({ brn: undefined, osn: undefined, uag: undefined, vdr: undefined, vfl: undefined, plg: undefined, pve: undefined }),
-          hw: JSON.stringify({ plf: undefined, ccl: undefined, arc: undefined, osc: undefined, hwc: undefined, dvm: undefined }),
-          pf: JSON.stringify({ lng: undefined, tze: undefined, tsp: undefined, ssg: undefined, odb: undefined, lst: undefined, idb: undefined, cke: undefined })
-        }
-      });
-      
-      expect(mockBase64Encoder.encodeBase64).toHaveBeenCalledWith(
-        expectedPayload,
-        CONFIG.ENCODING_KEY
-      );
-    });
-  });
 
   describe('start', () => {
     it('should process F4 data and return attributes', async () => {
       // Arrange
-      const sessionKey = 'test-session-key';
       const expectedAttributes = {
-        audioCodecs: ['mp3'],
-        userAgent: 'Chrome',
-        platform: 'Win32',
-        timezone: 'UTC'
+        hardware: { plf: 'Win32', hwc: 8, arc: 64, osc: 'Intel Mac OS X 10_15_7', ccl: 'x86', dvm: 16 },
+        audio: { aud: 0.5, abl: 0.01 },
+        browser: { brn: 'Chrome', osn: 'Windows', uag: 'Chrome/90.0.4430.212', vdr: 'Google Inc.', vfl: ['chromium'], plg: [], pve: 1 },
+        preferences: { lng: [['en-US'], ['en']], tze: 'Asia/Ho_Chi_Minh', tsp: [0, 0, 0], cke: 1, lst: 1, ssg: 1, odb: 0, idb: 1 }
       };
 
       // Mock the process method to return expected result
       jest.spyOn(f4Fingerprint as any, 'process').mockResolvedValue({
         attributes: expectedAttributes,
-        data: { audio: {}, browser: {}, hardware: {}, preferences: {} },
-        hashed: 'test-hash',
-        step: 'F4'
+        hashed: 'test-hash'
       });
 
-      // Mock sendToServer to avoid actual network calls
-      jest.spyOn(f4Fingerprint as any, 'sendToServer').mockResolvedValue(true);
-
       // Act
-      const result = await f4Fingerprint.start(sessionKey, mockInjectCallback);
+      const result = await f4Fingerprint.start(mockInjectCallback);
 
       // Assert
       expect(result).toEqual(expectedAttributes);
       expect(mockInjectCallback).toHaveBeenCalledWith({
         attributes: expectedAttributes,
-        data: { audio: {}, browser: {}, hardware: {}, preferences: {} },
-        hashed: 'test-hash',
-        step: 'F4'
+        hashed: 'test-hash'
       });
-      expect((window as any).f4Attributes).toEqual(expectedAttributes);
     });
 
     it('should handle process errors gracefully', async () => {
       // Arrange
-      const sessionKey = 'test-session-key';
       const error = new Error('Process failed');
 
       jest.spyOn(f4Fingerprint as any, 'process').mockRejectedValue(error);
 
       // Act & Assert
-      await expect(f4Fingerprint.start(sessionKey, mockInjectCallback))
+      await expect(f4Fingerprint.start(mockInjectCallback))
         .rejects.toThrow('Process failed');
-    });
-
-    it('should set window.f4Attributes when window is available', async () => {
-      // Arrange
-      const sessionKey = 'test-session-key';
-      const expectedAttributes = { testData: 'value' };
-
-      jest.spyOn(f4Fingerprint as any, 'process').mockResolvedValue({
-        attributes: expectedAttributes,
-        data: { audio: {}, browser: {}, hardware: {}, preferences: {} },
-        hashed: 'test-hash',
-        step: 'F4'
-      });
-
-      // Mock sendToServer to avoid actual network calls
-      jest.spyOn(f4Fingerprint as any, 'sendToServer').mockResolvedValue(true);
-
-      // Act
-      await f4Fingerprint.start(sessionKey, mockInjectCallback);
-
-      // Assert
-      expect((window as any).f4Attributes).toEqual(expectedAttributes);
-    });
-
-    it('should not throw when window is undefined', async () => {
-      // Arrange
-      const originalWindow = global.window;
-      (global as any).window = undefined;
-
-      const sessionKey = 'test-session-key';
-      const expectedAttributes = { testData: 'value' };
-
-      jest.spyOn(f4Fingerprint as any, 'process').mockResolvedValue({
-        attributes: expectedAttributes,
-        data: { audio: {}, browser: {}, hardware: {}, preferences: {} },
-        hashed: 'test-hash',
-        step: 'F4'
-      });
-
-      // Mock sendToServer to avoid actual network calls
-      jest.spyOn(f4Fingerprint as any, 'sendToServer').mockResolvedValue(true);
-
-      // Act & Assert
-      await expect(f4Fingerprint.start(sessionKey, mockInjectCallback))
-        .resolves.toEqual(expectedAttributes);
-
-      // Cleanup
-      global.window = originalWindow;
     });
   });
 
@@ -422,7 +323,12 @@ describe('F4Fingerprint', () => {
       // Spy on methods that are actually called in the process method
       jest.spyOn(f4Fingerprint as any, 'collectData').mockImplementation(async () => {
         callOrder.push('collectData');
-        return { audio: {}, browser: {}, hardware: {}, preferences: {} };
+        return { 
+          audio: { audio: 0.5, audioBaseLatency: 0.01 }, 
+          browser: { browserName: 'Chrome', osName: 'Windows', userAgent: 'Chrome/90.0', vendor: 'Google', vendorFlavors: [], plugins: [], pdfViewerEnabled: 1 }, 
+          hardware: { platform: 'Win32', architecture: 64, oscpu: 'Intel', cpuClass: 'x86', hardwareConcurrency: 8, deviceMemory: 16 }, 
+          preferences: { languages: [['en-US']], timezone: 'UTC', touchSupport: [0, 0, 0], cookiesEnabled: 1, localStorage: 1, sessionStorage: 1, openDatabase: 0, indexedDB: 1 } 
+        };
       });
 
       jest.spyOn(f4Fingerprint as any, 'extractAttributes').mockImplementation((data) => {
@@ -447,8 +353,7 @@ describe('F4Fingerprint', () => {
 
       expect(result).toEqual({
         attributes: { extracted: 'attributes' },
-        hashed: 'test-hash',
-        step: 'F4'
+        hashed: 'test-hash'
       });
     });
 
@@ -517,18 +422,12 @@ describe('F4Fingerprint', () => {
       expect(typeof fingerprint.start).toBe('function');
     });
 
-    // it('should enforce readonly properties', () => {
-    //   // Arrange
-    //   const fingerprint = new F4Fingerprint();
+    it('should have correct endpoint', () => {
+      // Arrange
+      const fingerprint = new F4Fingerprint();
 
-    //   // Assert
-    //   expect((fingerprint as any).step).toBe('F4');
-    //   expect((fingerprint as any).endpoint).toBe('/meta_data');
-      
-    //   // These should be readonly
-    //   expect(() => {
-    //     (fingerprint as any).step = 'F5';
-    //   }).toThrow();
-    // });
+      // Assert
+      expect((fingerprint as any).endpoint).toBe('/meta-data');
+    });
   });
 });

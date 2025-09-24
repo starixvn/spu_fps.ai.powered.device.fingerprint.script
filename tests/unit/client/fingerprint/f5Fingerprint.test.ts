@@ -118,8 +118,7 @@ describe('F5Fingerprint', () => {
   });
 
   describe('Constructor', () => {
-    it('should initialize with correct step and endpoint', () => {
-      expect((f5Fingerprint as any).step).toBe('F5');
+    it('should initialize with correct endpoint', () => {
       expect((f5Fingerprint as any).endpoint).toBe('/logs_sync');
     });
   });
@@ -390,223 +389,77 @@ describe('F5Fingerprint', () => {
     });
   });
 
-  describe('buildPayload', () => {
-    it('should build correct F5 payload structure', () => {
-      // Arrange
-      const sessionKey = 'test-f5-session-key';
-      const fingerprintData = {
-        graphics: {
-          canvas: 'canvas-123',
-          webglBasics: 'Intel HD Graphics', 
-          screenResolution: '1920x1080',
-          colorDepth: 24
-        }
-      };
-
-      mockBase64Encoder.encodeBase64.mockReturnValue('encoded-graphics-data');
-
-      // Act
-      const result = (f5Fingerprint as any).buildPayload(sessionKey, fingerprintData);
-
-      // Assert
-      expect(result).toBe('encoded-graphics-data');
-      expect(mockBase64Encoder.encodeBase64).toHaveBeenCalledTimes(1);
-      
-      // The buildPayload method expects raw graphics properties, not aliases
-      const expectedPayload = JSON.stringify({
-        sk: sessionKey, 
-        fp: {
-          gp: JSON.stringify({
-            canvas: 'canvas-123',
-            webglBasics: 'Intel HD Graphics',
-            screenResolution: '1920x1080',
-            colorDepth: 24
-          })
-        }
-      });
-      
-      expect(mockBase64Encoder.encodeBase64).toHaveBeenCalledWith(
-        expectedPayload,
-        CONFIG.ENCODING_KEY
-      );
-    });
-
-    it('should handle empty graphics data in payload', () => {
-      // Arrange
-      const sessionKey = 'test-session-key';
-      const fingerprintData = { graphics: {} };
-
-      mockBase64Encoder.encodeBase64.mockReturnValue('encoded-empty-graphics');
-
-      // Act
-      const result = (f5Fingerprint as any).buildPayload(sessionKey, fingerprintData);
-
-      // Assert
-      expect(result).toBe('encoded-empty-graphics');
-      expect(mockBase64Encoder.encodeBase64).toHaveBeenCalledWith(
-        JSON.stringify({sk: sessionKey, fp: {gp: JSON.stringify({})}}),
-        CONFIG.ENCODING_KEY
-      );
-    });
-
-    it('should handle null graphics data in payload', () => {
-      // Arrange
-      const sessionKey = 'test-session-key';
-      const fingerprintData = { graphics: null };
-
-      mockBase64Encoder.encodeBase64.mockReturnValue('encoded-null-graphics');
-
-      // Act
-      const result = (f5Fingerprint as any).buildPayload(sessionKey, fingerprintData);
-
-      // Assert
-      expect(result).toBe('encoded-null-graphics');
-      expect(mockBase64Encoder.encodeBase64).toHaveBeenCalledWith(
-        JSON.stringify({sk: sessionKey, fp: {gp: JSON.stringify(null)}}),
-        CONFIG.ENCODING_KEY
-      );
-    });
-  });
 
   describe('start', () => {
-    it('should process F5 data with F4 attributes and return combined attributes', async () => {
+    it('should process F5 data with F4 attributes', async () => {
       // Arrange
-      const sessionKey = 'test-f5-session-key';
       const f4Attributes = {
         userAgent: 'Chrome/90.0',
         platform: 'Win32',
         audioCodecs: ['mp3']
       };
 
-      const expectedCombinedAttributes = {
-        userAgent: 'Chrome/90.0',
-        platform: 'Win32',
-        audioCodecs: ['mp3'],
-        canvasFingerprint: 'canvas-123',
-        webglRenderer: 'Intel HD',
-        screenResolution: '1920x1080'
+      const expectedResult = {
+        attributes: {
+          userAgent: 'Chrome/90.0',
+          platform: 'Win32',
+          audioCodecs: ['mp3'],
+          graphics: {
+            cnv: ['canvas-fingerprint-123', 0],
+            wgb: ['WebGL 1.0', 'Intel Inc.', 'Intel HD Graphics', 'renderer', 'unmasked-renderer', 'GLSL ES 1.0']
+          }
+        },
+        hashed: 'test-f5-hash'
       };
 
       // Mock the process method to return expected result
-      jest.spyOn(f5Fingerprint as any, 'process').mockResolvedValue({
-        attributes: expectedCombinedAttributes,
-        data: { graphics: {} },
-        hashed: 'test-f5-hash',
-        step: 'F5'
-      });
-
-      // Mock sendToServer to avoid actual network calls
-      jest.spyOn(f5Fingerprint as any, 'sendToServer').mockResolvedValue(true);
+      jest.spyOn(f5Fingerprint as any, 'process').mockResolvedValue(expectedResult);
 
       // Act
-      const result = await f5Fingerprint.start(sessionKey, f4Attributes, mockInjectCallback);
+      await f5Fingerprint.start(f4Attributes, mockInjectCallback);
 
       // Assert
-      expect(result).toEqual(expectedCombinedAttributes);
-      expect(mockInjectCallback).toHaveBeenCalledWith({
-        attributes: expectedCombinedAttributes,
-        data: { graphics: {} },
-        hashed: 'test-f5-hash',
-        step: 'F5'
-      });
-      expect((window as any).f5Attributes).toEqual(expectedCombinedAttributes);
+      expect(mockInjectCallback).toHaveBeenCalledWith(expectedResult);
+      expect((f5Fingerprint as any).process).toHaveBeenCalledWith(f4Attributes);
     });
 
     it('should handle F5 processing without F4 attributes', async () => {
       // Arrange
-      const sessionKey = 'test-session-key';
       const f4Attributes = {};
 
-      const expectedAttributes = {
-        canvasFingerprint: 'canvas-123',
-        webglRenderer: 'Intel HD'
+      const expectedResult = {
+        attributes: {
+          cnv: ['canvas-fingerprint-123', 0],
+          wgb: ['WebGL 1.0', 'Intel Inc.', 'Intel HD Graphics', 'renderer', 'unmasked-renderer', 'GLSL ES 1.0']
+        },
+        hashed: 'test-hash'
       };
 
-      jest.spyOn(f5Fingerprint as any, 'process').mockResolvedValue({
-        attributes: expectedAttributes,
-        data: { graphics: {} },
-        hashed: 'test-hash',
-        step: 'F5'
-      });
-
-      // Mock sendToServer to avoid actual network calls
-      jest.spyOn(f5Fingerprint as any, 'sendToServer').mockResolvedValue(true);
+      jest.spyOn(f5Fingerprint as any, 'process').mockResolvedValue(expectedResult);
 
       // Act
-      const result = await f5Fingerprint.start(sessionKey, f4Attributes, mockInjectCallback);
+      await f5Fingerprint.start(f4Attributes, mockInjectCallback);
 
       // Assert
-      expect(result).toEqual(expectedAttributes);
-      expect((window as any).f5Attributes).toEqual(expectedAttributes);
+      expect(mockInjectCallback).toHaveBeenCalledWith(expectedResult);
     });
 
     it('should handle process errors gracefully', async () => {
       // Arrange
-      const sessionKey = 'test-session-key';
       const f4Attributes = { userAgent: 'Chrome' };
       const error = new Error('F5 Process failed');
 
       jest.spyOn(f5Fingerprint as any, 'process').mockRejectedValue(error);
 
       // Act & Assert
-      await expect(f5Fingerprint.start(sessionKey, f4Attributes, mockInjectCallback))
+      await expect(f5Fingerprint.start(f4Attributes, mockInjectCallback))
         .rejects.toThrow('F5 Process failed');
-    });
-
-    it('should not throw when window is undefined', async () => {
-      // Arrange
-      const originalWindow = global.window;
-      (global as any).window = undefined;
-
-      const sessionKey = 'test-session-key';
-      const f4Attributes = { userAgent: 'Chrome' };
-      const expectedAttributes = { graphics: 'data' };
-
-      jest.spyOn(f5Fingerprint as any, 'process').mockResolvedValue({
-        attributes: expectedAttributes,
-        data: { graphics: {} },
-        hashed: 'test-hash',
-        step: 'F5'
-      });
-
-      // Mock sendToServer to avoid actual network calls
-      jest.spyOn(f5Fingerprint as any, 'sendToServer').mockResolvedValue(true);
-
-      // Act & Assert
-      await expect(f5Fingerprint.start(sessionKey, f4Attributes, mockInjectCallback))
-        .resolves.toEqual(expectedAttributes);
-
-      // Cleanup
-      global.window = originalWindow;
-    });
-
-    it('should set window.f5Attributes correctly', async () => {
-      // Arrange
-      const sessionKey = 'test-session-key';
-      const f4Attributes = { userAgent: 'Chrome' };
-      const expectedAttributes = {
-        userAgent: 'Chrome',
-        canvasFingerprint: 'canvas-hash'
-      };
-
-      jest.spyOn(f5Fingerprint as any, 'process').mockResolvedValue({
-        attributes: expectedAttributes,
-        hashed: 'test-hash',
-        step: 'F5'
-      });
-
-      // Act
-      await f5Fingerprint.start(sessionKey, f4Attributes, mockInjectCallback);
-
-      // Assert
-      expect((window as any).f5Attributes).toEqual(expectedAttributes);
     });
   });
 
   describe('Integration with AbstractFingerprint', () => {
     it('should pass F4 attributes correctly to extractAttributes', async () => {
       // Arrange
-      const sessionKey = 'test-session-key';
       const f4Attributes = {
         userAgent: 'Chrome/90.0',
         platform: 'Win32'
@@ -615,8 +468,6 @@ describe('F5Fingerprint', () => {
       const extractAttributesSpy = jest.spyOn(f5Fingerprint as any, 'extractAttributes');
       jest.spyOn(f5Fingerprint as any, 'collectData').mockResolvedValue({ graphics: {} });
       jest.spyOn(f5Fingerprint as any, 'generateGroupHashes').mockReturnValue('hash');
-      jest.spyOn(f5Fingerprint as any, 'buildPayload').mockReturnValue({});
-      jest.spyOn(f5Fingerprint as any, 'sendToServer').mockResolvedValue(true);
 
       // Act
       await (f5Fingerprint as any).process(f4Attributes);
