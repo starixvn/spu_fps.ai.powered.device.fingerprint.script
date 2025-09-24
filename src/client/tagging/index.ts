@@ -65,11 +65,12 @@ export class TaggingClass {
 
 const tagging = new TaggingClass();
 
-if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => {
+if ((window as any).enabledTag) {
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", () => {
+            tagging.start();
+        });
+    } else {
         tagging.start();
-    });
-} else {
-    tagging.start();
+    }
 }
-

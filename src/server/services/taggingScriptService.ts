@@ -21,6 +21,16 @@ export class TaggingScriptService extends ScriptService {
         ];
     }
 
+    protected wrapInIIFE(jsCode: string): string {
+        return `
+        (function(global) {
+            'use strict';
+            global.enabledTag = true;
+            ${jsCode}
+        })(typeof window !== 'undefined' ? window : global);
+        `;
+    }
+
     /**
      * Get the tagging script bundle
      */

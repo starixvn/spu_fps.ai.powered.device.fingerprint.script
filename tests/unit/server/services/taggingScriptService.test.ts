@@ -160,8 +160,9 @@ describe('TaggingScriptService', () => {
       const script = taggingScriptService.getTaggingScript();
 
       expect(script).toContain('console.log("tagging test");');
-      expect(script).toMatch(/^\(function\(global\)/);
+      expect(script).toMatch(/\(function\(global\)/);
       expect(script).toContain("'use strict';");
+      expect(script).toContain("global.enabledTag = true;");
     });
 
     it('should rebuild script if needed', () => {
@@ -290,10 +291,11 @@ describe('TaggingScriptService', () => {
     it('should wrap tagging code in IIFE', () => {
       const script = taggingScriptService.getTaggingScript();
 
-      expect(script).toMatch(/^\(function\(global\)/);
+      expect(script).toMatch(/\(function\(global\)/);
       expect(script).toContain("'use strict';");
+      expect(script).toContain("global.enabledTag = true;");
       expect(script).toContain('console.log("tagging test");');
-      expect(script).toMatch(/\}\)\(typeof window !== 'undefined' \? window : global\);$/);
+      expect(script).toMatch(/\}\)\(typeof window !== 'undefined' \? window : global\);/);
     });
   });
 
