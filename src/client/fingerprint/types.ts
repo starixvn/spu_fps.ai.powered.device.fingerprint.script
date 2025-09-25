@@ -1,4 +1,4 @@
-import { FingerprintSpecialValue } from "./utils/consts";
+import { FingerprintSpecialValue } from './utils/consts';
 
 // Bit type for boolean values as 0 or 1
 export type Bit = 0 | 1;
@@ -78,7 +78,14 @@ export interface GraphicsGroupInfo {
 
 export type CanvasInfo = [string | FingerprintSpecialValue, Bit]; // [value, canvasProtection]
 
-export type WebGLBasicsInfo = [string | FingerprintSpecialValue, string | FingerprintSpecialValue, string | FingerprintSpecialValue, string | FingerprintSpecialValue, string | FingerprintSpecialValue, string | FingerprintSpecialValue]; // [version, vendor, vendorUnmasked, renderer, rendererUnmasked, shadingLanguageVersion]
+export type WebGLBasicsInfo = [
+  string | FingerprintSpecialValue,
+  string | FingerprintSpecialValue,
+  string | FingerprintSpecialValue,
+  string | FingerprintSpecialValue,
+  string | FingerprintSpecialValue,
+  string | FingerprintSpecialValue
+]; // [version, vendor, vendorUnmasked, renderer, rendererUnmasked, shadingLanguageVersion]
 
 export type WebGLExtensionsInfo = string | FingerprintSpecialValue;
 
@@ -113,22 +120,18 @@ export interface AudioGroupInfo {
 
 // #region Browser
 export interface BrowserGroupInfo {
-  browserName: string;
-  osName: string;
+  browserName: BrowserNameInfo;
+  osName: OSNameInfo;
   userAgent: UserAgentInfo;
   vendor: VendorInfo;
   vendorFlavors: VendorFlavorsInfo;
-  plugins: PluginsInfo; 
+  plugins: PluginsInfo;
   pdfViewerEnabled: PdfViewerEnabledInfo;
 }
 
-export interface BrowserNameInfo {
-  browserName: string;
-}
+export type BrowserNameInfo = string | FingerprintSpecialValue;
 
-export interface OSNameInfo {
-  osName: string;
-}
+export type OSNameInfo = string | FingerprintSpecialValue;
 
 export type UserAgentInfo = string | FingerprintSpecialValue;
 

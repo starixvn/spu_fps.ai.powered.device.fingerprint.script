@@ -99,7 +99,7 @@ export function isTrident(): boolean {
       'msMaxTouchPoints' in n,
       'msPointerEnabled' in n,
     ]) >= 4
-  )
+  );
 }
 
 /**
@@ -111,9 +111,13 @@ export function isEdgeHTML(): boolean {
   const n = navigator;
 
   return (
-    countTruthy(['msWriteProfilerMark' in w, 'MSStream' in w, 'msLaunchUri' in n, 'msSaveBlob' in n]) >= 3 &&
-    !isTrident()
-  )
+    countTruthy([
+      'msWriteProfilerMark' in w,
+      'MSStream' in w,
+      'msLaunchUri' in n,
+      'msSaveBlob' in n,
+    ]) >= 3 && !isTrident()
+  );
 }
 
 /**
@@ -132,10 +136,10 @@ export function isWebKit(): Bit {
       'RGBColor' in w,
       'WebKitMediaKeys' in w,
     ];
-    
+
     const truthyCount = countTruthy(checks);
     const result = truthyCount >= 4;
-    
+
     return boolToBit(result);
   } catch (error) {
     return 0;
@@ -160,13 +164,13 @@ export function isSafariWebKit(): Bit {
     // Must be WebKit and have Safari indicators
     return boolToBit(
       isWebKit() === 1 &&
-      countTruthy([
-        'safari' in w,
-        ua.includes('Safari'),
-        ua.includes('Version/'), // Safari has Version/ in UA
-        n.vendor.includes('Apple'),
-        !ua.includes('Chrome'),
-      ]) >= 4
+        countTruthy([
+          'safari' in w,
+          ua.includes('Safari'),
+          ua.includes('Version/'), // Safari has Version/ in UA
+          n.vendor.includes('Apple'),
+          !ua.includes('Chrome'),
+        ]) >= 4
     );
   } catch {
     return 0;
@@ -180,14 +184,14 @@ export function isSafariWebKit(): Bit {
 export function isWebKit616OrNewer(): Bit {
   try {
     const userAgent = navigator.userAgent;
-    
+
     // Look for WebKit version in user agent
     const webkitMatch = userAgent.match(/WebKit\/(\d+)/);
-    
+
     if (!webkitMatch) return 0;
-    
+
     const webkitVersion = parseInt(webkitMatch[1], 10);
-    
+
     // WebKit 616+ corresponds to Safari 17+
     return boolToBit(webkitVersion >= 616);
   } catch {
@@ -200,11 +204,13 @@ export function isWebKit616OrNewer(): Bit {
  */
 export function getFullscreenElement(): Element | null {
   const d = document;
-  return d.fullscreenElement || 
-         (d as any).msFullscreenElement || 
-         (d as any).mozFullScreenElement || 
-         (d as any).webkitFullscreenElement || 
-         null;
+  return (
+    d.fullscreenElement ||
+    (d as any).msFullscreenElement ||
+    (d as any).mozFullScreenElement ||
+    (d as any).webkitFullscreenElement ||
+    null
+  );
 }
 
 /**
@@ -212,11 +218,12 @@ export function getFullscreenElement(): Element | null {
  */
 export function exitFullscreen(): Promise<void> {
   const d = document;
-  const exitFn = d.exitFullscreen || 
-                 (d as any).msExitFullscreen || 
-                 (d as any).mozCancelFullScreen || 
-                 (d as any).webkitExitFullscreen;
-  
+  const exitFn =
+    d.exitFullscreen ||
+    (d as any).msExitFullscreen ||
+    (d as any).mozCancelFullScreen ||
+    (d as any).webkitExitFullscreen;
+
   return exitFn.call(d);
 }
 
@@ -242,14 +249,30 @@ export function isGecko(): Bit {
  * Checks whether the device runs on Android without using user-agent
  */
 export function isAndroid(): Bit {
-  try {
-    const n = navigator;
-    const w = window;
-    const result = /android/i.test(n.userAgent) || 'ontouchstart' in w;
-    return boolToBit(result);
-  } catch (error) {
-    return 0;
+  const isItChromium = isChromium();
+  const isItGecko = isGecko();
+  const w = window;
+  const n = navigator as any;
+  const c = 'connection';
+
+  if (isItChromium) {
+    return boolToBit(
+      countTruthy([
+        !('SharedWorker' in w),
+        n[c] && 'ontypechange' in n[c],
+        !('sinkId' in new Audio()),
+      ]) >= 2
+    );
+  } else if (isItGecko) {
+    return boolToBit(
+      countTruthy([
+        'onorientationchange' in w,
+        'orientation' in w,
+        /android/i.test(n.appVersion),
+      ]) >= 2
+    );
   }
+  return 0;
 }
 
 /**
@@ -258,7 +281,7 @@ export function isAndroid(): Bit {
 export function isMobile(): Bit {
   try {
     const ua = navigator.userAgent.toLowerCase();
-    return boolToBit(ua.includes("mobi") || ua.includes("android"));
+    return boolToBit(ua.includes('mobi') || ua.includes('android'));
   } catch {
     return 0;
   }
@@ -273,7 +296,7 @@ export function isDesktopWebKit(): Bit {
 
   return boolToBit(
     countTruthy([
-      'safari' in w, 
+      'safari' in w,
       !('ongestureend' in w),
       !('TouchEvent' in w),
       !('orientation' in w),
