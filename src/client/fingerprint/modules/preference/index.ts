@@ -1,12 +1,12 @@
-import { collectLanguages } from "./languages";
-import { collectTimezone } from "./timezone";
-import { collectTouchSupport } from "./touchSupport";
-import { collectSessionStorage } from "./sessionStorage";
-import { collectOpenDatabase } from "./openDatabase";
-import { collectLocalStorage } from "./localStorage";
-import { collectIndexedDB } from "./indexedDb";
-import { collectCookiesEnabled } from "./cookiesEnabled";
-import type { PreferencesGroupInfo } from "../../types";
+import { collectLanguages } from './languages';
+import { collectTimezone } from './timezone';
+import { collectTouchSupport } from './touchSupport';
+import { collectSessionStorage } from './sessionStorage';
+import { collectOpenDatabase } from './openDatabase';
+import { collectLocalStorage } from './localStorage';
+import { collectIndexedDB } from './indexedDb';
+import { collectCookiesEnabled } from './cookiesEnabled';
+import type { PreferencesGroupInfo } from '../../types';
 
 export class PreferencesFingerprint {
   public static async collect(): Promise<PreferencesGroupInfo> {
@@ -20,14 +20,14 @@ export class PreferencesFingerprint {
     const cookiesEnabledResult = collectCookiesEnabled();
 
     const preferencesGroup: PreferencesGroupInfo = {
-      languages: languagesResult.languages,
-      timezone: timezoneResult.timezone,
+      languages: languagesResult,
+      timezone: timezoneResult,
       touchSupport: touchSupportResult,
-      sessionStorage: sessionStorageResult.sessionStorage,
-      openDatabase: openDatabaseResult.openDatabase,
-      localStorage: localStorageResult.localStorage,
-      indexedDB: indexedDBResult.indexedDB,
-      cookiesEnabled: cookiesEnabledResult.cookiesEnabled,
+      sessionStorage: sessionStorageResult,
+      openDatabase: openDatabaseResult,
+      localStorage: localStorageResult,
+      indexedDB: indexedDBResult,
+      cookiesEnabled: cookiesEnabledResult,
     };
 
     return preferencesGroup;

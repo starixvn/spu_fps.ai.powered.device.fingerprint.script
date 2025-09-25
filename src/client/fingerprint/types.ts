@@ -146,44 +146,31 @@ export type PdfViewerEnabledInfo = Bit | FingerprintSpecialValue;
 
 // #region Preferences
 export interface PreferencesGroupInfo {
-  languages: string[][];
-  timezone: string;
+  languages: LanguagesInfo;
+  timezone: TimezoneInfo;
   touchSupport: TouchSupportInfo;
-  cookiesEnabled: Bit;
-  localStorage: Bit | FingerprintSpecialValue;
-  sessionStorage: Bit | FingerprintSpecialValue;
-  openDatabase: Bit | FingerprintSpecialValue;
-  indexedDB: Bit | FingerprintSpecialValue;
-}
-export interface LanguagesInfo {
-  languages: string[][];
+  cookiesEnabled: CookiesEnabledInfo;
+  localStorage: LocalStorageInfo;
+  sessionStorage: SessionStorageInfo;
+  openDatabase: OpenDatabaseInfo;
+  indexedDB: IndexedDBInfo;
 }
 
-export interface TimezoneInfo {
-  timezone: string;
-}
+export type LanguagesInfo = string[][] | FingerprintSpecialValue;
 
-export type TouchSupportInfo = [number, Bit, Bit]; // [maxTouchPoints, touchEvent, touchStart]
+export type TimezoneInfo = string | FingerprintSpecialValue;
 
-export interface CookiesEnabledInfo {
-  cookiesEnabled: Bit;
-}
+export type TouchSupportInfo = [number, Bit, Bit] | FingerprintSpecialValue; // [maxTouchPoints, touchEvent, touchStart]
 
-export interface LocalStorageInfo {
-  localStorage: Bit | FingerprintSpecialValue;
-}
+export type CookiesEnabledInfo = Bit | FingerprintSpecialValue;
 
-export interface SessionStorageInfo {
-  sessionStorage: Bit | FingerprintSpecialValue;
-}
+export type LocalStorageInfo = Bit | FingerprintSpecialValue;
 
-export interface OpenDatabaseInfo {
-  openDatabase: Bit | FingerprintSpecialValue;
-}
+export type SessionStorageInfo = Bit | FingerprintSpecialValue;
 
-export interface IndexedDBInfo {
-  indexedDB: Bit | FingerprintSpecialValue;
-}
+export type OpenDatabaseInfo = Bit | FingerprintSpecialValue;
+
+export type IndexedDBInfo = Bit | FingerprintSpecialValue;
 // #endregion
 
 declare global {

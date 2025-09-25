@@ -1,14 +1,21 @@
 import type { Bit } from '../../types';
-import { FingerprintSpecialValue } from "../../utils/consts";
+import { FingerprintSpecialValue } from '../../utils/consts';
 import { boolToBit } from '../../utils/data';
-import { getBrowserName } from '../browser/browserName';
-import { isChromium, isChromium122OrNewer, isMobile, isSafariWebKit, isSamsungInternet, isWebKit } from '../../utils/browser';
+import { collectBrowserName } from '../browser/browserName';
+import {
+  isChromium,
+  isChromium122OrNewer,
+  isMobile,
+  isSafariWebKit,
+  isSamsungInternet,
+  isWebKit,
+} from '../../utils/browser';
 
 export const enum AudioStatus {
-  CLEAN = "clean",
-  RANDOMIZE = "randomize", 
-  SPOOF = "spoof",
-  BLOCK = "block",
+  CLEAN = 'clean',
+  RANDOMIZE = 'randomize',
+  SPOOF = 'spoof',
+  BLOCK = 'block',
 }
 
 const enum InnerErrorName {
@@ -19,21 +26,23 @@ let audioCache: number | null = null;
 let lastMedian: number | null = null;
 
 const OSC_FREQUENCY = 10000; // 10kHz triangle wave frequency
-const SAMPLE_RATE = 44100;   // 44.1kHz standard sample rate
-const DURATION = 0.5;        // 0.5s audio duration
-const SNAPSHOTS = 3;         // audio samples
+const SAMPLE_RATE = 44100; // 44.1kHz standard sample rate
+const DURATION = 0.5; // 0.5s audio duration
+const SNAPSHOTS = 3; // audio samples
 
-const SPOOF_VALUES = [-100, -120, 0];     
+const SPOOF_VALUES = [-100, -120, 0];
 const SPOOF_RANGES = [
   [-101, -99], // Brave
   [-121, -119], // Tor
 ];
 
-const VARIANCE_THRESHOLD = 25;      
-const MEDIAN_DIFF_THRESHOLD = 5;   
-const RMS_DIFF_THRESHOLD = 3;     
+const VARIANCE_THRESHOLD = 25;
+const MEDIAN_DIFF_THRESHOLD = 5;
+const RMS_DIFF_THRESHOLD = 3;
 
-export async function collectAudio(): Promise<number | FingerprintSpecialValue> {
+export async function collectAudio(): Promise<
+  number | FingerprintSpecialValue
+> {
   try {
     if (doesBrowserPerformAntifingerprinting()) {
       return FingerprintSpecialValue.ANTI_FINGERPRINTED;
@@ -42,7 +51,7 @@ export async function collectAudio(): Promise<number | FingerprintSpecialValue> 
     const AudioCtxClass =
       (window as any).OfflineAudioContext ||
       (window as any).webkitOfflineAudioContext;
-      
+
     if (!AudioCtxClass) {
       return FingerprintSpecialValue.UNDEFINED;
     }
@@ -59,8 +68,8 @@ export async function collectAudio(): Promise<number | FingerprintSpecialValue> 
       const result = await getAudioSampleWithRMSAndRetry();
 
       if (result !== null) {
-        samples.push(result.sample);     
-        snapshotsRMS.push(result.rms);   
+        samples.push(result.sample);
+        snapshotsRMS.push(result.rms);
       }
     }
 
@@ -74,17 +83,16 @@ export async function collectAudio(): Promise<number | FingerprintSpecialValue> 
 
     // Cache clean results
     return status === AudioStatus.CLEAN
-        ? (audioCache = median)
-        : FingerprintSpecialValue.ANTI_FINGERPRINTED;
-
+      ? (audioCache = median)
+      : FingerprintSpecialValue.ANTI_FINGERPRINTED;
   } catch (error) {
     return FingerprintSpecialValue.ERROR;
   }
 }
 
 function doesBrowserPerformAntifingerprinting(): Bit {
-  const browserName = getBrowserName().toLowerCase();
-  
+  const browserName = collectBrowserName().toString().toLowerCase();
+
   // Safari WebKit has Intelligent Tracking Prevention with audio normalization
   if (isWebKit() && isSafariWebKit()) return 1;
 
@@ -92,11 +100,11 @@ function doesBrowserPerformAntifingerprinting(): Bit {
   if (isChromium() && isSamsungInternet() && isChromium122OrNewer()) return 1;
 
   // Brave Browser has built-in fingerprinting protection
-  if (browserName === "brave") return 1;
-  
+  if (browserName === 'brave') return 1;
+
   // Firefox with privacy.resistFingerprinting detection
-  if (browserName === "firefox") return detectFirefoxResistFingerprinting();
-  
+  if (browserName === 'firefox') return detectFirefoxResistFingerprinting();
+
   return 0;
 }
 
@@ -106,29 +114,31 @@ async function getAudioSampleWithRMSAndRetry(): Promise<{
 } | null> {
   const maxRetries = 3;
   const retryDelay = 500;
-  
+
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       const result = await getAudioSampleWithRMS();
 
       if (result !== null) return result;
-      
+
       if (isMobile() && document.hidden) {
-        await new Promise(resolve => setTimeout(resolve, retryDelay * 2));
+        await new Promise((resolve) => setTimeout(resolve, retryDelay * 2));
       } else {
-        await new Promise(resolve => setTimeout(resolve, retryDelay));
+        await new Promise((resolve) => setTimeout(resolve, retryDelay));
       }
     } catch (err: any) {
-      if (err.name === "NotAllowedError" || 
-          err.message?.includes("user gesture")) {
+      if (
+        err.name === 'NotAllowedError' ||
+        err.message?.includes('user gesture')
+      ) {
         return null;
       }
-      
+
       if (attempt === maxRetries - 1) throw err;
-      await new Promise(resolve => setTimeout(resolve, retryDelay));
+      await new Promise((resolve) => setTimeout(resolve, retryDelay));
     }
   }
-  
+
   return null;
 }
 
@@ -147,7 +157,7 @@ function detectNoise(
   snapshotsRMS: number[]
 ): AudioStatus {
   if (SPOOF_VALUES.includes(Math.round(median))) return AudioStatus.SPOOF;
-  
+
   if (SPOOF_RANGES.some(([min, max]) => median >= min && median <= max))
     return AudioStatus.SPOOF;
 
@@ -178,52 +188,68 @@ function detectNoise(
 function detectFirefoxResistFingerprinting(): Bit {
   try {
     let indicators = 0;
-    
+
     // Check timezone spoofing - resistFingerprinting forces UTC
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const timezoneOffset = new Date().getTimezoneOffset();
-    if (timezone === "UTC" && timezoneOffset !== 0) {
+    if (timezone === 'UTC' && timezoneOffset !== 0) {
       indicators++;
     }
-    
+
     // Check screen resolution normalization
     const { width, height } = screen;
     const commonResolutions = [
-      [1024, 768], [1366, 768], [1920, 1080], [1280, 720]
+      [1024, 768],
+      [1366, 768],
+      [1920, 1080],
+      [1280, 720],
     ];
-    const hasCommonResolution = commonResolutions.some(([w, h]) => 
-      width === w && height === h
+    const hasCommonResolution = commonResolutions.some(
+      ([w, h]) => width === w && height === h
     );
-    if (hasCommonResolution && screen.availWidth === width && screen.availHeight === height) {
+    if (
+      hasCommonResolution &&
+      screen.availWidth === width &&
+      screen.availHeight === height
+    ) {
       indicators++;
     }
-    
-    // Check Date 
+
+    // Check Date
     const dates = [];
     for (let i = 0; i < 10; i++) {
       dates.push(new Date().getTime());
     }
     const uniqueDates = new Set(dates).size;
-    if (uniqueDates <= 2) { // resistFingerprinting reduces Date precision
+    if (uniqueDates <= 2) {
+      // resistFingerprinting reduces Date precision
       indicators++;
     }
-    
+
     // Check language spoofing - resistFingerprinting often forces 'en-US'
-    if (navigator.language === 'en-US' && navigator.languages && 
-        navigator.languages.length === 1 && navigator.languages[0] === 'en-US') {
+    if (
+      navigator.language === 'en-US' &&
+      navigator.languages &&
+      navigator.languages.length === 1 &&
+      navigator.languages[0] === 'en-US'
+    ) {
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      if (!timezone.includes('America') && !timezone.includes('US') && !timezone.includes('Canada')) {
+      if (
+        !timezone.includes('America') &&
+        !timezone.includes('US') &&
+        !timezone.includes('Canada')
+      ) {
         indicators++;
       }
     }
-    
+
     // Check navigator.hardwareConcurrency spoofing
     if (navigator.hardwareConcurrency === 2) {
       if (indicators > 0) {
         indicators++;
       }
     }
-    
+
     // Check canvas fingerprinting normalization
     try {
       const canvas = document.createElement('canvas');
@@ -238,7 +264,7 @@ function detectFirefoxResistFingerprinting(): Bit {
         ctx.globalCompositeOperation = 'multiply';
         ctx.fillStyle = 'rgba(0, 0, 255, 0.3)';
         ctx.fillRect(5, 5, 10, 10);
-        
+
         const dataURL = canvas.toDataURL();
 
         if (dataURL.length < 3000) {
@@ -248,25 +274,30 @@ function detectFirefoxResistFingerprinting(): Bit {
     } catch (err) {
       indicators++;
     }
-    
+
     // Check WebGL renderer spoofing
     try {
       const canvas = document.createElement('canvas');
-      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      const gl =
+        canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
       if (gl) {
         const webglContext = gl as WebGLRenderingContext;
         const renderer = webglContext.getParameter(webglContext.RENDERER);
-       
-        if (renderer.includes('llvmpipe') || renderer.includes('Software') || 
-            renderer.includes('Mesa') || renderer.includes('SwiftShader')) {
+
+        if (
+          renderer.includes('llvmpipe') ||
+          renderer.includes('Software') ||
+          renderer.includes('Mesa') ||
+          renderer.includes('SwiftShader')
+        ) {
           indicators++;
         }
       }
     } catch (err) {
       indicators++; // WebGL blocked
     }
-    
-    // Require at least 2 indicators for positive detection 
+
+    // Require at least 2 indicators for positive detection
     return boolToBit(indicators >= 2);
   } catch (err) {
     return 0;
@@ -290,10 +321,10 @@ async function getAudioSampleWithRMS(): Promise<{
       ctx = new AudioCtxClass(1, SAMPLE_RATE * DURATION, SAMPLE_RATE);
     } catch (err: any) {
       if (
-        err.name === "NotAllowedError" ||
-        err.message?.includes("user gesture") ||
-        err.message?.includes("AudioContext was not allowed") ||
-        err.message?.includes("autoplay policy")
+        err.name === 'NotAllowedError' ||
+        err.message?.includes('user gesture') ||
+        err.message?.includes('AudioContext was not allowed') ||
+        err.message?.includes('autoplay policy')
       ) {
         return null;
       }
@@ -304,7 +335,7 @@ async function getAudioSampleWithRMS(): Promise<{
     const osc = ctx.createOscillator();
     const comp = ctx.createDynamicsCompressor();
 
-    osc.type = "triangle";
+    osc.type = 'triangle';
     osc.frequency.value = OSC_FREQUENCY;
 
     comp.threshold.setValueAtTime(-50, ctx.currentTime);
@@ -324,11 +355,8 @@ async function getAudioSampleWithRMS(): Promise<{
       setTimeout(() => reject(new Error(InnerErrorName.Timeout)), 5000);
     });
 
-    const buffer = await Promise.race([
-      ctx.startRendering(),
-      timeoutPromise
-    ]);
-    
+    const buffer = await Promise.race([ctx.startRendering(), timeoutPromise]);
+
     // Analyze audio data for fingerprinting
     const data = buffer.getChannelData(0);
     let sum = 0;

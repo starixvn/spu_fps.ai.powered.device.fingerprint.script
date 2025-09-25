@@ -1,18 +1,14 @@
-import type { TimezoneInfo } from "../../types";
+import type { TimezoneInfo } from '../../types';
+import { FingerprintSpecialValue } from '../../utils/consts';
 
 export function collectTimezone(): TimezoneInfo {
-  const timezone = getTimezone();
-  return { timezone };
-}
-
-function getTimezone(): string {
   try {
-    if (typeof Intl !== "undefined" && Intl.DateTimeFormat) {
+    if (typeof Intl !== 'undefined' && Intl.DateTimeFormat) {
       const formatter = new Intl.DateTimeFormat();
       const options = formatter.resolvedOptions();
       const tz = options.timeZone;
 
-      if (typeof tz === "string" && tz.trim().length > 0) {
+      if (typeof tz === 'string' && tz.trim().length > 0) {
         return tz;
       }
     }
@@ -20,16 +16,16 @@ function getTimezone(): string {
     const now = new Date();
     const offset = now.getTimezoneOffset(); // in minutes
 
-    if (typeof offset !== "number" || isNaN(offset)) return "";
+    if (typeof offset !== 'number' || isNaN(offset)) return '';
 
     const absHours = Math.floor(Math.abs(offset) / 60);
     const absMinutes = Math.abs(offset) % 60;
-    const sign = offset <= 0 ? "+" : "-";
+    const sign = offset <= 0 ? '+' : '-';
 
-    return `UTC${sign}${absHours.toString().padStart(2, "0")}:${absMinutes
+    return `UTC${sign}${absHours.toString().padStart(2, '0')}:${absMinutes
       .toString()
-      .padStart(2, "0")}`;
+      .padStart(2, '0')}`;
   } catch (err) {
-    return "";
+    return FingerprintSpecialValue.ERROR;
   }
 }

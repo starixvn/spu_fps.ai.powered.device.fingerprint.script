@@ -1,21 +1,15 @@
-import type { LanguagesInfo } from "../../types";
-import { isChromium, isChromium86OrNewer } from "../../utils/browser";
+import type { LanguagesInfo } from '../../types';
+import { isChromium, isChromium86OrNewer } from '../../utils/browser';
+import { FingerprintSpecialValue } from '../../utils/consts';
 
 export function collectLanguages(): LanguagesInfo {
-  const languages = getLanguages();
-
-  return {
-    languages: languages.length > 0 ? languages : [[""]],
-  };
-}
-
-function getLanguages(): string[][] {
   try {
     const n = navigator as any;
     const result: string[][] = [];
 
-    // Get primary language 
-    const language = n.language || n.userLanguage || n.browserLanguage || n.systemLanguage;
+    // Get primary language
+    const language =
+      n.language || n.userLanguage || n.browserLanguage || n.systemLanguage;
 
     if (language !== undefined) {
       result.push([language]);
@@ -26,7 +20,7 @@ function getLanguages(): string[][] {
       if (!(isChromium() && isChromium86OrNewer())) {
         const validLanguages = n.languages.filter(
           (lang: any): lang is string =>
-            typeof lang === "string" && lang.trim().length > 0
+            typeof lang === 'string' && lang.trim().length > 0
         );
 
         if (validLanguages.length > 0) {
@@ -35,14 +29,19 @@ function getLanguages(): string[][] {
       }
     } else if (typeof n.languages === 'string') {
       const languages = n.languages as string;
-      
+
       if (languages) {
-        result.push(languages.split(',').map((lang: string) => lang.trim()).filter((lang: string) => lang.length > 0));
+        result.push(
+          languages
+            .split(',')
+            .map((lang: string) => lang.trim())
+            .filter((lang: string) => lang.length > 0)
+        );
       }
     }
 
     return result;
   } catch {
-    return [[""]];
+    return FingerprintSpecialValue.ERROR;
   }
 }

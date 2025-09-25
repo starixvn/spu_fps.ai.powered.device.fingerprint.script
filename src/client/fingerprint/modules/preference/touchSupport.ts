@@ -1,15 +1,11 @@
-import type { TouchSupportInfo, Bit } from "../../types";
-import { toInt, boolToBit } from "../../utils/data";
+import type { TouchSupportInfo, Bit } from '../../types';
+import { FingerprintSpecialValue } from '../../utils/consts';
+import { toInt, boolToBit } from '../../utils/data';
 
 export function collectTouchSupport(): TouchSupportInfo {
-  const result = getTouchSupport();
-  return [result.maxTouchPoints, result.touchEvent, result.touchStart];
-}
-
-function getTouchSupport(): { maxTouchPoints: number; touchEvent: Bit; touchStart: Bit } {
   try {
     const n = navigator;
-    let maxTouchPoints = 0;
+    let maxTouchPoints: number = 0;
     let touchEvent: Bit;
 
     if (n.maxTouchPoints !== undefined) {
@@ -27,8 +23,8 @@ function getTouchSupport(): { maxTouchPoints: number; touchEvent: Bit; touchStar
 
     const touchStart: Bit = boolToBit('ontouchstart' in window);
 
-    return { maxTouchPoints, touchEvent, touchStart };
+    return [maxTouchPoints, touchEvent, touchStart];
   } catch {
-    return { maxTouchPoints: 0, touchEvent: 0, touchStart: 0 };
+    return FingerprintSpecialValue.ERROR;
   }
 }
