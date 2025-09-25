@@ -15,9 +15,9 @@ COPY . .
 # Build the application
 RUN npm run build
 
-# Local stage  
-FROM base AS local
-ENV NODE_ENV=local
+# Staging stage  
+FROM base AS staging
+ENV NODE_ENV=staging
 ENV PORT=5000
 EXPOSE 5000
-CMD ["npm", "run", "start:local"]
+CMD ["npm", "run", "start:staging"]
