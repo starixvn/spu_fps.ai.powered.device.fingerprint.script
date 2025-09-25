@@ -21,8 +21,8 @@ export class BrowserFingerprint {
       browserName: browserNameResult.browserName,
       osName: osNameResult.osName,
       userAgent: userAgentResult,
-      vendor: vendorResult.vendor,
-      vendorFlavors: vendorFlavorsResult.vendorFlavors,
+      vendor: vendorResult,
+      vendorFlavors: vendorFlavorsResult,
       plugins: pluginsResult,
       pdfViewerEnabled: pdfViewerResult,
     };

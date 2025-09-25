@@ -1,11 +1,7 @@
 import type { VendorInfo } from "../../types";
+import { FingerprintSpecialValue } from "../../utils/consts";
 
 export function collectVendor(): VendorInfo {
-  const vendor = getVendor();
-  return { vendor };
-}
-
-function getVendor(): string {
   try {
     const w = window as any;
     const n = navigator as any;
@@ -28,8 +24,8 @@ function getVendor(): string {
 
     if (w.chrome) return "Google Inc.";
 
-    return "";
+    return FingerprintSpecialValue.UNDEFINED;
   } catch {
-    return "";
+    return FingerprintSpecialValue.ERROR;
   }
 }
