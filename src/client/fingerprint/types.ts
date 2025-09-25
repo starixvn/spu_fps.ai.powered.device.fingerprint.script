@@ -115,7 +115,7 @@ export interface AudioGroupInfo {
 export interface BrowserGroupInfo {
   browserName: string;
   osName: string;
-  userAgent: string;
+  userAgent: UserAgentInfo;
   vendor: string;
   vendorFlavors: string[];
   plugins: PluginsInfo; 
@@ -130,9 +130,7 @@ export interface OSNameInfo {
   osName: string;
 }
 
-export interface UserAgentInfo {
-  userAgent: string;
-}
+export type UserAgentInfo = string | FingerprintSpecialValue;
 
 export interface VendorInfo {
   vendor: string;
@@ -144,9 +142,7 @@ export interface VendorFlavorsInfo {
 
 export type PluginsInfo = string[] | FingerprintSpecialValue;
 
-export interface PdfViewerEnabledInfo {
-  pdfViewerEnabled: Bit | FingerprintSpecialValue;
-}
+export type PdfViewerEnabledInfo = Bit | FingerprintSpecialValue;
 // #endregion
 
 // #region Preferences

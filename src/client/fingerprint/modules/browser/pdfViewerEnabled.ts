@@ -4,18 +4,12 @@ import { FingerprintSpecialValue } from "../../utils/consts";
 export function collectPdfViewerEnabled(): PdfViewerEnabledInfo {
   try {
     if (typeof navigator === "undefined" || typeof navigator.pdfViewerEnabled === "undefined") {
-      return {
-        pdfViewerEnabled: FingerprintSpecialValue.UNDEFINED
-      };
+      return FingerprintSpecialValue.UNDEFINED;
     }
 
-    return {
-      pdfViewerEnabled: navigator.pdfViewerEnabled ? 1 : 0
-    };
+    return navigator.pdfViewerEnabled ? 1 : 0;
 
   } catch (error) {
-    return {
-      pdfViewerEnabled: FingerprintSpecialValue.ERROR
-    };
+    return FingerprintSpecialValue.ERROR;
   }
 }

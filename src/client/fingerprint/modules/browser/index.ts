@@ -20,7 +20,7 @@ export class BrowserFingerprint {
     const browserGroup: BrowserGroupInfo = {
       browserName: browserNameResult.browserName,
       osName: osNameResult.osName,
-      userAgent: userAgentResult.userAgent,
+      userAgent: userAgentResult,
       vendor: vendorResult.vendor,
       vendorFlavors: vendorFlavorsResult.vendorFlavors,
       plugins: pluginsResult,
