@@ -23,7 +23,7 @@ describe("Hardware Device Memory Module", () => {
 
   it("should return empty string when deviceMemory property is missing", async () => {
     const result = await collectDeviceMemory();
-    expect(result).toHaveProperty("deviceMemory", FingerprintSpecialValue.UNDEFINED);
+    expect(result).toBe(FingerprintSpecialValue.UNDEFINED);
   }, 30000); // Increase timeout
 
   it("should handle undefined navigator gracefully", async () => {
@@ -33,6 +33,6 @@ describe("Hardware Device Memory Module", () => {
     });
 
     const result = await collectDeviceMemory();
-    expect(result.deviceMemory).toBe(FingerprintSpecialValue.ERROR);
+    expect(result).toBe(FingerprintSpecialValue.ERROR);
   }, 30000);
 });

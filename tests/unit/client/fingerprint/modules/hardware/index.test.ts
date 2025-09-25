@@ -25,12 +25,12 @@ describe('Hardware Fingerprint Module', () => {
   describe('HardwareFingerprint.collect', () => {
     it('should collect complete hardware information successfully', async () => {
       // Arrange
-      const mockPlatformResult = { platform: 'Win32' };
-      const mockCpuClassResult = { cpuClass: 'x86' };
-      const mockArchitectureResult = { architecture: 255 };
-      const mockOSCpuResult = { oscpu: 'Windows NT 10.0; Win64; x64' };
-      const mockHardwareConcurrencyResult = { hardwareConcurrency: 8 };
-      const mockDeviceMemoryResult = { deviceMemory: 8 };
+      const mockPlatformResult = 'Win32';
+      const mockCpuClassResult = 'x86';
+      const mockArchitectureResult = 255;
+      const mockOSCpuResult = 'Windows NT 10.0; Win64; x64';
+      const mockHardwareConcurrencyResult = 8;
+      const mockDeviceMemoryResult = 8;
 
       mockCollectPlatform.mockReturnValue(mockPlatformResult);
       mockCollectCpuClass.mockReturnValue(mockCpuClassResult);
@@ -63,12 +63,12 @@ describe('Hardware Fingerprint Module', () => {
 
     it('should handle mixed valid and invalid values from collectors', async () => {
       // Arrange
-      mockCollectPlatform.mockReturnValue({ platform: 'Linux x86_64' });
-      mockCollectCpuClass.mockReturnValue({ cpuClass: FingerprintSpecialValue.UNDEFINED });
-      mockCollectArchitecture.mockReturnValue({ architecture: 255 });
-      mockCollectOSCpu.mockResolvedValue({ oscpu: 'Linux x86_64' });
-      mockCollectHardwareConcurrency.mockResolvedValue({ hardwareConcurrency: FingerprintSpecialValue.UNDEFINED });
-      mockCollectDeviceMemory.mockResolvedValue({ deviceMemory: 16 });
+      mockCollectPlatform.mockReturnValue('Linux x86_64');
+      mockCollectCpuClass.mockReturnValue(FingerprintSpecialValue.UNDEFINED);
+      mockCollectArchitecture.mockReturnValue(255);
+      mockCollectOSCpu.mockResolvedValue('Linux x86_64');
+      mockCollectHardwareConcurrency.mockResolvedValue(FingerprintSpecialValue.UNDEFINED);
+      mockCollectDeviceMemory.mockResolvedValue(16);
 
       const expectedResult = {
         platform: 'Linux x86_64',
@@ -88,12 +88,12 @@ describe('Hardware Fingerprint Module', () => {
 
     it('should handle all special values from collectors', async () => {
       // Arrange
-      mockCollectPlatform.mockReturnValue({ platform: FingerprintSpecialValue.UNDEFINED });
-      mockCollectCpuClass.mockReturnValue({ cpuClass: FingerprintSpecialValue.UNDEFINED });
-      mockCollectArchitecture.mockReturnValue({ architecture: FingerprintSpecialValue.ERROR });
-      mockCollectOSCpu.mockResolvedValue({ oscpu: FingerprintSpecialValue.UNDEFINED });
-      mockCollectHardwareConcurrency.mockResolvedValue({ hardwareConcurrency: FingerprintSpecialValue.TIMEOUT });
-      mockCollectDeviceMemory.mockResolvedValue({ deviceMemory: FingerprintSpecialValue.UNDEFINED });
+      mockCollectPlatform.mockReturnValue(FingerprintSpecialValue.UNDEFINED);
+      mockCollectCpuClass.mockReturnValue(FingerprintSpecialValue.UNDEFINED);
+      mockCollectArchitecture.mockReturnValue(FingerprintSpecialValue.ERROR);
+      mockCollectOSCpu.mockResolvedValue(FingerprintSpecialValue.UNDEFINED);
+      mockCollectHardwareConcurrency.mockResolvedValue(FingerprintSpecialValue.TIMEOUT);
+      mockCollectDeviceMemory.mockResolvedValue(FingerprintSpecialValue.UNDEFINED);
 
       const expectedResult = {
         platform: FingerprintSpecialValue.UNDEFINED,
@@ -128,12 +128,12 @@ describe('Hardware Fingerprint Module', () => {
 
     it('should maintain proper data types for all collectors', async () => {
       // Arrange
-      mockCollectPlatform.mockReturnValue({ platform: 'Win32' });
-      mockCollectCpuClass.mockReturnValue({ cpuClass: 'x86' });
-      mockCollectArchitecture.mockReturnValue({ architecture: 255 });
-      mockCollectOSCpu.mockResolvedValue({ oscpu: 'Windows NT 10.0; Win64; x64' });
-      mockCollectHardwareConcurrency.mockResolvedValue({ hardwareConcurrency: 8 });
-      mockCollectDeviceMemory.mockResolvedValue({ deviceMemory: 16 });
+      mockCollectPlatform.mockReturnValue('Win32');
+      mockCollectCpuClass.mockReturnValue('x86');
+      mockCollectArchitecture.mockReturnValue(255);
+      mockCollectOSCpu.mockResolvedValue('Windows NT 10.0; Win64; x64');
+      mockCollectHardwareConcurrency.mockResolvedValue(8);
+      mockCollectDeviceMemory.mockResolvedValue(16);
 
       // Act
       const result = await HardwareFingerprint.collect();
@@ -151,20 +151,20 @@ describe('Hardware Fingerprint Module', () => {
       // Arrange
       const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
       
-      mockCollectPlatform.mockReturnValue({ platform: 'Darwin' });
-      mockCollectCpuClass.mockReturnValue({ cpuClass: 'x64' });
-      mockCollectArchitecture.mockReturnValue({ architecture: 255 });
+      mockCollectPlatform.mockReturnValue('Darwin');
+      mockCollectCpuClass.mockReturnValue('x64');
+      mockCollectArchitecture.mockReturnValue(255);
       mockCollectOSCpu.mockImplementation(async () => {
         await delay(10);
-        return { oscpu: 'macOS' };
+        return 'macOS';
       });
       mockCollectHardwareConcurrency.mockImplementation(async () => {
         await delay(5);
-        return { hardwareConcurrency: 8 };
+        return 8;
       });
       mockCollectDeviceMemory.mockImplementation(async () => {
         await delay(15);
-        return { deviceMemory: 16 };
+        return 16;
       });
 
       const startTime = Date.now();
@@ -189,12 +189,12 @@ describe('Hardware Fingerprint Module', () => {
     it('should return the exact structure from individual collectors', async () => {
       // Arrange
       const mockResults = {
-        platform: { platform: 'Test Platform' },
-        cpuClass: { cpuClass: 'Test CPU' },
-        architecture: { architecture: 128 },
-        oscpu: { oscpu: 'Test OS' },
-        hardwareConcurrency: { hardwareConcurrency: 16 },
-        deviceMemory: { deviceMemory: 32 },
+        platform: 'Test Platform',
+        cpuClass: 'Test CPU',
+        architecture: 128,
+        oscpu: 'Test OS',
+        hardwareConcurrency: 16,
+        deviceMemory: 32,
       };
 
       mockCollectPlatform.mockReturnValue(mockResults.platform);
@@ -208,12 +208,12 @@ describe('Hardware Fingerprint Module', () => {
       const result = await HardwareFingerprint.collect();
 
       // Assert
-      expect(result.platform).toBe(mockResults.platform.platform);
-      expect(result.cpuClass).toBe(mockResults.cpuClass.cpuClass);
-      expect(result.architecture).toBe(mockResults.architecture.architecture);
-      expect(result.oscpu).toBe(mockResults.oscpu.oscpu);
-      expect(result.hardwareConcurrency).toBe(mockResults.hardwareConcurrency.hardwareConcurrency);
-      expect(result.deviceMemory).toBe(mockResults.deviceMemory.deviceMemory);
+      expect(result.platform).toBe(mockResults.platform);
+      expect(result.cpuClass).toBe(mockResults.cpuClass);
+      expect(result.architecture).toBe(mockResults.architecture);
+      expect(result.oscpu).toBe(mockResults.oscpu);
+      expect(result.hardwareConcurrency).toBe(mockResults.hardwareConcurrency);
+      expect(result.deviceMemory).toBe(mockResults.deviceMemory);
     });
 
     it('should handle special fingerprint values correctly', async () => {
@@ -225,12 +225,12 @@ describe('Hardware Fingerprint Module', () => {
       ];
 
       for (const specialValue of specialValues) {
-        mockCollectPlatform.mockReturnValue({ platform: specialValue });
-        mockCollectCpuClass.mockReturnValue({ cpuClass: specialValue });
-        mockCollectArchitecture.mockReturnValue({ architecture: specialValue });
-        mockCollectOSCpu.mockResolvedValue({ oscpu: specialValue });
-        mockCollectHardwareConcurrency.mockResolvedValue({ hardwareConcurrency: specialValue });
-        mockCollectDeviceMemory.mockResolvedValue({ deviceMemory: specialValue });
+        mockCollectPlatform.mockReturnValue(specialValue);
+        mockCollectCpuClass.mockReturnValue(specialValue);
+        mockCollectArchitecture.mockReturnValue(specialValue);
+        mockCollectOSCpu.mockResolvedValue(specialValue);
+        mockCollectHardwareConcurrency.mockResolvedValue(specialValue);
+        mockCollectDeviceMemory.mockResolvedValue(specialValue);
 
         // Act
         const result = await HardwareFingerprint.collect();

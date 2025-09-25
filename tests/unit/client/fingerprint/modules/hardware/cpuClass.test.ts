@@ -27,7 +27,7 @@ describe('Hardware CPU Class Module', () => {
       const result = collectCpuClass();
 
       // Assert
-      expect(result).toEqual({ cpuClass: 'Intel x86' });
+      expect(result).toEqual('Intel x86');
     });
 
     it('should trim whitespace from cpuClass string', () => {
@@ -38,7 +38,7 @@ describe('Hardware CPU Class Module', () => {
       const result = collectCpuClass();
 
       // Assert
-      expect(result).toEqual({ cpuClass: 'Intel x86' });
+      expect(result).toEqual('Intel x86');
     });
 
     it('should return empty string when navigator.cpuClass is undefined', () => {
@@ -49,7 +49,7 @@ describe('Hardware CPU Class Module', () => {
       const result = collectCpuClass();
 
       // Assert
-      expect(result).toEqual({ cpuClass: FingerprintSpecialValue.UNDEFINED });
+      expect(result).toEqual(FingerprintSpecialValue.UNDEFINED);
     });
 
     it('should return empty string when navigator.cpuClass is null', () => {
@@ -60,7 +60,7 @@ describe('Hardware CPU Class Module', () => {
       const result = collectCpuClass();
 
       // Assert
-      expect(result).toEqual({ cpuClass: FingerprintSpecialValue.UNDEFINED });
+      expect(result).toEqual(FingerprintSpecialValue.UNDEFINED);
     });
 
     it('should return empty string when navigator.cpuClass is not a string', () => {
@@ -71,7 +71,7 @@ describe('Hardware CPU Class Module', () => {
       const result = collectCpuClass();
 
       // Assert
-      expect(result).toEqual({ cpuClass: FingerprintSpecialValue.UNDEFINED });
+      expect(result).toEqual(FingerprintSpecialValue.UNDEFINED);
     });
 
     it('should return empty string when navigator.cpuClass is empty string', () => {
@@ -82,7 +82,7 @@ describe('Hardware CPU Class Module', () => {
       const result = collectCpuClass();
 
       // Assert
-      expect(result).toEqual({ cpuClass: FingerprintSpecialValue.UNDEFINED });
+      expect(result).toEqual(FingerprintSpecialValue.UNDEFINED);
     });
 
     it('should return empty string when navigator.cpuClass is whitespace only', () => {
@@ -93,7 +93,7 @@ describe('Hardware CPU Class Module', () => {
       const result = collectCpuClass();
 
       // Assert
-      expect(result).toEqual({ cpuClass: FingerprintSpecialValue.UNDEFINED });
+      expect(result).toEqual(FingerprintSpecialValue.UNDEFINED);
     });
 
     it('should handle error gracefully and return ERROR', () => {
@@ -107,7 +107,7 @@ describe('Hardware CPU Class Module', () => {
       const result = collectCpuClass();
 
       // Assert
-      expect(result).toEqual({ cpuClass: FingerprintSpecialValue.ERROR });
+      expect(result).toEqual(FingerprintSpecialValue.ERROR);
 
       // Restore navigator for other tests
       Object.defineProperty(global, 'navigator', {

@@ -98,7 +98,7 @@ describe("Hardware Modules Integration Tests", () => {
       const result = collectPlatform();
 
       // Assert
-      expect(result).toEqual({ platform: "Test Platform" });
+      expect(result).toEqual("Test Platform");
     });
 
     it("should test collectCpuClass function independently", () => {
@@ -109,7 +109,7 @@ describe("Hardware Modules Integration Tests", () => {
       const result = collectCpuClass();
 
       // Assert
-      expect(result).toEqual({ cpuClass: "Test CPU" });
+      expect(result).toEqual("Test CPU");
     });
 
     it("should test collectHardwareConcurrency function independently", async () => {
@@ -120,7 +120,7 @@ describe("Hardware Modules Integration Tests", () => {
       const result = await collectHardwareConcurrency();
 
       // Assert - May return empty string due to validation logic
-      expect(result).toHaveProperty("hardwareConcurrency");
+      expect(typeof result).toBe("number");
     });
 
     it("should test collectDeviceMemory function independently", async () => {
@@ -131,7 +131,7 @@ describe("Hardware Modules Integration Tests", () => {
       const result = await collectDeviceMemory();
 
       // Assert - May return empty string due to validation logic
-      expect(result).toHaveProperty("deviceMemory");
+      expect(typeof result).toBe("number");
     });
 
     it("should test collectOSCpu function independently", async () => {
@@ -142,7 +142,7 @@ describe("Hardware Modules Integration Tests", () => {
       const result = await collectOSCpu();
 
       // Assert
-      expect(result).toEqual({ oscpu: "Windows NT 10.0; Win64; x64" });
+      expect(result).toEqual("Windows NT 10.0; Win64; x64");
     });
 
     it("should test collectArchitecture function independently", () => {
@@ -152,7 +152,7 @@ describe("Hardware Modules Integration Tests", () => {
       const result = collectArchitecture();
 
       // Assert
-      expect(result).toEqual({ architecture: 255 });  // Changed: number value
+      expect(result).toEqual(255);  // Changed: number value
     });
   });
 });
