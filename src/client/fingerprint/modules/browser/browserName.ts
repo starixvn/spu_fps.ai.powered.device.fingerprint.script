@@ -58,7 +58,10 @@ export function getBrowserName(): string {
 
     // CSS fallback
     const css = findMatch(cssDetectors);
-    if (css) return css;
+    if (css) {
+      if (css === "Safari/WebKit") return "Safari";
+      return css;
+    }
 
     return "";
   } catch {

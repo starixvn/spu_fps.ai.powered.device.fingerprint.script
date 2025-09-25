@@ -45,11 +45,50 @@ export function isChromium86OrNewer(): Bit {
 }
 
 /**
+ * Checks whether the browser is based on Chromium version ≥122 without using user-agent.
+ */
+export function isChromium122OrNewer(): boolean {
+  // Checked in Chrome 121 vs Chrome 122 and 129 both on desktop and Android
+  const w = window;
+  const URLPattern = (w as any).URLPattern;
+
+  return (
+    countTruthy([
+      'union' in Set.prototype,
+      'Iterator' in w,
+      URLPattern && 'hasRegExpGroups' in URLPattern.prototype,
+      'RGB8' in WebGLRenderingContext.prototype,
+    ]) >= 3
+  )
+}
+
+/**
+ * Checks whether the browser is Samsung Internet without using user-agent.
+ */
+export function isSamsungInternet(): boolean {
+  // Checked in Samsung Internet 21, 25 and 27
+  const n = navigator;
+  const w = window;
+  const audioPrototype = Audio.prototype;
+  const { visualViewport } = w;
+
+  return (
+    countTruthy([
+      'srLatency' in audioPrototype,
+      'srChannelCount' in audioPrototype,
+      'devicePosture' in n, // Not available in HTTP
+      visualViewport && 'segments' in visualViewport,
+      'getTextInformation' in Image.prototype, // Not available in Samsung Internet 21
+    ]) >= 3
+  )
+}
+
+/**
  * Checks whether the browser is based on Trident (the Internet Explorer engine) without using user-agent.
  */
 export function isTrident(): boolean {
-  const w = window
-  const n = navigator
+  const w = window;
+  const n = navigator;
 
   // The properties are checked to be in IE 10, IE 11 and not to be in other browsers in October 2020
   return (
@@ -68,8 +107,8 @@ export function isTrident(): boolean {
  */
 export function isEdgeHTML(): boolean {
   // Based on research in October 2020
-  const w = window
-  const n = navigator
+  const w = window;
+  const n = navigator;
 
   return (
     countTruthy(['msWriteProfilerMark' in w, 'MSStream' in w, 'msLaunchUri' in n, 'msSaveBlob' in n]) >= 3 &&

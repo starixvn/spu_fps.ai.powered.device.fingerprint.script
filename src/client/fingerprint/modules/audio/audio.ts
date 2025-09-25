@@ -2,7 +2,7 @@ import type { Bit } from '../../types';
 import { FingerprintSpecialValue } from "../../utils/consts";
 import { boolToBit } from '../../utils/data';
 import { getBrowserName } from '../browser/browserName';
-import { isMobile } from '../../utils/browser';
+import { isChromium, isChromium122OrNewer, isMobile, isSafariWebKit, isSamsungInternet, isWebKit } from '../../utils/browser';
 
 export const enum AudioStatus {
   CLEAN = "clean",
@@ -47,7 +47,7 @@ export async function collectAudio(): Promise<number | FingerprintSpecialValue> 
       return FingerprintSpecialValue.UNDEFINED;
     }
 
-    if (audioCache) {
+    if (audioCache !== null) {
       return audioCache;
     }
 
@@ -73,11 +73,10 @@ export async function collectAudio(): Promise<number | FingerprintSpecialValue> 
     const status = detectNoise(samples, median, snapshotsRMS);
 
     // Cache clean results
-    if (status === "clean") {
-      audioCache = median;
-    }
+    return status === AudioStatus.CLEAN
+        ? (audioCache = median)
+        : FingerprintSpecialValue.ANTI_FINGERPRINTED;
 
-    return median;
   } catch (error) {
     return FingerprintSpecialValue.ERROR;
   }
@@ -85,27 +84,18 @@ export async function collectAudio(): Promise<number | FingerprintSpecialValue> 
 
 function doesBrowserPerformAntifingerprinting(): Bit {
   const browserName = getBrowserName().toLowerCase();
-  const version = getBrowserVersion();
   
-  // Safari 17+ has Intelligent Tracking Prevention with audio normalization
-  if (browserName === "safari" && version >= 17) {
-    return 1;
-  }
-  
+  // Safari WebKit has Intelligent Tracking Prevention with audio normalization
+  if (isWebKit() && isSafariWebKit()) return 1;
+
+  // Samsung Browser 26+ has enhanced privacy
+  if (isChromium() && isSamsungInternet() && isChromium122OrNewer()) return 1;
+
   // Brave Browser has built-in fingerprinting protection
-  if (browserName === "brave") {
-    return 1;
-  }
+  if (browserName === "brave") return 1;
   
   // Firefox with privacy.resistFingerprinting detection
-  if (browserName === "firefox") {
-    return detectFirefoxResistFingerprinting();
-  }
-  
-  // Samsung Browser 26+ has enhanced privacy
-  if (navigator.userAgent.includes("SamsungBrowser") && version >= 26) {
-    return 1;
-  }
+  if (browserName === "firefox") return detectFirefoxResistFingerprinting();
   
   return 0;
 }
@@ -183,32 +173,6 @@ function detectNoise(
 
   lastMedian = median;
   return AudioStatus.CLEAN;
-}
-
-function getBrowserVersion(): number {
-  try {
-    const userAgent = navigator.userAgent;
-    const browserName = getBrowserName().toLowerCase();
-    
-    if (browserName === "safari") {
-      const match = userAgent.match(/Version\/(\d+)/);
-      return match ? parseInt(match[1], 10) : 0;
-    }
-    
-    if (browserName === "chrome") {
-      const match = userAgent.match(/Chrome\/(\d+)/);
-      return match ? parseInt(match[1], 10) : 0;
-    }
-    
-    if (browserName === "firefox") {
-      const match = userAgent.match(/Firefox\/(\d+)/);
-      return match ? parseInt(match[1], 10) : 0;
-    }
-    
-    return 0;
-  } catch {
-    return 0;
-  }
 }
 
 function detectFirefoxResistFingerprinting(): Bit {
