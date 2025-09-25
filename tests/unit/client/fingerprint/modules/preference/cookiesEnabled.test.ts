@@ -165,7 +165,7 @@ describe('Cookies Enabled Module', () => {
       // Assert
       expect(typeof result).toBe('object');
       expect(result).toHaveProperty('cookiesEnabled');
-      expect([0, 1]).toContain(result.cookiesEnabled);
+      expect([0, 1]).toContain(result);
     });
 
     it('should handle navigator property access errors gracefully', () => {

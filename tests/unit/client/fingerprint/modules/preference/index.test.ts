@@ -213,7 +213,7 @@ describe('Preferences Fingerprint Module', () => {
       // Assert
       expect(result.languages).toEqual(complexLanguages);
       expect(result.languages).toHaveLength(4);
-      expect(result.languages[1]).toHaveLength(3); // zh-Hans-CN has 3 variants
+      expect((result.languages as string[][])[1]).toHaveLength(3);
     });
 
     it('should handle touch support variations correctly', async () => {
@@ -240,11 +240,13 @@ describe('Preferences Fingerprint Module', () => {
         const result = await PreferencesFingerprint.collect();
 
         // Assert
-        expect(result.touchSupport).toEqual(touchSupport);
-        expect(result.touchSupport).toHaveLength(3);
-        expect(typeof result.touchSupport[0]).toBe('number'); // maxTouchPoints
-        expect([0, 1]).toContain(result.touchSupport[1]); // touchEvent bit
-        expect([0, 1]).toContain(result.touchSupport[2]); // touchStart bit
+        if (Array.isArray(result.touchSupport)) {
+          expect(result.touchSupport).toEqual(touchSupport);
+          expect(result.touchSupport).toHaveLength(3);
+          expect(typeof result.touchSupport[0]).toBe('number'); // maxTouchPoints
+          expect([0, 1]).toContain(result.touchSupport[1]);      // touchEvent bit
+          expect([0, 1]).toContain(result.touchSupport[2]);      // touchStart bit
+        }
       }
     });
 

@@ -39,7 +39,7 @@ describe('SessionStorage Module', () => {
       const result = collectSessionStorage();
 
       // Assert
-      expect(result).toEqual({ sessionStorage: -1 }); // UNDEFINED = -1
+      expect(result).toEqual(-1); // UNDEFINED = -1
     });
 
     it('should return 1 when sessionStorage works correctly', () => {
@@ -69,7 +69,7 @@ describe('SessionStorage Module', () => {
       const result = collectSessionStorage();
 
       // Assert
-      expect(result).toEqual({ sessionStorage: 1 });
+      expect(result).toEqual(1);
       expect(mockSessionStorage.setItem).toHaveBeenCalledWith(
         expect.stringMatching(/^sessionstorage_test_/),
         'test_value'
@@ -105,7 +105,7 @@ describe('SessionStorage Module', () => {
       const result = collectSessionStorage();
 
       // Assert
-      expect(result).toEqual({ sessionStorage: 1 });
+      expect(result).toEqual(1);
     });
 
     it('should return ERROR when non-SecurityError DOMException occurs', () => {
@@ -131,7 +131,7 @@ describe('SessionStorage Module', () => {
       const result = collectSessionStorage();
 
       // Assert
-      expect(result).toEqual({ sessionStorage: -3 }); // ERROR = -3
+      expect(result).toEqual(-3); // ERROR = -3
     });
   });
 });

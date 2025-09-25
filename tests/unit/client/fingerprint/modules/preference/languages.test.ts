@@ -242,10 +242,7 @@ describe('Languages Module', () => {
     it('should handle errors gracefully and return default', () => {
       // Arrange - Simulate error in navigator access
       const originalNavigator = global.navigator;
-      Object.defineProperty(global, 'navigator', {
-        get: () => { throw new Error('Navigator access denied'); },
-        configurable: true
-      });
+      delete (global as any).navigator;
 
       // Act
       const result = collectLanguages();

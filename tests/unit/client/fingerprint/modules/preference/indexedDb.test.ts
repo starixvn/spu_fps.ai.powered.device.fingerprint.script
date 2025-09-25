@@ -133,7 +133,7 @@ describe('IndexedDB Module', () => {
       // Assert - empty object is still truthy, so doesn't trigger !window.indexedDB  
       // This will actually try to use the indexedDB and likely return ERROR or similar
       expect(result).toHaveProperty('indexedDB');
-      expect(typeof result.indexedDB).toBe('number');
+      expect(typeof result).toBe('number');
     });
 
     it('should return 1 when SecurityError occurs during indexedDB access', async () => {

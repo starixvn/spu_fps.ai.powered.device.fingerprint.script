@@ -28,7 +28,7 @@ describe('OpenDatabase Module', () => {
       const result = collectOpenDatabase();
 
       // Assert
-      expect(result).toEqual({ openDatabase: 0 }); // In jsdom, deleting window triggers outer catch, returns 0
+      expect(result).toEqual(0); // In jsdom, deleting window triggers outer catch, returns 0
 
       // Restore window
       (global as any).window = originalWindow;
@@ -41,7 +41,7 @@ describe('OpenDatabase Module', () => {
       const result = collectOpenDatabase();
 
       // Assert
-      expect(result).toEqual({ openDatabase: 0 });
+      expect(result).toEqual(0);
     });
 
     it('should return 1 when openDatabase API is available and works', () => {
@@ -53,7 +53,7 @@ describe('OpenDatabase Module', () => {
       const result = collectOpenDatabase();
 
       // Assert
-      expect(result).toEqual({ openDatabase: 1 });
+      expect(result).toEqual(1);
       expect(mockOpenDatabase).toHaveBeenCalledWith("test", "1.0", "test_db", 1);
     });
 
@@ -68,7 +68,7 @@ describe('OpenDatabase Module', () => {
       const result = collectOpenDatabase();
 
       // Assert
-      expect(result).toEqual({ openDatabase: 1 });
+      expect(result).toEqual(1);
       expect(mockOpenDatabase).toHaveBeenCalledWith("test", "1.0", "test_db", 1);
     });
 
@@ -81,7 +81,7 @@ describe('OpenDatabase Module', () => {
       const result = collectOpenDatabase();
 
       // Assert
-      expect(result).toEqual({ openDatabase: 1 });
+      expect(result).toEqual(1);
       expect(mockWebkitOpenDatabase).toHaveBeenCalledWith("test", "1.0", "test_db", 1);
     });
 
@@ -94,7 +94,7 @@ describe('OpenDatabase Module', () => {
       const result = collectOpenDatabase();
 
       // Assert
-      expect(result).toEqual({ openDatabase: 1 });
+      expect(result).toEqual(1);
       expect(mockMozOpenDatabase).toHaveBeenCalledWith("test", "1.0", "test_db", 1);
     });
 
@@ -107,7 +107,7 @@ describe('OpenDatabase Module', () => {
       const result = collectOpenDatabase();
 
       // Assert
-      expect(result).toEqual({ openDatabase: 1 });
+      expect(result).toEqual(1);
       expect(mockMsOpenDatabase).toHaveBeenCalledWith("test", "1.0", "test_db", 1);
     });
 
@@ -123,7 +123,7 @@ describe('OpenDatabase Module', () => {
       const result = collectOpenDatabase();
 
       // Assert
-      expect(result).toEqual({ openDatabase: 1 });
+      expect(result).toEqual(1);
       expect(mockOpenDatabase).toHaveBeenCalledWith("test", "1.0", "test_db", 1);
       expect(mockWebkitOpenDatabase).not.toHaveBeenCalled();
     });
@@ -137,7 +137,7 @@ describe('OpenDatabase Module', () => {
       const result = collectOpenDatabase();
 
       // Assert
-      expect(result).toEqual({ openDatabase: 1 });
+      expect(result).toEqual(1);
       expect(mockWebkitOpenDatabase).toHaveBeenCalledWith("test", "1.0", "test_db", 1);
     });
 
@@ -152,7 +152,7 @@ describe('OpenDatabase Module', () => {
       const result = collectOpenDatabase();
 
       // Assert
-      expect(result).toEqual({ openDatabase: 0 });
+      expect(result).toEqual(0);
     });
 
     it('should return 0 when all database APIs are not functions', () => {
@@ -171,7 +171,7 @@ describe('OpenDatabase Module', () => {
       const result = collectOpenDatabase();
 
       // Assert - Should return 0 when no functional APIs available
-      expect(result).toEqual({ openDatabase: 0 });
+      expect(result).toEqual(0);
 
       // Restore
       originalAPIs.forEach(api => {
@@ -192,7 +192,7 @@ describe('OpenDatabase Module', () => {
       const result = collectOpenDatabase();
 
       // Assert
-      expect(result).toEqual({ openDatabase: 1 });
+      expect(result).toEqual(1);
       expect(mockMozOpenDatabase).toHaveBeenCalledWith("test", "1.0", "test_db", 1);
     });
 
@@ -206,7 +206,7 @@ describe('OpenDatabase Module', () => {
       const result = collectOpenDatabase();
 
       // Assert
-      expect(result).toEqual({ openDatabase: 1 });
+      expect(result).toEqual(1);
       expect(mockWebkitOpenDatabase).toHaveBeenCalledWith("test", "1.0", "test_db", 1);
     });
 
@@ -221,7 +221,7 @@ describe('OpenDatabase Module', () => {
       const result = collectOpenDatabase();
 
       // Assert
-      expect(result).toEqual({ openDatabase: 1 });
+      expect(result).toEqual(1);
       expect(mockOpenDatabase).toHaveBeenCalledWith("test", "1.0", "test_db", 1);
     });
 
@@ -236,7 +236,7 @@ describe('OpenDatabase Module', () => {
       const result = collectOpenDatabase();
 
       // Assert
-      expect(result).toEqual({ openDatabase: 0 });
+      expect(result).toEqual(0);
     });
 
     it('should use last available API if others are not functions', () => {
@@ -251,7 +251,7 @@ describe('OpenDatabase Module', () => {
       const result = collectOpenDatabase();
 
       // Assert
-      expect(result).toEqual({ openDatabase: 1 });
+      expect(result).toEqual(1);
       expect(mockMsOpenDatabase).toHaveBeenCalledWith("test", "1.0", "test_db", 1);
     });
   });

@@ -97,8 +97,8 @@ describe('Touch Support Module', () => {
         const result = collectTouchSupport();
 
         // Assert
-        expect(result[0]).toBe(touchPoints); // maxTouchPoints is first element
-        expect(typeof result[0]).toBe('number');
+        expect((result as number[])[0]).toBe(touchPoints); // maxTouchPoints is first element
+        expect(typeof (result as number[])[0]).toBe('number');
       }
     });
 
@@ -116,7 +116,7 @@ describe('Touch Support Module', () => {
       const result = collectTouchSupport();
 
       // Assert
-      expect(result[0]).toBe(8); // Should use msMaxTouchPoints
+      expect((result as number[])[0]).toBe(8); // Should use msMaxTouchPoints
     });
 
     it('should default to 0 when both maxTouchPoints and msMaxTouchPoints are undefined', () => {
@@ -133,7 +133,7 @@ describe('Touch Support Module', () => {
       const result = collectTouchSupport();
 
       // Assert
-      expect(result[0]).toBe(0); // Should default to 0
+      expect((result as number[])[0]).toBe(0); // Should default to 0
     });
 
     it('should detect TouchEvent support correctly', () => {
@@ -146,7 +146,7 @@ describe('Touch Support Module', () => {
       });
 
       const result1 = collectTouchSupport();
-      expect(result1[1]).toBe(1); // touchEvent supported
+      expect((result1 as number[])[1]).toBe(1); // touchEvent supported
 
       // Test TouchEvent not supported
       document.createEvent = jest.fn().mockImplementation((eventType) => {
@@ -157,24 +157,24 @@ describe('Touch Support Module', () => {
       });
 
       const result2 = collectTouchSupport();
-      expect(result2[1]).toBe(0); // touchEvent not supported
+      expect((result2 as number[])[1]).toBe(0); // touchEvent not supported
     });
 
     it('should detect ontouchstart property correctly', () => {
       // Test ontouchstart exists
       (window as any).ontouchstart = null;
       const result1 = collectTouchSupport();
-      expect(result1[2]).toBe(1); // touchStart supported
+      expect((result1 as number[])[2]).toBe(1); // touchStart supported
 
       // Test ontouchstart exists with function
       (window as any).ontouchstart = function() {};
       const result2 = collectTouchSupport();
-      expect(result2[2]).toBe(1); // touchStart supported
+      expect((result2 as number[])[2]).toBe(1); // touchStart supported
 
       // Test ontouchstart doesn't exist
       delete (window as any).ontouchstart;
       const result3 = collectTouchSupport();
-      expect(result3[2]).toBe(0); // touchStart not supported
+      expect((result3 as number[])[2]).toBe(0); // touchStart not supported
     });
 
     it('should handle errors gracefully and return fallback values', () => {
@@ -211,8 +211,8 @@ describe('Touch Support Module', () => {
       const result = collectTouchSupport();
 
       // Assert
-      expect(result[0]).toBe(10); // Should convert string to number
-      expect(typeof result[0]).toBe('number');
+      expect((result as number[])[0]).toBe(10); // Should convert string to number
+      expect(typeof (result as number[])[0]).toBe('number');
     });
 
     it('should handle invalid maxTouchPoints values correctly', () => {
@@ -241,7 +241,7 @@ describe('Touch Support Module', () => {
         const result = collectTouchSupport();
 
         // Assert
-        expect(typeof result[0]).toBe('number');
+        expect(typeof (result as number[])[0]).toBe('number');
         // Should handle gracefully, either convert to 0 or handle error
       }
     });
@@ -256,7 +256,7 @@ describe('Touch Support Module', () => {
       const result = collectTouchSupport();
 
       // Assert
-      expect(result[1]).toBe(0); // Should default to 0 when createEvent fails
+      expect((result as number[])[1]).toBe(0); // Should default to 0 when createEvent fails
     });
 
     it('should return consistent types', () => {
@@ -271,11 +271,11 @@ describe('Touch Support Module', () => {
       const result = collectTouchSupport();
 
       // Assert
-      expect(typeof result[0]).toBe('number'); // maxTouchPoints
-      expect(typeof result[1]).toBe('number'); // touchEvent
-      expect(typeof result[2]).toBe('number'); // touchStart
-      expect([0, 1]).toContain(result[1]); // touchEvent is bit
-      expect([0, 1]).toContain(result[2]); // touchStart is bit
+      expect(typeof (result as number[])[0]).toBe('number'); // maxTouchPoints
+      expect(typeof (result as number[])[1]).toBe('number'); // touchEvent
+      expect(typeof (result as number[])[2]).toBe('number'); // touchStart
+      expect([0, 1]).toContain((result as number[])[1]); // touchEvent is bit
+      expect([0, 1]).toContain((result as number[])[2]); // touchStart is bit
     });
 
     it('should handle edge case with 0 maxTouchPoints but touch events supported', () => {
@@ -314,8 +314,8 @@ describe('Touch Support Module', () => {
       const result = collectTouchSupport();
 
       // Assert
-      expect(result[0]).toBe(255);
-      expect(result[0]).toBeGreaterThan(0);
+      expect((result as number[])[0]).toBe(255);
+      expect((result as number[])[0]).toBeGreaterThan(0);
     });
   });
 });

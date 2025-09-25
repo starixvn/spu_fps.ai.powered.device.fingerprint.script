@@ -42,7 +42,7 @@ describe('Timezone Module', () => {
       const result = collectTimezone();
 
       // Assert
-      expect(result).toEqual({ timezone: 'America/New_York' });
+      expect(result).toEqual('America/New_York');
       expect(mockIntl.DateTimeFormat).toHaveBeenCalled();
     });
 
@@ -66,7 +66,7 @@ describe('Timezone Module', () => {
       const result = collectTimezone();
 
       // Assert
-      expect(result).toEqual({ timezone: '  Asia/Tokyo  ' }); // Code doesn't trim whitespace
+      expect(result).toEqual('  Asia/Tokyo  '); // Code doesn't trim whitespace
     });
 
     it('should fallback to offset when Intl.DateTimeFormat returns empty string', () => {
@@ -94,7 +94,7 @@ describe('Timezone Module', () => {
       const result = collectTimezone();
 
       // Assert
-      expect(result).toEqual({ timezone: 'UTC+08:00' });
+      expect(result).toEqual('UTC+08:00');
 
       mockDate.mockRestore();
     });
@@ -116,7 +116,7 @@ describe('Timezone Module', () => {
       const result = collectTimezone();
 
       // Assert
-      expect(result).toEqual({ timezone: 'UTC+00:00' });
+      expect(result).toEqual('UTC+00:00');
 
       mockDate.mockRestore();
     });
@@ -138,7 +138,7 @@ describe('Timezone Module', () => {
       const result = collectTimezone();
 
       // Assert
-      expect(result).toEqual({ timezone: '' });
+      expect(result).toBe(-3); // ERROR = -3
 
       mockDate.mockRestore();
     });
@@ -159,7 +159,7 @@ describe('Timezone Module', () => {
       const result = collectTimezone();
 
       // Assert
-      expect(result).toEqual({ timezone: '' });
+      expect(result).toBe(-3); // ERROR = -3
     });
 
     it('should format positive offset correctly', () => {
@@ -179,7 +179,7 @@ describe('Timezone Module', () => {
       const result = collectTimezone();
 
       // Assert
-      expect(result).toEqual({ timezone: 'UTC-05:30' });
+      expect(result).toEqual('UTC-05:30');
 
       mockDate.mockRestore();
     });
@@ -201,7 +201,7 @@ describe('Timezone Module', () => {
       const result = collectTimezone();
 
       // Assert
-      expect(result).toEqual({ timezone: 'UTC+10:30' });
+      expect(result).toEqual('UTC+10:30');
 
       mockDate.mockRestore();
     });

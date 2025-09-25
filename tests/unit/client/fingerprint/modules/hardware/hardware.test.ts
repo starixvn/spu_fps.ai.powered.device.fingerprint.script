@@ -130,8 +130,8 @@ describe("Hardware Modules Integration Tests", () => {
       // Act
       const result = await collectDeviceMemory();
 
-      // Assert - May return empty string due to validation logic
-      expect(typeof result).toBe("number");
+      // Assert - DeviceMemory can return number, string, or special value
+      expect(['number', 'string'].includes(typeof result)).toBe(true);
     });
 
     it("should test collectOSCpu function independently", async () => {

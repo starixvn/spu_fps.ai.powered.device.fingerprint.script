@@ -175,7 +175,7 @@ describe('Local Storage Module', () => {
       // Assert
       expect(typeof result).toBe('object');
       expect(result).toHaveProperty('localStorage');
-      expect([0, 1, FingerprintSpecialValue.UNDEFINED, FingerprintSpecialValue.ERROR]).toContain(result.localStorage);
+      expect([0, 1, FingerprintSpecialValue.UNDEFINED, FingerprintSpecialValue.ERROR]).toContain(result);
     });
 
     it('should handle localStorage with missing methods', () => {
