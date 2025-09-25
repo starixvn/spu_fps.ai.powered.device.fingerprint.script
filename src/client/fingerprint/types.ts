@@ -118,7 +118,7 @@ export interface BrowserGroupInfo {
   userAgent: string;
   vendor: string;
   vendorFlavors: string[];
-  plugins: string[]; 
+  plugins: PluginsInfo; 
   pdfViewerEnabled: PdfViewerEnabledInfo;
 }
 
@@ -142,18 +142,7 @@ export interface VendorFlavorsInfo {
   vendorFlavors: string[];
 }
 
-export interface PluginMimeTypeData {
-  type: string;
-  suffixes: string;
-}
-
-export interface PluginData {
-  name: string;
-  description: string;
-  mimeTypes: PluginMimeTypeData[];
-}
-
-export type PluginsInfo = string[];
+export type PluginsInfo = string[] | FingerprintSpecialValue;
 
 export interface PdfViewerEnabledInfo {
   pdfViewerEnabled: Bit | FingerprintSpecialValue;
