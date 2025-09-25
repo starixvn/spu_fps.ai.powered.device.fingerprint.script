@@ -1,15 +1,21 @@
-import type { Bit } from "../../types";
+import type { PdfViewerEnabledInfo } from "../../types";
 import { FingerprintSpecialValue } from "../../utils/consts";
 
-export function collectPdfViewerEnabled(): Bit | FingerprintSpecialValue {
+export function collectPdfViewerEnabled(): PdfViewerEnabledInfo {
   try {
     if (typeof navigator === "undefined" || typeof navigator.pdfViewerEnabled === "undefined") {
-      return FingerprintSpecialValue.UNDEFINED;
+      return {
+        pdfViewerEnabled: FingerprintSpecialValue.UNDEFINED
+      };
     }
-    
-    return navigator.pdfViewerEnabled ? 1 : 0;
+
+    return {
+      pdfViewerEnabled: navigator.pdfViewerEnabled ? 1 : 0
+    };
 
   } catch (error) {
-    return FingerprintSpecialValue.ERROR;
+    return {
+      pdfViewerEnabled: FingerprintSpecialValue.ERROR
+    };
   }
 }
