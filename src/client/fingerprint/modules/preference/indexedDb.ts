@@ -83,7 +83,11 @@ export async function collectIndexedDB(): Promise<IndexedDBInfo> {
         }
       }
     });
-  } catch {
+  } catch (e) {
+    if (e instanceof DOMException && e.name === 'SecurityError') {
+      return 1;
+    }
+
     return FingerprintSpecialValue.ERROR;
   }
 }
