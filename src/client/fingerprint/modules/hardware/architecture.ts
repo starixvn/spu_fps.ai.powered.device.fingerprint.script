@@ -3,7 +3,7 @@ import { FingerprintSpecialValue } from "../../utils/consts";
 
 export function collectArchitecture(): ArchitectureInfo {
   const architecture = getArchitecture();
-  return { architecture };
+  return architecture;
 }
 
 function getArchitecture(): number | FingerprintSpecialValue {

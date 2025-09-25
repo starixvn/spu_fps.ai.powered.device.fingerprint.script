@@ -3,7 +3,7 @@ import { FingerprintSpecialValue } from "../../utils/consts";
 
 export async function collectOSCpu(): Promise<OSCpuInfo> {
   const oscpu = await getOSCpu();
-  return { oscpu };
+  return oscpu;
 }
 
 async function getOSCpu(): Promise<string | FingerprintSpecialValue> {

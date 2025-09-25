@@ -4,7 +4,7 @@ import { FingerprintSpecialValue } from "../../utils/consts";
 
 export function collectPlatform(): PlatformInfo {
   const platform = getPlatform();
-  return { platform };
+  return platform;
 }
 
 export function getPlatform(): string | FingerprintSpecialValue {

@@ -30,37 +30,25 @@ export interface CollectedDeviceInfo {
 
 // #region Hardware
 export interface HardwareGroupInfo {
-  platform: string | FingerprintSpecialValue;
-  architecture: number | FingerprintSpecialValue;
-  oscpu: string | FingerprintSpecialValue;
-  cpuClass: string | FingerprintSpecialValue;
-  hardwareConcurrency: number | string | FingerprintSpecialValue;
-  deviceMemory: number | string | FingerprintSpecialValue;
+  platform: PlatformInfo;
+  architecture: ArchitectureInfo;
+  oscpu: OSCpuInfo;
+  cpuClass: CpuClassInfo;
+  hardwareConcurrency: HardwareConcurrencyInfo;
+  deviceMemory: DeviceMemoryInfo;
 }
 
-export interface DeviceMemoryInfo {
-  deviceMemory: number | string | FingerprintSpecialValue;
-}
+export type PlatformInfo = string | FingerprintSpecialValue;
 
-export interface HardwareConcurrencyInfo {
-  hardwareConcurrency: number | string | FingerprintSpecialValue;
-}
+export type ArchitectureInfo = number | FingerprintSpecialValue;
 
-export interface CpuClassInfo {
-  cpuClass: string | FingerprintSpecialValue;
-}
+export type OSCpuInfo =  string | FingerprintSpecialValue;
 
-export interface PlatformInfo {
-  platform: string | FingerprintSpecialValue;
-}
+export type CpuClassInfo = string | FingerprintSpecialValue;
 
-export interface ArchitectureInfo {
-  architecture: number | FingerprintSpecialValue;
-}
+export type HardwareConcurrencyInfo = number | string | FingerprintSpecialValue;
 
-export interface OSCpuInfo {
-  oscpu: string | FingerprintSpecialValue;
-}
+export type DeviceMemoryInfo = number | string | FingerprintSpecialValue;
 // #endregion
 
 // #region Graphics
@@ -113,9 +101,13 @@ export interface FontPreferencesInfo {
 
 // #region Audio
 export interface AudioGroupInfo {
-  audio: number | FingerprintSpecialValue;
-  audioBaseLatency: number | FingerprintSpecialValue;
+  audio: AudioInfo;
+  audioBaseLatency: AudioBaseLatencyInfo;
 }
+
+export type AudioInfo = number | FingerprintSpecialValue;
+
+export type AudioBaseLatencyInfo = number | FingerprintSpecialValue;
 // #endregion
 
 // #region Browser

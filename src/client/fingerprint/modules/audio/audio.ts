@@ -1,4 +1,4 @@
-import type { Bit } from '../../types';
+import type { AudioInfo, Bit } from '../../types';
 import { FingerprintSpecialValue } from '../../utils/consts';
 import { boolToBit } from '../../utils/data';
 import { collectBrowserName } from '../browser/browserName';
@@ -40,9 +40,7 @@ const VARIANCE_THRESHOLD = 25;
 const MEDIAN_DIFF_THRESHOLD = 5;
 const RMS_DIFF_THRESHOLD = 3;
 
-export async function collectAudio(): Promise<
-  number | FingerprintSpecialValue
-> {
+export async function collectAudio(): Promise<AudioInfo> {
   try {
     if (doesBrowserPerformAntifingerprinting()) {
       return FingerprintSpecialValue.ANTI_FINGERPRINTED;

@@ -9,7 +9,7 @@ const HARDWARE_CONCURRENCY_MIN_BENCHMARK_SCORE = 180000;
 export async function collectHardwareConcurrency(): Promise<HardwareConcurrencyInfo> {
   try {
     if (!("hardwareConcurrency" in navigator))
-      return { hardwareConcurrency: FingerprintSpecialValue.UNDEFINED };
+      return FingerprintSpecialValue.UNDEFINED;
 
     const values: number[] = [];
 
@@ -20,27 +20,27 @@ export async function collectHardwareConcurrency(): Promise<HardwareConcurrencyI
       await delay(1);
     }
 
-    if (!values.length) return { hardwareConcurrency: FingerprintSpecialValue.TIMEOUT };
+    if (!values.length) return FingerprintSpecialValue.TIMEOUT;
 
     const stableValue = mostFrequent(values);
 
-    if (hasNoise(values, stableValue)) return { hardwareConcurrency: FingerprintSpecialValue.ANTI_FINGERPRINTED };
+    if (hasNoise(values, stableValue)) return FingerprintSpecialValue.ANTI_FINGERPRINTED;
 
     const benchmark = await runCompositeBenchmark();
 
     if (stableValue < MIN_VALID_CORES || stableValue > MAX_VALID_CORES)
-      return { hardwareConcurrency: FingerprintSpecialValue.ANTI_FINGERPRINTED };
+      return FingerprintSpecialValue.ANTI_FINGERPRINTED;
 
     const expectedMinCores = Math.max(
       MIN_VALID_CORES,
       (benchmark / HARDWARE_CONCURRENCY_MIN_BENCHMARK_SCORE) * stableValue
     );
 
-    if (stableValue < expectedMinCores) return { hardwareConcurrency: FingerprintSpecialValue.ANTI_FINGERPRINTED };
+    if (stableValue < expectedMinCores) return FingerprintSpecialValue.ANTI_FINGERPRINTED;
 
-    return { hardwareConcurrency: stableValue };
+    return stableValue;
   } catch {
-    return { hardwareConcurrency: FingerprintSpecialValue.ERROR };
+    return FingerprintSpecialValue.ERROR;
   }
 }
 

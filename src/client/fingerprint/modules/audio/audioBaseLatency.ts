@@ -1,7 +1,8 @@
 import { FingerprintSpecialValue } from "../../utils/consts";
 import { isAndroid, isWebKit } from "../../utils/browser";
+import { AudioBaseLatencyInfo } from "../../types";
 
-export function collectAudioBaseLatency(): number | FingerprintSpecialValue {
+export function collectAudioBaseLatency(): AudioBaseLatencyInfo {
   try {
     const isAllowedPlatform = isAndroid() === 1 || isWebKit() === 1;
     

@@ -3,7 +3,7 @@ import { FingerprintSpecialValue } from "../../utils/consts";
 
 export function collectCpuClass(): CpuClassInfo {
   const cpuClass = getCpuClass();
-  return { cpuClass };
+  return cpuClass;
 }
 
 function getCpuClass(): string | FingerprintSpecialValue {
