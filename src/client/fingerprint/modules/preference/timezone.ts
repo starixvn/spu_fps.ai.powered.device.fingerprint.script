@@ -16,7 +16,7 @@ export function collectTimezone(): TimezoneInfo {
     const now = new Date();
     const offset = now.getTimezoneOffset(); // in minutes
 
-    if (typeof offset !== 'number' || isNaN(offset)) return '';
+    if (typeof offset !== 'number' || isNaN(offset)) return FingerprintSpecialValue.ERROR;
 
     const absHours = Math.floor(Math.abs(offset) / 60);
     const absMinutes = Math.abs(offset) % 60;

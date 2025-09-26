@@ -43,7 +43,7 @@ describe('IndexedDB Module', () => {
       const result = await collectIndexedDB();
 
       // Assert
-      expect(result).toEqual({ indexedDB: FingerprintSpecialValue.UNDEFINED });
+      expect(result).toBe(FingerprintSpecialValue.UNDEFINED);
     });
 
     it('should return UNDEFINED for EdgeHTML browser', async () => {
@@ -54,7 +54,7 @@ describe('IndexedDB Module', () => {
       const result = await collectIndexedDB();
 
       // Assert
-      expect(result).toEqual({ indexedDB: FingerprintSpecialValue.UNDEFINED });
+      expect(result).toBe(FingerprintSpecialValue.UNDEFINED);
     });
 
     it('should return UNDEFINED when window is undefined', async () => {
@@ -66,7 +66,7 @@ describe('IndexedDB Module', () => {
       const result = await collectIndexedDB();
 
       // Assert
-      expect(result).toEqual({ indexedDB: FingerprintSpecialValue.UNDEFINED });
+      expect(result).toBe(FingerprintSpecialValue.UNDEFINED);
 
       // Restore window
       (global as any).window = originalWindow;
@@ -84,7 +84,7 @@ describe('IndexedDB Module', () => {
       const result = await collectIndexedDB();
 
       // Assert
-      expect(result).toEqual({ indexedDB: FingerprintSpecialValue.UNDEFINED });
+      expect(result).toBe(FingerprintSpecialValue.UNDEFINED);
     });
 
     it('should return UNDEFINED when window.indexedDB is null', async () => {
@@ -99,7 +99,7 @@ describe('IndexedDB Module', () => {
       const result = await collectIndexedDB();
 
       // Assert
-      expect(result).toEqual({ indexedDB: FingerprintSpecialValue.UNDEFINED });
+      expect(result).toBe(FingerprintSpecialValue.UNDEFINED);
     });
 
     it('should return UNDEFINED when indexedDB is null', async () => {
@@ -114,7 +114,7 @@ describe('IndexedDB Module', () => {
       const result = await collectIndexedDB();
 
       // Assert
-      expect(result).toEqual({ indexedDB: -1 }); // UNDEFINED = -1 when !window.indexedDB
+      expect(result).toBe(-1); // UNDEFINED = -1 when !window.indexedDB
     });
 
     it('should return UNDEFINED when indexedDB exists but is empty object', async () => {
@@ -132,7 +132,6 @@ describe('IndexedDB Module', () => {
 
       // Assert - empty object is still truthy, so doesn't trigger !window.indexedDB  
       // This will actually try to use the indexedDB and likely return ERROR or similar
-      expect(result).toHaveProperty('indexedDB');
       expect(typeof result).toBe('number');
     });
 
@@ -150,8 +149,8 @@ describe('IndexedDB Module', () => {
       // Act
       const result = await collectIndexedDB();
 
-      // Assert - this actually triggers the outer catch and returns ERROR (-3)
-      expect(result).toEqual({ indexedDB: -3 }); // ERROR = -3
+      // Assert - SecurityError should return 1  
+      expect(result).toBe(1);
     });
 
     it('should return ERROR when non-SecurityError occurs during indexedDB access', async () => {
@@ -165,7 +164,7 @@ describe('IndexedDB Module', () => {
       const result = await collectIndexedDB();
 
       // Assert
-      expect(result).toEqual({ indexedDB: FingerprintSpecialValue.ERROR });
+      expect(result).toBe(FingerprintSpecialValue.ERROR);
     });
 
     it('should return 1 when database opens successfully', async () => {
@@ -209,7 +208,7 @@ describe('IndexedDB Module', () => {
       const result = await resultPromise;
 
       // Assert
-      expect(result).toEqual({ indexedDB: 1 });
+      expect(result).toBe(1);
       expect(mockRequest.result.close).toHaveBeenCalled();
     });
 
@@ -247,7 +246,7 @@ describe('IndexedDB Module', () => {
       const result = await resultPromise;
 
       // Assert
-      expect(result).toEqual({ indexedDB: FingerprintSpecialValue.ERROR });
+      expect(result).toBe(FingerprintSpecialValue.ERROR);
     });
 
     it('should return ERROR when operation times out', async () => {
@@ -278,7 +277,7 @@ describe('IndexedDB Module', () => {
       const result = await resultPromise;
 
       // Assert
-      expect(result).toEqual({ indexedDB: FingerprintSpecialValue.ERROR });
+      expect(result).toBe(FingerprintSpecialValue.ERROR);
     });
 
     it('should return 1 when SecurityError occurs during database open', async () => {
@@ -302,7 +301,7 @@ describe('IndexedDB Module', () => {
       const result = await collectIndexedDB();
 
       // Assert
-      expect(result).toEqual({ indexedDB: 1 });
+      expect(result).toBe(1);
     });
 
     it('should return ERROR when non-SecurityError occurs during database open', async () => {
@@ -324,7 +323,7 @@ describe('IndexedDB Module', () => {
       const result = await collectIndexedDB();
 
       // Assert
-      expect(result).toEqual({ indexedDB: FingerprintSpecialValue.ERROR });
+      expect(result).toBe(FingerprintSpecialValue.ERROR);
     });
 
     it('should return ERROR when outer try-catch is triggered', async () => {
@@ -337,7 +336,7 @@ describe('IndexedDB Module', () => {
       const result = await collectIndexedDB();
 
       // Assert
-      expect(result).toEqual({ indexedDB: -3 }); // ERROR = -3
+      expect(result).toBe(FingerprintSpecialValue.ERROR);
 
       // Restore
       jest.restoreAllMocks();

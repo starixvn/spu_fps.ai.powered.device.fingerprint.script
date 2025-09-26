@@ -31,7 +31,7 @@ describe('Cookies Enabled Module', () => {
       const result = collectCookiesEnabled();
 
       // Assert
-      expect(result).toEqual({ cookiesEnabled: 1 });
+      expect(result).toBe(1);
     });
 
     it('should return 0 when cookies are disabled', () => {
@@ -46,7 +46,7 @@ describe('Cookies Enabled Module', () => {
       const result = collectCookiesEnabled();
 
       // Assert
-      expect(result).toEqual({ cookiesEnabled: 0 });
+      expect(result).toBe(0);
     });
 
     it('should fallback to document.cookie when cookieEnabled is undefined', () => {
@@ -61,7 +61,7 @@ describe('Cookies Enabled Module', () => {
       const result = collectCookiesEnabled();
 
       // Assert - Should fallback to document.cookie test, which works in jsdom
-      expect(result).toEqual({ cookiesEnabled: 1 });
+      expect(result).toBe(1);
     });
 
     it('should fallback to document.cookie when cookieEnabled is null', () => {
@@ -76,7 +76,7 @@ describe('Cookies Enabled Module', () => {
       const result = collectCookiesEnabled();
 
       // Assert - Should fallback to document.cookie test
-      expect(result).toEqual({ cookiesEnabled: 1 });
+      expect(result).toBe(1);
     });
 
     it('should fallback to document.cookie when cookieEnabled property does not exist', () => {
@@ -88,7 +88,7 @@ describe('Cookies Enabled Module', () => {
       const result = collectCookiesEnabled();
 
       // Assert - Should fallback to document.cookie test
-      expect(result).toEqual({ cookiesEnabled: 1 });
+      expect(result).toBe(1);
 
       // Restore
       Object.defineProperty(navigator, 'cookieEnabled', {
@@ -114,7 +114,7 @@ describe('Cookies Enabled Module', () => {
         const result = collectCookiesEnabled();
 
         // Assert
-        expect(result).toEqual({ cookiesEnabled: 1 });
+        expect(result).toBe(1);
       }
     });
 
@@ -130,7 +130,7 @@ describe('Cookies Enabled Module', () => {
       const result = collectCookiesEnabled();
 
       // Assert
-      expect(result).toEqual({ cookiesEnabled: 0 });
+      expect(result).toBe(0);
       
       // Test non-boolean falsy values that should fallback to document.cookie
       const nonBooleanFalsyValues = [0, '', null, undefined, NaN];
@@ -147,11 +147,11 @@ describe('Cookies Enabled Module', () => {
         const result = collectCookiesEnabled();
 
         // Assert - Should fallback to document.cookie test
-        expect(result).toEqual({ cookiesEnabled: 1 });
+        expect(result).toBe(1);
       }
     });
 
-    it('should always return an object with cookiesEnabled property', () => {
+    it('should always return a number', () => {
       // Arrange
       Object.defineProperty(navigator, 'cookieEnabled', {
         writable: true,
@@ -163,9 +163,8 @@ describe('Cookies Enabled Module', () => {
       const result = collectCookiesEnabled();
 
       // Assert
-      expect(typeof result).toBe('object');
-      expect(result).toHaveProperty('cookiesEnabled');
-      expect([0, 1]).toContain(result);
+      expect(typeof result).toBe('number');
+      expect([0, 1, -1, -3]).toContain(result);
     });
 
     it('should handle navigator property access errors gracefully', () => {
@@ -181,8 +180,8 @@ describe('Cookies Enabled Module', () => {
       // Act
       const result = collectCookiesEnabled();
 
-      // Assert - Should return 0 when error occurs
-      expect(result).toEqual({ cookiesEnabled: 0 });
+      // Assert - Should return ERROR (-3) when error occurs
+      expect(result).toBe(-3);
 
       // Restore navigator
       Object.defineProperty(global, 'navigator', {
@@ -221,7 +220,7 @@ describe('Cookies Enabled Module', () => {
       const result = collectCookiesEnabled();
 
       // Assert
-      expect(result).toEqual({ cookiesEnabled: 1 });
+      expect(result).toBe(1);
     });
 
     it('should return 0 when document.cookie test fails', () => {
@@ -243,7 +242,7 @@ describe('Cookies Enabled Module', () => {
       const result = collectCookiesEnabled();
 
       // Assert
-      expect(result).toEqual({ cookiesEnabled: 0 });
+      expect(result).toBe(0);
     });
 
     it('should return 0 when document is undefined', () => {
@@ -261,7 +260,7 @@ describe('Cookies Enabled Module', () => {
       const result = collectCookiesEnabled();
 
       // Assert
-      expect(result).toEqual({ cookiesEnabled: 0 });
+      expect(result).toBe(0);
 
       // Restore document
       (global as any).document = originalDocument;
@@ -284,8 +283,8 @@ describe('Cookies Enabled Module', () => {
       // Act
       const result = collectCookiesEnabled();
 
-      // Assert
-      expect(result).toEqual({ cookiesEnabled: 0 });
+      // Assert - Should return ERROR (-3) when document.cookie access fails
+      expect(result).toBe(-3);
     });
   });
 });

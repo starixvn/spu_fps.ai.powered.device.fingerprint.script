@@ -29,14 +29,14 @@ describe('Preferences Fingerprint Module', () => {
   describe('PreferencesFingerprint.collect', () => {
     it('should collect complete preferences information successfully', async () => {
       // Arrange
-      const mockLanguagesResult = { languages: [['en-US', 'en'], ['vi-VN', 'vi']] };
-      const mockTimezoneResult = { timezone: 'Asia/Ho_Chi_Minh' };
+      const mockLanguagesResult = [['en-US', 'en'], ['vi-VN', 'vi']];
+      const mockTimezoneResult = 'Asia/Ho_Chi_Minh';
       const mockTouchSupportResult = [10, 1, 1]; // [maxTouchPoints, touchEvent, touchStart]
-      const mockSessionStorageResult = { sessionStorage: 1 };
-      const mockOpenDatabaseResult = { openDatabase: 1 };
-      const mockLocalStorageResult = { localStorage: 1 };
-      const mockIndexedDBResult = { indexedDB: 1 };
-      const mockCookiesEnabledResult = { cookiesEnabled: 1 };
+      const mockSessionStorageResult = 1;
+      const mockOpenDatabaseResult = 1;
+      const mockLocalStorageResult = 1;
+      const mockIndexedDBResult = 1;
+      const mockCookiesEnabledResult = 1;
 
       mockCollectLanguages.mockReturnValue(mockLanguagesResult);
       mockCollectTimezone.mockReturnValue(mockTimezoneResult);
@@ -75,14 +75,14 @@ describe('Preferences Fingerprint Module', () => {
 
     it('should handle mixed valid and special values from collectors', async () => {
       // Arrange
-      mockCollectLanguages.mockReturnValue({ languages: [['en-US', 'en']] });
-      mockCollectTimezone.mockReturnValue({ timezone: 'UTC' });
+      mockCollectLanguages.mockReturnValue([['en-US', 'en']]);
+      mockCollectTimezone.mockReturnValue('UTC');
       mockCollectTouchSupport.mockReturnValue([0, 0, 0]); // No touch support
-      mockCollectSessionStorage.mockReturnValue({ sessionStorage: FingerprintSpecialValue.UNDEFINED });
-      mockCollectOpenDatabase.mockReturnValue({ openDatabase: FingerprintSpecialValue.UNDEFINED });
-      mockCollectLocalStorage.mockReturnValue({ localStorage: 1 });
-      mockCollectIndexedDB.mockResolvedValue({ indexedDB: FingerprintSpecialValue.ERROR });
-      mockCollectCookiesEnabled.mockReturnValue({ cookiesEnabled: 1 });
+      mockCollectSessionStorage.mockReturnValue(FingerprintSpecialValue.UNDEFINED);
+      mockCollectOpenDatabase.mockReturnValue(FingerprintSpecialValue.UNDEFINED);
+      mockCollectLocalStorage.mockReturnValue(1);
+      mockCollectIndexedDB.mockResolvedValue(FingerprintSpecialValue.ERROR);
+      mockCollectCookiesEnabled.mockReturnValue(1);
 
       const expectedResult = {
         languages: [['en-US', 'en']],
@@ -104,14 +104,14 @@ describe('Preferences Fingerprint Module', () => {
 
     it('should handle all special values from collectors', async () => {
       // Arrange
-      mockCollectLanguages.mockReturnValue({ languages: [] }); // Empty languages
-      mockCollectTimezone.mockReturnValue({ timezone: '' }); // Empty timezone
+      mockCollectLanguages.mockReturnValue([]); // Empty languages
+      mockCollectTimezone.mockReturnValue(''); // Empty timezone
       mockCollectTouchSupport.mockReturnValue([0, 0, 0]); // No touch support
-      mockCollectSessionStorage.mockReturnValue({ sessionStorage: FingerprintSpecialValue.ERROR });
-      mockCollectOpenDatabase.mockReturnValue({ openDatabase: FingerprintSpecialValue.UNDEFINED });
-      mockCollectLocalStorage.mockReturnValue({ localStorage: FingerprintSpecialValue.ERROR });
-      mockCollectIndexedDB.mockResolvedValue({ indexedDB: FingerprintSpecialValue.UNDEFINED });
-      mockCollectCookiesEnabled.mockReturnValue({ cookiesEnabled: 0 });
+      mockCollectSessionStorage.mockReturnValue(FingerprintSpecialValue.ERROR);
+      mockCollectOpenDatabase.mockReturnValue(FingerprintSpecialValue.UNDEFINED);
+      mockCollectLocalStorage.mockReturnValue(FingerprintSpecialValue.ERROR);
+      mockCollectIndexedDB.mockResolvedValue(FingerprintSpecialValue.UNDEFINED);
+      mockCollectCookiesEnabled.mockReturnValue(0);
 
       const expectedResult = {
         languages: [],
@@ -133,16 +133,16 @@ describe('Preferences Fingerprint Module', () => {
 
     it('should handle errors from individual collectors gracefully', async () => {
       // Arrange
-      mockCollectLanguages.mockReturnValue({ languages: [['en-US', 'en']] });
+      mockCollectLanguages.mockReturnValue([['en-US', 'en']]);
       mockCollectTimezone.mockImplementation(() => {
         throw new Error('Timezone collection failed');
       });
       mockCollectTouchSupport.mockReturnValue([5, 1, 1]);
-      mockCollectSessionStorage.mockReturnValue({ sessionStorage: 1 });
-      mockCollectOpenDatabase.mockReturnValue({ openDatabase: 1 });
-      mockCollectLocalStorage.mockReturnValue({ localStorage: 1 });
-      mockCollectIndexedDB.mockResolvedValue({ indexedDB: 1 });
-      mockCollectCookiesEnabled.mockReturnValue({ cookiesEnabled: 1 });
+      mockCollectSessionStorage.mockReturnValue(1);
+      mockCollectOpenDatabase.mockReturnValue(1);
+      mockCollectLocalStorage.mockReturnValue(1);
+      mockCollectIndexedDB.mockResolvedValue(1);
+      mockCollectCookiesEnabled.mockReturnValue(1);
 
       // Act & Assert
       await expect(PreferencesFingerprint.collect()).rejects.toThrow('Timezone collection failed');
@@ -150,14 +150,14 @@ describe('Preferences Fingerprint Module', () => {
 
     it('should handle async indexedDB errors gracefully', async () => {
       // Arrange
-      mockCollectLanguages.mockReturnValue({ languages: [['en-US', 'en']] });
-      mockCollectTimezone.mockReturnValue({ timezone: 'UTC' });
+      mockCollectLanguages.mockReturnValue([['en-US', 'en']]);
+      mockCollectTimezone.mockReturnValue('UTC');
       mockCollectTouchSupport.mockReturnValue([0, 0, 0]);
-      mockCollectSessionStorage.mockReturnValue({ sessionStorage: 1 });
-      mockCollectOpenDatabase.mockReturnValue({ openDatabase: 1 });
-      mockCollectLocalStorage.mockReturnValue({ localStorage: 1 });
+      mockCollectSessionStorage.mockReturnValue(1);
+      mockCollectOpenDatabase.mockReturnValue(1);
+      mockCollectLocalStorage.mockReturnValue(1);
       mockCollectIndexedDB.mockRejectedValue(new Error('IndexedDB collection failed'));
-      mockCollectCookiesEnabled.mockReturnValue({ cookiesEnabled: 1 });
+      mockCollectCookiesEnabled.mockReturnValue(1);
 
       // Act & Assert
       await expect(PreferencesFingerprint.collect()).rejects.toThrow('IndexedDB collection failed');
@@ -165,14 +165,14 @@ describe('Preferences Fingerprint Module', () => {
 
     it('should maintain proper data types for all collectors', async () => {
       // Arrange
-      mockCollectLanguages.mockReturnValue({ languages: [['en-US', 'en'], ['zh-CN', 'zh']] });
-      mockCollectTimezone.mockReturnValue({ timezone: 'America/New_York' });
+      mockCollectLanguages.mockReturnValue([['en-US', 'en'], ['zh-CN', 'zh']]);
+      mockCollectTimezone.mockReturnValue('America/New_York');
       mockCollectTouchSupport.mockReturnValue([8, 1, 1]);
-      mockCollectSessionStorage.mockReturnValue({ sessionStorage: 1 });
-      mockCollectOpenDatabase.mockReturnValue({ openDatabase: 0 });
-      mockCollectLocalStorage.mockReturnValue({ localStorage: 1 });
-      mockCollectIndexedDB.mockResolvedValue({ indexedDB: 1 });
-      mockCollectCookiesEnabled.mockReturnValue({ cookiesEnabled: 1 });
+      mockCollectSessionStorage.mockReturnValue(1);
+      mockCollectOpenDatabase.mockReturnValue(0);
+      mockCollectLocalStorage.mockReturnValue(1);
+      mockCollectIndexedDB.mockResolvedValue(1);
+      mockCollectCookiesEnabled.mockReturnValue(1);
 
       // Act
       const result = await PreferencesFingerprint.collect();
@@ -198,14 +198,14 @@ describe('Preferences Fingerprint Module', () => {
         ['fr-CA', 'fr']
       ];
       
-      mockCollectLanguages.mockReturnValue({ languages: complexLanguages });
-      mockCollectTimezone.mockReturnValue({ timezone: 'America/Toronto' });
+      mockCollectLanguages.mockReturnValue(complexLanguages);
+      mockCollectTimezone.mockReturnValue('America/Toronto');
       mockCollectTouchSupport.mockReturnValue([10, 1, 1]);
-      mockCollectSessionStorage.mockReturnValue({ sessionStorage: 1 });
-      mockCollectOpenDatabase.mockReturnValue({ openDatabase: 1 });
-      mockCollectLocalStorage.mockReturnValue({ localStorage: 1 });
-      mockCollectIndexedDB.mockResolvedValue({ indexedDB: 1 });
-      mockCollectCookiesEnabled.mockReturnValue({ cookiesEnabled: 1 });
+      mockCollectSessionStorage.mockReturnValue(1);
+      mockCollectOpenDatabase.mockReturnValue(1);
+      mockCollectLocalStorage.mockReturnValue(1);
+      mockCollectIndexedDB.mockResolvedValue(1);
+      mockCollectCookiesEnabled.mockReturnValue(1);
 
       // Act
       const result = await PreferencesFingerprint.collect();
@@ -227,14 +227,14 @@ describe('Preferences Fingerprint Module', () => {
 
       for (const touchSupport of touchTestCases) {
         // Arrange
-        mockCollectLanguages.mockReturnValue({ languages: [['en-US', 'en']] });
-        mockCollectTimezone.mockReturnValue({ timezone: 'UTC' });
+        mockCollectLanguages.mockReturnValue([['en-US', 'en']]);
+        mockCollectTimezone.mockReturnValue('UTC');
         mockCollectTouchSupport.mockReturnValue(touchSupport);
-        mockCollectSessionStorage.mockReturnValue({ sessionStorage: 1 });
-        mockCollectOpenDatabase.mockReturnValue({ openDatabase: 1 });
-        mockCollectLocalStorage.mockReturnValue({ localStorage: 1 });
-        mockCollectIndexedDB.mockResolvedValue({ indexedDB: 1 });
-        mockCollectCookiesEnabled.mockReturnValue({ cookiesEnabled: 1 });
+        mockCollectSessionStorage.mockReturnValue(1);
+        mockCollectOpenDatabase.mockReturnValue(1);
+        mockCollectLocalStorage.mockReturnValue(1);
+        mockCollectIndexedDB.mockResolvedValue(1);
+        mockCollectCookiesEnabled.mockReturnValue(1);
 
         // Act
         const result = await PreferencesFingerprint.collect();
@@ -252,14 +252,14 @@ describe('Preferences Fingerprint Module', () => {
 
     it('should handle storage-related special values correctly', async () => {
       // Arrange
-      mockCollectLanguages.mockReturnValue({ languages: [['en-US', 'en']] });
-      mockCollectTimezone.mockReturnValue({ timezone: 'UTC' });
+      mockCollectLanguages.mockReturnValue([['en-US', 'en']]);
+      mockCollectTimezone.mockReturnValue('UTC');
       mockCollectTouchSupport.mockReturnValue([0, 0, 0]);
-      mockCollectSessionStorage.mockReturnValue({ sessionStorage: FingerprintSpecialValue.ERROR });
-      mockCollectOpenDatabase.mockReturnValue({ openDatabase: FingerprintSpecialValue.UNDEFINED });
-      mockCollectLocalStorage.mockReturnValue({ localStorage: FingerprintSpecialValue.ERROR });
-      mockCollectIndexedDB.mockResolvedValue({ indexedDB: FingerprintSpecialValue.UNDEFINED });
-      mockCollectCookiesEnabled.mockReturnValue({ cookiesEnabled: 0 });
+      mockCollectSessionStorage.mockReturnValue(FingerprintSpecialValue.ERROR);
+      mockCollectOpenDatabase.mockReturnValue(FingerprintSpecialValue.UNDEFINED);
+      mockCollectLocalStorage.mockReturnValue(FingerprintSpecialValue.ERROR);
+      mockCollectIndexedDB.mockResolvedValue(FingerprintSpecialValue.UNDEFINED);
+      mockCollectCookiesEnabled.mockReturnValue(0);
 
       // Act
       const result = await PreferencesFingerprint.collect();
@@ -284,14 +284,14 @@ describe('Preferences Fingerprint Module', () => {
         cookiesEnabled: 1,
       };
 
-      mockCollectLanguages.mockReturnValue({ languages: mockResults.languages });
-      mockCollectTimezone.mockReturnValue({ timezone: mockResults.timezone });
+      mockCollectLanguages.mockReturnValue(mockResults.languages);
+      mockCollectTimezone.mockReturnValue(mockResults.timezone);
       mockCollectTouchSupport.mockReturnValue(mockResults.touchSupport);
-      mockCollectSessionStorage.mockReturnValue({ sessionStorage: mockResults.sessionStorage });
-      mockCollectOpenDatabase.mockReturnValue({ openDatabase: mockResults.openDatabase });
-      mockCollectLocalStorage.mockReturnValue({ localStorage: mockResults.localStorage });
-      mockCollectIndexedDB.mockResolvedValue({ indexedDB: mockResults.indexedDB });
-      mockCollectCookiesEnabled.mockReturnValue({ cookiesEnabled: mockResults.cookiesEnabled });
+      mockCollectSessionStorage.mockReturnValue(mockResults.sessionStorage);
+      mockCollectOpenDatabase.mockReturnValue(mockResults.openDatabase);
+      mockCollectLocalStorage.mockReturnValue(mockResults.localStorage);
+      mockCollectIndexedDB.mockResolvedValue(mockResults.indexedDB);
+      mockCollectCookiesEnabled.mockReturnValue(mockResults.cookiesEnabled);
 
       // Act
       const result = await PreferencesFingerprint.collect();
@@ -309,14 +309,14 @@ describe('Preferences Fingerprint Module', () => {
 
     it('should handle concurrent calls consistently', async () => {
       // Arrange
-      mockCollectLanguages.mockReturnValue({ languages: [['en-US', 'en']] });
-      mockCollectTimezone.mockReturnValue({ timezone: 'UTC' });
+      mockCollectLanguages.mockReturnValue([['en-US', 'en']]);
+      mockCollectTimezone.mockReturnValue('UTC');
       mockCollectTouchSupport.mockReturnValue([2, 1, 1]);
-      mockCollectSessionStorage.mockReturnValue({ sessionStorage: 1 });
-      mockCollectOpenDatabase.mockReturnValue({ openDatabase: 1 });
-      mockCollectLocalStorage.mockReturnValue({ localStorage: 1 });
-      mockCollectIndexedDB.mockResolvedValue({ indexedDB: 1 });
-      mockCollectCookiesEnabled.mockReturnValue({ cookiesEnabled: 1 });
+      mockCollectSessionStorage.mockReturnValue(1);
+      mockCollectOpenDatabase.mockReturnValue(1);
+      mockCollectLocalStorage.mockReturnValue(1);
+      mockCollectIndexedDB.mockResolvedValue(1);
+      mockCollectCookiesEnabled.mockReturnValue(1);
 
       // Act - Make multiple concurrent calls
       const promises = Array.from({ length: 3 }, () => PreferencesFingerprint.collect());

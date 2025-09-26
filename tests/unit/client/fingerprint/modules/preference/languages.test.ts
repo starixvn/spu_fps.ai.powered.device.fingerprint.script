@@ -54,7 +54,7 @@ describe('Languages Module', () => {
       const result = collectLanguages();
 
       // Assert
-      expect(result).toEqual({ languages: [['en-US']] });
+      expect(result).toEqual([['en-US']]);
     });
 
     it('should return languages from navigator.languages when available', () => {
@@ -77,9 +77,7 @@ describe('Languages Module', () => {
       const result = collectLanguages();
 
       // Assert
-      expect(result).toEqual({ 
-        languages: [['en-US'], ['en-US', 'en', 'vi-VN', 'vi']] 
-      });
+      expect(result).toEqual([['en-US'], ['en-US', 'en', 'vi-VN', 'vi']]);
     });
 
     it('should ignore navigator.languages in Chromium 86+ incognito mode', () => {
@@ -103,7 +101,7 @@ describe('Languages Module', () => {
       const result = collectLanguages();
 
       // Assert
-      expect(result).toEqual({ languages: [['en-US']] }); // Only primary language
+      expect(result).toEqual([['en-US']]); // Only primary language
     });
 
     it('should use navigator.languages in older Chromium versions', () => {
@@ -127,9 +125,7 @@ describe('Languages Module', () => {
       const result = collectLanguages();
 
       // Assert
-      expect(result).toEqual({ 
-        languages: [['en-US'], ['en-US', 'en']] 
-      });
+      expect(result).toEqual([['en-US'], ['en-US', 'en']]);
     });
 
     it('should fallback to userLanguage when language is undefined', () => {
@@ -146,7 +142,7 @@ describe('Languages Module', () => {
       const result = collectLanguages();
 
       // Assert
-      expect(result).toEqual({ languages: [['zh-CN']] });
+      expect(result).toEqual([['zh-CN']]);
     });
 
     it('should fallback to browserLanguage when language and userLanguage are undefined', () => {
@@ -163,7 +159,7 @@ describe('Languages Module', () => {
       const result = collectLanguages();
 
       // Assert
-      expect(result).toEqual({ languages: [['ja-JP']] });
+      expect(result).toEqual([['ja-JP']]);
     });
 
     it('should fallback to systemLanguage when other primary languages are undefined', () => {
@@ -180,7 +176,7 @@ describe('Languages Module', () => {
       const result = collectLanguages();
 
       // Assert
-      expect(result).toEqual({ languages: [['ko-KR']] });
+      expect(result).toEqual([['ko-KR']]);
     });
 
     it('should handle string navigator.languages (non-standard)', () => {
@@ -201,9 +197,7 @@ describe('Languages Module', () => {
       const result = collectLanguages();
 
       // Assert
-      expect(result).toEqual({ 
-        languages: [['en-US'], ['en-US', 'en', 'fr-FR', 'fr']] 
-      });
+      expect(result).toEqual([['en-US'], ['en-US', 'en', 'fr-FR', 'fr']]);
     });
 
     it('should filter out empty strings from languages array', () => {
@@ -224,9 +218,7 @@ describe('Languages Module', () => {
       const result = collectLanguages();
 
       // Assert
-      expect(result).toEqual({ 
-        languages: [['en-US'], ['en-US', 'en', 'fr-FR']] 
-      });
+      expect(result).toEqual([['en-US'], ['en-US', 'en', 'fr-FR']]);
     });
 
     it('should return default empty language when no languages are available', () => {
@@ -236,10 +228,10 @@ describe('Languages Module', () => {
       const result = collectLanguages();
 
       // Assert
-      expect(result).toEqual({ languages: [['']] });
+      expect(result).toEqual([]);
     });
 
-    it('should handle errors gracefully and return default', () => {
+    it('should handle errors gracefully and return ERROR', () => {
       // Arrange - Simulate error in navigator access
       const originalNavigator = global.navigator;
       delete (global as any).navigator;
@@ -248,7 +240,7 @@ describe('Languages Module', () => {
       const result = collectLanguages();
 
       // Assert
-      expect(result).toEqual({ languages: [['']] });
+      expect(result).toBe(-3);
 
       // Restore navigator
       Object.defineProperty(global, 'navigator', {

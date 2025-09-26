@@ -177,11 +177,18 @@ describe('Touch Support Module', () => {
       expect((result3 as number[])[2]).toBe(0); // touchStart not supported
     });
 
-    it('should handle errors gracefully and return fallback values', () => {
-      // Arrange - Simulate error in navigator access
+    it('should handle errors gracefully and return ERROR', () => {
+      // Arrange - Simulate error in navigator access by making property access fail
       const originalNavigator = global.navigator;
+      const mockNavigator = {
+        get maxTouchPoints() {
+          throw new Error('Navigator access denied');
+        }
+      };
+
       Object.defineProperty(global, 'navigator', {
-        get: () => { throw new Error('Navigator access denied'); },
+        value: mockNavigator,
+        writable: true,
         configurable: true
       });
 
@@ -189,7 +196,7 @@ describe('Touch Support Module', () => {
       const result = collectTouchSupport();
 
       // Assert
-      expect(result).toEqual([0, 0, 0]); // Fallback values
+      expect(result).toBe(-3); // ERROR = -3
 
       // Restore navigator
       Object.defineProperty(global, 'navigator', {

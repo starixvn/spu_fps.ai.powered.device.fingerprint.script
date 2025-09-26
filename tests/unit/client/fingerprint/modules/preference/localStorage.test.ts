@@ -27,7 +27,7 @@ describe('Local Storage Module', () => {
       const result = collectLocalStorage();
 
       // Assert
-      expect(result).toEqual({ localStorage: 1 });
+      expect(result).toBe(1);
     });
 
     it('should return UNDEFINED when window.localStorage is undefined', () => {
@@ -42,7 +42,7 @@ describe('Local Storage Module', () => {
       const result = collectLocalStorage();
 
       // Assert
-      expect(result).toEqual({ localStorage: FingerprintSpecialValue.UNDEFINED });
+      expect(result).toBe(FingerprintSpecialValue.UNDEFINED);
     });
 
     it('should return UNDEFINED when window.localStorage is null', () => {
@@ -57,7 +57,7 @@ describe('Local Storage Module', () => {
       const result = collectLocalStorage();
 
       // Assert
-      expect(result).toEqual({ localStorage: FingerprintSpecialValue.UNDEFINED });
+      expect(result).toBe(FingerprintSpecialValue.UNDEFINED);
     });
 
     it('should handle SecurityError and return 1', () => {
@@ -82,7 +82,7 @@ describe('Local Storage Module', () => {
       const result = collectLocalStorage();
 
       // Assert
-      expect(result).toEqual({ localStorage: 1 });
+      expect(result).toBe(1);
     });
 
     it('should return ERROR for non-SecurityError exceptions', () => {
@@ -105,7 +105,7 @@ describe('Local Storage Module', () => {
       const result = collectLocalStorage();
 
       // Assert
-      expect(result).toEqual({ localStorage: FingerprintSpecialValue.ERROR });
+      expect(result).toBe(FingerprintSpecialValue.ERROR);
     });
 
     it('should return 0 when localStorage data is not retrievable correctly', () => {
@@ -126,7 +126,7 @@ describe('Local Storage Module', () => {
       const result = collectLocalStorage();
 
       // Assert
-      expect(result).toEqual({ localStorage: 0 });
+      expect(result).toBe(0);
     });
 
     it('should handle getItem returning null', () => {
@@ -147,7 +147,7 @@ describe('Local Storage Module', () => {
       const result = collectLocalStorage();
 
       // Assert
-      expect(result).toEqual({ localStorage: 0 });
+      expect(result).toBe(0);
     });
 
     it('should use unique random key for each test', () => {
@@ -168,13 +168,12 @@ describe('Local Storage Module', () => {
       expect(secondCallKey).toMatch(/^localstorage_test_/);
     });
 
-    it('should return object with localStorage property', () => {
+    it('should return a number', () => {
       // Act
       const result = collectLocalStorage();
 
       // Assert
-      expect(typeof result).toBe('object');
-      expect(result).toHaveProperty('localStorage');
+      expect(typeof result).toBe('number');
       expect([0, 1, FingerprintSpecialValue.UNDEFINED, FingerprintSpecialValue.ERROR]).toContain(result);
     });
 
@@ -190,7 +189,7 @@ describe('Local Storage Module', () => {
       const result = collectLocalStorage();
 
       // Assert
-      expect(result).toEqual({ localStorage: FingerprintSpecialValue.ERROR });
+      expect(result).toBe(FingerprintSpecialValue.ERROR);
     });
 
     it('should clean up test data after testing', () => {
