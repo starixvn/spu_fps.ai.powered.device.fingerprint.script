@@ -5,7 +5,7 @@ import path from 'path';
 /* istanbul ignore file */
 
 const loadEnvironment = (): void => {
-  const nodeEnv = process.env.NODE_ENV || 'development';
+  const nodeEnv = process.env.NODE_ENV?.toLowerCase() || 'development';
   const envFile = `.env.${nodeEnv}`;
   const envPath = path.resolve(process.cwd(), envFile);
   
@@ -40,14 +40,14 @@ interface EnvironmentConfig {
 
 const getDefaultPort = (): number => {
   return parseInt(
-    process.env.PORT || (process.env.NODE_ENV === 'production' ? '5000' : '3000'), 
+    process.env.PORT || (process.env.NODE_ENV?.toLowerCase() === 'production' ? '5000' : '3000'), 
     10
   );
 };
 
 const environmentConfig: EnvironmentConfig = {
   port: getDefaultPort(),
-  nodeEnv: process.env.NODE_ENV || 'local',
+  nodeEnv: process.env.NODE_ENV?.toLowerCase() || 'development',
   
   localStorageKey: process.env.LOCAL_STORAGE_KEY || 'awb_visitor_session',
   indexedDBKey: process.env.INDEXEDDB_KEY || 'pwr_client_sync',
@@ -64,7 +64,7 @@ const environmentConfig: EnvironmentConfig = {
 };
 
 const getDefaultLogLevel = (): string => {
-  switch (process.env.NODE_ENV) {
+  switch (process.env.NODE_ENV?.toLowerCase()) {
     case 'production':
       return 'warn';
     case 'development':
