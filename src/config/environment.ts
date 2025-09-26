@@ -40,7 +40,7 @@ interface EnvironmentConfig {
 
 const getDefaultPort = (): number => {
   return parseInt(
-    process.env.PORT || (process.env.NODE_ENV?.toLowerCase() === 'production' ? '5000' : '3000'), 
+    process.env.PORT || (process.env.NODE_ENV?.toLowerCase() === 'klprod' ? '5000' : '3000'), 
     10
   );
 };
@@ -65,7 +65,7 @@ const environmentConfig: EnvironmentConfig = {
 
 const getDefaultLogLevel = (): string => {
   switch (process.env.NODE_ENV?.toLowerCase()) {
-    case 'production':
+    case 'klprod':
       return 'warn';
     case 'development':
       return 'info';
@@ -82,7 +82,7 @@ const validateConfig = (): void => {
 };
 
 const validateEnvironment = (): void => {
-  const validEnvironments = ['local', 'development', 'staging', 'production'];
+  const validEnvironments = ['local', 'development', 'staging', 'klprod'];
   if (!validEnvironments.includes(environmentConfig.nodeEnv)) {
     console.warn(`Warning: NODE_ENV '${environmentConfig.nodeEnv}' is not recognized. Using 'local' defaults.`);
   }
@@ -92,7 +92,7 @@ const initializeEnvironment = (): void => {
   validateEnvironment();
   validateConfig();
   
-  if (environmentConfig.nodeEnv !== 'production') {
+  if (environmentConfig.nodeEnv !== 'klprod') {
     console.log(`🚀 Environment: ${environmentConfig.nodeEnv.toUpperCase()} | Port: ${environmentConfig.port}`);
   }
 };

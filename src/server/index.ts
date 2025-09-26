@@ -24,7 +24,7 @@ const combinedScript = new CombinedScriptService();
 
 // Middleware to restrict development endpoints in production
 const restrictInProduction = (req: Request, res: Response, next: NextFunction) => {
-  if (config.nodeEnv === 'production') {
+  if (config.nodeEnv === 'klprod') {
     return res.sendStatus(404);
   }
   next();
@@ -262,7 +262,7 @@ if (process.env.NODE_ENV !== 'test') {
   app.listen(config.port, '0.0.0.0', () => {
     console.log(`🚀 FPS API server running on port ${config.port}`);
     console.log(`🌍 Environment: ${config.nodeEnv.toUpperCase()}`);
-    console.log(`📊 Debug mode: ${config.nodeEnv !== 'production' ? 'ON' : 'OFF'}`);
+    console.log(`📊 Debug mode: ${config.nodeEnv !== 'klprod' ? 'ON' : 'OFF'}`);
     console.log(`🔗 API endpoint: http://localhost:${config.port}/api`);
     console.log(`🐳 Docker: Server listening on 0.0.0.0:${config.port}`);
   }).on('error', (err) => {
