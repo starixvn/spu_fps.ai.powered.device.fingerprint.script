@@ -63,7 +63,7 @@ async function detectCanvasProtection(): Promise<Bit> {
       
       // Draw simple test pattern
       ctx.textBaseline = "top";
-      ctx.font = "14px Arial";
+      ctx.font = "14px Arial, sans-serif";
       ctx.fillStyle = "#f60";
       ctx.fillRect(125, 1, 62, 20);
       ctx.fillStyle = "#069";
@@ -164,7 +164,7 @@ async function getCanvasFeatures(): Promise<Record<string, any> | null> {
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
 
-    drawComplexCanvas(ctx, "FPS Fingerprint 💯 @123# 😊 Canvas/GPU Test", canvas.width, canvas.height);
+    drawComplexCanvas(ctx, "Canvas Test", canvas.width, canvas.height);
 
     const features: Record<string, any> = {
       font: ctx.font,
