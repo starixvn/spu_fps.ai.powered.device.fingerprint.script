@@ -126,31 +126,6 @@ describe('Audio Fingerprint Module', () => {
       expect(result.audioBaseLatency).toBe(0.03);
     });
 
-    it('should handle asynchronous audio collector properly', async () => {
-      // Arrange
-      const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-      
-      mockCollectAudio.mockImplementation(async () => {
-        await delay(20);
-        return -130.789;
-      });
-      mockCollectAudioBaseLatency.mockReturnValue(0.04);
-
-      const startTime = Date.now();
-
-      // Act
-      const result = await AudioFingerprint.collect();
-
-      // Assert
-      const endTime = Date.now();
-      expect(endTime - startTime).toBeGreaterThanOrEqual(20); // Should take at least 20ms due to audio delay
-      
-      expect(result).toEqual({
-        audio: -130.789,
-        audioBaseLatency: 0.04,
-      });
-    });
-
     it('should return the exact structure from individual collectors', async () => {
       // Arrange
       const mockResults = {

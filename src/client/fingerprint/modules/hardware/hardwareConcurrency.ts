@@ -4,7 +4,6 @@ import { FingerprintSpecialValue } from "../../utils/consts";
 const HARDWARE_CONCURRENCY_RUNS = 5;
 const MIN_VALID_CORES = 1;
 const MAX_VALID_CORES = 128;
-const HARDWARE_CONCURRENCY_MIN_BENCHMARK_SCORE = 180000;
 
 export async function collectHardwareConcurrency(): Promise<HardwareConcurrencyInfo> {
   try {
@@ -26,17 +25,8 @@ export async function collectHardwareConcurrency(): Promise<HardwareConcurrencyI
 
     if (hasNoise(values, stableValue)) return FingerprintSpecialValue.ANTI_FINGERPRINTED;
 
-    const benchmark = await runCompositeBenchmark();
-
     if (stableValue < MIN_VALID_CORES || stableValue > MAX_VALID_CORES)
       return FingerprintSpecialValue.ANTI_FINGERPRINTED;
-
-    const expectedMinCores = Math.max(
-      MIN_VALID_CORES,
-      (benchmark / HARDWARE_CONCURRENCY_MIN_BENCHMARK_SCORE) * stableValue
-    );
-
-    if (stableValue < expectedMinCores) return FingerprintSpecialValue.ANTI_FINGERPRINTED;
 
     return stableValue;
   } catch {
@@ -63,36 +53,6 @@ function mostFrequent(arr: number[]): number {
 
 function hasNoise(arr: number[], stable: number): boolean {
   return arr.some((v) => v !== stable);
-}
-
-async function runCompositeBenchmark(): Promise<number> {
-  const ITER = 3;
-  const scores: number[] = [];
-
-  for (let t = 0; t < ITER; t++) {
-    const score = await new Promise<number>((resolve) => {
-      const start = performance.now();
-      let x = 0;
-
-      for (let i = 0; i < 3e5; i++) {
-        x += Math.sqrt(i) % 3;
-        if (i % 1000 === 0) x += Math.sin(i) * Math.cos(i);
-      }
-
-      resolve(Math.floor(3e5 / (performance.now() - start)));
-    });
-
-    scores.push(score);
-    await delay(1);
-  }
-
-  scores.sort((a, b) => a - b);
-
-  const median = scores[1];
-  const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
-  const harmonic = scores.length / scores.reduce((sum, s) => sum + 1 / s, 0);
-
-  return median * 0.5 + mean * 0.3 + harmonic * 0.2;
 }
 
 function delay(ms: number) {
