@@ -6,6 +6,11 @@ import { FingerprintSpecialValue } from "../../utils/consts";
 const CANVAS_CACHE_KEY = "canvasCache";
 const CANVAS_SNAPSHOTS = 5;
 
+type CanvasProtectionResult = {
+  isProtected: boolean;
+  isStrong: boolean; // baseline mismatch 
+};
+
 export async function collectCanvas(): Promise<CanvasInfo> {
   try {
     let cachedValue: string | null = null;
@@ -21,8 +26,25 @@ export async function collectCanvas(): Promise<CanvasInfo> {
     // Detect canvas protection
     const canvasProtection = await detectCanvasProtection();
     
-    if (canvasProtection) {
+    // Handle canvas protection detection
+    let fallbackGenerated = false;
+
+    if (canvasProtection.isStrong) {
       return [FingerprintSpecialValue.ANTI_FINGERPRINTED, 1];
+    } else if (canvasProtection.isProtected) {
+      try {
+        const fallbackSamples = await Promise.all(Array.from({ length: 2 }, () => getCanvasFeatures()));
+        const validFallbackSamples = fallbackSamples.filter(Boolean);
+        
+        if (validFallbackSamples.length > 0) {
+          fallbackGenerated = true;
+        }
+      } catch (e) {
+      }
+      
+      if (!fallbackGenerated) {
+        return [FingerprintSpecialValue.ANTI_FINGERPRINTED, 1];
+      }
     }
 
     const snapshotPromises = Array.from({ length: CANVAS_SNAPSHOTS }, () => getCanvasFeatures());
@@ -36,7 +58,7 @@ export async function collectCanvas(): Promise<CanvasInfo> {
     const value = MurmurHash128.hash128(JSON.stringify(stableFeatures));
      
     if (cachedValue && cachedValue === value) {
-      return [cachedValue, 0];
+      return [cachedValue, fallbackGenerated ? 1 : 0];
     }
 
     try {
@@ -44,14 +66,13 @@ export async function collectCanvas(): Promise<CanvasInfo> {
     } catch (e) {
     }
 
-    return [value, 0];
-  } catch {
+    return [value, fallbackGenerated ? 1 : 0];
+  } catch (error) {
     return [FingerprintSpecialValue.ERROR, 0];
   }
 }
 
-// Checks across sessions
-async function detectCanvasProtection(): Promise<Bit> {
+async function detectCanvasProtection(): Promise<CanvasProtectionResult> {
   try {
     const testCanvas = () => {
       const canvas = document.createElement("canvas");
@@ -79,12 +100,13 @@ async function detectCanvasProtection(): Promise<Bit> {
     const dataUrl2 = testCanvas();
     
     if (!dataUrl1 || !dataUrl2) {
-      return 1; 
+      return { isProtected: true, isStrong: false }; 
     }
 
     // Test in-session randomization 
-    if (dataUrl1 !== dataUrl2) {
-      return 1; 
+    const isConsistent = dataUrl1 === dataUrl2;
+    if (!isConsistent) {
+      return { isProtected: true, isStrong: false }; 
     }
 
     // Compare with previous sessions 
@@ -94,57 +116,64 @@ async function detectCanvasProtection(): Promise<Bit> {
     try {
       storedBaseline = localStorage.getItem(CANVAS_BASELINE_KEY);
     } catch (e) {
-      return 1;
+      return { isProtected: true, isStrong: false };
     }
 
     if (storedBaseline) {
-      if (dataUrl1 !== storedBaseline) {
-        return 1;
+      const baselineMatches = dataUrl1 === storedBaseline;
+      if (!baselineMatches) {
+        // Baseline mismatch is a strong indicator of Canvas Blocker extension
+        return { isProtected: true, isStrong: true };
       }
     } else {
       try {
         localStorage.setItem(CANVAS_BASELINE_KEY, dataUrl1);
       } catch (e) {
-        return 1;
+        return { isProtected: true, isStrong: false };
       }
     }
 
     // Check for suspicious canvas API modifications
-    if (typeof HTMLCanvasElement.prototype.toDataURL !== 'function') {
-      return 1;
+    const isToDataURLFunction = typeof HTMLCanvasElement.prototype.toDataURL === 'function';
+    if (!isToDataURLFunction) {
+      return { isProtected: true, isStrong: false };
     }
 
     // Check for extension-specific markers
-    if (detectCanvasBlockerExtension() === 1) {
-      return 1;
+    const extensionDetected = detectCanvasBlockerExtension();
+    if (extensionDetected === 1) {
+      return { isProtected: true, isStrong: false };
     }
 
-    return 0; 
+    return { isProtected: false, isStrong: false }; 
   } catch (error) {
-    return 1; 
+    return { isProtected: true, isStrong: false }; 
   }
 }
 
-// Detect CanvasBlocker extension specifically
 function detectCanvasBlockerExtension(): Bit {
   try {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     
-    if (!ctx) return 0;
+    if (!ctx) {
+      return 0;
+    }
     
-    // CanvasBlocker often modifies canvas prototype
     const originalToDataURL = HTMLCanvasElement.prototype.toDataURL.toString();
-    
-    // Look for signs of method modification
-    if (originalToDataURL.includes('native code') === false || 
-        originalToDataURL.length > 100) {
-      return 1; // Method likely modified
+    const isLongString = originalToDataURL.length > 100;
+
+    if (isLongString) {
+      return 1; 
     }
 
     // Check for CanvasBlocker specific properties
-    if ('cbName' in canvas || 'cbInject' in canvas || 
-        'canvasBlockerName' in window || 'canvasBlocker' in window) {
+    const cbNameInCanvas = 'cbName' in canvas;
+    const cbInjectInCanvas = 'cbInject' in canvas;
+    const canvasBlockerNameInWindow = 'canvasBlockerName' in window;
+    const canvasBlockerInWindow = 'canvasBlocker' in window;
+    
+    if (cbNameInCanvas || cbInjectInCanvas || canvasBlockerNameInWindow || canvasBlockerInWindow) {
       return 1;
     }
 
