@@ -31,11 +31,11 @@ interface EnvironmentConfig {
   indexedDBKey: string;
   cookiesKey: string;
   cacheKey: string;
-  serverDomain: string;
   gatewayUrl: string;
   encodeKey: string;
   sessionKey: string;
   version: string;
+  cacheExpireTime: string;
 }
 
 const getDefaultPort = (): number => {
@@ -55,12 +55,13 @@ const environmentConfig: EnvironmentConfig = {
   cacheKey: process.env.CACHE_KEY || 'msn_identity_tag',
   sessionKey: process.env.SESSION_KEY || '',
   
-  serverDomain: process.env.SERVER_DOMAIN || 'https://fps-pwr-dfp.nexdev.net',
   gatewayUrl: process.env.GATEWAY_URL || '',
   
   encodeKey: process.env.ENCODE_KEY || '',
   
-  version: process.env.VERSION || ''
+  version: process.env.VERSION || '',
+
+  cacheExpireTime: process.env.CACHE_EXPIRE_TIME || '3600',
 };
 
 const getDefaultLogLevel = (): string => {

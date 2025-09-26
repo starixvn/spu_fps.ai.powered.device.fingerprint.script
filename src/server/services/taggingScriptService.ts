@@ -8,6 +8,7 @@ export class TaggingScriptService extends ScriptService {
 
     protected getScriptFiles(): string[] {
         return [
+            'utils/domain.js',
             'utils/hash.js',
             'deviceFactory.js',
             'tagging/modules/cacheApi.js',

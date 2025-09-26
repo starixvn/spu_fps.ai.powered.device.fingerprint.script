@@ -1,8 +1,16 @@
 import { ETagHandler } from '../../../../../src/client/tagging/modules/etag';
+import { DomainUtils } from '../../../../../src/client/utils/domain';
 
 // Mock fetch globally
 const mockFetch = jest.fn();
 (global as any).fetch = mockFetch;
+
+// Mock DomainUtils to return consistent value for tests
+jest.mock('../../../../../src/client/utils/domain', () => ({
+  DomainUtils: {
+    getServerDomain: jest.fn().mockReturnValue('__SERVER_DOMAIN__')
+  }
+}));
 
 describe('ETagHandler', () => {
   let etagHandler: ETagHandler;

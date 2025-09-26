@@ -80,7 +80,7 @@ app.get('/libs/apd-express.min.js', async (req: Request, res: Response) => {
     const script = await taggingScript.getMinifiedTaggingScript();
 
     res.setHeader('Content-Type', 'application/javascript');
-    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.setHeader('Cache-Control', `public, max-age=${config.cacheExpireTime}`);
     res.send(script);
   } catch (error) {
     res.status(500).json({
@@ -110,7 +110,7 @@ app.get('/libs/apd-routing.min.js', async (req: Request, res: Response) => {
     const script = await fingerprintScript.getMinifiedFingerprintScript();
 
     res.setHeader('Content-Type', 'application/javascript');
-    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.setHeader('Cache-Control', `public, max-age=${config.cacheExpireTime}`);
     res.send(script);
   } catch (error) {
     res.status(500).json({
@@ -156,7 +156,7 @@ app.get('/libs/apd-unified.min.js', async (req: Request, res: Response) => {
     const script = await combinedScript.getMinifiedCombinedScript();
 
     res.setHeader('Content-Type', 'application/javascript');
-    res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
+    res.setHeader('Cache-Control', `public, max-age=${config.cacheExpireTime}`); // Cache for 24 hours
     res.send(script);
   } catch (error) {
     res.status(500).json({

@@ -81,7 +81,6 @@ export abstract class ScriptService {
 
   protected replaceConfigPlaceholders(content: string): string {
     const replacements = {
-      '__SERVER_DOMAIN__': config.serverDomain,
       '__VERSION__': config.version,
       '__ENCODE_KEY__': config.encodeKey,
       '__GATEWAY_URL__': config.gatewayUrl,

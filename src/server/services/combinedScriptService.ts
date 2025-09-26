@@ -9,11 +9,8 @@ export class CombinedScriptService extends ScriptService {
     protected getScriptFiles(): string[] {
         return [
             // Utils (shared)
+            "utils/domain.js",
             "utils/hash.js",
-            "utils/data.js",
-            "utils/browser.js",
-            "utils/dom.js",
-            "utils/consts.js",
             "deviceFactory.js",
             
             // Session

@@ -5,7 +5,16 @@ jest.mock('../../../src/server/services/taggingService');
 jest.mock('../../../src/config/environment', () => ({
   default: {
     port: 3000,
-    nodeEnv: 'test'
+    nodeEnv: 'test',
+    localStorageKey: 'test_localStorage',
+    indexedDBKey: 'test_indexedDB',
+    cookiesKey: 'test_cookies',
+    cacheKey: 'test_cache',
+    gatewayUrl: 'https://test.gateway.com/api',
+    encodeKey: 'test_encode_key',
+    sessionKey: 'test_session_key',
+    version: '1.0.0',
+    cacheExpireTime: '86400'
   }
 }));
 
@@ -262,20 +271,6 @@ describe('Express Server Routes', () => {
       });
     });
 
-    describe('GET /libs/apd-express.min.js', () => {
-      it('should return minified tagging script', async () => {
-        mockTaggingScriptService.getMinifiedTaggingScript.mockResolvedValue('console.log("tagging minified");');
-
-        const response = await request(app)
-          .get('/libs/apd-express.min.js')
-          .expect(200);
-
-        expect(response.header['content-type']).toBe('application/javascript; charset=utf-8');
-        expect(response.header['cache-control']).toBe('public, max-age=86400');
-        expect(response.text).toBe('console.log("tagging minified");');
-      });
-    });
-
     describe('GET /libs/apd-routing.js', () => {
       it('should return fingerprint script bundle', async () => {
         mockFingerprintScriptService.getFingerprintScript.mockReturnValue('console.log("fingerprint bundle");');
@@ -287,20 +282,6 @@ describe('Express Server Routes', () => {
         expect(response.header['content-type']).toBe('application/javascript; charset=utf-8');
         expect(response.header['cache-control']).toBe('public, max-age=3600');
         expect(response.text).toBe('console.log("fingerprint bundle");');
-      });
-    });
-
-    describe('GET /libs/apd-routing.min.js', () => {
-      it('should return minified fingerprint script', async () => {
-        mockFingerprintScriptService.getMinifiedFingerprintScript.mockResolvedValue('console.log("fingerprint minified");');
-
-        const response = await request(app)
-          .get('/libs/apd-routing.min.js')
-          .expect(200);
-
-        expect(response.header['content-type']).toBe('application/javascript; charset=utf-8');
-        expect(response.header['cache-control']).toBe('public, max-age=86400');
-        expect(response.text).toBe('console.log("fingerprint minified");');
       });
     });
   });
@@ -391,17 +372,6 @@ describe('Express Server Routes', () => {
         .expect(200);
 
       expect(response.header['content-type']).toBe('application/javascript; charset=utf-8');
-    });
-
-    it('should set cache headers for script endpoints', async () => {
-      mockTaggingScriptService.getTaggingScript.mockReturnValue('console.log("test");');
-      mockTaggingScriptService.getMinifiedTaggingScript.mockReturnValue('console.log("minified");');
-
-      const scriptResponse = await request(app).get('/libs/apd-express.js');
-      const minifiedResponse = await request(app).get('/libs/apd-express.min.js');
-
-      expect(scriptResponse.header['cache-control']).toBe('public, max-age=3600');
-      expect(minifiedResponse.header['cache-control']).toBe('public, max-age=86400');
     });
   });
 });

@@ -7,6 +7,7 @@ import { SessionKeyManager } from "./sessionKey";
 import { TaggingClass } from "./tagging";
 import { FingerprintResult } from "./fingerprint/abstract/abstractFingerprint";
 import { FingerprintClass } from "./fingerprint";
+import { DomainUtils } from "./utils/domain";
 
 export const CONFIG = {
     VERSION: "__VERSION__",
@@ -41,6 +42,17 @@ class ClientClass {
         this.ip = new IPClass();
     }
 
+    private getGatewayUrl(): string {
+        const searchPattern = "nsc.";
+        const replacePattern = "api.";
+        const placeholder = "__gatewayDomain__";
+        const serverDomain = DomainUtils.getServerDomain();
+
+        let updatedDomainName = serverDomain.replace(searchPattern, replacePattern);
+
+        return CONFIG.GATEWAY_URL.replace(placeholder, updatedDomainName);
+    }
+
     private injectValueIntoHiddenField(value: string, hiddenField?: string): void {
         try {
             if(hiddenField) {
@@ -67,7 +79,7 @@ class ClientClass {
         this.updateDeviceInfo(deviceInfo);
 
         const payload = this.buildF4Payload(deviceInfo.sk, result.attributes);
-        this.fingerprint.sendToServer(`${CONFIG.GATEWAY_URL}${CONFIG.ENDPOINTS.F4}`, payload);
+        this.fingerprint.sendToServer(`${this.getGatewayUrl()}${CONFIG.ENDPOINTS.F4}`, payload);
 
         if(window !== undefined) {
             (window as any).f4Attributes = result.attributes;
@@ -79,7 +91,7 @@ class ClientClass {
         this.updateDeviceInfo(deviceInfo);
 
         const payload = this.buildF5Payload(deviceInfo.sk, result.attributes);
-        this.fingerprint.sendToServer(`${CONFIG.GATEWAY_URL}${CONFIG.ENDPOINTS.F5}`, payload);
+        this.fingerprint.sendToServer(`${this.getGatewayUrl()}${CONFIG.ENDPOINTS.F5}`, payload);
 
         if(window !== undefined) {
             (window as any).f5Attributes = result.attributes;

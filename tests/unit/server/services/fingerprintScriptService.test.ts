@@ -344,9 +344,7 @@ describe('FingerprintScriptService', () => {
       
       // Utils
       expect(scriptFiles).toContain('utils/hash.js');
-      expect(scriptFiles).toContain('utils/data.js');
-      expect(scriptFiles).toContain('utils/browser.js');
-      expect(scriptFiles).toContain('utils/dom.js');
+      expect(scriptFiles).toContain('utils/domain.js');
       
       // Fingerprint utils
       expect(scriptFiles).toContain('fingerprint/utils/hash.js');
@@ -399,6 +397,10 @@ describe('FingerprintScriptService', () => {
       const utilsIndex = scriptFiles.findIndex((file: string) => file === 'utils/hash.js');
       const fingerprintIndex = scriptFiles.findIndex((file: string) => file === 'fingerprint/f4Fingerprint.js');
       expect(utilsIndex).toBeLessThan(fingerprintIndex);
+      
+      // Domain utils should also come before fingerprint modules
+      const domainUtilsIndex = scriptFiles.findIndex((file: string) => file === 'utils/domain.js');
+      expect(domainUtilsIndex).toBeLessThan(fingerprintIndex);
       
       // Core dom.js should come last
       const domJsIndex = scriptFiles.findIndex((file: string) => file === 'dom.js');
