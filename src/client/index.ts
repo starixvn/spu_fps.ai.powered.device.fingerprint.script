@@ -78,7 +78,7 @@ class ClientClass {
         deviceInfo.f4 = result.hashed;
         this.updateDeviceInfo(deviceInfo);
 
-        const payload = this.buildF4Payload(deviceInfo.sk, result.attributes);
+        const payload = this.buildF4Payload(deviceInfo.sk, result.attributes, result.hashed);
         this.fingerprint.sendToServer(`${this.getGatewayUrl()}${CONFIG.ENDPOINTS.F4}`, payload);
 
         if(window !== undefined) {
@@ -90,7 +90,7 @@ class ClientClass {
         deviceInfo.f5 = result.hashed;
         this.updateDeviceInfo(deviceInfo);
 
-        const payload = this.buildF5Payload(deviceInfo.sk, result.attributes);
+        const payload = this.buildF5Payload(deviceInfo.sk, result.attributes, result.hashed);
         this.fingerprint.sendToServer(`${this.getGatewayUrl()}${CONFIG.ENDPOINTS.F5}`, payload);
 
         if(window !== undefined) {
@@ -105,25 +105,27 @@ class ClientClass {
 
     private buildF4Payload(
         sessionKey: string,
-        fingerprintData: Record<string, any>
+        fingerprintData: Record<string, any>,
+        hash: string
       ): any {
             const payload = Base64Encoder.encodeBase64(JSON.stringify({sk: sessionKey, fp: {
                 [this.directory.audio]: JSON.stringify(fingerprintData.audio), 
                 [this.directory.browser]: JSON.stringify(fingerprintData.browser), 
                 [this.directory.hardware]: JSON.stringify(fingerprintData.hardware), 
                 [this.directory.preferences]: JSON.stringify(fingerprintData.preferences)
-            }}), CONFIG.ENCODING_KEY);
+            }, hs: hash}), CONFIG.ENCODING_KEY);
     
         return payload;
       }
 
     private buildF5Payload(
         sessionKey: string,
-        fingerprintData: Record<string, any>
+        fingerprintData: Record<string, any>,
+        hash: string
       ): any {
         const payload = Base64Encoder.encodeBase64(JSON.stringify({sk: sessionKey, fp: {
             [this.directory.graphics]: JSON.stringify(fingerprintData.graphics)
-        }}), CONFIG.ENCODING_KEY);
+        }, hs: hash}), CONFIG.ENCODING_KEY);
     
         return payload;
       }
