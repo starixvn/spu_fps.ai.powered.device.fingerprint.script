@@ -3,7 +3,7 @@ import { FingerprintSpecialValue } from "../../utils/consts";
 
 export function collectPdfViewerEnabled(): PdfViewerEnabledInfo {
   try {
-    if (typeof navigator === "undefined" || typeof navigator.pdfViewerEnabled === "undefined") {
+    if (typeof navigator === "undefined" || navigator === null || typeof navigator.pdfViewerEnabled === "undefined") {
       return FingerprintSpecialValue.UNDEFINED;
     }
 

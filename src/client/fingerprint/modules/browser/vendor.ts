@@ -19,7 +19,7 @@ export function collectVendor(): VendorInfo {
     if (w.samsungAr) return "Samsung Electronics";
     
     if (n.vendor && n.vendor.trim() !== "") {
-      return n.vendor;
+      return n.vendor.trim();
     }
 
     if (w.chrome) return "Google Inc.";

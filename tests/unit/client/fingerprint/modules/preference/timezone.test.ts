@@ -46,7 +46,7 @@ describe('Timezone Module', () => {
       expect(mockIntl.DateTimeFormat).toHaveBeenCalled();
     });
 
-    it('should return timezone as-is without trimming whitespace', () => {
+    it('should trim whitespace from timezone string', () => {
       // Arrange
       const mockIntl = {
         DateTimeFormat: jest.fn().mockImplementation(() => ({
@@ -66,7 +66,7 @@ describe('Timezone Module', () => {
       const result = collectTimezone();
 
       // Assert
-      expect(result).toEqual('  Asia/Tokyo  '); // Code doesn't trim whitespace
+      expect(result).toEqual('Asia/Tokyo'); // Code trims whitespace correctly
     });
 
     it('should fallback to offset when Intl.DateTimeFormat returns empty string', () => {
