@@ -5,15 +5,16 @@ export class MurmurHash128 {
 }
 
 function murmurhash3_x86_128(key: string, seed: number = 0): string {
+  // Original MurmurHash3 x86_128 constants
   const c1 = 0x239b961b;
   const c2 = 0xab0e9789;
   const c3 = 0x38b34ae5;
   const c4 = 0xa1e38b93;
 
-  let h1 = seed;
-  let h2 = seed;
-  let h3 = seed;
-  let h4 = seed;
+  let h1 = seed >>> 0;
+  let h2 = seed >>> 0;
+  let h3 = seed >>> 0;
+  let h4 = seed >>> 0;
 
   const length = key.length;
   const remainder = length & 15;
@@ -22,57 +23,61 @@ function murmurhash3_x86_128(key: string, seed: number = 0): string {
   // Process 16 bytes at a time
   for (let i = 0; i < bytes; i += 16) {
     let k1 =
-      key.charCodeAt(i) |
-      (key.charCodeAt(i + 1) << 8) |
-      (key.charCodeAt(i + 2) << 16) |
-      (key.charCodeAt(i + 3) << 24);
+      (key.charCodeAt(i) & 0xff) |
+      ((key.charCodeAt(i + 1) & 0xff) << 8) |
+      ((key.charCodeAt(i + 2) & 0xff) << 16) |
+      ((key.charCodeAt(i + 3) & 0xff) << 24);
     let k2 =
-      key.charCodeAt(i + 4) |
-      (key.charCodeAt(i + 5) << 8) |
-      (key.charCodeAt(i + 6) << 16) |
-      (key.charCodeAt(i + 7) << 24);
+      (key.charCodeAt(i + 4) & 0xff) |
+      ((key.charCodeAt(i + 5) & 0xff) << 8) |
+      ((key.charCodeAt(i + 6) & 0xff) << 16) |
+      ((key.charCodeAt(i + 7) & 0xff) << 24);
     let k3 =
-      key.charCodeAt(i + 8) |
-      (key.charCodeAt(i + 9) << 8) |
-      (key.charCodeAt(i + 10) << 16) |
-      (key.charCodeAt(i + 11) << 24);
+      (key.charCodeAt(i + 8) & 0xff) |
+      ((key.charCodeAt(i + 9) & 0xff) << 8) |
+      ((key.charCodeAt(i + 10) & 0xff) << 16) |
+      ((key.charCodeAt(i + 11) & 0xff) << 24);
     let k4 =
-      key.charCodeAt(i + 12) |
-      (key.charCodeAt(i + 13) << 8) |
-      (key.charCodeAt(i + 14) << 16) |
-      (key.charCodeAt(i + 15) << 24);
+      (key.charCodeAt(i + 12) & 0xff) |
+      ((key.charCodeAt(i + 13) & 0xff) << 8) |
+      ((key.charCodeAt(i + 14) & 0xff) << 16) |
+      ((key.charCodeAt(i + 15) & 0xff) << 24);
 
     // Mix k1
-    k1 = ((k1 & 0xff) * c1) >>> 0;
+    k1 = Math.imul(k1, c1);
     k1 = (k1 << 15) | (k1 >>> 17);
-    k1 = (k1 * c2) >>> 0;
-    h1 = (h1 ^ k1) >>> 0;
-    h1 = (h1 + h2 + h3 + h4) >>> 0;
-    h1 = (h1 * 3 + 0x52dce729) >>> 0;
+    k1 = Math.imul(k1, c2);
+    h1 ^= k1;
+    h1 = (h1 << 19) | (h1 >>> 13);
+    h1 = (h1 + h2) >>> 0;
+    h1 = Math.imul(h1, 5) + 0x561ccd1b;
 
     // Mix k2
-    k2 = ((k2 & 0xff) * c2) >>> 0;
+    k2 = Math.imul(k2, c2);
     k2 = (k2 << 16) | (k2 >>> 16);
-    k2 = (k2 * c3) >>> 0;
-    h2 = (h2 ^ k2) >>> 0;
-    h2 = (h2 + h1 + h3 + h4) >>> 0;
-    h2 = (h2 * 3 + 0x38495ab5) >>> 0;
+    k2 = Math.imul(k2, c3);
+    h2 ^= k2;
+    h2 = (h2 << 17) | (h2 >>> 15);
+    h2 = (h2 + h3) >>> 0;
+    h2 = Math.imul(h2, 5) + 0x0bcaa747;
 
     // Mix k3
-    k3 = ((k3 & 0xff) * c3) >>> 0;
+    k3 = Math.imul(k3, c3);
     k3 = (k3 << 17) | (k3 >>> 15);
-    k3 = (k3 * c4) >>> 0;
-    h3 = (h3 ^ k3) >>> 0;
-    h3 = (h3 + h1 + h2 + h4) >>> 0;
-    h3 = (h3 * 3 + 0x4c6f6a87) >>> 0;
+    k3 = Math.imul(k3, c4);
+    h3 ^= k3;
+    h3 = (h3 << 15) | (h3 >>> 17);
+    h3 = (h3 + h4) >>> 0;
+    h3 = Math.imul(h3, 5) + 0x96cd1c35;
 
     // Mix k4
-    k4 = ((k4 & 0xff) * c4) >>> 0;
+    k4 = Math.imul(k4, c4);
     k4 = (k4 << 18) | (k4 >>> 14);
-    k4 = (k4 * c1) >>> 0;
-    h4 = (h4 ^ k4) >>> 0;
-    h4 = (h4 + h1 + h2 + h3) >>> 0;
-    h4 = (h4 * 3 + 0x5cf7bce1) >>> 0;
+    k4 = Math.imul(k4, c1);
+    h4 ^= k4;
+    h4 = (h4 << 13) | (h4 >>> 19);
+    h4 = (h4 + h1) >>> 0;
+    h4 = Math.imul(h4, 5) + 0x32ac3b17;
   }
 
   // Reset k variables
@@ -84,65 +89,64 @@ function murmurhash3_x86_128(key: string, seed: number = 0): string {
   // Handle remaining bytes
   switch (remainder) {
     case 15:
-      k4 = (k4 ^ (key.charCodeAt(bytes + 14) << 16)) >>> 0;
+      k4 ^= (key.charCodeAt(bytes + 14) & 0xff) << 16;
     case 14:
-      k4 = (k4 ^ (key.charCodeAt(bytes + 13) << 8)) >>> 0;
+      k4 ^= (key.charCodeAt(bytes + 13) & 0xff) << 8;
     case 13:
-      k4 = (k4 ^ key.charCodeAt(bytes + 12)) >>> 0;
-      k4 = (k4 * c4) >>> 0;
+      k4 ^= key.charCodeAt(bytes + 12) & 0xff;
+      k4 = Math.imul(k4, c4);
       k4 = (k4 << 18) | (k4 >>> 14);
-      k4 = (k4 * c1) >>> 0;
-      h4 = (h4 ^ k4) >>> 0;
-      break;
+      k4 = Math.imul(k4, c1);
+      h4 ^= k4;
+      // fall through
 
     case 12:
-      k3 = (k3 ^ (key.charCodeAt(bytes + 11) << 24)) >>> 0;
+      k3 ^= (key.charCodeAt(bytes + 11) & 0xff) << 24;
     case 11:
-      k3 = (k3 ^ (key.charCodeAt(bytes + 10) << 16)) >>> 0;
+      k3 ^= (key.charCodeAt(bytes + 10) & 0xff) << 16;
     case 10:
-      k3 = (k3 ^ (key.charCodeAt(bytes + 9) << 8)) >>> 0;
+      k3 ^= (key.charCodeAt(bytes + 9) & 0xff) << 8;
     case 9:
-      k3 = (k3 ^ key.charCodeAt(bytes + 8)) >>> 0;
-      k3 = (k3 * c3) >>> 0;
+      k3 ^= key.charCodeAt(bytes + 8) & 0xff;
+      k3 = Math.imul(k3, c3);
       k3 = (k3 << 17) | (k3 >>> 15);
-      k3 = (k3 * c4) >>> 0;
-      h3 = (h3 ^ k3) >>> 0;
-      break;
+      k3 = Math.imul(k3, c4);
+      h3 ^= k3;
+      // fall through
 
     case 8:
-      k2 = (k2 ^ (key.charCodeAt(bytes + 7) << 24)) >>> 0;
+      k2 ^= (key.charCodeAt(bytes + 7) & 0xff) << 24;
     case 7:
-      k2 = (k2 ^ (key.charCodeAt(bytes + 6) << 16)) >>> 0;
+      k2 ^= (key.charCodeAt(bytes + 6) & 0xff) << 16;
     case 6:
-      k2 = (k2 ^ (key.charCodeAt(bytes + 5) << 8)) >>> 0;
+      k2 ^= (key.charCodeAt(bytes + 5) & 0xff) << 8;
     case 5:
-      k2 = (k2 ^ key.charCodeAt(bytes + 4)) >>> 0;
-      k2 = (k2 * c2) >>> 0;
+      k2 ^= key.charCodeAt(bytes + 4) & 0xff;
+      k2 = Math.imul(k2, c2);
       k2 = (k2 << 16) | (k2 >>> 16);
-      k2 = (k2 * c3) >>> 0;
-      h2 = (h2 ^ k2) >>> 0;
-      break;
+      k2 = Math.imul(k2, c3);
+      h2 ^= k2;
+      // fall through
 
     case 4:
-      k1 = (k1 ^ (key.charCodeAt(bytes + 3) << 24)) >>> 0;
+      k1 ^= (key.charCodeAt(bytes + 3) & 0xff) << 24;
     case 3:
-      k1 = (k1 ^ (key.charCodeAt(bytes + 2) << 16)) >>> 0;
+      k1 ^= (key.charCodeAt(bytes + 2) & 0xff) << 16;
     case 2:
-      k1 = (k1 ^ (key.charCodeAt(bytes + 1) << 8)) >>> 0;
+      k1 ^= (key.charCodeAt(bytes + 1) & 0xff) << 8;
     case 1:
-      k1 = (k1 ^ key.charCodeAt(bytes)) >>> 0;
-      k1 = (k1 * c1) >>> 0;
+      k1 ^= key.charCodeAt(bytes) & 0xff;
+      k1 = Math.imul(k1, c1);
       k1 = (k1 << 15) | (k1 >>> 17);
-      k1 = (k1 * c2) >>> 0;
-      h1 = (h1 ^ k1) >>> 0;
-      break;
+      k1 = Math.imul(k1, c2);
+      h1 ^= k1;
   }
 
   // Finalization mix
-  h1 = (h1 ^ length) >>> 0;
-  h2 = (h2 ^ length) >>> 0;
-  h3 = (h3 ^ length) >>> 0;
-  h4 = (h4 ^ length) >>> 0;
+  h1 ^= length;
+  h2 ^= length;
+  h3 ^= length;
+  h4 ^= length;
 
   h1 = (h1 + h2 + h3 + h4) >>> 0;
   h2 = (h2 + h1) >>> 0;
