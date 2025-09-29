@@ -33,7 +33,7 @@ jest.mock('../../../../src/client/fingerprint/utils/hash', () => ({
 }));
 
 // Mock CONFIG before any imports
-jest.mock('../../../../src/client/index', () => ({
+jest.mock('../../../../src/client/utils/domain', () => ({
   CONFIG: {
     ENCODING_KEY: "__ENCODE_KEY__",
     GATEWAY_URL: "__GATEWAY_URL__",
@@ -56,7 +56,7 @@ import { BrowserFingerprint } from '../../../../src/client/fingerprint/modules/b
 import { HardwareFingerprint } from '../../../../src/client/fingerprint/modules/hardware';
 import { PreferencesFingerprint } from '../../../../src/client/fingerprint/modules/preference';
 import { MurmurHash128, Base64Encoder } from '../../../../src/client/fingerprint/utils/hash';
-import { CONFIG } from '../../../../src/client/index';
+import { CONFIG } from '../../../../src/client/utils/domain';
 
 // Get mocked instances with any type to avoid strict typing issues
 const mockAudioFingerprint = AudioFingerprint as any;

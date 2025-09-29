@@ -1,7 +1,6 @@
 /// <reference lib="dom" />
 
 import { MurmurHash128, Base64Encoder } from '../utils/hash';
-import { CONFIG } from '../../index';
 
 export interface FingerprintResult {
     attributes: Record<string, any>;

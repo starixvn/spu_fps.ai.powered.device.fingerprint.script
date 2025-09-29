@@ -8,7 +8,7 @@ import { AudioFingerprint } from "./modules/audio/index";
 import { BrowserFingerprint } from "./modules/browser/index";
 import { PreferencesFingerprint } from "./modules/preference/index";
 import { AbstractFingerprint, FingerprintResult } from "./abstract/abstractFingerprint";
-import { CONFIG, FingerprintStep } from "../index";
+import { CONFIG } from "../utils/domain";
 
 export class F4Fingerprint extends AbstractFingerprint {
   private static readonly audioAliases = {

@@ -36,6 +36,7 @@ interface EnvironmentConfig {
   sessionKey: string;
   version: string;
   cacheExpireTime: string;
+  sentryDns: string;
 }
 
 const getDefaultPort = (): number => {
@@ -48,7 +49,7 @@ const getDefaultPort = (): number => {
 const environmentConfig: EnvironmentConfig = {
   port: getDefaultPort(),
   nodeEnv: process.env.NODE_ENV?.toLowerCase() || 'development',
-  
+
   localStorageKey: process.env.LOCAL_STORAGE_KEY || 'awb_visitor_session',
   indexedDBKey: process.env.INDEXEDDB_KEY || 'pwr_client_sync',
   cookiesKey: process.env.COOKIES_KEY || 'cke_anchor_key',
@@ -56,24 +57,10 @@ const environmentConfig: EnvironmentConfig = {
   sessionKey: process.env.SESSION_KEY || '',
   
   gatewayUrl: process.env.GATEWAY_URL || '',
-  
   encodeKey: process.env.ENCODE_KEY || '',
-  
   version: process.env.VERSION || '',
-
   cacheExpireTime: process.env.CACHE_EXPIRE_TIME || '3600',
-};
-
-const getDefaultLogLevel = (): string => {
-  switch (process.env.NODE_ENV?.toLowerCase()) {
-    case 'klprod':
-      return 'warn';
-    case 'development':
-      return 'info';
-    case 'local':
-    default:
-      return 'debug';
-  }
+  sentryDns: process.env.SENTRY_DNS || '',
 };
 
 const validateConfig = (): void => {
@@ -101,4 +88,3 @@ const initializeEnvironment = (): void => {
 initializeEnvironment();
 
 export default environmentConfig;
-export { getDefaultLogLevel };

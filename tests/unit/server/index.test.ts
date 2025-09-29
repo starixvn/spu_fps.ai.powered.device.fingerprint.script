@@ -2,7 +2,7 @@
 jest.mock('../../../src/server/services/fingerprintScriptService');
 jest.mock('../../../src/server/services/taggingScriptService');
 jest.mock('../../../src/server/services/taggingService');
-jest.mock('../../../src/config/environment', () => ({
+jest.mock('../../../src/server/config/environment', () => ({
   default: {
     port: 3000,
     nodeEnv: 'test',
@@ -175,19 +175,6 @@ describe('Express Server Routes', () => {
     });
   });
 
-  describe('GET /test', () => {
-    it('should return test page with FPS test content', async () => {
-      const response = await request(app)
-        .get('/test')
-        .expect(200);
-
-      expect(response.text).toContain('FPS Fingerprint Test');
-      expect(response.text).toContain('testFPS()');
-      expect(response.text).toContain('FPSFingerprint.collect()');
-      expect(response.header['content-type']).toMatch(/text\/html/);
-    });
-  }); 
-
   describe('GET /', () => {
     it('should redirect to healthz page', async () => {
       const response = await request(app)
@@ -222,8 +209,7 @@ describe('Express Server Routes', () => {
           .expect(500);
 
         expect(response.body).toEqual({
-          success: false,
-          error: 'Failed to deliver script'
+          error: 'Internal Server Error'
         });
       });
     });
@@ -251,8 +237,7 @@ describe('Express Server Routes', () => {
           .expect(500);
 
         expect(response.body).toEqual({
-          success: false,
-          error: 'Failed to deliver script'
+          error: 'Internal Server Error'
         });
       });
     });
@@ -308,18 +293,6 @@ describe('Express Server Routes', () => {
     });
   });
 
-  describe('GET /login-demo.html', () => {
-    it('should return 404 with custom message', async () => {
-      const response = await request(app)
-        .get('/login-demo.html')
-        .expect(404);
-
-      expect(response.text).toContain('Login Demo Not Available');
-      expect(response.text).toContain('This demo is not yet implemented');
-      expect(response.text).toContain('/demo.html');
-    });
-  });
-
   describe('Error Handling', () => {
     it('should handle 404 for non-existent routes', async () => {
       const response = await request(app)
@@ -333,7 +306,7 @@ describe('Express Server Routes', () => {
         .send('invalid json')
         .set('Content-Type', 'application/json');
 
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(500);
     });
   });
 

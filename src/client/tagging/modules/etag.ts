@@ -1,11 +1,11 @@
-import { DomainUtils } from "../../utils/domain";
+import { CONFIG } from "../../utils/domain";
 import { IStorageHandler } from "../types";
 
 export class ETagHandler implements IStorageHandler {
     private _baseUrl: string | '';
 
     constructor() {
-        this._baseUrl = `${DomainUtils.getServerDomain()}/resources/vers`;
+        this._baseUrl = `${CONFIG.SERVER_DOMAIN}/resources/vers`;
     }
 
     public async get(key: string): Promise<string | null> {

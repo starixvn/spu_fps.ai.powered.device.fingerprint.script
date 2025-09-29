@@ -77,7 +77,7 @@ const mockIPClass = IPClass as any;
 const mockTaggingClass = TaggingClass as any;
 
 // Import the CONFIG
-import { CONFIG } from '../../../src/client/index';
+import { CONFIG } from '../../../src/client/utils/domain';
 
 describe('Client Module Tests', () => {
   beforeAll(() => {

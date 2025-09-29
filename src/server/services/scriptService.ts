@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { minify } from 'terser';
-import config from '../../config/environment';
+import config from '../config/environment';
 
 export abstract class ScriptService {
   protected script: string | null = null;

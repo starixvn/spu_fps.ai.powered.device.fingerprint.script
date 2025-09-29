@@ -7,20 +7,7 @@ import { SessionKeyManager } from "./sessionKey";
 import { TaggingClass } from "./tagging";
 import { FingerprintResult } from "./fingerprint/abstract/abstractFingerprint";
 import { FingerprintClass } from "./fingerprint";
-import { DomainUtils } from "./utils/domain";
-
-export const CONFIG = {
-    VERSION: "__VERSION__",
-    ENCODING_KEY: "__ENCODE_KEY__",
-    GATEWAY_URL: "__GATEWAY_URL__",
-    ENDPOINTS: {
-      F4: "/meta-data",
-      F5: "/logs-sync"
-    },
-    FIELD_NAMES: {
-      DEVICE_INFO: "__di"
-    }
-}
+import { CONFIG } from "./utils/domain";
 
 export type FingerprintStep = 'F4' | 'F5';
   
@@ -46,7 +33,7 @@ class ClientClass {
         const searchPattern = "nsc.";
         const replacePattern = "api.";
         const placeholder = "__gatewayDomain__";
-        const serverDomain = DomainUtils.getServerDomain();
+        const serverDomain = CONFIG.SERVER_DOMAIN;
 
         let updatedDomainName = serverDomain.replace(searchPattern, replacePattern);
 

@@ -3,7 +3,7 @@
 import { GraphicsGroupInfo } from "./types";
 import { GraphicsFingerprint } from "./modules/graphics/index";
 import { AbstractFingerprint, FingerprintResult } from "./abstract/abstractFingerprint";
-import { CONFIG, FingerprintStep } from "../index";
+import { CONFIG } from "../utils/domain";
 
 export class F5Fingerprint extends AbstractFingerprint {
   private static readonly graphicsAliases = {
