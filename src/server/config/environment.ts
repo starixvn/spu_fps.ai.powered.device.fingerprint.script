@@ -1,7 +1,7 @@
 import { config } from 'dotenv';
 import { existsSync } from 'fs';
 import path from 'path';
-import { initSentry } from '../components/sentry';
+import * as Sentry from "@sentry/node";
 
 /* istanbul ignore file */
 
@@ -80,9 +80,12 @@ const validateEnvironment = (): void => {
 const initializeEnvironment = (): void => {
   validateEnvironment();
   validateConfig();
-  initSentry(environmentConfig.sentryDns, environmentConfig.version);
 
-  
+  Sentry.init({
+    dsn: environmentConfig.sentryDns,
+    release: environmentConfig.version,
+  });
+
   if (environmentConfig.nodeEnv !== 'klprod') {
     console.log(`🚀 Environment: ${environmentConfig.nodeEnv.toUpperCase()} | Port: ${environmentConfig.port}`);
   }

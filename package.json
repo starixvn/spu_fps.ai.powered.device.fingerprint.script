@@ -22,7 +22,7 @@
   "author": "SPU Team",
   "license": "MIT",
   "dependencies": {
-    "@sentry/node": "^10.15.0",
+    "@sentry/node": "^5.5.0",
     "@types/cookie-parser": "^1.4.9",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",

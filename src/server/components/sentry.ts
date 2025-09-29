@@ -1,24 +1,11 @@
-import Sentry from "@sentry/node";
+import * as Sentry from "@sentry/node";
 
-let initialized = false;
+export class Logger {
+  public static captureException(message: Error) {
+    Sentry.captureException(message);
+  }
 
-const initSentry = (sentryDns: string, version: string) => {
-    if (!initialized) {
-        Sentry.init({ 
-            dsn: sentryDns,
-            release: version,
-            sendDefaultPii: true,
-         });
-    }
-
-    initialized = true;
-};
-
-const captureException = (message: Error) => {
-    Sentry.captureException(message)
-};
-
-export {
-  captureException,
-  initSentry,
-};
+  public static captureMessage(message: string) {
+    Sentry.captureMessage(message);
+  }
+}

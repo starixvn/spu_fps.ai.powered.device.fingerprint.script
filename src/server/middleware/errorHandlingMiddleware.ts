@@ -1,5 +1,5 @@
 import config from '../config/environment';
-import { captureException } from '../components/sentry';
+import { Logger } from '../components/sentry';
 import { NextFunction, Request, Response } from 'express';
 
 const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) =>{
@@ -9,10 +9,9 @@ const errorHandler = (err: Error, req: Request, res: Response, next: NextFunctio
     }
 
     if(config.nodeEnv === 'development'){
-        captureException(err);
         console.error(err);
     } else {
-        captureException(err);
+        Logger.captureException(err);
     }
 
     res.status(500).json({ error: 'Internal Server Error' });

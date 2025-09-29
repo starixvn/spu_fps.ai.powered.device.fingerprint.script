@@ -1,7 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import Sentry from '@sentry/node';
 import * as path from 'path';
 import config from './config/environment';
 import { errorHandler } from './middleware/errorHandlingMiddleware';
@@ -10,6 +9,7 @@ import { TaggingService } from './services/taggingService';
 import { FingerprintScriptService } from './services/fingerprintScriptService';
 import { TaggingScriptService } from './services/taggingScriptService';
 import { CombinedScriptService } from './services/combinedScriptService';
+import { Logger } from './components/sentry';
 
 const app = express();
 
@@ -24,6 +24,8 @@ app.set('etag', false);
 const fingerprintScript = new FingerprintScriptService();
 const taggingScript = new TaggingScriptService();
 const combinedScript = new CombinedScriptService();
+
+Logger.captureMessage('APD Server is starting');
 
 app.get('/api/taggingScript', restrictInProduction, (req: Request, res: Response) => {
   const script = taggingScript.getTaggingScript();
@@ -152,11 +154,11 @@ app.get('/examples.html', restrictInProduction, (req: Request, res: Response) =>
   res.sendFile('index.html', { root: path.join(__dirname, '../../examples') });
 });
 
+app.use(errorHandler);
+
 app.listen(config.port, () => {
   console.log(`Server is running on port ${config.port}`);
   console.log(`Environment: ${config.nodeEnv}`);
 });
-
-app.use(errorHandler);
 
 export default app;
