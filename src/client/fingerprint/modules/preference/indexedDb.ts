@@ -47,7 +47,7 @@ export async function collectIndexedDB(): Promise<IndexedDBInfo> {
           if (!resolved) {
             resolved = true;
             clearTimeout(timeout);
-            resolve(FingerprintSpecialValue.ERROR);
+            resolve(1);
           }
         };
 
