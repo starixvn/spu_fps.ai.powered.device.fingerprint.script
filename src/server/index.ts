@@ -35,7 +35,7 @@ app.get('/api/taggingScript', restrictInProduction, (req: Request, res: Response
     const script = taggingScript.getTaggingScript();
 
     res.setHeader('Content-Type', 'application/javascript');
-    res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+    res.setHeader('Cache-Control', 'private, max-age=3600'); // Cache for 1 hour
     res.send(script);
   } catch (error) {
     res.status(500).json({
@@ -50,7 +50,7 @@ app.get('/api/fingerprintScript', restrictInProduction, (req: Request, res: Resp
     const script = fingerprintScript.getFingerprintScript();
 
     res.setHeader('Content-Type', 'application/javascript');
-    res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+    res.setHeader('Cache-Control', 'private, max-age=3600'); // Cache for 1 hour
     res.send(script);
   } catch (error) {
     res.status(500).json({
@@ -65,7 +65,7 @@ app.get('/libs/apd-express.js', restrictInProduction, (req: Request, res: Respon
     const script = taggingScript.getTaggingScript();
 
     res.setHeader('Content-Type', 'application/javascript');
-    res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+    res.setHeader('Cache-Control', 'private, max-age=3600'); // Cache for 1 hour
     res.send(script);
   } catch (error) {
     res.status(500).json({
@@ -80,7 +80,7 @@ app.get('/libs/apd-express.min.js', async (req: Request, res: Response) => {
     const script = await taggingScript.getMinifiedTaggingScript();
 
     res.setHeader('Content-Type', 'application/javascript');
-    res.setHeader('Cache-Control', `public, max-age=${config.cacheExpireTime}`);
+    res.setHeader('Cache-Control', `private, max-age=${config.cacheExpireTime}`);
     res.send(script);
   } catch (error) {
     res.status(500).json({
@@ -95,7 +95,7 @@ app.get('/libs/apd-routing.js', restrictInProduction, (req: Request, res: Respon
     const script = fingerprintScript.getFingerprintScript();
 
     res.setHeader('Content-Type', 'application/javascript');
-    res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+    res.setHeader('Cache-Control', 'private, max-age=3600'); // Cache for 1 hour
     res.send(script);
   } catch (error) {
     res.status(500).json({
@@ -110,7 +110,7 @@ app.get('/libs/apd-routing.min.js', async (req: Request, res: Response) => {
     const script = await fingerprintScript.getMinifiedFingerprintScript();
 
     res.setHeader('Content-Type', 'application/javascript');
-    res.setHeader('Cache-Control', `public, max-age=${config.cacheExpireTime}`);
+    res.setHeader('Cache-Control', `private, max-age=${config.cacheExpireTime}`);
     res.send(script);
   } catch (error) {
     res.status(500).json({
@@ -126,7 +126,7 @@ app.get('/api/combinedScript', restrictInProduction, (req: Request, res: Respons
     const script = combinedScript.getCombinedScript();
 
     res.setHeader('Content-Type', 'application/javascript');
-    res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+    res.setHeader('Cache-Control', 'private, max-age=3600'); // Cache for 1 hour
     res.send(script);
   } catch (error) {
     res.status(500).json({
@@ -141,7 +141,7 @@ app.get('/libs/apd-unified.js', restrictInProduction, (req: Request, res: Respon
     const script = combinedScript.getCombinedScript();
 
     res.setHeader('Content-Type', 'application/javascript');
-    res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+    res.setHeader('Cache-Control', 'private, max-age=3600'); // Cache for 1 hour
     res.send(script);
   } catch (error) {
     res.status(500).json({
@@ -156,7 +156,7 @@ app.get('/libs/apd-unified.min.js', async (req: Request, res: Response) => {
     const script = await combinedScript.getMinifiedCombinedScript();
 
     res.setHeader('Content-Type', 'application/javascript');
-    res.setHeader('Cache-Control', `public, max-age=${config.cacheExpireTime}`); // Cache for 24 hours
+    res.setHeader('Cache-Control', `private, max-age=${config.cacheExpireTime}`); // Cache for 24 hours
     res.send(script);
   } catch (error) {
     res.status(500).json({

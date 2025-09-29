@@ -208,7 +208,7 @@ describe('Express Server Routes', () => {
           .expect(200);
 
         expect(response.header['content-type']).toBe('application/javascript; charset=utf-8');
-        expect(response.header['cache-control']).toBe('public, max-age=3600');
+        expect(response.header['cache-control']).toBe('private, max-age=3600');
         expect(response.text).toBe('console.log("fingerprint");');
       });
 
@@ -237,7 +237,7 @@ describe('Express Server Routes', () => {
           .expect(200);
 
         expect(response.header['content-type']).toBe('application/javascript; charset=utf-8');
-        expect(response.header['cache-control']).toBe('public, max-age=3600');
+        expect(response.header['cache-control']).toBe('private, max-age=3600');
         expect(response.text).toBe('console.log("tagging");');
       });
 
@@ -266,7 +266,7 @@ describe('Express Server Routes', () => {
           .expect(200);
 
         expect(response.header['content-type']).toBe('application/javascript; charset=utf-8');
-        expect(response.header['cache-control']).toBe('public, max-age=3600');
+        expect(response.header['cache-control']).toBe('private, max-age=3600');
         expect(response.text).toBe('console.log("tagging bundle");');
       });
     });
@@ -280,7 +280,7 @@ describe('Express Server Routes', () => {
           .expect(200);
 
         expect(response.header['content-type']).toBe('application/javascript; charset=utf-8');
-        expect(response.header['cache-control']).toBe('public, max-age=3600');
+        expect(response.header['cache-control']).toBe('private, max-age=3600');
         expect(response.text).toBe('console.log("fingerprint bundle");');
       });
     });
