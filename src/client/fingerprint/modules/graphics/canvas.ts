@@ -27,24 +27,8 @@ export async function collectCanvas(): Promise<CanvasInfo> {
     const canvasProtection = await detectCanvasProtection();
     
     // Handle canvas protection detection
-    let fallbackGenerated = false;
-
-    if (canvasProtection.isStrong) {
+    if (canvasProtection.isStrong || canvasProtection.isProtected) {
       return [FingerprintSpecialValue.ANTI_FINGERPRINTED, 1];
-    } else if (canvasProtection.isProtected) {
-      try {
-        const fallbackSamples = await Promise.all(Array.from({ length: 2 }, () => getCanvasFeatures()));
-        const validFallbackSamples = fallbackSamples.filter(Boolean);
-        
-        if (validFallbackSamples.length > 0) {
-          fallbackGenerated = true;
-        }
-      } catch (e) {
-      }
-      
-      if (!fallbackGenerated) {
-        return [FingerprintSpecialValue.ANTI_FINGERPRINTED, 1];
-      }
     }
 
     const snapshotPromises = Array.from({ length: CANVAS_SNAPSHOTS }, () => getCanvasFeatures());
@@ -58,7 +42,7 @@ export async function collectCanvas(): Promise<CanvasInfo> {
     const value = MurmurHash128.hash128(JSON.stringify(stableFeatures));
      
     if (cachedValue && cachedValue === value) {
-      return [cachedValue, fallbackGenerated ? 1 : 0];
+      return [cachedValue, 0];
     }
 
     try {
@@ -66,7 +50,7 @@ export async function collectCanvas(): Promise<CanvasInfo> {
     } catch (e) {
     }
 
-    return [value, fallbackGenerated ? 1 : 0];
+    return [value, 0];
   } catch (error) {
     return [FingerprintSpecialValue.ERROR, 0];
   }
