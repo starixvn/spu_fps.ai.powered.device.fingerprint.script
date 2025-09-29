@@ -1,13 +1,12 @@
 import Sentry from "@sentry/node";
-import config from '../config/environment';
 
 let initialized = false;
 
-const initSentry = () => {
+const initSentry = (sentryDns: string, version: string) => {
     if (!initialized) {
         Sentry.init({ 
-            dsn: config.sentryDns,
-            release: config.version,
+            dsn: sentryDns,
+            release: version,
             sendDefaultPii: true,
          });
     }
@@ -16,10 +15,10 @@ const initSentry = () => {
 };
 
 const captureException = (message: Error) => {
-    initSentry();
     Sentry.captureException(message)
 };
 
 export {
   captureException,
+  initSentry,
 };

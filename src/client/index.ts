@@ -121,8 +121,9 @@ class ClientClass {
         try {
             console.log('v' + CONFIG.VERSION);
 
+            const version = (window as any)?.Detecas?.Config?.version || CONFIG.VERSION;
             const sessionKey = SessionKeyManager.getSessionKey();
-            const deviceInfo: CollectedDeviceInfo = { sk: sessionKey, v: CONFIG.VERSION };
+            const deviceInfo: CollectedDeviceInfo = { sk: sessionKey, v: version };
 
             await this.ensureDOMReady();
             
