@@ -9,7 +9,7 @@ export function collectTimezone(): TimezoneInfo {
       const tz = options.timeZone;
 
       if (typeof tz === 'string' && tz.trim().length > 0) {
-        return tz;
+        return tz.trim();
       }
     }
 

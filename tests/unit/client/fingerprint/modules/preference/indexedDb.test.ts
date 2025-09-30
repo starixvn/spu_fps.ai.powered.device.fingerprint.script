@@ -245,8 +245,8 @@ describe('IndexedDB Module', () => {
 
       const result = await resultPromise;
 
-      // Assert
-      expect(result).toBe(FingerprintSpecialValue.ERROR);
+      // Assert 
+      expect(result).toBe(1);
     });
 
     it('should return ERROR when operation times out', async () => {

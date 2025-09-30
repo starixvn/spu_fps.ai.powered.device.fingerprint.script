@@ -19,7 +19,7 @@ export async function collectIndexedDB(): Promise<IndexedDBInfo> {
     }
 
     // Open test database
-    const testDBName = `fps_test_${Date.now()}_${Math.random()
+    const testDBName = `test_${Date.now()}_${Math.random()
       .toString(36)
       .slice(2)}`;
 
