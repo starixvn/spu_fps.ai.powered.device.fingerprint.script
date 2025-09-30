@@ -9,16 +9,7 @@ export function collectTimezone(): TimezoneInfo {
       const tz = options.timeZone;
 
       if (typeof tz === 'string' && tz.trim().length > 0) {
-        const cleanTz = tz
-          .replace(/[\u0000-\u001F\u007F-\u009F\u200B-\u200D\uFEFF]/g, '')
-          .trim();
-
-        const ianaPattern   = /^[A-Za-z0-9_\-]+(?:\/[A-Za-z0-9_\-]+)+$/;
-        const offsetPattern = /^UTC[+-]\d{2}:\d{2}$/;
-
-        if (cleanTz && (ianaPattern.test(cleanTz) || offsetPattern.test(cleanTz))) {
-          return cleanTz;
-        }
+        return tz;
       }
     }
 
