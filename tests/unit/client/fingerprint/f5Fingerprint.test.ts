@@ -117,12 +117,6 @@ describe('F5Fingerprint', () => {
     (global.fetch as jest.Mock).mockResolvedValue({ ok: true });
   });
 
-  describe('Constructor', () => {
-    it('should initialize with correct endpoint', () => {
-      expect((f5Fingerprint as any).endpoint).toBe('/logs_sync');
-    });
-  });
-
   describe('collectData', () => {
     it('should collect graphics data successfully', async () => {
       // Act

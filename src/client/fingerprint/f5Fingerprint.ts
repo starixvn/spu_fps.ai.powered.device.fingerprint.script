@@ -3,7 +3,6 @@
 import { GraphicsGroupInfo } from "./types";
 import { GraphicsFingerprint } from "./modules/graphics/index";
 import { AbstractFingerprint, FingerprintResult } from "./abstract/abstractFingerprint";
-import { CONFIG } from "../utils/domain";
 
 export class F5Fingerprint extends AbstractFingerprint {
   private static readonly graphicsAliases = {
@@ -17,8 +16,6 @@ export class F5Fingerprint extends AbstractFingerprint {
     colorDepth: 'cld',
     colorGamut: 'clg',
   };
-
-  protected readonly endpoint: string = CONFIG.ENDPOINTS.F5;
 
   protected async collectData(): Promise<{graphics: GraphicsGroupInfo}> {
     const graphics = await GraphicsFingerprint.collect();

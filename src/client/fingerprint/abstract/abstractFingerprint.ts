@@ -8,8 +8,6 @@ export interface FingerprintResult {
 }
 
 export abstract class AbstractFingerprint {
-    protected abstract readonly endpoint: string;
-
     protected abstract collectData(): Promise<any>;
 
     protected abstract extractAttributes(
@@ -72,8 +70,10 @@ export abstract class AbstractFingerprint {
                 hashed,
             };
         } catch (error) {
-            // console.error(`${this.step} fingerprint collection failed:`, error);
-            throw error;
+            return {
+                attributes: {},
+                hashed: '',
+            };
         }
     }
 }

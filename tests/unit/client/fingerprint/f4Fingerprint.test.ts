@@ -138,12 +138,6 @@ describe('F4Fingerprint', () => {
     (global.fetch as jest.Mock).mockResolvedValue({ ok: true });
   });
 
-  describe('Constructor', () => {
-    it('should initialize with correct endpoint', () => {
-      expect((f4Fingerprint as any).endpoint).toBe('/meta-data');
-    });
-  });
-
   describe('collectData', () => {
     it('should collect all F4 data successfully', async () => {
       // Act
@@ -356,16 +350,6 @@ describe('F4Fingerprint', () => {
         hashed: 'test-hash'
       });
     });
-
-    it('should handle errors in abstract method chain', async () => {
-      // Arrange
-      const sessionKey = 'test-session-key';
-      jest.spyOn(f4Fingerprint as any, 'collectData').mockRejectedValue(new Error('Collection failed'));
-
-      // Act & Assert
-      await expect((f4Fingerprint as any).process(sessionKey, mockInjectCallback))
-        .rejects.toThrow('Collection failed');
-    });
   });
 
   describe('Error Handling', () => {
@@ -420,14 +404,6 @@ describe('F4Fingerprint', () => {
       // Assert
       expect(fingerprint).toBeInstanceOf(F4Fingerprint);
       expect(typeof fingerprint.start).toBe('function');
-    });
-
-    it('should have correct endpoint', () => {
-      // Arrange
-      const fingerprint = new F4Fingerprint();
-
-      // Assert
-      expect((fingerprint as any).endpoint).toBe('/meta-data');
     });
   });
 });

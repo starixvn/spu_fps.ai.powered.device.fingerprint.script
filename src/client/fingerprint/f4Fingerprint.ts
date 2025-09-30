@@ -8,7 +8,6 @@ import { AudioFingerprint } from "./modules/audio/index";
 import { BrowserFingerprint } from "./modules/browser/index";
 import { PreferencesFingerprint } from "./modules/preference/index";
 import { AbstractFingerprint, FingerprintResult } from "./abstract/abstractFingerprint";
-import { CONFIG } from "../utils/domain";
 
 export class F4Fingerprint extends AbstractFingerprint {
   private static readonly audioAliases = {
@@ -46,8 +45,6 @@ export class F4Fingerprint extends AbstractFingerprint {
     cookiesEnabled: 'cke',
   };
   
-  protected readonly endpoint: string = CONFIG.ENDPOINTS.F4;
-
   protected async collectData(): Promise<F4Data> {
     const [audio, browser, hardware, preferences] = await Promise.all([
       AudioFingerprint.collect(),

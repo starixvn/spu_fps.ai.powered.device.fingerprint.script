@@ -119,7 +119,7 @@ class ClientClass {
 
     public async start(): Promise<void> {
         try {
-            console.log('sv' + CONFIG.VERSION);
+            console.log('v' + CONFIG.VERSION);
 
             const version = (window as any)?.Detecas?.Config?.version || CONFIG.VERSION;
             const sessionKey = SessionKeyManager.getSessionKey();
