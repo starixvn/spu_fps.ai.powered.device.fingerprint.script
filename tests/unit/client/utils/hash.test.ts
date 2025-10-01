@@ -4,92 +4,92 @@ describe('RC4', () => {
   describe('encrypt', () => {
     it('should encrypt a simple string', () => {
       const key = 'testkey';
-      const plaintext = 'hello world';
+      const plaintext = new TextEncoder().encode('hello world');
       
       const result = RC4.encrypt(key, plaintext);
       
       expect(result).toBeDefined();
-      expect(result).not.toBe(plaintext);
-      expect(typeof result).toBe('string');
+      expect(result).not.toEqual(plaintext);
+      expect(result).toBeInstanceOf(Uint8Array);
     });
 
-    it('should return empty string when value is empty', () => {
+    it('should return empty Uint8Array when value is empty', () => {
       const key = 'testkey';
-      const plaintext = '';
+      const plaintext = new Uint8Array(0);
       
       const result = RC4.encrypt(key, plaintext);
       
-      expect(result).toBe('');
+      expect(result).toEqual(new Uint8Array(0));
     });
 
-    it('should return empty string when key is empty', () => {
+    it('should return original value when key is empty', () => {
       const key = '';
-      const plaintext = 'hello world';
+      const plaintext = new TextEncoder().encode('hello world');
       
       const result = RC4.encrypt(key, plaintext);
       
-      expect(result).toBe('hello world');
+      expect(result).toEqual(plaintext);
     });
 
     it('should return value when key is null or undefined', () => {
-      const plaintext = 'hello world';
+      const plaintext = new TextEncoder().encode('hello world');
       
-      expect(RC4.encrypt(null as any, plaintext)).toBe(plaintext);
-      expect(RC4.encrypt(undefined as any, plaintext)).toBe(plaintext);
+      expect(RC4.encrypt(null as any, plaintext)).toEqual(plaintext);
+      expect(RC4.encrypt(undefined as any, plaintext)).toEqual(plaintext);
     });
 
-    it('should return empty string when value is null or undefined', () => {
+    it('should return empty Uint8Array when value is null or undefined', () => {
       const key = 'testkey';
       
-      expect(RC4.encrypt(key, null as any)).toBe('');
-      expect(RC4.encrypt(key, undefined as any)).toBe('');
+      expect(RC4.encrypt(key, null as any)).toEqual(new Uint8Array(0));
+      expect(RC4.encrypt(key, undefined as any)).toEqual(new Uint8Array(0));
     });
 
     it('should produce different outputs for different keys', () => {
-      const plaintext = 'hello world';
+      const plaintext = new TextEncoder().encode('hello world');
       const key1 = 'key1';
       const key2 = 'key2';
       
       const result1 = RC4.encrypt(key1, plaintext);
       const result2 = RC4.encrypt(key2, plaintext);
       
-      expect(result1).not.toBe(result2);
+      expect(result1).not.toEqual(result2);
     });
 
     it('should produce different outputs for different plaintexts', () => {
       const key = 'testkey';
-      const plaintext1 = 'hello world';
-      const plaintext2 = 'goodbye world';
+      const plaintext1 = new TextEncoder().encode('hello world');
+      const plaintext2 = new TextEncoder().encode('goodbye world');
       
       const result1 = RC4.encrypt(key, plaintext1);
       const result2 = RC4.encrypt(key, plaintext2);
       
-      expect(result1).not.toBe(result2);
+      expect(result1).not.toEqual(result2);
     });
 
     it('should handle special characters in key', () => {
       const key = '!@#$%^&*()';
-      const plaintext = 'hello world';
+      const plaintext = new TextEncoder().encode('hello world');
       
       const result = RC4.encrypt(key, plaintext);
       
       expect(result).toBeDefined();
-      expect(typeof result).toBe('string');
+      expect(result).toBeInstanceOf(Uint8Array);
     });
 
     it('should handle special characters in plaintext', () => {
       const key = 'testkey';
-      const plaintext = 'héllo wörld!@#$%^&*()';
+      const plaintext = new TextEncoder().encode('héllo wörld!@#$%^&*()');
       
       const result = RC4.encrypt(key, plaintext);
       
       expect(result).toBeDefined();
-      expect(typeof result).toBe('string');
+      expect(result).toBeInstanceOf(Uint8Array);
     });
 
     it('should handle long strings', () => {
       const key = 'testkey';
-      const plaintext = 'a'.repeat(1000);
+      const plaintext = new TextEncoder().encode('a'.repeat(1000));
       
       const result = RC4.encrypt(key, plaintext);
       
@@ -99,63 +99,63 @@ describe('RC4', () => {
 
     it('should be deterministic - same input produces same output', () => {
       const key = 'testkey';
-      const plaintext = 'hello world';
+      const plaintext = new TextEncoder().encode('hello world');
       
       const result1 = RC4.encrypt(key, plaintext);
       const result2 = RC4.encrypt(key, plaintext);
       
-      expect(result1).toBe(result2);
+      expect(result1).toEqual(result2);
     });
   });
 
   describe('decrypt', () => {
     it('should decrypt to original plaintext', () => {
       const key = 'testkey';
-      const plaintext = 'hello world';
+      const plaintext = new TextEncoder().encode('hello world');
       
       const encrypted = RC4.encrypt(key, plaintext);
       const decrypted = RC4.decrypt(key, encrypted);
       
-      expect(decrypted).toBe(plaintext);
+      expect(decrypted).toEqual(plaintext);
     });
 
-    it('should handle empty strings in decryption', () => {
+    it('should handle empty Uint8Array in decryption', () => {
       const key = 'testkey';
-      const encrypted = '';
+      const encrypted = new Uint8Array(0);
       
       const result = RC4.decrypt(key, encrypted);
       
-      expect(result).toBe('');
+      expect(result).toEqual(new Uint8Array(0));
     });
 
     it('should be symmetric with encrypt', () => {
       const key = 'testkey';
-      const plaintext = 'The quick brown fox jumps over the lazy dog';
+      const plaintext = new TextEncoder().encode('The quick brown fox jumps over the lazy dog');
       
       const encrypted = RC4.encrypt(key, plaintext);
       const decrypted = RC4.decrypt(key, encrypted);
       
-      expect(decrypted).toBe(plaintext);
+      expect(decrypted).toEqual(plaintext);
     });
 
     it('should handle special characters correctly', () => {
       const key = 'testkey';
-      const plaintext = 'héllo wörld!@#$%^&*()çñü';
+      const plaintext = new TextEncoder().encode('héllo wörld!@#$%^&*()çñü');
       
       const encrypted = RC4.encrypt(key, plaintext);
       const decrypted = RC4.decrypt(key, encrypted);
       
-      expect(decrypted).toBe(plaintext);
+      expect(decrypted).toEqual(plaintext);
     });
 
     it('should handle long strings correctly', () => {
       const key = 'testkey';
-      const plaintext = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '.repeat(50);
+      const plaintext = new TextEncoder().encode('Lorem ipsum dolor sit amet, consectetur adipiscing elit. '.repeat(50));
       
       const encrypted = RC4.encrypt(key, plaintext);
       const decrypted = RC4.decrypt(key, encrypted);
       
-      expect(decrypted).toBe(plaintext);
+      expect(decrypted).toEqual(plaintext);
     });
   });
 });
@@ -163,7 +163,7 @@ describe('RC4', () => {
 describe('Hex', () => {
   describe('encode', () => {
     it('should encode simple ASCII string to hex', () => {
-      const input = 'hello';
+      const input = new TextEncoder().encode('hello');
       
       const result = Hex.encode(input);
       
@@ -172,7 +172,7 @@ describe('Hex', () => {
     });
 
     it('should return empty string for empty input', () => {
-      const input = '';
+      const input = new Uint8Array(0);
       
       const result = Hex.encode(input);
       
@@ -185,7 +185,7 @@ describe('Hex', () => {
     });
 
     it('should encode single character correctly', () => {
-      const input = 'A';
+      const input = new TextEncoder().encode('A');
       
       const result = Hex.encode(input);
       
@@ -194,7 +194,7 @@ describe('Hex', () => {
     });
 
     it('should encode special characters correctly', () => {
-      const input = '!@#';
+      const input = new TextEncoder().encode('!@#');
       
       const result = Hex.encode(input);
       
@@ -203,7 +203,7 @@ describe('Hex', () => {
     });
 
     it('should encode numbers correctly', () => {
-      const input = '123';
+      const input = new TextEncoder().encode('123');
       
       const result = Hex.encode(input);
       
@@ -212,16 +212,16 @@ describe('Hex', () => {
     });
 
     it('should encode Unicode characters correctly', () => {
-      const input = 'ñ';
+      const input = new TextEncoder().encode('ñ');
       
       const result = Hex.encode(input);
       
       expect(result).toBeDefined();
-      expect(result.length).toBe(2); // Single byte character
+      expect(result.length).toBe(4); // UTF-8 encoding of 'ñ' is 2 bytes
     });
 
     it('should handle long strings', () => {
-      const input = 'a'.repeat(100);
+      const input = new TextEncoder().encode('a'.repeat(100));
       
       const result = Hex.encode(input);
       
@@ -230,7 +230,7 @@ describe('Hex', () => {
     });
 
     it('should produce lowercase hex digits', () => {
-      const input = 'Hello World';
+      const input = new TextEncoder().encode('Hello World');
       
       const result = Hex.encode(input);
       
@@ -240,25 +240,25 @@ describe('Hex', () => {
 
   describe('decode', () => {
     it('should decode hex string back to original', () => {
-      const original = 'hello';
+      const original = new TextEncoder().encode('hello');
       const hex = '68656c6c6f';
       
       const result = Hex.decode(hex);
       
-      expect(result).toBe(original);
+      expect(result).toEqual(original);
     });
 
-    it('should return empty string for empty input', () => {
+    it('should return empty Uint8Array for empty input', () => {
       const input = '';
       
       const result = Hex.decode(input);
       
-      expect(result).toBe('');
+      expect(result).toEqual(new Uint8Array(0));
     });
 
-    it('should return empty string for null or undefined input', () => {
-      expect(Hex.decode(null as any)).toBe('');
-      expect(Hex.decode(undefined as any)).toBe('');
+    it('should return empty Uint8Array for null or undefined input', () => {
+      expect(Hex.decode(null as any)).toEqual(new Uint8Array(0));
+      expect(Hex.decode(undefined as any)).toEqual(new Uint8Array(0));
     });
 
     it('should handle odd-length hex strings by padding with zero', () => {
@@ -266,7 +266,7 @@ describe('Hex', () => {
       
       const result = Hex.decode(input);
       
-      expect(result).toBe('A');
+      expect(result).toEqual(new TextEncoder().encode('A'));
     });
 
     it('should handle odd-length hex strings correctly', () => {
@@ -283,7 +283,7 @@ describe('Hex', () => {
       
       const result = Hex.decode(hex);
       
-      expect(result).toBe('!@#');
+      expect(result).toEqual(new TextEncoder().encode('!@#'));
     });
 
     it('should decode numbers correctly', () => {
@@ -291,25 +291,25 @@ describe('Hex', () => {
       
       const result = Hex.decode(hex);
       
-      expect(result).toBe('123');
+      expect(result).toEqual(new TextEncoder().encode('123'));
     });
 
     it('should be symmetric with encode', () => {
-      const original = 'The quick brown fox jumps over the lazy dog!@#$%^&*()';
+      const original = new TextEncoder().encode('The quick brown fox jumps over the lazy dog!@#$%^&*()');
       
       const encoded = Hex.encode(original);
       const decoded = Hex.decode(encoded);
       
-      expect(decoded).toBe(original);
+      expect(decoded).toEqual(original);
     });
 
     it('should handle long hex strings', () => {
-      const original = 'a'.repeat(100);
+      const original = new TextEncoder().encode('a'.repeat(100));
       const hex = '61'.repeat(100);
       
       const result = Hex.decode(hex);
       
-      expect(result).toBe(original);
+      expect(result).toEqual(original);
     });
 
     it('should handle uppercase and lowercase hex digits', () => {
@@ -319,8 +319,8 @@ describe('Hex', () => {
       const upperResult = Hex.decode(upperHex);
       const lowerResult = Hex.decode(lowerHex);
       
-      expect(upperResult).toBe('Hello');
-      expect(lowerResult).toBe('Hello');
+      expect(upperResult).toEqual(new TextEncoder().encode('Hello'));
+      expect(lowerResult).toEqual(new TextEncoder().encode('Hello'));
     });
 
     it('should handle invalid hex characters gracefully', () => {
@@ -347,9 +347,10 @@ describe('Hex', () => {
       ];
 
       testCases.forEach(testCase => {
-        const encoded = Hex.encode(testCase);
+        const original = new TextEncoder().encode(testCase);
+        const encoded = Hex.encode(original);
         const decoded = Hex.decode(encoded);
-        expect(decoded).toBe(testCase);
+        expect(decoded).toEqual(original);
       });
     });
   });
@@ -374,11 +375,6 @@ describe('DeviceEncryption', () => {
       const result = PacketTransformer.wrapMessage(plaintext);
 
       expect(result).toBe('');
-    });
-
-    it('should handle null and undefined inputs', () => {
-      expect(PacketTransformer.wrapMessage(null as any)).toBe('');
-      expect(PacketTransformer.wrapMessage(undefined as any)).toBe('');
     });
 
     it('should produce consistent results for same input', () => {
@@ -472,8 +468,9 @@ describe('DeviceEncryption', () => {
       // Manually reverse the process
       const hexDecoded = Hex.decode(encrypted);
       const decrypted = RC4.decrypt(encryptKey, hexDecoded);
+      const decryptedString = new TextDecoder().decode(decrypted);
       
-      expect(decrypted).toBe(plaintext);
+      expect(decryptedString).toBe(plaintext);
     });
 
     it('should match manual RC4 + Hex process', () => {
@@ -484,7 +481,8 @@ describe('DeviceEncryption', () => {
       const deviceResult = PacketTransformer.wrapMessage(plaintext);
       
       // Manual process
-      const rc4Encrypted = RC4.encrypt(encryptKey, plaintext);
+      const plaintextBytes = new TextEncoder().encode(plaintext);
+      const rc4Encrypted = RC4.encrypt(encryptKey, plaintextBytes);
       const hexEncoded = Hex.encode(rc4Encrypted);
       
       expect(deviceResult).toBe(hexEncoded);

@@ -1,13 +1,12 @@
 const SESSION_SEED = '&％#@?,:*!~^.';
 
 export class RC4 {
-    public static encrypt(key: string, value: string): string {
+    public static encrypt(key: string, value: Uint8Array): Uint8Array {
         if (!key || !value) {
-            return value || '';
+            return value || new Uint8Array(0);
         }
         
         const keyCharArray = key.split('');
-        const valueCharArray = value.split('');
         const keyLength = key.length;
         const valueLength = value.length;
         const map = new Array(256);
@@ -23,20 +22,20 @@ export class RC4 {
             map[j] = x;
         }
 
-        let encryptedValue = '';
+        const encryptedValue = new Uint8Array(valueLength);
         for (let y = 0, i = 0, j = 0; y < valueLength; y++) {
             i = (i + 1) % 256;
             j = (j + map[i]) % 256;
             const x = map[i];
             map[i] = map[j];
             map[j] = x;
-            encryptedValue += String.fromCharCode(valueCharArray[y].charCodeAt(0) ^ map[(map[i] + map[j]) % 256]);
+            encryptedValue[y] = value[y] ^ map[(map[i] + map[j]) % 256];
         }
 
         return encryptedValue;
     }
 
-    public static decrypt(key: string, value: string): string {
+    public static decrypt(key: string, value: Uint8Array): Uint8Array {
         return this.encrypt(key, value);
     }
 }
@@ -44,7 +43,7 @@ export class RC4 {
 export class Hex {
     private static readonly HexDigits = "0123456789abcdef";
 
-    public static encode(data: string): string {
+    public static encode(data: Uint8Array): string {
         if (!data) {
             return '';
         }
@@ -57,22 +56,15 @@ export class Hex {
         const length = data.length;
         const result: string[] = [];
         for (let i = 0; i < length; i++) {
-            result.push(map[data.charCodeAt(i)]);
+            result.push(map[data[i]]);
         }
 
         return result.join('');
     }
 
-    public static decode(data: string): string {
+    public static decode(data: string): Uint8Array {
         if (!data) {
-            return '';
-        }
-
-        const map: { [key: number]: string } = {};
-
-        for (let i = 0; i < 256; i++) {
-            const hexStr = this.HexDigits[i >> 4] + this.HexDigits[i & 15];
-            map[parseInt(hexStr, 16)] = String.fromCharCode(i);
+            return new Uint8Array(0);
         }
 
         let length = data.length;
@@ -82,32 +74,29 @@ export class Hex {
             length = data.length;
         }
 
-        const result: string[] = [];
+        const result = new Uint8Array(length / 2);
         for (let i = 0; i < length; i += 2) {
             const hexPair = data.substring(i, i + 2);
-            const charCode = parseInt(hexPair, 16);
-            
-            if (map[charCode] !== undefined) {
-                result.push(map[charCode]);
-            } else {
-                result.push(String.fromCharCode(charCode));
-            }
+            const byteValue = parseInt(hexPair, 16);
+            result[i / 2] = byteValue;
         }
 
-        return result.join('');
+        return result;
     }
 }
 
 export class PacketTransformer {
 
     public static wrapMessage(plaintext: string): string {
-        const encryptedText = RC4.encrypt(SESSION_SEED, plaintext);
-        return Hex.encode(encryptedText);
+        const plaintextBytes = new TextEncoder().encode(plaintext);
+        const encryptedBytes = RC4.encrypt(SESSION_SEED, plaintextBytes);
+        return Hex.encode(encryptedBytes);
     }
 
     public static unwrapMessage(ciphertext: string): string {
-        const decodedText = Hex.decode(ciphertext);
-        return RC4.decrypt(SESSION_SEED, decodedText); 
+        const encryptedBytes = Hex.decode(ciphertext);
+        const decryptedBytes = RC4.decrypt(SESSION_SEED, encryptedBytes);
+        return new TextDecoder().decode(decryptedBytes); 
     }
 }
 
