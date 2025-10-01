@@ -49,6 +49,17 @@ describe('WebGL Basics Module', () => {
       configurable: true
     });
 
+    // Setup navigator mock separately
+    Object.defineProperty(global, 'navigator', {
+      value: {
+        userAgent: 'Mozilla/5.0 (Chrome)',
+        buildID: undefined, // Not a Gecko browser
+        mozInnerScreenX: undefined
+      },
+      writable: true,
+      configurable: true
+    });
+
     // Clear module cache để avoid cross-test contamination
     jest.resetModules();
 
@@ -96,6 +107,17 @@ describe('WebGL Basics Module', () => {
       jest.resetModules();
       mockCanvas.getContext.mockReturnValue(null);
 
+      // Ensure navigator is mocked
+      Object.defineProperty(global, 'navigator', {
+        value: {
+          userAgent: 'Mozilla/5.0 (Chrome)',
+          buildID: undefined,
+          mozInnerScreenX: undefined
+        },
+        writable: true,
+        configurable: true
+      });
+
       // Act
       const { collectWebGLBasics } = require('../../../../../../src/client/fingerprint/modules/graphics/webglBasics');
       const result = collectWebGLBasics();
@@ -123,6 +145,14 @@ describe('WebGL Basics Module', () => {
           configurable: true
         });
 
+        // Also remove navigator to avoid isGecko() errors
+        const originalNavigator = global.navigator;
+        Object.defineProperty(global, 'navigator', {
+          value: undefined,
+          writable: true,
+          configurable: true
+        });
+
         const result = collectWebGLBasics();
         expect(result).toBeDefined();
         
@@ -131,9 +161,14 @@ describe('WebGL Basics Module', () => {
           expect(result).toHaveLength(6);
         }
 
-        // Restore document
+        // Restore document and navigator
         Object.defineProperty(global, 'document', {
           value: originalDocument,
+          writable: true,
+          configurable: true
+        });
+        Object.defineProperty(global, 'navigator', {
+          value: originalNavigator,
           writable: true,
           configurable: true
         });
