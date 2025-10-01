@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Worker UUID Demo</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; padding: 20px; background-color: #f4f4f9; color: #333; }
+        .container { max-width: 700px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #444; }
+        code { background: #eee; padding: 2px 5px; border-radius: 4px; font-size: 0.9em; }
+        button { background: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        button:hover { background: #0056b3; }
+        #uuid-display { font-weight: bold; color: #d9534f; word-break: break-all; }
+        .status { margin-top: 20px; padding: 10px; border-radius: 5px; background: #e9f7ef; color: #1d7b4e; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Demo Service Worker - "Evercookie"</h1>
+    <p>UUID bền bỉ của bạn là:</p>
+    <p><code id="uuid-display">Đang tải...</code></p>
+    
+    <button id="clear-btn">Xóa LocalStorage & Tải lại</button>
+
+    <div class="status" id="status-log">
+        <b>Nhật ký:</b><br>
+        - Đang khởi tạo...
+    </div>
+</div>
+
+<script>    
+
+    // --- PHẦN 2: MÃ CỦA TRANG WEB CHÍNH ---
+    const UUID_LOCALSTORAGE_KEY = 'user-uuid';
+    const UUID_COOKIE_KEY = 'user-uuid';
+    const uuidDisplay = document.getElementById('uuid-display');
+    const clearButton = document.getElementById('clear-btn');
+    const statusLog = document.getElementById('status-log');
+
+    function log(message) {
+        statusLog.innerHTML += `<br>- ${message}`;
+        console.log(message);
+    }
+
+    // Hàm đồng bộ hóa UUID vào các nơi lưu trữ
+    function syncIdentifier(uuid) {
+        log(`Đồng bộ hóa UUID: <b>${uuid}</b> vào localStorage và cookie.`);
+        localStorage.setItem(UUID_LOCALSTORAGE_KEY, uuid);
+        const d = new Date();
+        d.setTime(d.getTime() + (365 * 24 * 60 * 60 * 1000));
+        document.cookie = `${UUID_COOKIE_KEY}=${uuid};expires=${d.toUTCString()};path=/`;
+        uuidDisplay.textContent = uuid;
+    }
+
+    // Hàm chính khởi chạy luồng
+    async function initializeIdentifier() {
+        if (!('serviceWorker' in navigator)) {
+            log("Lỗi: Trình duyệt không hỗ trợ Service Worker.");
+            return;
+        }
+
+        try {
+            // Đăng ký Service Worker từ chuỗi code ở trên
+            const registration = await navigator.serviceWorker.register('ws.js');
+            log('Service Worker đã được đăng ký.');
+
+            await navigator.serviceWorker.ready;
+            log('Service Worker đã sẵn sàng.');
+
+            // Lắng nghe tin nhắn phản hồi từ Service Worker
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                if (event.data && event.data.type === 'UUID_RESPONSE') {
+                    log('Đã nhận UUID từ Service Worker.');
+                    syncIdentifier(event.data.uuid);
+                }
+            });
+
+            // Kiểm tra localStorage khi bắt đầu
+            const localUUID = localStorage.getItem(UUID_LOCALSTORAGE_KEY);
+            if (localUUID) {
+                log('Tìm thấy UUID trong localStorage.');
+                syncIdentifier(localUUID);
+            } else {
+                log('Không tìm thấy UUID trong localStorage. Đang hỏi Service Worker...');
+                navigator.serviceWorker.controller?.postMessage({ type: 'GET_UUID' });
+            }
+
+        } catch (error) {
+            log(`Đăng ký Service Worker thất bại: ${error}`);
+        }
+    }
+    
+    // Sự kiện cho nút xóa
+    clearButton.addEventListener('click', () => {
+        log('Đã xóa UUID khỏi localStorage.');
+        localStorage.removeItem(UUID_LOCALSTORAGE_KEY);
+        // Bạn cũng có thể xóa cookie ở đây nếu muốn
+        // document.cookie = `${UUID_COOKIE_KEY}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        
+        uuidDisplay.textContent = 'Đã xóa. Đang tải lại...';
+        setTimeout(() => location.reload(), 1500);
+    });
+
+    // Bắt đầu!
+    initializeIdentifier();
+</script>
+
+</body>
+</html>
