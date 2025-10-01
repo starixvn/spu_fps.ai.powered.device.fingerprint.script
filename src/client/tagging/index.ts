@@ -47,31 +47,24 @@ export class TaggingClass {
     public async start(): Promise<string> {
         const taggingValue = await this.getStorage();
 
-        if(typeof window !== 'undefined') {
-            (window.history as any).tag = {
-                ...(window.performance && { ...window.performance }),
-                self: null as Promise<string> | null,
-                sessionId: `session_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-                timestamp: Date.now(),
-                userAgent: navigator.userAgent
-            };
-
-            (window.history as any).tag.self = Promise.resolve(taggingValue);
-        }
-
         return taggingValue;
     }
 }
 
+if (typeof window !== 'undefined') {
+    if ((window as any).enabledTag) {
+        const tagging = new TaggingClass();
 
-if ((window as any).enabledTag) {
-    const tagging = new TaggingClass();
-    
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", () => {
-            tagging.start();
-        });
-    } else {
-        tagging.start();
+        (window.history as any).tag = {
+            ...(window.performance && { ...window.performance }),
+            self: null as Promise<string> | null,
+            sessionId: `session_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+            timestamp: Date.now(),
+            userAgent: navigator.userAgent
+        };
+
+        (window.history as any).tag.self = (async () => {
+            return await tagging.getStorage();
+        })();
     }
 }
