@@ -1,22 +1,23 @@
+import { FingerprintSpecialValue } from "../../../fingerprint/utils/consts";
+
 export interface IPCollectionResult {
-    localIPs: string[];
-    publicIPs: string[];
+    localIPs: string[] | FingerprintSpecialValue;
+    publicIPs: string[] | FingerprintSpecialValue;
     collectionMetadata: {
         timestamp: number;
         collectionTime: number;
         methodsUsed: string[];
         totalIPs: number;
         successRate: number;
-        webrtcSupported: boolean;
+        webrtcSupported: boolean | FingerprintSpecialValue;
     };
 }
 
-// Add mobile-specific timeouts for problematic browsers
 const MOBILE_BROWSER_TIMEOUTS = {
     MiBrowser: {
-        OFFER_TIMEOUT: 2000, // Longer timeout for MiBrowser
-        FAST_EXIT: 1500, // Slightly longer fast exit
-        FULL_TIMEOUT: 5000, // Longer full timeout
+        OFFER_TIMEOUT: 2000, 
+        FAST_EXIT: 1500, 
+        FULL_TIMEOUT: 5000, 
     },
     UCBrowser: {
         OFFER_TIMEOUT: 2000,
@@ -70,7 +71,7 @@ export async function collectAllIPTypes(): Promise<IPCollectionResult> {
         ipCache = result;
         return result;
     } catch (error) {
-        throw error;
+        return emptyResult(0, ['error'], FingerprintSpecialValue.ERROR, FingerprintSpecialValue.ERROR);
     }
 }
 
@@ -96,7 +97,8 @@ async function collectAllIPTypes1PC(): Promise<IPCollectionResult> {
         return emptyResult(
             performance.now() - start,
             ['webrtc_ctor_error'],
-            true
+            FingerprintSpecialValue.ERROR,
+            FingerprintSpecialValue.ERROR
         );
     }
 
@@ -171,7 +173,7 @@ async function collectAllIPTypes1PC(): Promise<IPCollectionResult> {
         try {
             pc.close();
         } catch {}
-        return emptyResult(performance.now() - start, ['offer_failed'], true);
+        return emptyResult(performance.now() - start, ['offer_failed'], FingerprintSpecialValue.ERROR, FingerprintSpecialValue.ERROR);
     }
 
     // Result collection with timeouts
@@ -205,11 +207,12 @@ async function collectAllIPTypes1PC(): Promise<IPCollectionResult> {
 function emptyResult(
     collectionTime: number,
     methodsUsed: string[],
-    webrtcSupported: boolean
+    webrtcSupported: boolean | FingerprintSpecialValue,
+    specialValue: FingerprintSpecialValue = FingerprintSpecialValue.UNDEFINED
 ): IPCollectionResult {
     return {
-        localIPs: [],
-        publicIPs: [],
+        localIPs: specialValue,
+        publicIPs: specialValue,
         collectionMetadata: {
             timestamp: Date.now(),
             collectionTime,
