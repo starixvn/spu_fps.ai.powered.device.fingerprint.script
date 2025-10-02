@@ -29,7 +29,7 @@ class ClientClass {
 
     private getGatewayUrl(): string {
         const searchPattern = "nsc.";
-        const replacePattern = "api.";
+        const replacePattern = "gw.";
         const placeholder = "__gatewayDomain__";
         const serverDomain = CONFIG.SERVER_DOMAIN;
 
