@@ -9,8 +9,6 @@ import { FingerprintResult } from "./fingerprint/abstract/abstractFingerprint";
 import { FingerprintClass } from "./fingerprint";
 import { CONFIG } from "./utils/domain";
 
-export type FingerprintStep = 'F4' | 'F5';
-  
 class ClientClass {
     private readonly directory = {
         audio: "au",
