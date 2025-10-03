@@ -199,13 +199,7 @@ async function getCanvasFeatures(): Promise<Record<string, any> | null> {
       fillStyle: ctx.fillStyle?.toString() || "gradient", 
       width: canvas.width,
       height: canvas.height,
-      pixelSample: (() => {
-        try {
-          return Array.from(ctx.getImageData(0, 0, 10, 10).data);
-        } catch {
-          return [];
-        }
-      })(),
+      pixelSample: Array.from(ctx.getImageData(0, 0, 10, 10).data),
     };
 
     // WebGL features
@@ -267,14 +261,7 @@ function computeFeatureMedian(samples: any[]): any {
       } 
     });
 
-    // Safety check for mostCommon
-    if (mostCommon !== undefined) {
-      try {
-        median[key] = JSON.parse(mostCommon);
-      } catch {
-        median[key] = mostCommon;
-      }
-    }
+    median[key] = JSON.parse(mostCommon);
   }
 
   return median;
