@@ -2,7 +2,7 @@ import { MurmurHash128 } from "../../utils/hash";
 import type { CanvasInfo } from "../../types";
 import type { Bit } from '../../types';
 import { FingerprintSpecialValue } from "../../utils/consts";
-import { isWebKit, isWebKit616OrNewer, isSafariWebKit } from "../../utils/browser";
+import { isWebKit, isWebKit616OrNewer, isSafariWebKit, isSafari17OrNewer } from "../../utils/browser";
 
 const CANVAS_CACHE_KEY = "canvasCache";
 const CANVAS_SNAPSHOTS = 5;
@@ -13,8 +13,8 @@ type CanvasProtectionResult = {
 };
 
 function doesBrowserPerformAntifingerprinting(): boolean {
-  // Safari 17+
-  if (isWebKit() && isWebKit616OrNewer() && isSafariWebKit()) return true;
+  // Safari 17+ has enhanced anti-fingerprinting for canvas
+  if (isSafari17OrNewer()) return true;
   return false;
 }
 
