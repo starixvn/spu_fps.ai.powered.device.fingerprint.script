@@ -13,7 +13,7 @@ type CanvasProtectionResult = {
 };
 
 function doesBrowserPerformAntifingerprinting(): boolean {
-  // Safari 17
+  // Safari 17+
   if (isWebKit() && isWebKit616OrNewer() && isSafariWebKit()) return true;
   return false;
 }
@@ -199,7 +199,13 @@ async function getCanvasFeatures(): Promise<Record<string, any> | null> {
       fillStyle: ctx.fillStyle?.toString() || "gradient", 
       width: canvas.width,
       height: canvas.height,
-      pixelSample: Array.from(ctx.getImageData(0, 0, 10, 10).data),
+      pixelSample: (() => {
+        try {
+          return Array.from(ctx.getImageData(0, 0, 10, 10).data);
+        } catch {
+          return [];
+        }
+      })(),
     };
 
     // WebGL features
@@ -261,7 +267,14 @@ function computeFeatureMedian(samples: any[]): any {
       } 
     });
 
-    median[key] = JSON.parse(mostCommon);
+    // Safety check for mostCommon
+    if (mostCommon !== undefined) {
+      try {
+        median[key] = JSON.parse(mostCommon);
+      } catch {
+        median[key] = mostCommon;
+      }
+    }
   }
 
   return median;
