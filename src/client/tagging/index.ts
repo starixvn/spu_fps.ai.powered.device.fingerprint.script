@@ -6,8 +6,9 @@ import { LocalStorageHandler } from './modules/localStorage';
 import { TaggingHandler, STORAGE_KEYS } from './tagging';
 import { WindowNameHandler } from './modules/windowName';
 import { IStorageHandler } from './types';
+import { DeviceFactory } from '../deviceFactory';
 
-class TaggingClass {
+export class TaggingClass {
     private readonly storageHandlers: Array<{
         handler: IStorageHandler;
         key: string;
@@ -28,7 +29,7 @@ class TaggingClass {
         let targetTaggingValue = await TaggingHandler.getTaggingValue();
 
         if (!targetTaggingValue) {
-            targetTaggingValue = TaggingHandler.generateTagging();
+            targetTaggingValue = DeviceFactory.generateTagging();
         }
 
         await Promise.all(
@@ -42,22 +43,28 @@ class TaggingClass {
 
         return targetTaggingValue;
     }
-}
 
-const tagging = new TaggingClass();
+    public async start(): Promise<string> {
+        const taggingValue = await this.getStorage();
+
+        return taggingValue;
+    }
+}
 
 if (typeof window !== 'undefined') {
-    (window.history as any).tag = {
-        ...(window.performance && { ...window.performance }),
-        self: null as Promise<string> | null,
-        sessionId: `session_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-        timestamp: Date.now(),
-        userAgent: navigator.userAgent
-    };
+    if ((window as any).enabledTag) {
+        const tagging = new TaggingClass();
 
-    (window.history as any).tag.self = (async () => {
-        return await tagging.getStorage();
-    })();
+        (window.history as any).tag = {
+            ...(window.performance && { ...window.performance }),
+            self: null as Promise<string> | null,
+            sessionId: `session_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+            timestamp: Date.now(),
+            userAgent: navigator.userAgent
+        };
+
+        (window.history as any).tag.self = (async () => {
+            return await tagging.getStorage();
+        })();
+    }
 }
-
-export default tagging;

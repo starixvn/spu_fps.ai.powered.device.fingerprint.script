@@ -1,105 +1,118 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { minify } from 'terser';
-import config from '../../config/environment';
+import config from '../config/environment';
 
-export class ScriptService {
-  private bundledScript: string | null = null;
-  private lastBuildTime: number = 0;
-  
+export abstract class ScriptService {
+  protected script: string | null = null;
+  protected minifiedScript: string | null = null;
+  protected lastBuildTime: number = 0;
+
   constructor() {
-    this.generateBundledScript();
+    this.generateScript();
+    this.initializeMinifiedScript();
   }
-  
-  private generateBundledScript(): void {
-    try {
-      const clientFiles = [
-        'tagging/utils/hash.js',
-        'tagging/modules/cacheApi.js',
-        'tagging/modules/cookie.js',
-        'tagging/modules/etag.js',
-        'tagging/modules/indexedDB.js',
-        'tagging/modules/localStorage.js',
-        'tagging/tagging.js',
-        'tagging/modules/windowName.js',
-        'tagging/index.js',
-      ];
-      
-      const clientDistPath = path.join(__dirname, '..', '..', 'client');
-      const fallbackDistPath = path.join(__dirname, '..', 'client');
-      
-      let basePath: string;
-      if (fs.existsSync(clientDistPath)) {
-        basePath = clientDistPath;
-      } else if (fs.existsSync(fallbackDistPath)) {
-        basePath = fallbackDistPath;
-      } else {
-        this.bundledScript = this.generateFallbackScript();
-        return;
-      }
-      
-      let needsRebuild = !this.bundledScript;
-      if (!needsRebuild) {
-        for (const fileName of clientFiles) {
-          const filePath = path.join(basePath, fileName);
-          if (fs.existsSync(filePath)) {
-            const fileStats = fs.statSync(filePath);
-            if (fileStats.mtime.getTime() > this.lastBuildTime) {
-              needsRebuild = true;
-              break;
-            }
-          }
-        }
-      }
-      
-      if (!needsRebuild) {
-        return;
-      }
-      
-      let combinedJsCode = '';
-      let filesProcessed = 0;
-      
-      for (const fileName of clientFiles) {
-        const filePath = path.join(basePath, fileName);
-        if (fs.existsSync(filePath)) {
-          let fileContent = fs.readFileSync(filePath, 'utf8');
 
-          fileContent = fileContent
-            .replace(/__SERVER_DOMAIN__/g, config.serverDomain)
-            .replace(/__localStorage_key__/g, config.localStorageKey)
-            .replace(/__indexedDB_key__/g, config.indexedDBKey)
-            .replace(/__cookies_key__/g, config.cookiesKey)
-            .replace(/__cache_key__/g, config.cacheKey);
+  protected abstract getScriptFiles(): string[];
+  protected abstract getScriptName(): string;
 
-          let processedContent = fileContent
-            .replace(/^import\s+.*?from\s+['"].*?['"];?\s*$/gm, '')
-            .replace(/^import\s+['"].*?['"];?\s*$/gm, '')
-            .replace(/^export\s+\{[^}]*\}\s*;?\s*$/gm, '')
-            .replace(/^export\s+\{[^}]*\}\s+from\s+['"][^'"]*['"];?\s*$/gm, '')
-            .replace(/^export\s+\*\s+from\s+['"][^'"]*['"];?\s*$/gm, '')
-            .replace(/^export\s+default\s+.*;?\s*$/gm, '')
-            .replace(/^export\s+(default\s+)?/gm, '')
-            .replace(/^export\s*\{[^}]*\}\s*$/gm, '')
-            .replace(/^export\s*$/gm, '');
-          
-          combinedJsCode += `\n${processedContent}\n`;
-          filesProcessed++;
-        }
+  protected resolveBasePath(): string | null {
+    const paths = [
+      path.join(__dirname, "..", "..", "client"),
+      path.join(__dirname, "..", "client")
+    ];
+
+    for (const testPath of paths) {
+      if (fs.existsSync(testPath)) {
+        return testPath;
       }
-      
-      if (filesProcessed === 0) {
-        throw new Error('No compiled client files found to bundle');
-      }
-      
-      this.bundledScript = this.wrapInIIFE(combinedJsCode);
-      this.lastBuildTime = Date.now();
-      
-    } catch (error) {
-      this.bundledScript = this.generateFallbackScript();
     }
+
+    return null;
   }
-  
-  private wrapInIIFE(jsCode: string): string {
+
+  protected shouldRebuild(scriptFiles: string[], basePath: string): boolean {
+    if (!this.script) {
+      return true;
+    }
+
+    for (const fileName of scriptFiles) {
+      const filePath = path.join(basePath, fileName);
+      if (fs.existsSync(filePath)) {
+        const fileStats = fs.statSync(filePath);
+        if (fileStats.mtime.getTime() > this.lastBuildTime) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  protected processClientFiles(clientFiles: string[], basePath: string): string {
+    let combinedJsCode = '';
+    let filesProcessed = 0;
+
+    for (const fileName of clientFiles) {
+      const filePath = path.join(basePath, fileName);
+      if (fs.existsSync(filePath)) {
+        const processedContent = this.processFileContent(filePath);
+        combinedJsCode += `\n${processedContent}\n`;
+        filesProcessed++;
+      }
+    }
+
+    if (filesProcessed === 0) {
+      throw new Error(`No compiled ${this.getScriptName()} files found to bundle`);
+    }
+
+    return combinedJsCode;
+  }
+
+  protected processFileContent(filePath: string): string {
+    let fileContent = fs.readFileSync(filePath, "utf8");
+
+    // Replace config placeholders
+    fileContent = this.replaceConfigPlaceholders(fileContent);
+    
+    // Remove ES6 imports/exports
+    return this.removeES6Syntax(fileContent);
+  }
+
+  protected replaceConfigPlaceholders(content: string): string {
+    const replacements = {
+      '__VERSION__': config.version,
+      '__ENCODE_KEY__': config.encodeKey,
+      '__GATEWAY_URL__': config.gatewayUrl,
+      '__localStorage_key__': config.localStorageKey,
+      '__indexedDB_key__': config.indexedDBKey,
+      '__cookies_key__': config.cookiesKey,
+      '__cache_key__': config.cacheKey,
+      '__session_key__': config.sessionKey
+    };
+
+    let result = content;
+    for (const [placeholder, value] of Object.entries(replacements)) {
+      result = result.replace(new RegExp(placeholder, 'g'), value);
+    }
+
+    return result;
+  }
+
+  protected removeES6Syntax(content: string): string {
+    return content
+      .replace(/^import\s+.*?from\s+['"].*?['"];?\s*$/gm, '')
+      .replace(/^import\s+['"].*?['"];?\s*$/gm, '')
+      .replace(/^export\s+\{[^}]*\}\s*;?\s*$/gm, '')
+      .replace(/^export\s+\{[^}]*\}\s+from\s+['"][^'"]*['"];?\s*$/gm, '')
+      .replace(/^export\s+\*\s+from\s+['"][^'"]*['"];?\s*$/gm, '')
+      .replace(/^export\s+default\s+.*;?\s*$/gm, '')
+      .replace(/^export\s+(default\s+)?/gm, '')
+      .replace(/^export\s*\{[^}]*\}\s*$/gm, '')
+      .replace(/^export\s*$/gm, '');
+  }
+
+  protected wrapInIIFE(jsCode: string): string {
     return `
 (function(global) {
   'use strict';
@@ -109,78 +122,41 @@ export class ScriptService {
 })(typeof window !== 'undefined' ? window : global);
 `.trim();
   }
-  
-  /**
-   * Get the bundled client script
-   */
-  getClientScript(): string {
-    if (!this.bundledScript || this.needsRebuild()) {
-      this.generateBundledScript();
-    }
-    
-    return this.bundledScript || this.generateFallbackScript();
-  }
-  
-  /**
-   * Check if script needs rebuilding (in development)
-   */
-  private needsRebuild(): boolean {
+
+  protected generateScript(): void {
     try {
-      const clientTsPath = path.join(__dirname, '..', 'client', 'FingerprintClient.ts');
-      const fallbackTsPath = path.join(__dirname, '..', '..', 'src', 'client', 'FingerprintClient.ts');
+      const scriptFiles = this.getScriptFiles();
+      const basePath = this.resolveBasePath();
       
-      let tsPath: string;
-      if (fs.existsSync(clientTsPath)) {
-        tsPath = clientTsPath;
-      } else if (fs.existsSync(fallbackTsPath)) {
-        tsPath = fallbackTsPath;
-      } else {
-        return false;
+      if (!basePath) {
+        this.script = this.generateFallbackScript();
+        return;
+      }
+
+      if (!this.shouldRebuild(scriptFiles, basePath)) {
+        return;
       }
       
-      const fileStats = fs.statSync(tsPath);
-      return fileStats.mtime.getTime() > this.lastBuildTime;
-    } catch {
-      return false;
-    }
-  }
-  
-  async getMinifiedScript(): Promise<string> {
-    try {
-      const script = this.getClientScript();
+      const combinedJsCode = this.processClientFiles(scriptFiles, basePath);
+      this.script = this.wrapInIIFE(combinedJsCode);
+      this.lastBuildTime = Date.now();
       
-      const result = await minify(script, {
-        compress: {
-          keep_fargs: false,
-          drop_console: false,
-          drop_debugger: true,
-          pure_funcs: [],
-          passes: 2
-        },
-        mangle: {
-          reserved: ['window', 'document', 'global', 'self'],
-          keep_fnames: false
-        },
-        format: {
-          comments: false,
-          beautify: false,
-          indent_level: 0
-        },
-        sourceMap: false,
-        ecma: 2015 
-      });
-
-      return result.code || script;
     } catch (error) {
-      return this.fallbackMinify(this.getClientScript());
+      this.script = this.generateFallbackScript();
     }
   }
 
-  getMinifiedScriptSync(): string {
-    return this.fallbackMinify(this.getClientScript());
+  protected async initializeMinifiedScript(): Promise<void> {
+    this.minifiedScript = await this.getMinifiedScript();
   }
 
-  private fallbackMinify(script: string): string {
+  protected generateFallbackScript(): string {
+    return `
+console.error('❌ FPS ${this.getScriptName()} Client: TypeScript compilation failed');
+`.trim();
+  }
+
+  protected fallbackMinify(script: string): string {
     const protectedContent: string[] = [];
     let protectedScript = script;
     
@@ -215,42 +191,96 @@ export class ScriptService {
     
     return minified;
   }
-  
-  getWrappedScript(config: {
-    apiEndpoint?: string;
-    autoCollect?: boolean;
-    debug?: boolean;
-  } = {}): string {
-    const baseScript = this.getClientScript();
-    
-    const configScript = `
-window.FPSConfig = {
-  apiEndpoint: '${config.apiEndpoint || '/api/fingerprint'}',
-  autoCollect: ${config.autoCollect || false},
-  debug: ${config.debug || false}
-};
 
-if (window.FPSConfig.autoCollect) {
-  window.FPSAutoCollect = true;
-}
+  protected needsRebuild(): boolean {
+    try {
+      const clientTsPath = path.join(
+        __dirname,
+        "..",
+        "client",
+        `${this.getScriptName()}Client.ts`
+      );
+      const fallbackTsPath = path.join(
+        __dirname,
+        "..",
+        "..",
+        "src",
+        "client",
+        `${this.getScriptName()}Client.ts`
+      );
 
-if (window.FPSConfig.debug) {
-  console.log('🔍 FPS Fingerprint Client loaded with config:', window.FPSConfig);
-}
-`;
-    
-    return configScript + '\n' + baseScript;
+      let tsPath: string;
+      if (fs.existsSync(clientTsPath)) {
+        tsPath = clientTsPath;
+      } else if (fs.existsSync(fallbackTsPath)) {
+        tsPath = fallbackTsPath;
+      } else {
+        return false;
+      }
+
+      const fileStats = fs.statSync(tsPath);
+      return fileStats.mtime.getTime() > this.lastBuildTime;
+    } catch {
+      return false;
+    }
   }
-  
+
   /**
-   * Force rebuild of the script (useful for development)
+   * Get the script bundle
+   */
+  getScript(): string {
+    if (!this.script || this.needsRebuild()) {
+      this.generateScript();
+    }
+
+    return this.script || this.generateFallbackScript();
+  }
+
+  async getMinifiedScript(): Promise<string> {
+    if (this.minifiedScript) {
+      return this.minifiedScript;
+    }
+    
+    try {
+      const script = this.getScript();
+      
+      const result = await minify(script, {
+        compress: {
+          keep_fargs: false,
+          drop_console: false,
+          drop_debugger: true,
+          pure_funcs: [],
+          passes: 2
+        },
+        mangle: {
+          reserved: ['window', 'document', 'global', 'self'],
+          keep_fnames: false
+        },
+        format: {
+          comments: false,
+          beautify: false,
+          indent_level: 0
+        },
+        sourceMap: false,
+        ecma: 2015 
+      });
+
+      return result.code || script;
+    } catch (error) {
+      return this.fallbackMinify(this.getScript());
+    }
+  }
+
+  /**
+   * Force rebuild of the script
    */
   rebuildScript(): void {
-    this.bundledScript = null;
+    this.script = null;
+    this.minifiedScript = null;
     this.lastBuildTime = 0;
-    this.generateBundledScript();
+    this.generateScript();
   }
-  
+
   /**
    * Get script info for debugging
    */
@@ -260,20 +290,15 @@ if (window.FPSConfig.debug) {
     lastBuilt: string;
     source: string;
   }> {
-    const script = this.getClientScript();
+    const script = this.getScript();
     const minified = await this.getMinifiedScript();
     
     return {
       size: script.length,
       minifiedSize: minified.length,
       lastBuilt: new Date(this.lastBuildTime).toISOString(),
-      source: 'TypeScript bundle'
+      source: `${this.getScriptName()} bundle`,
     };
   }
-  
-  private generateFallbackScript(): string {
-    return `
-console.error('❌ FPS Fingerprint Client: TypeScript compilation failed');
-`.trim();
-  }
 }
+

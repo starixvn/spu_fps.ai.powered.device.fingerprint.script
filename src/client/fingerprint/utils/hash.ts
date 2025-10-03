@@ -1,46 +1,240 @@
-/**
- * Hash Utility Functions
- * Provides various hashing algorithms for fingerprinting
- */
-
-/**
- * DJB2 hash algorithm
- */
-export function djb2Hash(input: string): string {
-  let hash = 5381;
-  for (let i = 0; i < input.length; i++) {
-    hash = ((hash << 5) + hash) + input.charCodeAt(i);
-    hash = hash & hash; // Convert to 32-bit integer
+export class MurmurHash128 {
+  public static hash128(data: string, seed: number = 0): string {
+    return murmurhash3_x86_128(data, seed);
   }
-  return Math.abs(hash).toString(16).padStart(8, '0');
 }
 
-/**
- * Simple hash function for shorter strings
- */
-export function simpleHash(input: string): number {
-  let hash = 0;
-  if (input.length === 0) return hash;
-  for (let i = 0; i < input.length; i++) {
-    const char = input.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32-bit integer
+function murmurhash3_x86_128(key: string, seed: number = 0): string {
+  // Original MurmurHash3 x86_128 constants
+  const c1 = 0x239b961b;
+  const c2 = 0xab0e9789;
+  const c3 = 0x38b34ae5;
+  const c4 = 0xa1e38b93;
+
+  let h1 = seed >>> 0;
+  let h2 = seed >>> 0;
+  let h3 = seed >>> 0;
+  let h4 = seed >>> 0;
+
+  const length = key.length;
+  const remainder = length & 15;
+  const bytes = length - remainder;
+
+  // Process 16 bytes at a time
+  for (let i = 0; i < bytes; i += 16) {
+    let k1 =
+      (key.charCodeAt(i) & 0xff) |
+      ((key.charCodeAt(i + 1) & 0xff) << 8) |
+      ((key.charCodeAt(i + 2) & 0xff) << 16) |
+      ((key.charCodeAt(i + 3) & 0xff) << 24);
+    let k2 =
+      (key.charCodeAt(i + 4) & 0xff) |
+      ((key.charCodeAt(i + 5) & 0xff) << 8) |
+      ((key.charCodeAt(i + 6) & 0xff) << 16) |
+      ((key.charCodeAt(i + 7) & 0xff) << 24);
+    let k3 =
+      (key.charCodeAt(i + 8) & 0xff) |
+      ((key.charCodeAt(i + 9) & 0xff) << 8) |
+      ((key.charCodeAt(i + 10) & 0xff) << 16) |
+      ((key.charCodeAt(i + 11) & 0xff) << 24);
+    let k4 =
+      (key.charCodeAt(i + 12) & 0xff) |
+      ((key.charCodeAt(i + 13) & 0xff) << 8) |
+      ((key.charCodeAt(i + 14) & 0xff) << 16) |
+      ((key.charCodeAt(i + 15) & 0xff) << 24);
+
+    // Mix k1
+    k1 = Math.imul(k1, c1);
+    k1 = (k1 << 15) | (k1 >>> 17);
+    k1 = Math.imul(k1, c2);
+    h1 ^= k1;
+    h1 = (h1 << 19) | (h1 >>> 13);
+    h1 = (h1 + h2) >>> 0;
+    h1 = Math.imul(h1, 5) + 0x561ccd1b;
+
+    // Mix k2
+    k2 = Math.imul(k2, c2);
+    k2 = (k2 << 16) | (k2 >>> 16);
+    k2 = Math.imul(k2, c3);
+    h2 ^= k2;
+    h2 = (h2 << 17) | (h2 >>> 15);
+    h2 = (h2 + h3) >>> 0;
+    h2 = Math.imul(h2, 5) + 0x0bcaa747;
+
+    // Mix k3
+    k3 = Math.imul(k3, c3);
+    k3 = (k3 << 17) | (k3 >>> 15);
+    k3 = Math.imul(k3, c4);
+    h3 ^= k3;
+    h3 = (h3 << 15) | (h3 >>> 17);
+    h3 = (h3 + h4) >>> 0;
+    h3 = Math.imul(h3, 5) + 0x96cd1c35;
+
+    // Mix k4
+    k4 = Math.imul(k4, c4);
+    k4 = (k4 << 18) | (k4 >>> 14);
+    k4 = Math.imul(k4, c1);
+    h4 ^= k4;
+    h4 = (h4 << 13) | (h4 >>> 19);
+    h4 = (h4 + h1) >>> 0;
+    h4 = Math.imul(h4, 5) + 0x32ac3b17;
   }
-  return Math.abs(hash);
+
+  // Reset k variables
+  let k1 = 0;
+  let k2 = 0;
+  let k3 = 0;
+  let k4 = 0;
+
+  // Handle remaining bytes
+  switch (remainder) {
+    case 15:
+      k4 ^= (key.charCodeAt(bytes + 14) & 0xff) << 16;
+    case 14:
+      k4 ^= (key.charCodeAt(bytes + 13) & 0xff) << 8;
+    case 13:
+      k4 ^= key.charCodeAt(bytes + 12) & 0xff;
+      k4 = Math.imul(k4, c4);
+      k4 = (k4 << 18) | (k4 >>> 14);
+      k4 = Math.imul(k4, c1);
+      h4 ^= k4;
+      // fall through
+
+    case 12:
+      k3 ^= (key.charCodeAt(bytes + 11) & 0xff) << 24;
+    case 11:
+      k3 ^= (key.charCodeAt(bytes + 10) & 0xff) << 16;
+    case 10:
+      k3 ^= (key.charCodeAt(bytes + 9) & 0xff) << 8;
+    case 9:
+      k3 ^= key.charCodeAt(bytes + 8) & 0xff;
+      k3 = Math.imul(k3, c3);
+      k3 = (k3 << 17) | (k3 >>> 15);
+      k3 = Math.imul(k3, c4);
+      h3 ^= k3;
+      // fall through
+
+    case 8:
+      k2 ^= (key.charCodeAt(bytes + 7) & 0xff) << 24;
+    case 7:
+      k2 ^= (key.charCodeAt(bytes + 6) & 0xff) << 16;
+    case 6:
+      k2 ^= (key.charCodeAt(bytes + 5) & 0xff) << 8;
+    case 5:
+      k2 ^= key.charCodeAt(bytes + 4) & 0xff;
+      k2 = Math.imul(k2, c2);
+      k2 = (k2 << 16) | (k2 >>> 16);
+      k2 = Math.imul(k2, c3);
+      h2 ^= k2;
+      // fall through
+
+    case 4:
+      k1 ^= (key.charCodeAt(bytes + 3) & 0xff) << 24;
+    case 3:
+      k1 ^= (key.charCodeAt(bytes + 2) & 0xff) << 16;
+    case 2:
+      k1 ^= (key.charCodeAt(bytes + 1) & 0xff) << 8;
+    case 1:
+      k1 ^= key.charCodeAt(bytes) & 0xff;
+      k1 = Math.imul(k1, c1);
+      k1 = (k1 << 15) | (k1 >>> 17);
+      k1 = Math.imul(k1, c2);
+      h1 ^= k1;
+  }
+
+  // Finalization mix
+  h1 ^= length;
+  h2 ^= length;
+  h3 ^= length;
+  h4 ^= length;
+
+  h1 = (h1 + h2 + h3 + h4) >>> 0;
+  h2 = (h2 + h1) >>> 0;
+  h3 = (h3 + h1) >>> 0;
+  h4 = (h4 + h1) >>> 0;
+
+  h1 = fmix32(h1);
+  h2 = fmix32(h2);
+  h3 = fmix32(h3);
+  h4 = fmix32(h4);
+
+  h1 = (h1 + h2 + h3 + h4) >>> 0;
+  h2 = (h2 + h1) >>> 0;
+  h3 = (h3 + h1) >>> 0;
+  h4 = (h4 + h1) >>> 0;
+
+  return toHexString(h1) + toHexString(h2) + toHexString(h3) + toHexString(h4);
 }
 
-/**
- * Generate hash from array of strings
- */
-export function hashArray(items: string[]): string {
-  return djb2Hash(items.join('|'));
+function fmix32(h: number): number {
+  h = (h ^ (h >>> 16)) >>> 0;
+  h = (h * 0x85ebca6b) >>> 0;
+  h = (h ^ (h >>> 13)) >>> 0;
+  h = (h * 0xc2b2ae35) >>> 0;
+  h = (h ^ (h >>> 16)) >>> 0;
+  return h;
 }
 
-/**
- * Generate hash from object
- */
-export function hashObject(obj: Record<string, any>): string {
-  const sortedKeys = Object.keys(obj).sort();
-  const values = sortedKeys.map(key => `${key}:${obj[key]}`);
-  return djb2Hash(values.join('|'));
+function toHexString(num: number): string {
+  return ("00000000" + num.toString(16)).slice(-8);
 }
+
+export class Base64Encoder {
+  private static utf8_encode(string: string): string {
+    string = string.replace(/\r\n/g, "\n");
+    let utfText = "";
+
+    for (let n = 0; n < string.length; n++) {
+      let c = string.charCodeAt(n);
+
+      if (c < 128) {
+        utfText += String.fromCharCode(c);
+      } else if (c > 127 && c < 2048) {
+        utfText += String.fromCharCode((c >> 6) | 192);
+        utfText += String.fromCharCode((c & 63) | 128);
+      } else {
+        utfText += String.fromCharCode((c >> 12) | 224);
+        utfText += String.fromCharCode(((c >> 6) & 63) | 128);
+        utfText += String.fromCharCode((c & 63) | 128);
+      }
+    }
+
+    return utfText;
+  }
+
+  public static encodeBase64(input: string, key: string): string {
+    let output = "";
+    let chr1: number, chr2: number, chr3: number;
+    let enc1: number, enc2: number, enc3: number, enc4: number;
+    let i = 0;
+
+    const utfInput = this.utf8_encode(input);
+
+    while (i < utfInput.length) {
+      chr1 = utfInput.charCodeAt(i++);
+      chr2 = utfInput.charCodeAt(i++);
+      chr3 = utfInput.charCodeAt(i++);
+
+      enc1 = chr1 >> 2;
+      enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+      enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+      enc4 = chr3 & 63;
+
+      if (isNaN(chr2)) {
+        enc3 = enc4 = 64;
+      } else if (isNaN(chr3)) {
+        enc4 = 64;
+      }
+
+      output =
+        output +
+        key.charAt(enc1) +
+        key.charAt(enc2) +
+        key.charAt(enc3) +
+        key.charAt(enc4);
+    }
+
+    return output;
+  }
+}
+

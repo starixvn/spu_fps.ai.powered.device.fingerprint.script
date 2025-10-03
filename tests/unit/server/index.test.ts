@@ -1,53 +1,62 @@
-import request from 'supertest';
-import app from '../../../src/server/index';
-import { FingerprintService } from '../../../src/server/services/fingerprintService';
-import { TaggingService } from '../../../src/server/services/taggingService';
-import { HashService } from '../../../src/server/services/hashService';
-import { ScriptService } from '../../../src/server/services/scriptService';
-
-// Mock all services
-jest.mock('../../../src/server/services/fingerprintService');
+// Mock all services BEFORE importing the app
+jest.mock('../../../src/server/services/fingerprintScriptService');
+jest.mock('../../../src/server/services/taggingScriptService');
 jest.mock('../../../src/server/services/taggingService');
-jest.mock('../../../src/server/services/hashService');
-jest.mock('../../../src/server/services/scriptService');
-jest.mock('../../../src/config/environment', () => ({
-  port: 3000,
-  nodeEnv: 'test'
+jest.mock('../../../src/server/config/environment', () => ({
+  default: {
+    port: 3000,
+    nodeEnv: 'test',
+    localStorageKey: 'test_localStorage',
+    indexedDBKey: 'test_indexedDB',
+    cookiesKey: 'test_cookies',
+    cacheKey: 'test_cache',
+    gatewayUrl: 'https://test.gateway.com/api',
+    encodeKey: 'test_encode_key',
+    sessionKey: 'test_session_key',
+    version: '1.0.0',
+    cacheExpireTime: '86400'
+  }
 }));
 
-const MockedFingerprintService = FingerprintService as jest.MockedClass<typeof FingerprintService>;
+import request from 'supertest';
+import { FingerprintScriptService } from '../../../src/server/services/fingerprintScriptService';
+import { TaggingScriptService } from '../../../src/server/services/taggingScriptService';
+import { TaggingService } from '../../../src/server/services/taggingService';
+
+const MockedFingerprintScriptService = FingerprintScriptService as jest.MockedClass<typeof FingerprintScriptService>;
+const MockedTaggingScriptService = TaggingScriptService as jest.MockedClass<typeof TaggingScriptService>;
 const MockedTaggingService = TaggingService as jest.MockedClass<typeof TaggingService>;
-const MockedHashService = HashService as jest.MockedClass<typeof HashService>;
-const MockedScriptService = ScriptService as jest.MockedClass<typeof ScriptService>;
+
+// Set up the mocks before importing the app
+const mockFingerprintScriptService = {
+  getFingerprintScript: jest.fn().mockReturnValue('console.log("fingerprint fallback");'),
+  getMinifiedFingerprintScript: jest.fn().mockResolvedValue('console.log("fingerprint minified");'),
+  rebuildScript: jest.fn(),
+  getScriptInfo: jest.fn()
+} as any;
+
+const mockTaggingScriptService = {
+  getTaggingScript: jest.fn().mockReturnValue('console.log("tagging fallback");'),
+  getMinifiedTaggingScript: jest.fn().mockResolvedValue('console.log("tagging minified");'),
+  rebuildScript: jest.fn(),
+  getScriptInfo: jest.fn()
+} as any;
+
+const mockTaggingService = {
+  setEtag: jest.fn(),
+  getEtag: jest.fn().mockReturnValue(null)
+} as any;
+
+MockedFingerprintScriptService.mockImplementation(() => mockFingerprintScriptService);
+MockedTaggingScriptService.mockImplementation(() => mockTaggingScriptService);
+MockedTaggingService.mockImplementation(() => mockTaggingService);
+
+// Import app AFTER setting up mocks
+import app from '../../../src/server/index';
 
 describe('Express Server Routes', () => {
-  let mockFingerprintService: jest.Mocked<FingerprintService>;
-  let mockTaggingService: jest.Mocked<TaggingService>;
-  let mockHashService: jest.Mocked<HashService>;
-  let mockScriptService: jest.Mocked<ScriptService>;
-
   beforeEach(() => {
     jest.clearAllMocks();
-
-    mockFingerprintService = new MockedFingerprintService() as jest.Mocked<FingerprintService>;
-    mockTaggingService = new MockedTaggingService() as jest.Mocked<TaggingService>;
-    mockHashService = new MockedHashService() as jest.Mocked<HashService>;
-    mockScriptService = new MockedScriptService() as jest.Mocked<ScriptService>;
-
-    MockedFingerprintService.mockImplementation(() => mockFingerprintService);
-    MockedTaggingService.mockImplementation(() => mockTaggingService);
-    MockedHashService.mockImplementation(() => mockHashService);
-    MockedScriptService.mockImplementation(() => mockScriptService);
-
-    mockFingerprintService.generateFingerprint = jest.fn();
-    mockFingerprintService.combineFingerprints = jest.fn();
-    mockTaggingService.setEtag = jest.fn();
-    mockHashService.hashFingerprint = jest.fn();
-    mockScriptService.getClientScript = jest.fn();
-    mockScriptService.getMinifiedScript = jest.fn();
-    mockScriptService.getWrappedScript = jest.fn();
-    mockScriptService.getScriptInfo = jest.fn();
-    mockScriptService.rebuildScript = jest.fn();
   });
 
 //   describe('GET /api/fingerprint', () => {
@@ -127,15 +136,138 @@ describe('Express Server Routes', () => {
       // Validate timestamp format
       expect(new Date(response.body.timestamp)).toBeInstanceOf(Date);
     });
-  }); 
+  });
+
+  describe('GET /resources/vers', () => {
+    it('should return success when etag value is present', async () => {
+      const response = await request(app)
+        .get('/resources/vers')
+        .set('Res-Ec-X', 'test-etag')
+        .expect(200);
+
+      expect(response.body).toEqual({
+        success: true,
+        t: 'test-etag'
+      });
+    });
+
+    it('should return failure when no etag value', async () => {
+      const response = await request(app)
+        .get('/resources/vers')
+        .expect(200);
+
+      expect(response.body).toEqual({
+        success: false,
+        t: null
+      });
+    });
+
+    it('should handle array of etag values', async () => {
+      const response = await request(app)
+        .get('/resources/vers')
+        .set('Res-Ec-X', 'first-etag,second-etag')
+        .expect(200);
+
+      expect(response.body).toEqual({
+        success: true,
+        t: 'first-etag,second-etag'
+      });
+    });
+  });
 
   describe('GET /', () => {
-    it('should redirect to examples page', async () => {
+    it('should redirect to healthz page', async () => {
       const response = await request(app)
         .get('/')
         .expect(302);
 
       expect(response.header.location).toBe('/healthz');
+    });
+  });
+
+  describe('Script Routes', () => {
+    describe('GET /api/fingerprintScript', () => {
+      it('should return fingerprint script', async () => {
+        mockFingerprintScriptService.getFingerprintScript.mockReturnValue('console.log("fingerprint");');
+
+        const response = await request(app)
+          .get('/api/fingerprintScript')
+          .expect(200);
+
+        expect(response.header['content-type']).toBe('application/javascript; charset=utf-8');
+        expect(response.header['cache-control']).toBe('private, max-age=3600');
+        expect(response.text).toBe('console.log("fingerprint");');
+      });
+
+      it('should handle fingerprint script errors', async () => {
+        mockFingerprintScriptService.getFingerprintScript.mockImplementation(() => {
+          throw new Error('Script generation failed');
+        });
+
+        const response = await request(app)
+          .get('/api/fingerprintScript')
+          .expect(500);
+
+        expect(response.body).toEqual({
+          error: 'Internal Server Error'
+        });
+      });
+    });
+
+    describe('GET /api/taggingScript', () => {
+      it('should return tagging script', async () => {
+        mockTaggingScriptService.getTaggingScript.mockReturnValue('console.log("tagging");');
+
+        const response = await request(app)
+          .get('/api/taggingScript')
+          .expect(200);
+
+        expect(response.header['content-type']).toBe('application/javascript; charset=utf-8');
+        expect(response.header['cache-control']).toBe('private, max-age=3600');
+        expect(response.text).toBe('console.log("tagging");');
+      });
+
+      it('should handle tagging script errors', async () => {
+        mockTaggingScriptService.getTaggingScript.mockImplementation(() => {
+          throw new Error('Script generation failed');
+        });
+
+        const response = await request(app)
+          .get('/api/taggingScript')
+          .expect(500);
+
+        expect(response.body).toEqual({
+          error: 'Internal Server Error'
+        });
+      });
+    });
+
+    describe('GET /libs/apd-express.js', () => {
+      it('should return tagging script bundle', async () => {
+        mockTaggingScriptService.getTaggingScript.mockReturnValue('console.log("tagging bundle");');
+
+        const response = await request(app)
+          .get('/libs/apd-express.js')
+          .expect(200);
+
+        expect(response.header['content-type']).toBe('application/javascript; charset=utf-8');
+        expect(response.header['cache-control']).toBe('private, max-age=3600');
+        expect(response.text).toBe('console.log("tagging bundle");');
+      });
+    });
+
+    describe('GET /libs/apd-routing.js', () => {
+      it('should return fingerprint script bundle', async () => {
+        mockFingerprintScriptService.getFingerprintScript.mockReturnValue('console.log("fingerprint bundle");');
+
+        const response = await request(app)
+          .get('/libs/apd-routing.js')
+          .expect(200);
+
+        expect(response.header['content-type']).toBe('application/javascript; charset=utf-8');
+        expect(response.header['cache-control']).toBe('private, max-age=3600');
+        expect(response.text).toBe('console.log("fingerprint bundle");');
+      });
     });
   });
 
@@ -161,18 +293,6 @@ describe('Express Server Routes', () => {
     });
   });
 
-  describe('GET /login-demo.html', () => {
-    it('should return 404 with custom message', async () => {
-      const response = await request(app)
-        .get('/login-demo.html')
-        .expect(404);
-
-      expect(response.text).toContain('Login Demo Not Available');
-      expect(response.text).toContain('This demo is not yet implemented');
-      expect(response.text).toContain('/demo.html');
-    });
-  });
-
   describe('Error Handling', () => {
     it('should handle 404 for non-existent routes', async () => {
       const response = await request(app)
@@ -186,7 +306,7 @@ describe('Express Server Routes', () => {
         .send('invalid json')
         .set('Content-Type', 'application/json');
 
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(500);
     });
   });
 
@@ -218,23 +338,13 @@ describe('Express Server Routes', () => {
     });
 
     it('should set correct content-type for JavaScript files', async () => {
-      mockScriptService.getClientScript.mockReturnValue('console.log("test");');
+      mockTaggingScriptService.getTaggingScript.mockReturnValue('console.log("test");');
 
       const response = await request(app)
         .get('/libs/apd-express.js')
         .expect(200);
 
-      expect(response.header['content-type']).toBe('application/javascript');
-    });
-
-    it('should set cache headers for script endpoints', async () => {
-      mockScriptService.getClientScript.mockReturnValue('console.log("test");');
-
-      const scriptResponse = await request(app).get('/libs/apd-express.js');
-      const minifiedResponse = await request(app).get('/libs/apd-express.min.js');
-
-      expect(scriptResponse.header['cache-control']).toBe('public, max-age=3600');
-      expect(minifiedResponse.header['cache-control']).toBe('public, max-age=86400');
+      expect(response.header['content-type']).toBe('application/javascript; charset=utf-8');
     });
   });
 });

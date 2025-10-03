@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Advanced "Evercookie" Demo</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; padding: 20px; background-color: #f4f4f9; color: #333; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px_10px rgba(0,0,0,0.1); }
+        code { background: #eee; padding: 2px 5px; border-radius: 4px; }
+        #uuid-display { font-weight: bold; color: #d9534f; word-break: break-all; }
+        .status { margin-top: 20px; padding: 10px; border-radius: 5px; background: #e9f7ef; color: #1d7b4e; max-height: 300px; overflow-y: auto; }
+        .storage-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 20px; }
+        .storage-item { padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .storage-item h3 { margin: 0 0 5px; font-size: 1em; }
+        .storage-item code { font-size: 0.8em; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Demo "Evercookie" Nâng Cao</h1>
+    <p>UUID bền bỉ của bạn là: <code id="uuid-display">Đang kiểm tra...</code></p>
+    <div class="storage-grid" id="storage-status"></div>
+    <div class="status" id="status-log"><b>Nhật ký:</b></div>
+</div>
+
+<script>
+    (async function () {
+        const UUID_KEY = 'persistent-user-uuid';
+        const logElement = document.getElementById('status-log');
+        const uuidDisplay = document.getElementById('uuid-display');
+        const storageStatusEl = document.getElementById('storage-status');
+        
+        const log = (msg) => {
+            console.log(msg);
+            logElement.innerHTML += `<br>- ${msg}`;
+            logElement.scrollTop = logElement.scrollHeight;
+        };
+
+        // --- BỘ ĐIỀU KHIỂN CHO TỪNG NƠI LƯU TRỮ ---
+
+        const drivers = {
+            localStorage: {
+                write: (id) => localStorage.setItem(UUID_KEY, id),
+                read: () => localStorage.getItem(UUID_KEY),
+            },
+            sessionStorage: {
+                write: (id) => sessionStorage.setItem(UUID_KEY, id),
+                read: () => sessionStorage.getItem(UUID_KEY),
+            },
+            cookie: {
+                write: (id) => {
+                    const d = new Date();
+                    d.setTime(d.getTime() + (365 * 24 * 60 * 60 * 1000));
+                    document.cookie = `${UUID_KEY}=${id};expires=${d.toUTCString()};path=/`;
+                },
+                read: () => {
+                    const name = UUID_KEY + "=";
+                    const decodedCookie = decodeURIComponent(document.cookie);
+                    const ca = decodedCookie.split(';');
+                    for(let i = 0; i <ca.length; i++) {
+                        let c = ca[i].trim();
+                        if (c.indexOf(name) == 0) return c.substring(name.length, c.length);
+                    }
+                    return null;
+                }
+            },
+            windowName: {
+                write: (id) => {
+                    try {
+                        const data = window.name ? JSON.parse(window.name) : {};
+                        data[UUID_KEY] = id;
+                        window.name = JSON.stringify(data);
+                    } catch (e) {
+                        window.name = JSON.stringify({ [UUID_KEY]: id });
+                    }
+                },
+                read: () => {
+                    try {
+                        const data = JSON.parse(window.name);
+                        return data[UUID_KEY] || null;
+                    } catch (e) {
+                        return null;
+                    }
+                }
+            },
+            indexedDB: {
+                db: null,
+                init() {
+                    return new Promise((resolve, reject) => {
+                        if (this.db) return resolve(this.db);
+                        const request = indexedDB.open("uuid_db", 1);
+                        request.onupgradeneeded = () => request.result.createObjectStore("uuid_store");
+                        request.onsuccess = () => { this.db = request.result; resolve(this.db); };
+                        request.onerror = (e) => reject("IndexedDB error:" + e.target.errorCode);
+                    });
+                },
+                write: async function(id) {
+                    const db = await this.init();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction("uuid_store", "readwrite");
+                        tx.objectStore("uuid_store").put(id, "uuid");
+                        tx.oncomplete = () => resolve();
+                        tx.onerror = () => reject();
+                    });
+                },
+                read: async function() {
+                    const db = await this.init();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction("uuid_store", "readonly");
+                        const request = tx.objectStore("uuid_store").get("uuid");
+                        request.onsuccess = () => resolve(request.result || null);
+                        request.onerror = () => reject();
+                    });
+                }
+            }
+        };
+
+        // --- LUỒNG LOGIC CHÍNH ---
+
+        async function readAllStorages() {
+            log('Đang đọc UUID từ tất cả các nơi...');
+            let foundUUIDs = new Set();
+            
+            for (const name in drivers) {
+                try {
+                    const uuid = await drivers[name].read();
+                    if (uuid) foundUUIDs.add(uuid);
+                    updateStorageStatus(name, uuid);
+                } catch(e) {
+                    updateStorageStatus(name, 'Lỗi đọc');
+                }
+            }
+            return foundUUIDs.size > 0 ? [...foundUUIDs][0] : null;
+        }
+        
+        async function syncAllStorages(uuid) {
+            log(`<b>Bắt đầu đồng bộ hóa UUID:</b> ${uuid}`);
+            uuidDisplay.textContent = uuid;
+            for (const name in drivers) {
+                try {
+                    await drivers[name].write(uuid);
+                    updateStorageStatus(name, uuid);
+                } catch (e) {
+                     updateStorageStatus(name, 'Lỗi ghi');
+                }
+            }
+            log('Đồng bộ hóa hoàn tất.');
+        }
+
+        function updateStorageStatus(name, value) {
+            let item = document.getElementById(`storage-${name}`);
+            if (!item) {
+                item = document.createElement('div');
+                item.id = `storage-${name}`;
+                item.className = 'storage-item';
+                storageStatusEl.appendChild(item);
+            }
+            item.innerHTML = `<h3>${name}</h3><code>${value || 'Trống'}</code>`;
+        }
+        
+        // --- KHỞI CHẠY ---
+        
+        log('Bắt đầu khởi tạo định danh...');
+
+        // 1. Cố gắng đọc UUID từ các nơi hiện có
+        let definitiveUUID = await readAllStorages();
+
+        // 2. Nếu tìm thấy, đồng bộ hóa lại cho chắc. Nếu không, hỏi Service Worker
+        if (definitiveUUID) {
+            log(`Tìm thấy UUID <b>${definitiveUUID}</b>. Đồng bộ hóa lại...`);
+            await syncAllStorages(definitiveUUID);
+        } else {
+            log("Không tìm thấy UUID nào. Đang hỏi Service Worker...");
+            if ('serviceWorker' in navigator) {
+                await navigator.serviceWorker.register('ws.js');
+                await navigator.serviceWorker.ready;
+                navigator.serviceWorker.controller?.postMessage({ type: 'GET_UUID' });
+            }
+        }
+        
+        // 3. Luôn lắng nghe Service Worker để nhận UUID "chuẩn"
+        navigator.serviceWorker.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'UUID_RESPONSE') {
+                log(`Nhận được UUID từ Service Worker: <b>${event.data.uuid}</b>`);
+                syncAllStorages(event.data.uuid);
+            }
+        });
+
+    })();
+</script>
+
+</body>
+</html>

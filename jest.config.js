@@ -5,7 +5,7 @@ module.exports = {
       displayName: 'server',
       testEnvironment: 'node',
       testMatch: ['<rootDir>/tests/unit/server/**/*.+(ts|tsx|js)'],
-      moduleNameMapping: {
+      moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/src/$1'
       },
       transform: {
@@ -21,7 +21,7 @@ module.exports = {
       displayName: 'client',
       testEnvironment: 'node',
       testMatch: ['<rootDir>/tests/unit/client/**/*.+(ts|tsx|js)'],
-      moduleNameMapping: {
+      moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/src/$1'
       },
       transform: {
