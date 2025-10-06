@@ -119,7 +119,7 @@ app.get('/resources/vers', (req: Request, res: Response) => {
 
   const etagValue = Array.isArray(eTaggingValues) ? eTaggingValues[0] : eTaggingValues;
 
-  const cachedValue = etagValue ?? taggingService.getEtag(req);
+  const cachedValue = etagValue || taggingService.getEtag(req);
 
   if (cachedValue) {
     taggingService.setEtag(res, cachedValue);

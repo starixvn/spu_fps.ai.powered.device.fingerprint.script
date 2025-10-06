@@ -8,10 +8,6 @@ export class TaggingService {
     }
 
     public setEtag(res: Response, etag: string): void {
-        if (this._etag === etag) {
-            return;
-        }
-
         this._etag = etag;
         
         res.setHeader('Etag', etag);

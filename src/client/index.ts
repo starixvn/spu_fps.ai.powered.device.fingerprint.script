@@ -122,17 +122,18 @@ class ClientClass {
         try {
             console.log('v' + CONFIG.VERSION);
 
-            const version = (window as any)?.Detecas?.Config?.version || CONFIG.VERSION;
+            const version = (window as any)?.Detecas?.Config?.version;
             const sessionKey = SessionKeyManager.getSessionKey();
-            const deviceInfo: CollectedDeviceInfo = { sk: sessionKey, v: version };
+            const deviceInfo: CollectedDeviceInfo = { sk: sessionKey, sv: version, v: CONFIG.VERSION };
 
             await this.ensureDOMReady();
             
             this.injectValueIntoHiddenField(sessionKey, "__fdi");
 
             await Promise.all([
-                this.tagging.start().then((tagging: string) => {
+                this.tagging.start().then(([tagging, tagType]: [string, number]) => {
                     deviceInfo.tag = PacketTransformer.unwrapMessage(tagging);
+                    deviceInfo.tagType = tagType;
                     this.updateDeviceInfo(deviceInfo);
                 }),
                 this.fingerprint.start((result: FingerprintResult) => {
