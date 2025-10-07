@@ -4,9 +4,9 @@ import type { Bit } from '../../types';
 import { FingerprintSpecialValue } from "../../utils/consts";
 import { isSafari17OrNewer, isSamsungInternet, isChromium122OrNewer } from "../../utils/browser";
 
-const CANVAS_CACHE_KEY = "canvasCache";
-const CANVAS_SNAPSHOTS = 3; // Reduced for better performance
-const CANVAS_FINGERPRINT_TEXT = "Sphinx ${String.fromCharCode(55357, 56848)} quartz ${String.fromCharCode(55357, 56849)} vow ${String.fromCharCode(55357, 56850)}";
+const CANVAS_CACHE_KEY = "canvasCache_v1.0.2";
+const CANVAS_SNAPSHOTS = 3; 
+const CANVAS_FINGERPRINT_TEXT = `Sphinx ${String.fromCharCode(55357, 56848)} quartz ${String.fromCharCode(55357, 56849)} vow ${String.fromCharCode(55357, 56850)}`;
 
 type CanvasProtectionResult = {
   isProtected: boolean;
@@ -24,27 +24,26 @@ function doesBrowserPerformCanvasAntifingerprinting(): boolean {
 }
 
 export async function collectCanvas(): Promise<CanvasInfo> {
+  console.log('[Canvas] 🚀 collectCanvas() started');
   try {
-    // Detect Samsung Internet - skip canvas completely
-    if (isSamsungInternet() && isChromium122OrNewer()) {
-      return [FingerprintSpecialValue.ANTI_FINGERPRINTED, 1];
-    }
-
     let cachedValue: string | null = null;
     try {
       const rawCache = localStorage.getItem(CANVAS_CACHE_KEY);
 
       if (rawCache && rawCache.length > 0) {
         cachedValue = rawCache;
+        console.log('[Canvas] 📦 Cache found, length:', rawCache.length);
       }
     } catch (e) {
     }
 
     // Detect canvas protection
     const canvasProtection = await detectCanvasProtection();
+    console.log('[Canvas] 🔍 Protection result:', canvasProtection);
     
     // Handle canvas protection detection
     if (canvasProtection.isStrong || canvasProtection.isProtected) {
+      console.log('[Canvas] 🛡️ Canvas protection detected - returning ANTI_FINGERPRINTED');
       return [FingerprintSpecialValue.ANTI_FINGERPRINTED, 1];
     }
 
@@ -57,32 +56,48 @@ export async function collectCanvas(): Promise<CanvasInfo> {
       .map(result => (result as PromiseFulfilledResult<any>).value)
       .filter(Boolean);
 
+    console.log('[Canvas] 📊 Valid samples collected:', samples.length, 'out of', CANVAS_SNAPSHOTS);
+
     if (samples.length === 0) {
+      console.log('[Canvas] ⏰ No valid samples - returning TIMEOUT');
       return [FingerprintSpecialValue.TIMEOUT, 0];
     }
 
     const stableFeatures = computeFeatureMedian(samples);
     const value = MurmurHash128.hash128(JSON.stringify(stableFeatures));
+    console.log('[Canvas] 🔐 Generated hash:', value.substring(0, 16) + '...');
      
     if (cachedValue && cachedValue === value) {
+      console.log('[Canvas] 💾 Cache hit - returning cached value');
       return [cachedValue, 0];
     }
 
     try {
       localStorage.setItem(CANVAS_CACHE_KEY, value);
+      console.log('[Canvas] 💾 Cache saved successfully');
     } catch (e) {
     }
 
+    console.log('[Canvas] ✅ collectCanvas() completed successfully');
     return [value, 0];
   } catch (error) {
+    console.log('[Canvas] ❌ collectCanvas() error:', error);
     return [FingerprintSpecialValue.ERROR, 0];
   }
 }
 
 async function detectCanvasProtection(): Promise<CanvasProtectionResult> {
   try {
+
+    console.log('[Canvas] 🌐 User-Agent:', navigator.userAgent);
+    console.log('[Canvas] 🌐 Browser detection:');
+    console.log('[Canvas] 🌐 - isSafari17OrNewer():', isSafari17OrNewer());
+    console.log('[Canvas] 🌐 - isSamsungInternet():', isSamsungInternet());
+    console.log('[Canvas] 🌐 - isChromium122OrNewer():', isChromium122OrNewer());
+
     // Check for Safari 17+ anti-fingerprinting first
     if (doesBrowserPerformCanvasAntifingerprinting()) {
+      console.log('[Canvas] 🔍 Browser anti-fingerprinting detected');
       return { isProtected: true, isStrong: true };
     }
 
@@ -97,7 +112,10 @@ async function detectCanvasProtection(): Promise<CanvasProtectionResult> {
       // Use unified function in test mode
       drawUnifiedCanvas(ctx, canvas.width, canvas.height, true);
       
-      return canvas.toDataURL();
+      const dataURL = canvas.toDataURL();
+      console.log('[Canvas] 🔍 Canvas created - size:', canvas.width, 'x', canvas.height);
+      console.log('[Canvas] 🔍 Canvas dataURL preview:', dataURL.substring(0, 100) + '...');
+      return dataURL;
     };
 
     // Test current session consistency  
@@ -105,12 +123,19 @@ async function detectCanvasProtection(): Promise<CanvasProtectionResult> {
     const dataUrl2 = testCanvas();
     
     if (!dataUrl1 || !dataUrl2) {
+      console.log('[Canvas] 🔍 Invalid canvas dataURLs');
       return { isProtected: true, isStrong: false }; 
     }
 
     // Test in-session randomization 
     const isConsistent = dataUrl1 === dataUrl2;
+    console.log('[Canvas] 🔍 Canvas consistency test:', isConsistent ? 'PASS' : 'FAIL');
+    console.log('[Canvas] 🔍 DataURL1 length:', dataUrl1.length);
+    console.log('[Canvas] 🔍 DataURL2 length:', dataUrl2.length);
+    console.log('[Canvas] 🔍 DataURL1 hash:', MurmurHash128.hash128(dataUrl1).substring(0, 16));
+    console.log('[Canvas] 🔍 DataURL2 hash:', MurmurHash128.hash128(dataUrl2).substring(0, 16));
     if (!isConsistent) {
+      console.log('[Canvas] 🔍 Canvas randomization detected');
       return { isProtected: true, isStrong: false }; 
     }
 
@@ -126,13 +151,23 @@ async function detectCanvasProtection(): Promise<CanvasProtectionResult> {
 
     if (storedBaseline) {
       const baselineMatches = dataUrl1 === storedBaseline;
+      console.log('[Canvas] 🔍 Baseline comparison:', baselineMatches ? 'PASS' : 'FAIL');
+      console.log('[Canvas] 🔍 Current DataURL length:', dataUrl1.length);
+      console.log('[Canvas] 🔍 Stored baseline length:', storedBaseline.length);
+      console.log('[Canvas] 🔍 Current hash:', MurmurHash128.hash128(dataUrl1).substring(0, 16));
+      console.log('[Canvas] 🔍 Stored hash:', MurmurHash128.hash128(storedBaseline).substring(0, 16));
       if (!baselineMatches) {
         // Baseline mismatch is a strong indicator of Canvas Blocker extension
+        console.log('[Canvas] 🔍 Baseline mismatch - possible extension detected');
+        console.log('[Canvas] 🔍 DataURLs are different:', dataUrl1 !== storedBaseline);
         return { isProtected: true, isStrong: true };
       }
     } else {
       try {
         localStorage.setItem(CANVAS_BASELINE_KEY, dataUrl1);
+        console.log('[Canvas] 🔍 Baseline saved for future comparison');
+        console.log('[Canvas] 🔍 Saved baseline length:', dataUrl1.length);
+        console.log('[Canvas] 🔍 Saved baseline hash:', MurmurHash128.hash128(dataUrl1).substring(0, 16));
       } catch (e) {
         return { isProtected: true, isStrong: false };
       }
@@ -141,15 +176,18 @@ async function detectCanvasProtection(): Promise<CanvasProtectionResult> {
     // Check for suspicious canvas API modifications
     const isToDataURLFunction = typeof HTMLCanvasElement.prototype.toDataURL === 'function';
     if (!isToDataURLFunction) {
+      console.log('[Canvas] 🔍 toDataURL function modified');
       return { isProtected: true, isStrong: false };
     }
 
     // Check for extension-specific markers
     const extensionDetected = detectCanvasBlockerExtension();
     if (extensionDetected === 1) {
+      console.log('[Canvas] 🔍 Canvas blocker extension detected');
       return { isProtected: true, isStrong: false };
     }
 
+    console.log('[Canvas] 🔍 No protection detected - canvas is clean');
     return { isProtected: false, isStrong: false }; 
   } catch (error) {
     return { isProtected: true, isStrong: false }; 
@@ -206,7 +244,10 @@ async function getCanvasFeatures(): Promise<Record<string, any> | null> {
     canvas.height = 100;
 
     const ctx = canvas.getContext("2d");
-    if (!ctx) return null;
+    if (!ctx) {
+      console.log('[Canvas] 📊 Failed to get 2D context');
+      return null;
+    }
 
     // Use new high-entropy text
     drawComplexCanvas(ctx, canvas.width, canvas.height);
@@ -221,6 +262,7 @@ async function getCanvasFeatures(): Promise<Record<string, any> | null> {
       height: canvas.height,
       pixelSample: Array.from(ctx.getImageData(0, 0, 10, 10).data),
     };
+    console.log('[Canvas] 📊 Basic features collected, keys:', Object.keys(features).length);
 
     // WebGL features with caching
     try {
@@ -244,13 +286,17 @@ async function getCanvasFeatures(): Promise<Record<string, any> | null> {
             features.unmaskedRenderer = "blocked";
           }
         }
+        console.log('[Canvas] 📊 WebGL features collected, version:', features.webglVersion);
       } else {
         features.webglVersion = "webgl-unavailable";
+        console.log('[Canvas] 📊 WebGL not available');
       }
     } catch (error) {
       features.webglVersion = "webgl-error";
+      console.log('[Canvas] 📊 WebGL error:', error);
     }
 
+    console.log('[Canvas] 📊 Total features collected:', Object.keys(features).length);
     return features;
    } catch (error) {
      return null;
@@ -309,7 +355,7 @@ function drawUnifiedCanvas(
   
   // Use appropriate text based on mode
   const text = isTestMode 
-    ? "Sphinx ${String.fromCharCode(55357, 56848)} quartz" // Shorter for test
+    ? `Sphinx ${String.fromCharCode(55357, 56848)} quartz` // Shorter for test
     : CANVAS_FINGERPRINT_TEXT; // Full text for fingerprinting
   
   if (isTestMode) {
