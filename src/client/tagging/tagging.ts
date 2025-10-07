@@ -28,15 +28,15 @@ export class TaggingHandler {
 
         for (const handlerConfig of storageHandlers) {
             if(handlerConfig.oldKey != "") {
-                let value = await this.getStoredValue(handlerConfig.oldKey, handlerConfig.handler);
-                if (value && DeviceFactory.isValidTagging(value)) {
-                    return { key: handlerConfig.newKey, value: value, type: this.computeTaggingType(handlerConfig.newKey) };
+                let storedValue = await this.getStoredValue(handlerConfig.oldKey, handlerConfig.handler);
+                if (storedValue && DeviceFactory.isValidTagging(storedValue)) {
+                    return { key: handlerConfig.newKey, value: storedValue, type: this.computeTaggingType(handlerConfig.newKey) };
                 }                
             }
 
-            let value = await this.getStoredValue(handlerConfig.newKey, handlerConfig.handler);
-            if (value && DeviceFactory.isValidTagging(value)) {
-                return { key: handlerConfig.newKey, value: value, type: this.computeTaggingType(handlerConfig.newKey) };
+            let storedValue = await this.getStoredValue(handlerConfig.newKey, handlerConfig.handler);
+            if (storedValue && DeviceFactory.isValidTagging(storedValue)) {
+                return { key: handlerConfig.newKey, value: storedValue, type: this.computeTaggingType(handlerConfig.newKey) };
             }
         }
 

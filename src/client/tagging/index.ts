@@ -6,7 +6,7 @@ import { LocalStorageHandler } from './modules/localStorage';
 import { TaggingHandler } from './tagging';
 import { DEFAULT_TAGGING_TYPE, STORAGE_KEYS } from '../utils/constants';
 import { WindowNameHandler } from './modules/windowName';
-import { IStorageHandler } from './types';
+import { IStorageHandler, ITaggingResult } from './types';
 import { DeviceFactory } from '../utils/deviceFactory';
 
 export class TaggingClass {
@@ -27,11 +27,11 @@ export class TaggingClass {
     }
 
     public async syncStorageValue(): Promise<[string, number]> {        
-        let { key: storageKey, value: targetTaggingValue, type: targetTaggingType } = await TaggingHandler.getTaggingFromStorages();
+        const taggingResult: ITaggingResult = await TaggingHandler.getTaggingFromStorages();
 
-        if (!targetTaggingValue) {
-            targetTaggingValue = DeviceFactory.generateTagging();
-        }
+        const storageKey = taggingResult.key;
+        const targetTaggingValue = taggingResult.value || DeviceFactory.generateTagging();
+        const targetTaggingType = taggingResult.type || DEFAULT_TAGGING_TYPE.GENERATED;
 
         await Promise.all(
             this.storageHandlers.map(async (handlerConfig) => {
@@ -43,7 +43,7 @@ export class TaggingClass {
             })
         );
 
-        return [targetTaggingValue, targetTaggingType || DEFAULT_TAGGING_TYPE.GENERATED];
+        return [targetTaggingValue, targetTaggingType];
     }
 
     public async getTaggingValue() : Promise<string> {
