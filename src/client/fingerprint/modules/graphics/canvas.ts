@@ -89,9 +89,18 @@ async function detectCanvasProtection(): Promise<CanvasProtectionResult> {
     // Test in-session randomization 
     const isConsistent = dataUrl1 === dataUrl2;
     console.log('[Canvas Protection Detection] Canvas consistency test:', isConsistent);
+    console.log('[Canvas Protection Detection] DataURL1 length:', dataUrl1.length);
+    console.log('[Canvas Protection Detection] DataURL2 length:', dataUrl2.length);
+    
     if (!isConsistent) {
       console.log('[Canvas Protection Detection] Canvas randomization detected');
       return { isProtected: true, isStrong: false }; 
+    }
+
+    // Additional test: Check if canvas data is suspiciously short (Brave blocking)
+    if (dataUrl1.length < 100) {
+      console.log('[Canvas Protection Detection] Canvas data suspiciously short (likely blocked)');
+      return { isProtected: true, isStrong: false };
     }
 
     // Check for suspicious canvas API modifications
@@ -129,6 +138,7 @@ function detectCanvasBlockerExtension(): Bit {
       return 0;
     }
     
+    // Test 1: Check toDataURL function signature and behavior
     const originalToDataURL = HTMLCanvasElement.prototype.toDataURL.toString();
     const isLongString = originalToDataURL.length > 100;
     
@@ -139,7 +149,7 @@ function detectCanvasBlockerExtension(): Bit {
       return 1; 
     }
 
-    // Check for CanvasBlocker specific properties
+    // Test 2: Check for CanvasBlocker specific properties
     const cbNameInCanvas = 'cbName' in canvas;
     const cbInjectInCanvas = 'cbInject' in canvas;
     const canvasBlockerNameInWindow = 'canvasBlockerName' in window;
@@ -154,6 +164,13 @@ function detectCanvasBlockerExtension(): Bit {
     
     if (cbNameInCanvas || cbInjectInCanvas || canvasBlockerNameInWindow || canvasBlockerInWindow) {
       console.log('[Canvas Blocker Detection] Detected: CanvasBlocker extension properties found');
+      return 1;
+    }
+
+    // Test 3: Check for Brave's canvas blocking behavior
+    const braveTestResult = testBraveCanvasBlocking();
+    if (braveTestResult.detected) {
+      console.log('[Canvas Blocker Detection] Detected:', braveTestResult.reason);
       return 1;
     }
 
@@ -356,4 +373,63 @@ function drawUnifiedCanvas(
 function drawComplexCanvas(ctx: CanvasRenderingContext2D, width: number, height: number) {
   // Use unified function in full mode
   drawUnifiedCanvas(ctx, width, height, false);
+}
+
+function testBraveCanvasBlocking(): { detected: boolean; reason: string } {
+  try {
+    const testCanvas1 = document.createElement('canvas');
+    testCanvas1.width = 100;
+    testCanvas1.height = 50;
+    const testCtx1 = testCanvas1.getContext('2d');
+    if (testCtx1) {
+      testCtx1.fillStyle = 'red';
+      testCtx1.fillRect(0, 0, 100, 50);
+      testCtx1.fillStyle = 'blue';
+      testCtx1.fillRect(50, 0, 50, 50);
+    }
+    
+    const testCanvas2 = document.createElement('canvas');
+    testCanvas2.width = 100;
+    testCanvas2.height = 50;
+    const testCtx2 = testCanvas2.getContext('2d');
+    if (testCtx2) {
+      testCtx2.fillStyle = 'green';
+      testCtx2.fillRect(0, 0, 100, 50);
+      testCtx2.fillStyle = 'yellow';
+      testCtx2.fillRect(50, 0, 50, 50);
+    }
+    
+    const dataUrl1 = testCanvas1.toDataURL();
+    const dataUrl2 = testCanvas2.toDataURL();
+    
+    console.log('[Canvas Blocker Detection] Brave test - Canvas1 dataUrl length:', dataUrl1.length);
+    console.log('[Canvas Blocker Detection] Brave test - Canvas2 dataUrl length:', dataUrl2.length);
+    console.log('[Canvas Blocker Detection] Brave test - DataURLs are identical:', dataUrl1 === dataUrl2);
+    
+    if (dataUrl1 === dataUrl2 && dataUrl1.length > 0) {
+      return { 
+        detected: true, 
+        reason: 'Brave canvas blocking (identical dataURLs for different drawings)' 
+      };
+    }
+
+    if (dataUrl1.length < 50 || dataUrl2.length < 50) {
+      return { 
+        detected: true, 
+        reason: 'Very short dataURLs (likely blocked)' 
+      };
+    }
+
+    const isBraveCanvasBlocked = dataUrl1.includes('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==');
+    if (isBraveCanvasBlocked) {
+      return { 
+        detected: true, 
+        reason: 'Brave transparent canvas pattern' 
+      };
+    }
+
+    return { detected: false, reason: '' };
+  } catch (error) {
+    return { detected: true, reason: 'Error during Brave canvas test' };
+  }
 }
