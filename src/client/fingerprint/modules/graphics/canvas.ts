@@ -26,9 +26,11 @@ export async function collectCanvas(): Promise<CanvasInfo> {
   try {
     // Detect canvas protection
     const canvasProtection = await detectCanvasProtection();
+    console.log('[Canvas Collection] Canvas protection result:', canvasProtection);
     
     // Handle canvas protection detection
     if (canvasProtection.isStrong || canvasProtection.isProtected) {
+      console.log('[Canvas Collection] Canvas is protected, returning anti-fingerprint value');
       return [FingerprintSpecialValue.ANTI_FINGERPRINTED, 1];
     }
 
@@ -57,6 +59,7 @@ export async function collectCanvas(): Promise<CanvasInfo> {
 async function detectCanvasProtection(): Promise<CanvasProtectionResult> {
   try {
     if (doesBrowserPerformCanvasAntifingerprinting()) {
+      console.log('[Canvas Protection Detection] Browser has built-in anti-fingerprinting');
       return { isProtected: true, isStrong: true };
     }
 
@@ -79,29 +82,39 @@ async function detectCanvasProtection(): Promise<CanvasProtectionResult> {
     const dataUrl2 = testCanvas();
     
     if (!dataUrl1 || !dataUrl2) {
+      console.log('[Canvas Protection Detection] Canvas test failed - no data URLs generated');
       return { isProtected: true, isStrong: false }; 
     }
 
     // Test in-session randomization 
     const isConsistent = dataUrl1 === dataUrl2;
+    console.log('[Canvas Protection Detection] Canvas consistency test:', isConsistent);
     if (!isConsistent) {
+      console.log('[Canvas Protection Detection] Canvas randomization detected');
       return { isProtected: true, isStrong: false }; 
     }
 
     // Check for suspicious canvas API modifications
     const isToDataURLFunction = typeof HTMLCanvasElement.prototype.toDataURL === 'function';
+    console.log('[Canvas Protection Detection] toDataURL function check:', isToDataURLFunction);
     if (!isToDataURLFunction) {
+      console.log('[Canvas Protection Detection] toDataURL function modified');
       return { isProtected: true, isStrong: false };
     }
 
     // Check for extension-specific markers
+    console.log('[Canvas Protection Detection] Checking for canvas blocker extension...');
     const extensionDetected = detectCanvasBlockerExtension();
+    console.log('[Canvas Protection Detection] Extension detection result:', extensionDetected);
     if (extensionDetected === 1) {
+      console.log('[Canvas Protection Detection] Canvas blocker extension detected');
       return { isProtected: true, isStrong: false };
     }
 
+    console.log('[Canvas Protection Detection] No canvas protection detected');
     return { isProtected: false, isStrong: false }; 
   } catch (error) {
+    console.log('[Canvas Protection Detection] Error during detection:', error);
     return { isProtected: true, isStrong: false }; 
   }
 }
@@ -112,13 +125,17 @@ function detectCanvasBlockerExtension(): Bit {
     const ctx = canvas.getContext('2d');
     
     if (!ctx) {
+      console.log('[Canvas Blocker Detection] No 2D context available');
       return 0;
     }
     
     const originalToDataURL = HTMLCanvasElement.prototype.toDataURL.toString();
     const isLongString = originalToDataURL.length > 100;
+    
+    console.log('[Canvas Blocker Detection] toDataURL function length:', originalToDataURL.length, 'isLongString:', isLongString);
 
     if (isLongString) {
+      console.log('[Canvas Blocker Detection] Detected: Long toDataURL function (likely blocked)');
       return 1; 
     }
 
@@ -128,12 +145,22 @@ function detectCanvasBlockerExtension(): Bit {
     const canvasBlockerNameInWindow = 'canvasBlockerName' in window;
     const canvasBlockerInWindow = 'canvasBlocker' in window;
     
+    console.log('[Canvas Blocker Detection] Canvas properties:', {
+      cbNameInCanvas,
+      cbInjectInCanvas,
+      canvasBlockerNameInWindow,
+      canvasBlockerInWindow
+    });
+    
     if (cbNameInCanvas || cbInjectInCanvas || canvasBlockerNameInWindow || canvasBlockerInWindow) {
+      console.log('[Canvas Blocker Detection] Detected: CanvasBlocker extension properties found');
       return 1;
     }
 
+    console.log('[Canvas Blocker Detection] No canvas blocker detected');
     return 0;
   } catch (error) {
+    console.log('[Canvas Blocker Detection] Error during detection:', error);
     return 1; 
   }
 }
