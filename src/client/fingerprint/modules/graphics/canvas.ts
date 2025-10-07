@@ -4,7 +4,6 @@ import type { Bit } from '../../types';
 import { FingerprintSpecialValue } from "../../utils/consts";
 import { isSafari17OrNewer, isSamsungInternet, isChromium122OrNewer } from "../../utils/browser";
 
-const CANVAS_CACHE_KEY = "canvasCache_v1.0.2";
 const CANVAS_SNAPSHOTS = 3; 
 const CANVAS_FINGERPRINT_TEXT = `Sphinx ${String.fromCharCode(55357, 56848)} quartz ${String.fromCharCode(55357, 56849)} vow ${String.fromCharCode(55357, 56850)}`;
 
@@ -26,17 +25,6 @@ function doesBrowserPerformCanvasAntifingerprinting(): boolean {
 export async function collectCanvas(): Promise<CanvasInfo> {
   console.log('[Canvas] 🚀 collectCanvas() started');
   try {
-    let cachedValue: string | null = null;
-    try {
-      const rawCache = localStorage.getItem(CANVAS_CACHE_KEY);
-
-      if (rawCache && rawCache.length > 0) {
-        cachedValue = rawCache;
-        console.log('[Canvas] 📦 Cache found, length:', rawCache.length);
-      }
-    } catch (e) {
-    }
-
     // Detect canvas protection
     const canvasProtection = await detectCanvasProtection();
     console.log('[Canvas] 🔍 Protection result:', canvasProtection);
@@ -65,19 +53,8 @@ export async function collectCanvas(): Promise<CanvasInfo> {
 
     const stableFeatures = computeFeatureMedian(samples);
     const value = MurmurHash128.hash128(JSON.stringify(stableFeatures));
-    console.log('[Canvas] 🔐 Generated hash:', value.substring(0, 16) + '...');
+    console.log('[Canvas] 🔐 Generated hash:', value);
      
-    if (cachedValue && cachedValue === value) {
-      console.log('[Canvas] 💾 Cache hit - returning cached value');
-      return [cachedValue, 0];
-    }
-
-    try {
-      localStorage.setItem(CANVAS_CACHE_KEY, value);
-      console.log('[Canvas] 💾 Cache saved successfully');
-    } catch (e) {
-    }
-
     console.log('[Canvas] ✅ collectCanvas() completed successfully');
     return [value, 0];
   } catch (error) {
@@ -137,40 +114,6 @@ async function detectCanvasProtection(): Promise<CanvasProtectionResult> {
     if (!isConsistent) {
       console.log('[Canvas] 🔍 Canvas randomization detected');
       return { isProtected: true, isStrong: false }; 
-    }
-
-    // Compare with previous sessions 
-    const CANVAS_BASELINE_KEY = "canvasBaseline";
-    let storedBaseline: string | null = null;
-    
-    try {
-      storedBaseline = localStorage.getItem(CANVAS_BASELINE_KEY);
-    } catch (e) {
-      return { isProtected: true, isStrong: false };
-    }
-
-    if (storedBaseline) {
-      const baselineMatches = dataUrl1 === storedBaseline;
-      console.log('[Canvas] 🔍 Baseline comparison:', baselineMatches ? 'PASS' : 'FAIL');
-      console.log('[Canvas] 🔍 Current DataURL length:', dataUrl1.length);
-      console.log('[Canvas] 🔍 Stored baseline length:', storedBaseline.length);
-      console.log('[Canvas] 🔍 Current hash:', MurmurHash128.hash128(dataUrl1).substring(0, 16));
-      console.log('[Canvas] 🔍 Stored hash:', MurmurHash128.hash128(storedBaseline).substring(0, 16));
-      if (!baselineMatches) {
-        // Baseline mismatch is a strong indicator of Canvas Blocker extension
-        console.log('[Canvas] 🔍 Baseline mismatch - possible extension detected');
-        console.log('[Canvas] 🔍 DataURLs are different:', dataUrl1 !== storedBaseline);
-        return { isProtected: true, isStrong: true };
-      }
-    } else {
-      try {
-        localStorage.setItem(CANVAS_BASELINE_KEY, dataUrl1);
-        console.log('[Canvas] 🔍 Baseline saved for future comparison');
-        console.log('[Canvas] 🔍 Saved baseline length:', dataUrl1.length);
-        console.log('[Canvas] 🔍 Saved baseline hash:', MurmurHash128.hash128(dataUrl1).substring(0, 16));
-      } catch (e) {
-        return { isProtected: true, isStrong: false };
-      }
     }
 
     // Check for suspicious canvas API modifications
