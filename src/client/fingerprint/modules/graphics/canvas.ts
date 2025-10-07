@@ -2,10 +2,11 @@ import { MurmurHash128 } from "../../utils/hash";
 import type { CanvasInfo } from "../../types";
 import type { Bit } from '../../types';
 import { FingerprintSpecialValue } from "../../utils/consts";
-import { isWebKit, isWebKit616OrNewer, isSafariWebKit, isSafari17OrNewer } from "../../utils/browser";
+import { isSafari17OrNewer, isSamsungInternet, isChromium122OrNewer } from "../../utils/browser";
 
 const CANVAS_CACHE_KEY = "canvasCache";
-const CANVAS_SNAPSHOTS = 5;
+const CANVAS_SNAPSHOTS = 3; // Reduced for better performance
+const CANVAS_FINGERPRINT_TEXT = "Sphinx ${String.fromCharCode(55357, 56848)} quartz ${String.fromCharCode(55357, 56849)} vow ${String.fromCharCode(55357, 56850)}";
 
 type CanvasProtectionResult = {
   isProtected: boolean;
@@ -15,11 +16,20 @@ type CanvasProtectionResult = {
 function doesBrowserPerformCanvasAntifingerprinting(): boolean {
   // Safari 17+ has enhanced anti-fingerprinting for canvas
   if (isSafari17OrNewer()) return true;
+  
+  // Samsung Internet 26+ has Smart Anti-Tracking
+  if (isSamsungInternet() && isChromium122OrNewer()) return true;
+  
   return false;
 }
 
 export async function collectCanvas(): Promise<CanvasInfo> {
   try {
+    // Detect Samsung Internet - skip canvas completely
+    if (isSamsungInternet() && isChromium122OrNewer()) {
+      return [FingerprintSpecialValue.ANTI_FINGERPRINTED, 1];
+    }
+
     let cachedValue: string | null = null;
     try {
       const rawCache = localStorage.getItem(CANVAS_CACHE_KEY);
@@ -38,8 +48,14 @@ export async function collectCanvas(): Promise<CanvasInfo> {
       return [FingerprintSpecialValue.ANTI_FINGERPRINTED, 1];
     }
 
-    const snapshotPromises = Array.from({ length: CANVAS_SNAPSHOTS }, () => getCanvasFeatures());
-    const samples = (await Promise.all(snapshotPromises)).filter(Boolean) as any[];
+    // Enhanced performance with timeout handling
+    const snapshotPromises = Array.from({ length: CANVAS_SNAPSHOTS }, () => getCanvasFeaturesWithTimeout());
+    const results = await Promise.allSettled(snapshotPromises);
+    
+    const samples = results
+      .filter(result => result.status === 'fulfilled')
+      .map(result => (result as PromiseFulfilledResult<any>).value)
+      .filter(Boolean);
 
     if (samples.length === 0) {
       return [FingerprintSpecialValue.TIMEOUT, 0];
@@ -179,6 +195,16 @@ function detectCanvasBlockerExtension(): Bit {
   }
 }
 
+// Enhanced function with timeout
+async function getCanvasFeaturesWithTimeout(): Promise<Record<string, any> | null> {
+  return Promise.race([
+    getCanvasFeatures(),
+    new Promise<null>((_, reject) => 
+      setTimeout(() => reject(new Error('Canvas timeout')), 2000)
+    )
+  ]).catch(() => null);
+}
+
 async function getCanvasFeatures(): Promise<Record<string, any> | null> {
   try {
     const canvas = document.createElement("canvas");
@@ -189,7 +215,8 @@ async function getCanvasFeatures(): Promise<Record<string, any> | null> {
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
 
-    drawComplexCanvas(ctx, "Canvas Test", canvas.width, canvas.height);
+    // Use new high-entropy text
+    drawComplexCanvas(ctx, canvas.width, canvas.height);
 
     const features: Record<string, any> = {
       font: ctx.font,
@@ -202,9 +229,9 @@ async function getCanvasFeatures(): Promise<Record<string, any> | null> {
       pixelSample: Array.from(ctx.getImageData(0, 0, 10, 10).data),
     };
 
-    // WebGL features
+    // WebGL features with caching
     try {
-      const gl = (canvas.getContext("webgl") || canvas.getContext("experimental-webgl")) as WebGLRenderingContext | null;
+      const gl = getWebGLContext(canvas);
       
       if (gl) {
         features.webglVersion = gl.getParameter(gl.VERSION);
@@ -237,6 +264,17 @@ async function getCanvasFeatures(): Promise<Record<string, any> | null> {
    }
 }
 
+// WebGL context caching for performance
+let webglContextCache: WebGLRenderingContext | null = null;
+
+function getWebGLContext(canvas: HTMLCanvasElement): WebGLRenderingContext | null {
+  if (webglContextCache) return webglContextCache;
+  
+  const context = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+  webglContextCache = context as WebGLRenderingContext | null;
+  return webglContextCache;
+}
+
 function computeFeatureMedian(samples: any[]): any {
   const validSamples = samples.filter((s): s is Record<string, any> => s && typeof s === 'object');
   if (validSamples.length === 0) return {};
@@ -267,28 +305,47 @@ function computeFeatureMedian(samples: any[]): any {
   return median;
 }
 
-// Draw canvas
-function drawComplexCanvas(ctx: CanvasRenderingContext2D, text: string, width: number, height: number) {
+// Enhanced canvas drawing with new high-entropy text
+function drawComplexCanvas(ctx: CanvasRenderingContext2D, width: number, height: number) {
   ctx.clearRect(0, 0, width, height);
-  ctx.font = "20px Arial";
+  
+  // Use fixed high-entropy text
+  const text = CANVAS_FINGERPRINT_TEXT;
+  
+  // Primary text with Times New Roman (high entropy serif font)
+  ctx.font = "20px Times New Roman, Times, serif";
   ctx.textBaseline = "middle";
   ctx.fillStyle = "rgb(255,0,255)";
   ctx.fillText(text, 10, height / 2);
 
+  // Secondary text with Georgia (another high entropy serif)
+  ctx.font = "18px Georgia, Times New Roman, serif";
+  ctx.fillStyle = "rgba(0,100,255,0.7)";
+  ctx.fillText(text, 10, height / 2 + 30);
+
+  // Tertiary text with Palatino (complex serif font)
+  ctx.font = "16px Palatino, Times New Roman, serif";
+  ctx.fillStyle = "rgb(255,255,0)";
+  ctx.fillText(text, 10, height / 2 - 30);
+
+  // Background rectangle
   ctx.fillStyle = "rgba(0,100,255,0.7)";
   ctx.fillRect(50, 10, 120, 60);
 
+  // Circle with blend mode
   ctx.globalCompositeOperation = "multiply";
   ctx.fillStyle = "rgb(255,255,0)";
   ctx.beginPath();
   ctx.arc(200, height / 2, 30, 0, Math.PI * 2);
   ctx.fill();
 
+  // Gradient background
   const gradient = ctx.createLinearGradient(0, 0, width, height);
   gradient.addColorStop(0, "rgba(255,0,0,0.3)");
   gradient.addColorStop(1, "rgba(0,0,255,0.3)");
   ctx.fillStyle = gradient;
 
+  // Shadow effects
   ctx.shadowColor = "rgba(0,0,0,0.5)";
   ctx.shadowBlur = 5;
   ctx.shadowOffsetX = 2;
