@@ -4,12 +4,12 @@ import { MurmurHash128 } from '../../../../../../src/client/fingerprint/utils/ha
 
 // Mock browser detection functions
 jest.mock('../../../../../../src/client/fingerprint/utils/browser', () => ({
-  isWebKit: jest.fn(),
-  isWebKit616OrNewer: jest.fn(),
-  isSafariWebKit: jest.fn()
+  isSafari17OrNewer: jest.fn(),
+  isSamsungInternet: jest.fn(),
+  isChromium122OrNewer: jest.fn()
 }));
 
-import { isWebKit, isWebKit616OrNewer, isSafariWebKit } from '../../../../../../src/client/fingerprint/utils/browser';
+import { isSafari17OrNewer, isSamsungInternet, isChromium122OrNewer } from '../../../../../../src/client/fingerprint/utils/browser';
 
 // Mock MurmurHash128
 jest.mock('../../../../../../src/client/fingerprint/utils/hash', () => ({
@@ -71,9 +71,9 @@ describe('Canvas Module', () => {
     jest.clearAllMocks();
     
     // Mock browser detection functions to return false (no anti-fingerprinting)
-    (isWebKit as jest.Mock).mockReturnValue(0);
-    (isWebKit616OrNewer as jest.Mock).mockReturnValue(0);
-    (isSafariWebKit as jest.Mock).mockReturnValue(0);
+    (isSafari17OrNewer as jest.Mock).mockReturnValue(false);
+    (isSamsungInternet as jest.Mock).mockReturnValue(false);
+    (isChromium122OrNewer as jest.Mock).mockReturnValue(false);
     
     // Setup global mocks
     Object.defineProperty(global, 'localStorage', {
@@ -151,22 +151,16 @@ describe('Canvas Module', () => {
 
   describe('collectCanvas', () => {
     it('should return cached value when available', async () => {
-      // Arrange
-      const cachedValue = 'cached-canvas-hash';
-      mockLocalStorage.getItem.mockImplementation((key: string) => {
-        if (key === 'canvasBaseline') return 'data:image/png;base64,consistent-baseline';
-        if (key === 'canvasCache') return cachedValue; // Return cached value
-        return null;
-      });
-      (MurmurHash128.hash128 as jest.Mock).mockReturnValue(cachedValue);
-      (MurmurHash128.hash128 as jest.Mock).mockReturnValue(cachedValue);
+      // Arrange - Since we removed localStorage, this test should just verify normal operation
+      const expectedHash = 'cached-canvas-hash';
+      (MurmurHash128.hash128 as jest.Mock).mockReturnValue(expectedHash);
 
       // Act
       const result = await collectCanvas();
 
       // Assert
-      expect(result).toEqual([cachedValue, 0]);
-      expect(mockLocalStorage.getItem).toHaveBeenCalledWith('canvasCache');
+      expect(result).toEqual([expectedHash, 0]);
+      expect(mockCanvas.getContext).toHaveBeenCalledWith('2d');
     });
 
     it('should generate new canvas fingerprint when no cache', async () => {
@@ -180,16 +174,11 @@ describe('Canvas Module', () => {
       // Assert
       expect(result).toEqual([expectedHash, 0]);
       expect(mockCanvas.getContext).toHaveBeenCalledWith('2d');
-      expect(mockLocalStorage.setItem).toHaveBeenCalledWith('canvasCache', expectedHash);
     });
 
     it('should handle canvas protection detected', async () => {
-      // Arrange - Simulate canvas protection by making toDataURL return different values
-      let callCount = 0;
-      mockCanvas.toDataURL.mockImplementation(() => {
-        callCount++;
-        return callCount === 1 ? 'data:image/png;base64,baseline' : 'data:image/png;base64,different';
-      });
+      // Arrange - Simulate canvas protection by enabling browser anti-fingerprinting
+      (isSafari17OrNewer as jest.Mock).mockReturnValue(true);
 
       // Act
       const result = await collectCanvas();
@@ -257,16 +246,15 @@ describe('Canvas Module', () => {
     });
 
     it('should handle localStorage errors gracefully', async () => {
-      // Arrange - localStorage error during canvas protection will trigger protection
-      mockLocalStorage.getItem.mockImplementation(() => {
-        throw new Error('localStorage error');
-      });
+      // Arrange - Since we removed localStorage, this test should verify normal operation
+      const expectedHash = 'test-hash-123';
+      (MurmurHash128.hash128 as jest.Mock).mockReturnValue(expectedHash);
 
       // Act
       const result = await collectCanvas();
 
-      // Assert - localStorage error triggers canvas protection
-      expect(result).toEqual([FingerprintSpecialValue.ANTI_FINGERPRINTED, 1]);
+      // Assert - Should work normally without localStorage
+      expect(result).toEqual([expectedHash, 0]);
     });
 
     it('should handle localStorage setItem errors gracefully', async () => {
@@ -347,22 +335,18 @@ describe('Canvas Module', () => {
         data: new Uint8ClampedArray([0, 255, 0, 255, 255, 0, 0, 255]) // Different pixel data
       });
 
-      // Act - Second call (clear cache first)
-      mockLocalStorage.getItem.mockReturnValue(null);
+      // Act - Second call
       const result2 = await collectCanvas();
 
-      // Assert - First call succeeds, second call may trigger protection due to mock inconsistency
+      // Assert - Both calls should succeed with different hashes
       expect(result1).toEqual([hash1, 0]);
-      // Second call may trigger protection due to different mock state
-      expect(result2).toEqual([FingerprintSpecialValue.ANTI_FINGERPRINTED, 1]);
+      expect(result2).toEqual([hash2, 0]);
     });
 
     it('should handle strong canvas protection', async () => {
-      // Arrange - Simulate strong protection with consistent blank image
-      mockCanvas.toDataURL.mockReturnValue('data:image/png;base64,blank');
-      mockContext.getImageData.mockReturnValue({
-        data: new Uint8ClampedArray(800).fill(0) // All zeros - blank canvas
-      });
+      // Arrange - Simulate strong protection by enabling Samsung Internet anti-fingerprinting
+      (isSamsungInternet as jest.Mock).mockReturnValue(true);
+      (isChromium122OrNewer as jest.Mock).mockReturnValue(true);
 
       // Act
       const result = await collectCanvas();
@@ -375,12 +359,10 @@ describe('Canvas Module', () => {
       // Arrange - Reset mock and set specific return value for this test
       jest.clearAllMocks();
       
-      // Re-setup mocks after clearing
-      mockLocalStorage.getItem.mockImplementation((key: string) => {
-        if (key === 'canvasBaseline') return 'data:image/png;base64,consistent-baseline';
-        if (key === 'canvasCache') return null;
-        return null;
-      });
+      // Re-setup browser mocks after clearing
+      (isSafari17OrNewer as jest.Mock).mockReturnValue(false);
+      (isSamsungInternet as jest.Mock).mockReturnValue(false);
+      (isChromium122OrNewer as jest.Mock).mockReturnValue(false);
       
       mockCreateElement.mockReturnValue({
         ...mockCanvas,
@@ -435,6 +417,11 @@ describe('Canvas Module', () => {
       mockCanvas.height = 150;
       const expectedHash = 'dimension-hash';
       (MurmurHash128.hash128 as jest.Mock).mockReturnValue(expectedHash);
+      
+      // Ensure browser mocks are set to allow normal operation
+      (isSafari17OrNewer as jest.Mock).mockReturnValue(false);
+      (isSamsungInternet as jest.Mock).mockReturnValue(false);
+      (isChromium122OrNewer as jest.Mock).mockReturnValue(false);
 
       // Act
       const result = await collectCanvas();
@@ -445,12 +432,8 @@ describe('Canvas Module', () => {
     });
 
     it('should handle async canvas protection detection', async () => {
-      // Arrange - Use Promise to simulate async detection
-      mockCanvas.toDataURL.mockImplementation(() => {
-        return new Promise(resolve => {
-          setTimeout(() => resolve('data:image/png;base64,async'), 10);
-        });
-      });
+      // Arrange - Simulate async protection detection by enabling browser anti-fingerprinting
+      (isSafari17OrNewer as jest.Mock).mockReturnValue(true);
 
       // Act
       const result = await collectCanvas();
@@ -459,6 +442,7 @@ describe('Canvas Module', () => {
       expect(Array.isArray(result)).toBe(true);
       expect(result).toHaveLength(2);
       expect(typeof result[1]).toBe('number');
+      expect(result[0]).toBe(FingerprintSpecialValue.ANTI_FINGERPRINTED);
     });
   });
 });
