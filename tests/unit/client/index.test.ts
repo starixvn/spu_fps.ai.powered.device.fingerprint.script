@@ -3,7 +3,7 @@
  */
 
 // Mock all dependencies before imports
-jest.mock('../../../src/client/dom', () => ({
+jest.mock('../../../src/client/utils/dom', () => ({
   DOMUtils: {
     injectValueIntoHiddenField: jest.fn()
   }
@@ -56,7 +56,7 @@ jest.mock('../../../src/client/tagging', () => ({
 }));
 
 // Import mocked modules
-import { DOMUtils } from '../../../src/client/dom';
+import { DOMUtils } from '../../../src/client/utils/dom';
 import { Base64Encoder } from '../../../src/client/fingerprint/utils/hash';
 import { PacketTransformer, GuidGenerator } from '../../../src/client/utils/hash';
 import { SessionKeyManager } from '../../../src/client/sessionKey';

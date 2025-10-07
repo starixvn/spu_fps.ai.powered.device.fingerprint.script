@@ -67,10 +67,9 @@ describe('ETagHandler', () => {
       
       const mockResponse = {
         ok: true,
-        json: jest.fn().mockResolvedValue({
-          success: true,
-          t: etagValue
-        })
+        headers: {
+          get: jest.fn().mockReturnValue(`"${etagValue}"`)
+        }
       };
       mockFetch.mockResolvedValue(mockResponse);
       
@@ -97,31 +96,29 @@ describe('ETagHandler', () => {
     it('should return null when response data is invalid', async () => {
       const mockResponse = {
         ok: true,
-        json: jest.fn().mockResolvedValue({
-          success: false,
-          t: null
-        })
+        headers: {
+          get: jest.fn().mockReturnValue(null)
+        }
       };
       mockFetch.mockResolvedValue(mockResponse);
       
       const result = await etagHandler.get('testKey');
       
-      expect(result).toBeNull();
+      expect(result).toBe('');
     });
 
     it('should return null when response data lacks t property', async () => {
       const mockResponse = {
         ok: true,
-        json: jest.fn().mockResolvedValue({
-          success: true
-          // Missing 't' property
-        })
+        headers: {
+          get: jest.fn().mockReturnValue('')
+        }
       };
       mockFetch.mockResolvedValue(mockResponse);
       
       const result = await etagHandler.get('testKey');
       
-      expect(result).toBeNull();
+      expect(result).toBe('');
     });
 
     it('should return null when fetch throws an error', async () => {
@@ -135,13 +132,15 @@ describe('ETagHandler', () => {
     it('should return null when JSON parsing fails', async () => {
       const mockResponse = {
         ok: true,
-        json: jest.fn().mockRejectedValue(new Error('Invalid JSON'))
+        headers: {
+          get: jest.fn().mockReturnValue(null)
+        }
       };
       mockFetch.mockResolvedValue(mockResponse);
       
       const result = await etagHandler.get('testKey');
       
-      expect(result).toBeNull();
+      expect(result).toBe('');
     });
   });
 
@@ -165,14 +164,9 @@ describe('ETagHandler', () => {
 
     it('should fetch and return true when API responds successfully', async () => {
       const newValue = 'new-etag-456';
-      const fetchedEtag = 'fetched-etag-789';
       
       const mockResponse = {
-        ok: true,
-        json: jest.fn().mockResolvedValue({
-          success: true,
-          t: fetchedEtag
-        })
+        ok: true
       };
       mockFetch.mockResolvedValue(mockResponse);
       
@@ -205,11 +199,7 @@ describe('ETagHandler', () => {
       const newValue = 'new-etag-456';
       
       const mockResponse = {
-        ok: true,
-        json: jest.fn().mockResolvedValue({
-          success: false,
-          t: null
-        })
+        ok: false
       };
       mockFetch.mockResolvedValue(mockResponse);
       
@@ -237,28 +227,23 @@ describe('ETagHandler', () => {
       expect(etagHandler.available()).toBe(true);
       
       // Mock successful fetch for get
-      let mockResponse = {
+      const getMockResponse = {
         ok: true,
-        json: jest.fn().mockResolvedValue({
-          success: true,
-          t: etagValue
-        })
+        headers: {
+          get: jest.fn().mockReturnValue(`"${etagValue}"`)
+        }
       };
-      mockFetch.mockResolvedValue(mockResponse);
+      mockFetch.mockResolvedValue(getMockResponse);
       
       // Get etag (should fetch from API)
       const getResult = await etagHandler.get('testKey');
       expect(getResult).toBe(etagValue);
       
       // Mock successful fetch for set
-      mockResponse = {
-        ok: true,
-        json: jest.fn().mockResolvedValue({
-          success: true,
-          t: 'set-response-etag'
-        })
+      const setMockResponse = {
+        ok: true
       };
-      mockFetch.mockResolvedValue(mockResponse);
+      mockFetch.mockResolvedValue(setMockResponse);
       
       // Set etag (should also fetch from API)
       const setResult = await etagHandler.set('testKey', 'new-value');
@@ -275,10 +260,9 @@ describe('ETagHandler', () => {
       // First get
       let mockResponse = {
         ok: true,
-        json: jest.fn().mockResolvedValue({
-          success: true,
-          t: firstEtag
-        })
+        headers: {
+          get: jest.fn().mockReturnValue(`"${firstEtag}"`)
+        }
       };
       mockFetch.mockResolvedValue(mockResponse);
       
@@ -288,10 +272,9 @@ describe('ETagHandler', () => {
       // Second get with different response
       mockResponse = {
         ok: true,
-        json: jest.fn().mockResolvedValue({
-          success: true,
-          t: secondEtag
-        })
+        headers: {
+          get: jest.fn().mockReturnValue(`"${secondEtag}"`)
+        }
       };
       mockFetch.mockResolvedValue(mockResponse);
       
@@ -306,11 +289,7 @@ describe('ETagHandler', () => {
       const setValue = 'test-set-value';
       
       const mockResponse = {
-        ok: true,
-        json: jest.fn().mockResolvedValue({
-          success: true,
-          t: 'response-etag'
-        })
+        ok: true
       };
       mockFetch.mockResolvedValue(mockResponse);
       
@@ -332,23 +311,22 @@ describe('ETagHandler', () => {
       let result = await etagHandler.get('testKey');
       expect(result).toBeNull();
       
-      // Test with response missing json method
+      // Test with response missing headers
       mockFetch.mockResolvedValue({ ok: true });
       result = await etagHandler.get('testKey');
       expect(result).toBeNull();
       
-      // Test with malformed JSON structure
+      // Test with malformed headers structure
       const mockResponse = {
         ok: true,
-        json: jest.fn().mockResolvedValue({
-          // Missing success and t properties
-          data: 'some data'
-        })
+        headers: {
+          get: jest.fn().mockReturnValue(null)
+        }
       };
       mockFetch.mockResolvedValue(mockResponse);
       
       result = await etagHandler.get('testKey');
-      expect(result).toBeNull();
+      expect(result).toBe('');
     });
   });
 });

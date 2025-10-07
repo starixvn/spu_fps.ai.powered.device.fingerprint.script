@@ -3,10 +3,11 @@ import { CookiesHandler } from './modules/cookie';
 import { ETagHandler } from './modules/etag';
 import { IndexedDBHandler } from './modules/indexedDB';
 import { LocalStorageHandler } from './modules/localStorage';
-import { TaggingHandler, STORAGE_KEYS } from './tagging';
+import { TaggingHandler } from './tagging';
+import { DEFAULT_TAGGING_TYPE, STORAGE_KEYS } from '../utils/constants';
 import { WindowNameHandler } from './modules/windowName';
 import { IStorageHandler } from './types';
-import { DeviceFactory } from '../deviceFactory';
+import { DeviceFactory } from '../utils/deviceFactory';
 
 export class TaggingClass {
     private readonly storageHandlers: Array<{
@@ -42,7 +43,7 @@ export class TaggingClass {
             })
         );
 
-        return [targetTaggingValue, targetTaggingType || 0];
+        return [targetTaggingValue, targetTaggingType || DEFAULT_TAGGING_TYPE.GENERATED];
     }
 
     public async getTaggingValue() : Promise<string> {

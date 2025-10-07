@@ -1,4 +1,4 @@
-import { GuidGenerator, PacketTransformer } from "./utils/hash";
+import { GuidGenerator, PacketTransformer } from "./hash";
 
 export class DeviceFactory {
     public static generateId(): string {

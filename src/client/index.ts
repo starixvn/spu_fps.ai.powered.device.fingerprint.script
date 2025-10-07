@@ -1,4 +1,4 @@
-import { DOMUtils } from "./dom";
+import { DOMUtils } from "./utils/dom";
 import { CollectedDeviceInfo } from "./types";
 import { Base64Encoder } from "./fingerprint/utils/hash";
 import { IPClass } from "./ip";
@@ -9,7 +9,7 @@ import { FingerprintResult } from "./fingerprint/abstract/abstractFingerprint";
 import { FingerprintClass } from "./fingerprint";
 import { CONFIG } from "./utils/domain";
 import { ErrorLogger } from "./utils/errorLogger";
-
+import { DEFAULT_TAGGING_TYPE } from "./utils/constants";
 class ClientClass {
     private readonly directory = {
         audio: "au",
@@ -123,12 +123,18 @@ class ClientClass {
             console.log('v' + CONFIG.VERSION);
 
             const version = (window as any)?.Detecas?.Config?.version;
-            const sessionKey = SessionKeyManager.getSessionKey();
-            const deviceInfo: CollectedDeviceInfo = { sk: sessionKey, sv: version, v: CONFIG.VERSION };
+            const defaultDeviceId = SessionKeyManager.getSessionKey();
+            const deviceInfo: CollectedDeviceInfo = { 
+                sk: defaultDeviceId, 
+                tag: defaultDeviceId, 
+                tagType: DEFAULT_TAGGING_TYPE.DEFAULT, 
+                sv: version, 
+                v: CONFIG.VERSION 
+            };
 
             await this.ensureDOMReady();
             
-            this.injectValueIntoHiddenField(sessionKey, "__fdi");
+            this.injectValueIntoHiddenField(defaultDeviceId, "__fdi");
 
             await Promise.all([
                 this.tagging.start().then(([tagging, tagType]: [string, number]) => {

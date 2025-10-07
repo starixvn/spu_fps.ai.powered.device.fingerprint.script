@@ -6,6 +6,7 @@ import { IndexedDBHandler } from '../../../../src/client/tagging/modules/indexed
 import { LocalStorageHandler } from '../../../../src/client/tagging/modules/localStorage';
 import { WindowNameHandler } from '../../../../src/client/tagging/modules/windowName';
 import { PacketTransformer } from '../../../../src/client/utils/hash';
+import { DeviceFactory } from '../../../../src/client/utils/deviceFactory';
 
 // Mock all the storage handlers
 jest.mock('../../../../src/client/tagging/modules/cacheApi');
@@ -15,6 +16,7 @@ jest.mock('../../../../src/client/tagging/modules/indexedDB');
 jest.mock('../../../../src/client/tagging/modules/localStorage');
 jest.mock('../../../../src/client/tagging/modules/windowName');
 jest.mock('../../../../src/client/utils/hash');
+jest.mock('../../../../src/client/utils/deviceFactory');
 
 // Mock crypto API
 const mockCrypto = {
@@ -32,6 +34,9 @@ describe('TaggingHandler', () => {
 
   // Mock the PacketTransformer module
   const mockPacketTransformer = PacketTransformer as jest.Mocked<typeof PacketTransformer>;
+  
+  // Mock the DeviceFactory module
+  const mockDeviceFactory = DeviceFactory as jest.Mocked<typeof DeviceFactory>;
 
   beforeAll(() => {
     // Create mock instances
@@ -93,6 +98,17 @@ describe('TaggingHandler', () => {
       // For invalid values, return something that won't match GUID pattern
       return 'invalid';
     });
+
+    // Mock DeviceFactory.isValidTagging to return true for valid test values
+    mockDeviceFactory.isValidTagging = jest.fn().mockImplementation((value: string) => {
+      const validValues = [
+        'valid-encrypted-value', 'indexeddb-value', 'indexeddb-new-value', 
+        'etag-value', 'cache-value', 'cookie-value', 'localstorage-value', 
+        'windowname-value', 'found-value', 'old-key-value', 'new-key-value', 
+        'mixed-handler-value'
+      ];
+      return validValues.includes(value);
+    });
   });
 
   beforeEach(() => {
@@ -107,17 +123,24 @@ describe('TaggingHandler', () => {
 
     // Reset PacketTransformer mock
     mockPacketTransformer.unwrapMessage.mockClear();
+    
+    // Reset DeviceFactory mock
+    mockDeviceFactory.isValidTagging.mockClear();
   });
 
-  describe('getTagValue', () => {
+  describe('getTaggingFromStorages', () => {
     it('should return value from indexedDBHandler when found with old key', async () => {
       const testValue = 'indexeddb-value';
       indexedDBHandler.get.mockResolvedValueOnce(testValue);
 
-      const result = await TaggingHandler.getTaggingValue();
+      const result = await TaggingHandler.getTaggingFromStorages();
 
       expect(indexedDBHandler.get).toHaveBeenCalledWith('(global.c3)');
-      expect(result).toBe(testValue);
+      expect(result).toEqual({
+        key: '__indexedDB_key__',
+        value: testValue,
+        type: 1001
+      });
     });
 
     it('should return value from indexedDBHandler when found with new key', async () => {
@@ -126,11 +149,15 @@ describe('TaggingHandler', () => {
         .mockResolvedValueOnce(null) // old key
         .mockResolvedValueOnce(testValue); // new key
 
-      const result = await TaggingHandler.getTaggingValue();
+      const result = await TaggingHandler.getTaggingFromStorages();
 
       expect(indexedDBHandler.get).toHaveBeenCalledWith('(global.c3)');
       expect(indexedDBHandler.get).toHaveBeenCalledWith('__indexedDB_key__');
-      expect(result).toBe(testValue);
+      expect(result).toEqual({
+        key: '__indexedDB_key__',
+        value: testValue,
+        type: 1001
+      });
     });
 
     it('should return value from etagHandler when IndexedDB returns null', async () => {
@@ -138,10 +165,14 @@ describe('TaggingHandler', () => {
       indexedDBHandler.get.mockResolvedValue(null);
       etagHandler.get.mockResolvedValueOnce(testValue);
 
-      const result = await TaggingHandler.getTaggingValue();
+      const result = await TaggingHandler.getTaggingFromStorages();
 
-      expect(etagHandler.get).toHaveBeenCalledWith('(global.c3)');
-      expect(result).toBe(testValue);
+      expect(etagHandler.get).toHaveBeenCalledWith('__etag_key__');
+      expect(result).toEqual({
+        key: '__etag_key__',
+        value: testValue,
+        type: 2002
+      });
     });
 
     it('should return value from cacheApiHandler when previous handlers return null', async () => {
@@ -150,10 +181,14 @@ describe('TaggingHandler', () => {
       etagHandler.get.mockResolvedValue(null);
       cacheApiHandler.get.mockResolvedValueOnce(testValue);
 
-      const result = await TaggingHandler.getTaggingValue();
+      const result = await TaggingHandler.getTaggingFromStorages();
 
-      expect(cacheApiHandler.get).toHaveBeenCalledWith('(global.c3)');
-      expect(result).toBe(testValue);
+      expect(cacheApiHandler.get).toHaveBeenCalledWith('__cache_key__');
+      expect(result).toEqual({
+        key: '__cache_key__',
+        value: testValue,
+        type: 3003
+      });
     });
 
     it('should return value from cookiesHandler when previous handlers return null', async () => {
@@ -163,11 +198,15 @@ describe('TaggingHandler', () => {
       cacheApiHandler.get.mockResolvedValue(null);
       cookiesHandler.get.mockResolvedValueOnce(testValue);
 
-      const result = await TaggingHandler.getTaggingValue();
+      const result = await TaggingHandler.getTaggingFromStorages();
 
       // Cookies handler uses different old key
       expect(cookiesHandler.get).toHaveBeenCalledWith('gfp');
-      expect(result).toBe(testValue);
+      expect(result).toEqual({
+        key: '__cookies_key__',
+        value: testValue,
+        type: 4004
+      });
     });
 
     it('should return value from localStorageHandler when previous handlers return null', async () => {
@@ -178,10 +217,14 @@ describe('TaggingHandler', () => {
       cookiesHandler.get.mockResolvedValue(null);
       localStorageHandler.get.mockResolvedValueOnce(testValue);
 
-      const result = await TaggingHandler.getTaggingValue();
+      const result = await TaggingHandler.getTaggingFromStorages();
 
       expect(localStorageHandler.get).toHaveBeenCalledWith('(global.c3)');
-      expect(result).toBe(testValue);
+      expect(result).toEqual({
+        key: '__localStorage_key__',
+        value: testValue,
+        type: 5005
+      });
     });
 
     it('should return value from windowNameHandler when previous handlers return null', async () => {
@@ -193,13 +236,17 @@ describe('TaggingHandler', () => {
       localStorageHandler.get.mockResolvedValue(null);
       windowNameHandler.get.mockResolvedValueOnce(testValue);
 
-      const result = await TaggingHandler.getTaggingValue();
+      const result = await TaggingHandler.getTaggingFromStorages();
 
-      expect(windowNameHandler.get).toHaveBeenCalledWith('(global.c3)');
-      expect(result).toBe(testValue);
+      expect(windowNameHandler.get).toHaveBeenCalledWith('__window_key__');
+      expect(result).toEqual({
+        key: '__window_key__',
+        value: testValue,
+        type: 6006
+      });
     });
 
-    it('should return null when all handlers return null', async () => {
+    it('should return undefined values when all handlers return null', async () => {
       // Mock all handlers to return null
       indexedDBHandler.get.mockResolvedValue(null);
       etagHandler.get.mockResolvedValue(null);
@@ -208,9 +255,13 @@ describe('TaggingHandler', () => {
       localStorageHandler.get.mockResolvedValue(null);
       windowNameHandler.get.mockResolvedValue(null);
 
-      const result = await TaggingHandler.getTaggingValue();
+      const result = await TaggingHandler.getTaggingFromStorages();
 
-      expect(result).toBeNull();
+      expect(result).toEqual({
+        key: undefined,
+        value: undefined,
+        type: undefined
+      });
     });
 
     it('should check both old and new keys for each handler', async () => {
@@ -222,33 +273,32 @@ describe('TaggingHandler', () => {
       localStorageHandler.get.mockResolvedValue(null);
       windowNameHandler.get.mockResolvedValue(null);
 
-      await TaggingHandler.getTaggingValue();
+      await TaggingHandler.getTaggingFromStorages();
 
       // Verify each handler was called with both keys
       expect(indexedDBHandler.get).toHaveBeenCalledWith('(global.c3)');
       expect(indexedDBHandler.get).toHaveBeenCalledWith('__indexedDB_key__');
-      expect(etagHandler.get).toHaveBeenCalledWith('(global.c3)');
       expect(etagHandler.get).toHaveBeenCalledWith('__etag_key__');
-      expect(cacheApiHandler.get).toHaveBeenCalledWith('(global.c3)');
       expect(cacheApiHandler.get).toHaveBeenCalledWith('__cache_key__');
       expect(cookiesHandler.get).toHaveBeenCalledWith('gfp');
       expect(cookiesHandler.get).toHaveBeenCalledWith('__cookies_key__');
       expect(localStorageHandler.get).toHaveBeenCalledWith('(global.c3)');
       expect(localStorageHandler.get).toHaveBeenCalledWith('__localStorage_key__');
-      expect(windowNameHandler.get).toHaveBeenCalledWith('(global.c3)');
       expect(windowNameHandler.get).toHaveBeenCalledWith('__window_key__');
     });
 
     it('should stop searching when a value is found', async () => {
       const testValue = 'found-value';
       indexedDBHandler.get.mockResolvedValue(null);
-      etagHandler.get
-        .mockResolvedValueOnce(null) // old key
-        .mockResolvedValueOnce(testValue); // new key - found!
+      etagHandler.get.mockResolvedValueOnce(testValue); // found!
 
-      const result = await TaggingHandler.getTaggingValue();
+      const result = await TaggingHandler.getTaggingFromStorages();
 
-      expect(result).toBe(testValue);
+      expect(result).toEqual({
+        key: '__etag_key__',
+        value: testValue,
+        type: 2002
+      });
       
       // Should not have called subsequent handlers
       expect(cacheApiHandler.get).not.toHaveBeenCalled();
@@ -261,7 +311,7 @@ describe('TaggingHandler', () => {
       // First handler throws error - this should cause the method to throw
       indexedDBHandler.get.mockRejectedValue(new Error('IndexedDB error'));
 
-      await expect(TaggingHandler.getTaggingValue()).rejects.toThrow('IndexedDB error');
+      await expect(TaggingHandler.getTaggingFromStorages()).rejects.toThrow('IndexedDB error');
     });
 
     it('should prioritize old key over new key within same handler', async () => {
@@ -269,12 +319,15 @@ describe('TaggingHandler', () => {
       const newKeyValue = 'new-key-value';
       
       indexedDBHandler.get
-        .mockResolvedValueOnce(oldKeyValue) // old key found
-        .mockResolvedValueOnce(newKeyValue); // new key (should not be reached)
+        .mockResolvedValueOnce(oldKeyValue); // old key found
 
-      const result = await TaggingHandler.getTaggingValue();
+      const result = await TaggingHandler.getTaggingFromStorages();
 
-      expect(result).toBe(oldKeyValue);
+      expect(result).toEqual({
+        key: '__indexedDB_key__',
+        value: oldKeyValue,
+        type: 1001
+      });
       expect(indexedDBHandler.get).toHaveBeenCalledTimes(1); // Only old key checked
       expect(indexedDBHandler.get).toHaveBeenCalledWith('(global.c3)');
     });
@@ -282,7 +335,7 @@ describe('TaggingHandler', () => {
 
   describe('Integration scenarios', () => {
     it('should handle complete tagging workflow', async () => {
-      // Setup: no existing tags, should return null
+      // Setup: no existing tags, should return undefined values
       indexedDBHandler.get.mockResolvedValue(null);
       etagHandler.get.mockResolvedValue(null);
       cacheApiHandler.get.mockResolvedValue(null);
@@ -290,9 +343,13 @@ describe('TaggingHandler', () => {
       localStorageHandler.get.mockResolvedValue(null);
       windowNameHandler.get.mockResolvedValue(null);
 
-      const result = await TaggingHandler.getTaggingValue();
+      const result = await TaggingHandler.getTaggingFromStorages();
 
-      expect(result).toBeNull();
+      expect(result).toEqual({
+        key: undefined,
+        value: undefined,
+        type: undefined
+      });
     });
 
     it('should handle mixed sync and async handlers', async () => {
@@ -306,9 +363,13 @@ describe('TaggingHandler', () => {
       // Sync handler returns value
       cookiesHandler.get.mockResolvedValue(testValue);
 
-      const result = await TaggingHandler.getTaggingValue();
+      const result = await TaggingHandler.getTaggingFromStorages();
 
-      expect(result).toBe(testValue);
+      expect(result).toEqual({
+        key: '__cookies_key__',
+        value: testValue,
+        type: 4004
+      });
     });
 
     it('should maintain correct order of storage priority', async () => {
@@ -340,15 +401,15 @@ describe('TaggingHandler', () => {
         return Promise.resolve(null);
       });
 
-      await TaggingHandler.getTaggingValue();
+      await TaggingHandler.getTaggingFromStorages();
 
       const expectedOrder = [
         'IndexedDB', 'IndexedDB', // old key, new key
-        'ETag', 'ETag',
-        'CacheApi', 'CacheApi',
-        'Cookies', 'Cookies',
-        'LocalStorage', 'LocalStorage',
-        'WindowName', 'WindowName'
+        'ETag', // only new key (no old key for etag)
+        'CacheApi', // only new key (no old key for cache)
+        'Cookies', 'Cookies', // old key, new key
+        'LocalStorage', 'LocalStorage', // old key, new key
+        'WindowName' // only new key (no old key for window)
       ];
 
       expect(callOrder).toEqual(expectedOrder);

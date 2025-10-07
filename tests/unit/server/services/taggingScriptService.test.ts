@@ -116,7 +116,7 @@ describe('TaggingScriptService', () => {
       expect(scriptFiles.length).toBe(12);
       
       // Check for key tagging files
-      expect(scriptFiles).toContain('deviceFactory.js');
+      expect(scriptFiles).toContain('utils/deviceFactory.js');
       expect(scriptFiles).toContain('tagging/tagging.js');
       expect(scriptFiles).toContain('tagging/index.js');
       
@@ -373,7 +373,8 @@ describe('TaggingScriptService', () => {
         'utils/domain.js',
         'utils/errorLogger.js',
         'utils/hash.js',
-        'deviceFactory.js',
+        'utils/deviceFactory.js',
+        'utils/constants.js',
         'tagging/modules/cacheApi.js',
         'tagging/modules/cookie.js',
         'tagging/modules/etag.js',
@@ -400,7 +401,8 @@ describe('TaggingScriptService', () => {
       expect(scriptFiles.indexOf('utils/errorLogger.js')).toBe(1);
       expect(scriptFiles.indexOf('utils/hash.js')).toBe(2);
       expect(scriptFiles.indexOf('deviceFactory.js')).toBe(3);
-      expect(scriptFiles.indexOf('tagging/modules/cacheApi.js')).toBe(4);
+      expect(scriptFiles.indexOf('utils/constants.js')).toBe(4);
+      expect(scriptFiles.indexOf('tagging/modules/cacheApi.js')).toBe(5);
       expect(scriptFiles.indexOf('tagging/index.js')).toBe(scriptFiles.length - 1);
       
       // Verify utils comes before core tagging

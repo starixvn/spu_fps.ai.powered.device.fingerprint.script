@@ -29,171 +29,178 @@ describe('TaggingService', () => {
     jest.clearAllMocks();
   });
 
-  describe('getEtag', () => {
-    it('should return internal etag when set', () => {
-      const testEtag = 'internal-etag';
-      
-      // Set internal etag first
-      taggingService.setEtag(mockResponse as Response, testEtag);
+  describe('set', () => {
+    it('should set header with string value', () => {
+      const key = 'test-header';
+      const value = 'test-value';
 
-      const result = taggingService.getEtag(mockRequest as Request);
+      taggingService.set(mockResponse as Response, key, value);
 
-      expect(result).toBe(testEtag);
+      expect(mockResponse.setHeader).toHaveBeenCalledWith(key, value);
     });
 
-    it('should return etag from if-none-match header when internal etag not set', () => {
-      mockRequest.headers = { 'if-none-match': 'header-etag' };
+    it('should convert value to string', () => {
+      const key = 'numeric-header';
+      const value = 123;
 
-      const result = taggingService.getEtag(mockRequest as Request);
+      taggingService.set(mockResponse as Response, key, value.toString());
 
-      expect(result).toBe('header-etag');
+      expect(mockResponse.setHeader).toHaveBeenCalledWith(key, '123');
     });
 
-    it('should return null when no etag available', () => {
-      const result = taggingService.getEtag(mockRequest as Request);
+    it('should handle empty string value', () => {
+      const key = 'empty-header';
+      const value = '';
+
+      taggingService.set(mockResponse as Response, key, value);
+
+      expect(mockResponse.setHeader).toHaveBeenCalledWith(key, '');
+    });
+  });
+
+  describe('get', () => {
+    it('should return header value when present', () => {
+      const key = 'test-header';
+      const value = 'test-value';
+      mockRequest.headers = { [key]: value };
+
+      const result = taggingService.get(mockRequest as Request, key);
+
+      expect(result).toBe(value);
+    });
+
+    it('should return undefined when header not present', () => {
+      const key = 'missing-header';
+      mockRequest.headers = {};
+
+      const result = taggingService.get(mockRequest as Request, key);
+
+      expect(result).toBe(undefined);
+    });
+
+    it('should throw error when headers is undefined', () => {
+      const key = 'test-header';
+      mockRequest.headers = undefined;
+
+      expect(() => {
+        taggingService.get(mockRequest as Request, key);
+      }).toThrow();
+    });
+
+    it('should handle case-sensitive header names', () => {
+      const key = 'Test-Header';
+      const value = 'test-value';
+      mockRequest.headers = { [key]: value };
+
+      const result = taggingService.get(mockRequest as Request, key);
+
+      expect(result).toBe(value);
+    });
+  });
+
+  describe('formatEtag', () => {
+    it('should return null for null input', () => {
+      const result = taggingService.formatEtag(null);
 
       expect(result).toBe(null);
     });
 
-    it('should prioritize internal etag over header', () => {
-      const internalEtag = 'internal-etag';
-      const headerEtag = 'header-etag';
-      
-      mockRequest.headers = { 'if-none-match': headerEtag };
-      taggingService.setEtag(mockResponse as Response, internalEtag);
+    it('should return null for empty string', () => {
+      const result = taggingService.formatEtag('');
 
-      const result = taggingService.getEtag(mockRequest as Request);
-
-      expect(result).toBe(internalEtag);
+      expect(result).toBe(null);
     });
 
-    it('should handle string header values correctly', () => {
-      mockRequest.headers = { 'if-none-match': 'single-etag' };
+    it('should remove W/ prefix', () => {
+      const etag = 'W/"abc123"';
+      const result = taggingService.formatEtag(etag);
 
-      const result = taggingService.getEtag(mockRequest as Request);
-
-      expect(result).toBe('single-etag');
-    });
-  });
-
-  describe('setEtag', () => {
-    it('should set etag and headers when etag is new', () => {
-      const testEtag = 'new-etag-value';
-
-      taggingService.setEtag(mockResponse as Response, testEtag);
-
-      expect(mockResponse.setHeader).toHaveBeenCalledWith('Etag', testEtag);
-      expect(mockResponse.setHeader).toHaveBeenCalledWith('Cache-Control', 'private, max-age=600');
+      expect(result).toBe('abc123');
     });
 
-    it('should not set headers when etag is same as current', () => {
-      const testEtag = 'same-etag';
+    it('should remove surrounding quotes', () => {
+      const etag = '"abc123"';
+      const result = taggingService.formatEtag(etag);
 
-      // Set etag first time
-      taggingService.setEtag(mockResponse as Response, testEtag);
-      jest.clearAllMocks();
-
-      // Set same etag again
-      taggingService.setEtag(mockResponse as Response, testEtag);
-
-      expect(mockResponse.setHeader).not.toHaveBeenCalled();
+      expect(result).toBe('abc123');
     });
 
-    it('should update internal etag value', () => {
-      const testEtag = 'updated-etag';
+    it('should remove both W/ prefix and quotes', () => {
+      const etag = 'W/"abc123"';
+      const result = taggingService.formatEtag(etag);
 
-      taggingService.setEtag(mockResponse as Response, testEtag);
-
-      const result = taggingService.getEtag(mockRequest as Request);
-      expect(result).toBe(testEtag);
+      expect(result).toBe('abc123');
     });
 
-    it('should allow updating to different etag', () => {
-      const firstEtag = 'first-etag';
-      const secondEtag = 'second-etag';
+    it('should handle etag without quotes or W/ prefix', () => {
+      const etag = 'abc123';
+      const result = taggingService.formatEtag(etag);
 
-      // Set first etag
-      taggingService.setEtag(mockResponse as Response, firstEtag);
-      expect(taggingService.getEtag(mockRequest as Request)).toBe(firstEtag);
-
-      // Clear mocks to check second call
-      jest.clearAllMocks();
-
-      // Set second etag
-      taggingService.setEtag(mockResponse as Response, secondEtag);
-      
-      expect(mockResponse.setHeader).toHaveBeenCalledWith('Etag', secondEtag);
-      expect(mockResponse.setHeader).toHaveBeenCalledWith('Cache-Control', 'private, max-age=600');
-      expect(taggingService.getEtag(mockRequest as Request)).toBe(secondEtag);
+      expect(result).toBe('abc123');
     });
 
-    it('should handle empty string etag (returns null due to falsy check)', () => {
-      const emptyEtag = '';
+    it('should handle etag with only W/ prefix', () => {
+      const etag = 'W/abc123';
+      const result = taggingService.formatEtag(etag);
 
-      taggingService.setEtag(mockResponse as Response, emptyEtag);
+      expect(result).toBe('abc123');
+    });
 
-      expect(mockResponse.setHeader).toHaveBeenCalledWith('Etag', emptyEtag);
-      // Empty string is falsy, so getEtag returns null instead of empty string
-      expect(taggingService.getEtag(mockRequest as Request)).toBe(null);
+    it('should handle etag with only quotes', () => {
+      const etag = '"abc123"';
+      const result = taggingService.formatEtag(etag);
+
+      expect(result).toBe('abc123');
     });
   });
 
   describe('Integration tests', () => {
-    it('should handle complete workflow: set etag -> get etag', () => {
-      const testEtag = 'workflow-etag';
+    it('should handle complete workflow: set header -> get header', () => {
+      const key = 'etag';
+      const value = 'workflow-etag';
 
-      // Set etag
-      taggingService.setEtag(mockResponse as Response, testEtag);
+      // Set header
+      taggingService.set(mockResponse as Response, key, value);
 
-      // Get etag should return the set value
-      const result = taggingService.getEtag(mockRequest as Request);
+      // Get header should return the set value
+      mockRequest.headers = { [key]: value };
+      const result = taggingService.get(mockRequest as Request, key);
 
-      expect(result).toBe(testEtag);
-      expect(mockResponse.setHeader).toHaveBeenCalledWith('Etag', testEtag);
+      expect(result).toBe(value);
+      expect(mockResponse.setHeader).toHaveBeenCalledWith(key, value);
     });
 
-    it('should handle multiple etag updates', () => {
-      const etag1 = 'etag-1';
-      const etag2 = 'etag-2';
-      const etag3 = 'etag-3';
+    it('should handle etag formatting workflow', () => {
+      const rawEtag = 'W/"abc123"';
+      const formattedEtag = 'abc123';
 
-      // Set multiple etags in sequence
-      taggingService.setEtag(mockResponse as Response, etag1);
-      expect(taggingService.getEtag(mockRequest as Request)).toBe(etag1);
+      // Format etag
+      const result = taggingService.formatEtag(rawEtag);
 
-      taggingService.setEtag(mockResponse as Response, etag2);
-      expect(taggingService.getEtag(mockRequest as Request)).toBe(etag2);
-
-      taggingService.setEtag(mockResponse as Response, etag3);
-      expect(taggingService.getEtag(mockRequest as Request)).toBe(etag3);
-
-      // Verify setHeader was called for each unique etag
-      expect(mockResponse.setHeader).toHaveBeenCalledTimes(6); // 3 etags * 2 headers each
+      expect(result).toBe(formattedEtag);
     });
 
-    it('should fallback to header when no internal etag set', () => {
-      const headerEtag = 'fallback-header-etag';
-      mockRequest.headers = { 'if-none-match': headerEtag };
+    it('should handle multiple header operations', () => {
+      const headers = {
+        'etag': 'etag-value',
+        'cache-control': 'no-cache',
+        'content-type': 'application/json'
+      };
 
-      // Don't set internal etag, should fallback to header
-      const result = taggingService.getEtag(mockRequest as Request);
+      // Set multiple headers
+      Object.entries(headers).forEach(([key, value]) => {
+        taggingService.set(mockResponse as Response, key, value);
+      });
 
-      expect(result).toBe(headerEtag);
-    });
+      // Get multiple headers
+      mockRequest.headers = headers;
+      Object.entries(headers).forEach(([key, value]) => {
+        const result = taggingService.get(mockRequest as Request, key);
+        expect(result).toBe(value);
+      });
 
-    it('should persist internal state across multiple operations', () => {
-      const persistentEtag = 'persistent-etag';
-
-      // Set etag once
-      taggingService.setEtag(mockResponse as Response, persistentEtag);
-
-      // Call getEtag multiple times
-      expect(taggingService.getEtag(mockRequest as Request)).toBe(persistentEtag);
-      expect(taggingService.getEtag(mockRequest as Request)).toBe(persistentEtag);
-      expect(taggingService.getEtag(mockRequest as Request)).toBe(persistentEtag);
-
-      // All should return the same value
-      expect(mockResponse.setHeader).toHaveBeenCalledTimes(2); // Only called once during setEtag
+      // Verify setHeader was called for each header
+      expect(mockResponse.setHeader).toHaveBeenCalledTimes(3);
     });
   });
 });

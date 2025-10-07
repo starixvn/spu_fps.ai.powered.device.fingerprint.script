@@ -3,7 +3,7 @@ import { ErrorLogger } from "../../utils/errorLogger";
 import { IStorageHandler } from "../types";
 
 export class ETagHandler implements IStorageHandler {
-    private _baseUrl: string | '';
+    private _baseUrl: string;
 
     constructor() {
         this._baseUrl = `${CONFIG.SERVER_DOMAIN}/resources/vers`;
@@ -19,15 +19,10 @@ export class ETagHandler implements IStorageHandler {
                 method: 'GET'
             });
 
-            if (response.ok) {
-                const data = await response.json();
+            const etag = response.headers.get('etag');
+
+            return this.formatEtag(etag || "");
                 
-                if (data.success && data.t) {
-                    return data.t;
-                }
-            }
-            
-            return null;
         } catch (error) {
             ErrorLogger.error('Failed to get etag:', error);
             return null;
@@ -43,19 +38,11 @@ export class ETagHandler implements IStorageHandler {
             const response = await fetch(this._baseUrl, {
                 method: 'GET',
                 headers: {
-                    'Res-Ec-X': value
+                    'Res-Ec-X': `${value}`
                 }
             });
 
-            if (response.ok) {
-                const data = await response.json();
-                
-                if (data.success && data.t) {
-                    return true;
-                }
-            }
-            
-            return false;
+            return response.ok;
         } catch (error) {
             ErrorLogger.error('Failed to set etag:', error);
             return false;
@@ -64,5 +51,9 @@ export class ETagHandler implements IStorageHandler {
 
     public available(): boolean {
         return this._baseUrl !== '';
+    }
+
+    private formatEtag(etag: string): string {
+        return etag.replace(/^W\//, "")?.replace(/^"|"$/g, "") || "";
     }
 }

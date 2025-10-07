@@ -1,5 +1,5 @@
 import express, { Request, Response, NextFunction } from 'express';
-import cors from 'cors';
+import cors, { CorsOptions } from 'cors';
 import cookieParser from 'cookie-parser';
 import * as path from 'path';
 import config from './config/environment';
@@ -13,17 +13,33 @@ import { Logger } from './components/sentry';
 
 const app = express();
 
+// Cấu hình trust proxy ngay tại đây
+// Tin tưởng 2 lớp proxy đứng trước app
+app.set('trust proxy', true);
+
 // Middleware - Basic configuration
-app.use(cors());
+const corsOptions: CorsOptions = {
+  origin: '*', // Consider restricting this to your actual domain in production
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Res-Ec-X', 'version','If-None-Match'],
+  optionsSuccessStatus: 204
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
-app.use(express.static('.'));
-app.use('/examples', express.static(path.join(__dirname, '../../examples')));
 app.set('etag', false);
 
+const resEcXKey = 'res-ec-x';
+const ifNoneMatchKey = 'if-none-match';
+const cacheControlKey = 'cache-control';
+const etagKey = 'etag';
+
+// Services
 const fingerprintScript = new FingerprintScriptService();
 const taggingScript = new TaggingScriptService();
 const combinedScript = new CombinedScriptService();
+const taggingService = new TaggingService();
 
 Logger.captureMessage('APD Server is starting');
 
@@ -113,28 +129,23 @@ app.get('/libs/apd-unified.min.js', async (req: Request, res: Response, next: Ne
 });
 
 app.get('/resources/vers', (req: Request, res: Response) => {
-  const taggingService = new TaggingService();
+  const resEcXValue = taggingService.get(req, resEcXKey);
+  const ifNoneMatchValue = taggingService.get(req, ifNoneMatchKey);
 
-  const eTaggingValues = req.headers['res-ec-x'];
+  const formattedIfNoneMatch = taggingService.formatEtag(ifNoneMatchValue);
+  const formattedResEcX = taggingService.formatEtag(resEcXValue);      
+  
+  const etagValue = formattedResEcX ? formattedResEcX : formattedIfNoneMatch;    
+  
+  res.setHeader(cacheControlKey, 'private, max-age=30, must-revalidate');
 
-  const etagValue = Array.isArray(eTaggingValues) ? eTaggingValues[0] : eTaggingValues;
-
-  const cachedValue = etagValue || taggingService.getEtag(req);
-
-  if (cachedValue) {
-    taggingService.setEtag(res, cachedValue);
-
-    return res.json({
-      success: true,
-      t: cachedValue
-    });
+  if(etagValue){
+    res.setHeader(etagKey, etagValue);
   }
-
-  return res.json({ 
-    success: false, 
-    t: null,
-  });
+  
+  return res.status(200).send('OK');
 });
+
 
 app.get('/healthz', (req: Request, res: Response) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
