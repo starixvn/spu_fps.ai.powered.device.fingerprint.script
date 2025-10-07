@@ -26,11 +26,9 @@ export async function collectCanvas(): Promise<CanvasInfo> {
   try {
     // Detect canvas protection
     const canvasProtection = await detectCanvasProtection();
-    console.log('[Canvas Collection] Canvas protection result:', canvasProtection);
     
     // Handle canvas protection detection
     if (canvasProtection.isStrong || canvasProtection.isProtected) {
-      console.log('[Canvas Collection] Canvas is protected, returning anti-fingerprint value');
       return [FingerprintSpecialValue.ANTI_FINGERPRINTED, 1];
     }
 
@@ -59,7 +57,6 @@ export async function collectCanvas(): Promise<CanvasInfo> {
 async function detectCanvasProtection(): Promise<CanvasProtectionResult> {
   try {
     if (doesBrowserPerformCanvasAntifingerprinting()) {
-      console.log('[Canvas Protection Detection] Browser has built-in anti-fingerprinting');
       return { isProtected: true, isStrong: true };
     }
 
@@ -82,48 +79,29 @@ async function detectCanvasProtection(): Promise<CanvasProtectionResult> {
     const dataUrl2 = testCanvas();
     
     if (!dataUrl1 || !dataUrl2) {
-      console.log('[Canvas Protection Detection] Canvas test failed - no data URLs generated');
       return { isProtected: true, isStrong: false }; 
     }
 
     // Test in-session randomization 
     const isConsistent = dataUrl1 === dataUrl2;
-    console.log('[Canvas Protection Detection] Canvas consistency test:', isConsistent);
-    console.log('[Canvas Protection Detection] DataURL1 length:', dataUrl1.length);
-    console.log('[Canvas Protection Detection] DataURL2 length:', dataUrl2.length);
-    
     if (!isConsistent) {
-      console.log('[Canvas Protection Detection] Canvas randomization detected');
       return { isProtected: true, isStrong: false }; 
-    }
-
-    // Additional test: Check if canvas data is suspiciously short (Brave blocking)
-    if (dataUrl1.length < 100) {
-      console.log('[Canvas Protection Detection] Canvas data suspiciously short (likely blocked)');
-      return { isProtected: true, isStrong: false };
     }
 
     // Check for suspicious canvas API modifications
     const isToDataURLFunction = typeof HTMLCanvasElement.prototype.toDataURL === 'function';
-    console.log('[Canvas Protection Detection] toDataURL function check:', isToDataURLFunction);
     if (!isToDataURLFunction) {
-      console.log('[Canvas Protection Detection] toDataURL function modified');
       return { isProtected: true, isStrong: false };
     }
 
     // Check for extension-specific markers
-    console.log('[Canvas Protection Detection] Checking for canvas blocker extension...');
     const extensionDetected = detectCanvasBlockerExtension();
-    console.log('[Canvas Protection Detection] Extension detection result:', extensionDetected);
     if (extensionDetected === 1) {
-      console.log('[Canvas Protection Detection] Canvas blocker extension detected');
       return { isProtected: true, isStrong: false };
     }
 
-    console.log('[Canvas Protection Detection] No canvas protection detected');
     return { isProtected: false, isStrong: false }; 
   } catch (error) {
-    console.log('[Canvas Protection Detection] Error during detection:', error);
     return { isProtected: true, isStrong: false }; 
   }
 }
@@ -134,50 +112,28 @@ function detectCanvasBlockerExtension(): Bit {
     const ctx = canvas.getContext('2d');
     
     if (!ctx) {
-      console.log('[Canvas Blocker Detection] No 2D context available');
       return 0;
     }
     
-    // Test 1: Check toDataURL function signature and behavior
     const originalToDataURL = HTMLCanvasElement.prototype.toDataURL.toString();
     const isLongString = originalToDataURL.length > 100;
-    
-    console.log('[Canvas Blocker Detection] toDataURL function length:', originalToDataURL.length, 'isLongString:', isLongString);
 
     if (isLongString) {
-      console.log('[Canvas Blocker Detection] Detected: Long toDataURL function (likely blocked)');
       return 1; 
     }
 
-    // Test 2: Check for CanvasBlocker specific properties
+    // Check for CanvasBlocker specific properties
     const cbNameInCanvas = 'cbName' in canvas;
     const cbInjectInCanvas = 'cbInject' in canvas;
     const canvasBlockerNameInWindow = 'canvasBlockerName' in window;
     const canvasBlockerInWindow = 'canvasBlocker' in window;
     
-    console.log('[Canvas Blocker Detection] Canvas properties:', {
-      cbNameInCanvas,
-      cbInjectInCanvas,
-      canvasBlockerNameInWindow,
-      canvasBlockerInWindow
-    });
-    
     if (cbNameInCanvas || cbInjectInCanvas || canvasBlockerNameInWindow || canvasBlockerInWindow) {
-      console.log('[Canvas Blocker Detection] Detected: CanvasBlocker extension properties found');
       return 1;
     }
 
-    // Test 3: Check for Brave's canvas blocking behavior
-    const braveTestResult = testBraveCanvasBlocking();
-    if (braveTestResult.detected) {
-      console.log('[Canvas Blocker Detection] Detected:', braveTestResult.reason);
-      return 1;
-    }
-
-    console.log('[Canvas Blocker Detection] No canvas blocker detected');
     return 0;
   } catch (error) {
-    console.log('[Canvas Blocker Detection] Error during detection:', error);
     return 1; 
   }
 }
@@ -373,63 +329,4 @@ function drawUnifiedCanvas(
 function drawComplexCanvas(ctx: CanvasRenderingContext2D, width: number, height: number) {
   // Use unified function in full mode
   drawUnifiedCanvas(ctx, width, height, false);
-}
-
-function testBraveCanvasBlocking(): { detected: boolean; reason: string } {
-  try {
-    const testCanvas1 = document.createElement('canvas');
-    testCanvas1.width = 100;
-    testCanvas1.height = 50;
-    const testCtx1 = testCanvas1.getContext('2d');
-    if (testCtx1) {
-      testCtx1.fillStyle = 'red';
-      testCtx1.fillRect(0, 0, 100, 50);
-      testCtx1.fillStyle = 'blue';
-      testCtx1.fillRect(50, 0, 50, 50);
-    }
-    
-    const testCanvas2 = document.createElement('canvas');
-    testCanvas2.width = 100;
-    testCanvas2.height = 50;
-    const testCtx2 = testCanvas2.getContext('2d');
-    if (testCtx2) {
-      testCtx2.fillStyle = 'green';
-      testCtx2.fillRect(0, 0, 100, 50);
-      testCtx2.fillStyle = 'yellow';
-      testCtx2.fillRect(50, 0, 50, 50);
-    }
-    
-    const dataUrl1 = testCanvas1.toDataURL();
-    const dataUrl2 = testCanvas2.toDataURL();
-    
-    console.log('[Canvas Blocker Detection] Brave test - Canvas1 dataUrl length:', dataUrl1.length);
-    console.log('[Canvas Blocker Detection] Brave test - Canvas2 dataUrl length:', dataUrl2.length);
-    console.log('[Canvas Blocker Detection] Brave test - DataURLs are identical:', dataUrl1 === dataUrl2);
-    
-    if (dataUrl1 === dataUrl2 && dataUrl1.length > 0) {
-      return { 
-        detected: true, 
-        reason: 'Brave canvas blocking (identical dataURLs for different drawings)' 
-      };
-    }
-
-    if (dataUrl1.length < 50 || dataUrl2.length < 50) {
-      return { 
-        detected: true, 
-        reason: 'Very short dataURLs (likely blocked)' 
-      };
-    }
-
-    const isBraveCanvasBlocked = dataUrl1.includes('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==');
-    if (isBraveCanvasBlocked) {
-      return { 
-        detected: true, 
-        reason: 'Brave transparent canvas pattern' 
-      };
-    }
-
-    return { detected: false, reason: '' };
-  } catch (error) {
-    return { detected: true, reason: 'Error during Brave canvas test' };
-  }
 }
