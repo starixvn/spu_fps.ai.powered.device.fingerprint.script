@@ -12,7 +12,7 @@ type CanvasProtectionResult = {
   isStrong: boolean; // baseline mismatch 
 };
 
-function doesBrowserPerformAntifingerprinting(): boolean {
+function doesBrowserPerformCanvasAntifingerprinting(): boolean {
   // Safari 17+ has enhanced anti-fingerprinting for canvas
   if (isSafari17OrNewer()) return true;
   return false;
@@ -65,8 +65,8 @@ export async function collectCanvas(): Promise<CanvasInfo> {
 
 async function detectCanvasProtection(): Promise<CanvasProtectionResult> {
   try {
-    // Check for Safari 17 anti-fingerprinting first
-    if (doesBrowserPerformAntifingerprinting()) {
+    // Check for Safari 17+ anti-fingerprinting first
+    if (doesBrowserPerformCanvasAntifingerprinting()) {
       return { isProtected: true, isStrong: true };
     }
 
@@ -227,7 +227,7 @@ async function getCanvasFeatures(): Promise<Record<string, any> | null> {
       } else {
         features.webglVersion = "webgl-unavailable";
       }
-    } catch {
+    } catch (error) {
       features.webglVersion = "webgl-error";
     }
 
