@@ -50,6 +50,7 @@ export async function collectCanvas(): Promise<CanvasInfo> {
       
     return [value, 0];
   } catch (error) {
+    console.log('collectCanvas error', error);
     return [FingerprintSpecialValue.ERROR, 0];
   }
 }
@@ -102,6 +103,7 @@ async function detectCanvasProtection(): Promise<CanvasProtectionResult> {
 
     return { isProtected: false, isStrong: false }; 
   } catch (error) {
+    console.log('Error detecting canvas protection:', error);
     return { isProtected: true, isStrong: false }; 
   }
 }

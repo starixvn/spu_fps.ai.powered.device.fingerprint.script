@@ -241,7 +241,8 @@ export function isSafari17OrNewer(): boolean {
     ];
     
     return countTruthy(safari17Features) >= 4;
-  } catch {
+  } catch(error) {
+    console.log('isSafari17OrNewer error', error);
     return false;
   }
 }
