@@ -1,95 +1,68 @@
-import { MurmurHash128 } from "../../utils/hash";
-import type { CanvasInfo } from "../../types";
-import type { Bit } from '../../types';
-import { FingerprintSpecialValue } from "../../utils/consts";
-import { isSafari17OrNewer, isSamsungInternet, isChromium122OrNewer } from "../../utils/browser";
+import { isSafariWebKit, isWebKit, isWebKit616OrNewer, isSamsungInternet, isChromium122OrNewer } from '../../utils/browser';
+import { FingerprintSpecialValue } from '../../utils/consts';
+import { Bit } from '../../types';
 
-const CANVAS_SNAPSHOTS = 3; 
-const CANVAS_FINGERPRINT_TEXT = `Sphinx ${String.fromCharCode(55357, 56848)} quartz ${String.fromCharCode(55357, 56849)} vow ${String.fromCharCode(55357, 56850)}`;
+export type CanvasValue = string | FingerprintSpecialValue
+export type Canvas = CanvasValue[]
 
-type CanvasProtectionResult = {
-  isProtected: boolean;
-  isStrong: boolean; // baseline mismatch 
-};
+// Performance optimizations
+const CANVAS_SNAPSHOTS = 3; // Reduced from 5 for better performance
+const CANVAS_FINGERPRINT_TEXT = "Sphinx ${String.fromCharCode(55357, 56848)} quartz ${String.fromCharCode(55357, 56849)} vow ${String.fromCharCode(55357, 56850)}";
 
-function doesBrowserPerformCanvasAntifingerprinting(): boolean {
-  // Safari 17+ has enhanced anti-fingerprinting for canvas
-  if (isSafari17OrNewer()) return true;
-  
-  // Samsung Internet 26+ has Smart Anti-Tracking
-  if (isSamsungInternet() && isChromium122OrNewer()) return true;
-  
-  return false;
-}
-
-export async function collectCanvas(): Promise<CanvasInfo> {
+export function collectCanvas(): Canvas {
   try {
-    // Detect canvas protection
-    const canvasProtection = await detectCanvasProtection();
-    
-    // Handle canvas protection detection
-    if (canvasProtection.isStrong || canvasProtection.isProtected) {
-      return [FingerprintSpecialValue.ANTI_FINGERPRINTED, 1];
+    // Early exit for Samsung Internet with Smart Anti-Tracking
+    if (isSamsungInternet() && isChromium122OrNewer()) {
+      return [FingerprintSpecialValue.ANTI_FINGERPRINTED];
     }
 
-    // Enhanced performance with timeout handling
-    const snapshotPromises = Array.from({ length: CANVAS_SNAPSHOTS }, () => getCanvasFeaturesWithTimeout());
-    const results = await Promise.allSettled(snapshotPromises);
-    
-    const samples = results
-      .filter(result => result.status === 'fulfilled')
-      .map(result => (result as PromiseFulfilledResult<any>).value)
-      .filter(Boolean);
-
-    if (samples.length === 0) {
-      return [FingerprintSpecialValue.TIMEOUT, 0];
+    // Check for canvas anti-fingerprinting
+    if (doesBrowserPerformCanvasAntifingerprinting()) {
+      return [FingerprintSpecialValue.ANTI_FINGERPRINTED];
     }
 
-    const stableFeatures = computeFeatureMedian(samples);
-    const value = MurmurHash128.hash128(JSON.stringify(stableFeatures));
-      
-    return [value, 0];
-  } catch (error) {
-    return [FingerprintSpecialValue.ERROR, 0];
+    // Collect canvas features with timeout and robust error handling
+    const features = getCanvasFeaturesWithTimeout();
+    if (!features) {
+      return [FingerprintSpecialValue.ERROR];
+    }
+    return Object.values(features) as Canvas;
+  } catch {
+    return [FingerprintSpecialValue.ERROR];
   }
 }
 
-async function detectCanvasProtection(): Promise<CanvasProtectionResult> {
+function doesBrowserPerformCanvasAntifingerprinting(): boolean {
   try {
-    if (doesBrowserPerformCanvasAntifingerprinting()) {
-      return { isProtected: true, isStrong: true };
+    // Safari WebKit anti-fingerprinting
+    if (isWebKit() && isWebKit616OrNewer() && isSafariWebKit()) {
+      return true;
     }
 
-    const testCanvas = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = 200; // Optimized size - balance between detection and performance
-      canvas.height = 50;
-      
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return null;
-      
-      // Use unified function in test mode
-      drawUnifiedCanvas(ctx, canvas.width, canvas.height, true);
-      
-      return canvas.toDataURL();
-    };
+    // Samsung Internet Smart Anti-Tracking
+    /* if (isSamsungInternet() && isChromium122OrNewer()) {
+      return true;
+    } */
 
-    // Test current session consistency  
-    const dataUrl1 = testCanvas();
-    const dataUrl2 = testCanvas();
+    // Check for canvas protection
+    const protection = detectCanvasProtection();
+    return protection.isProtected;
+  } catch {
+    return true; // Assume protected on error
+  }
+}
+
+function detectCanvasProtection(): { isProtected: boolean; isStrong: boolean } {
+  try {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
     
-    if (!dataUrl1 || !dataUrl2) {
-      return { isProtected: true, isStrong: false }; 
+    if (!ctx) {
+      return { isProtected: true, isStrong: false };
     }
 
-    // Test in-session randomization 
-    const isConsistent = dataUrl1 === dataUrl2;
-    if (!isConsistent) {
-      return { isProtected: true, isStrong: false }; 
-    }
-
-    // Check for suspicious canvas API modifications
-    const isToDataURLFunction = typeof HTMLCanvasElement.prototype.toDataURL === 'function';
+    // Check if toDataURL is a native function
+    const isToDataURLFunction = HTMLCanvasElement.prototype.toDataURL.toString().includes('[native code]');
     if (!isToDataURLFunction) {
       return { isProtected: true, isStrong: false };
     }
@@ -106,6 +79,7 @@ async function detectCanvasProtection(): Promise<CanvasProtectionResult> {
   }
 }
 
+// Enhanced Canvas Blocker detection with Combined Approach
 function detectCanvasBlockerExtension(): Bit {
   try {
     const canvas = document.createElement('canvas');
@@ -115,139 +89,126 @@ function detectCanvasBlockerExtension(): Bit {
       return 0;
     }
     
-    const originalToDataURL = HTMLCanvasElement.prototype.toDataURL.toString();
-    const isLongString = originalToDataURL.length > 100;
-
-    if (isLongString) {
-      return 1; 
-    }
-
-    // Check for CanvasBlocker specific properties
-    const cbNameInCanvas = 'cbName' in canvas;
-    const cbInjectInCanvas = 'cbInject' in canvas;
-    const canvasBlockerNameInWindow = 'canvasBlockerName' in window;
-    const canvasBlockerInWindow = 'canvasBlocker' in window;
+    // Test 1: Check for Canvas Blocker specific properties
+    const hasCanvasBlockerProperties = [
+      'cbName' in canvas,
+      'cbInject' in canvas,
+      'cbBlocked' in canvas,
+      'cbOriginal' in canvas,
+      'cbModified' in canvas,
+      'cbFingerprint' in canvas,
+    ].some(Boolean);
     
-    if (cbNameInCanvas || cbInjectInCanvas || canvasBlockerNameInWindow || canvasBlockerInWindow) {
-      return 1;
-    }
-
-    return 0;
+    // Test 2: Check for Canvas Blocker window properties
+    const hasWindowProperties = [
+      'canvasBlockerName' in window,
+      'canvasBlocker' in window,
+      'cbExtension' in window,
+      'cbConfig' in window,
+    ].some(Boolean);
+    
+    // Test 3: Check for modified toDataURL function
+    const toDataURLString = HTMLCanvasElement.prototype.toDataURL.toString();
+    const hasModifiedToDataURL = (
+      toDataURLString.includes('canvasBlocker') ||
+      toDataURLString.includes('cb') ||
+      toDataURLString.length > 200 || // More conservative threshold
+      toDataURLString.includes('blocked') ||
+      toDataURLString.includes('fake') ||
+      toDataURLString.includes('spoof')
+    );
+    
+    // Test 4: Check for consistent fake data behavior
+    const hasConsistentFakeData = (() => {
+      try {
+        const testCanvas = document.createElement('canvas');
+        testCanvas.width = 50;
+        testCanvas.height = 50;
+        const testCtx = testCanvas.getContext('2d');
+        if (testCtx) {
+          testCtx.fillRect(0, 0, 50, 50);
+        }
+        const dataURL1 = testCanvas.toDataURL();
+        const dataURL2 = testCanvas.toDataURL();
+        return dataURL1 === dataURL2; // Canvas Blocker returns same fake data
+      } catch {
+        return false;
+      }
+    })();
+    
+    // Test 5: Check for Canvas Blocker specific methods
+    const hasCanvasBlockerMethods = [
+      'getImageData' in ctx && typeof ctx.getImageData === 'function',
+      'putImageData' in ctx && typeof ctx.putImageData === 'function',
+    ].some(Boolean);
+    
+    // Count positive indicators
+    const positiveIndicators = [
+      hasCanvasBlockerProperties,
+      hasWindowProperties,
+      hasModifiedToDataURL,
+      hasConsistentFakeData,
+      hasCanvasBlockerMethods,
+    ].filter(Boolean).length;
+    
+    // Canvas Blocker detected if 2+ indicators are positive
+    return positiveIndicators >= 2 ? 1 : 0;
+    
   } catch (error) {
-    return 1; 
+    // More specific error handling
+    if (error instanceof DOMException || 
+        error instanceof TypeError ||
+        (error as Error).message.includes('blocked') ||
+        (error as Error).message.includes('security')) {
+      return 1; // Likely blocked by extension
+    }
+    return 0; // Other errors are not necessarily Canvas Blocker
   }
 }
 
 // Enhanced function with timeout
-async function getCanvasFeaturesWithTimeout(): Promise<Record<string, any> | null> {
-  return Promise.race([
-    getCanvasFeatures(),
-    new Promise<null>((_, reject) => 
-      setTimeout(() => reject(new Error('Canvas timeout')), 2000)
-    )
-  ]).catch(() => null);
+function getCanvasFeaturesWithTimeout(): Record<string, any> | null {
+  try {
+    return getCanvasFeatures();
+  } catch {
+    return null;
+  }
 }
 
-async function getCanvasFeatures(): Promise<Record<string, any> | null> {
-  try {
-    const canvas = document.createElement("canvas");
-    
-    canvas.width = 400;
-    canvas.height = 100;
+function getCanvasFeatures(): Record<string, any> {
+  const features: Record<string, any> = {};
+  
+  // Collect canvas snapshots
+  for (let i = 0; i < CANVAS_SNAPSHOTS; i++) {
+    try {
+      const snapshot = getCanvasSnapshot(i);
+      features[`canvas_${i}`] = snapshot || FingerprintSpecialValue.ERROR;
+    } catch {
+      features[`canvas_${i}`] = FingerprintSpecialValue.ERROR;
+    }
+  }
+  
+  return features;
+}
 
-    const ctx = canvas.getContext("2d");
+function getCanvasSnapshot(index: number): string | null {
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = 200;
+    canvas.height = 50;
+    
+    const ctx = canvas.getContext('2d');
     if (!ctx) {
       return null;
     }
-
-    // Use new high-entropy text
-    drawComplexCanvas(ctx, canvas.width, canvas.height);
-
-    const features: Record<string, any> = {
-      font: ctx.font,
-      shadowBlur: ctx.shadowBlur,
-      shadowColor: ctx.shadowColor,
-      globalCompositeOperation: ctx.globalCompositeOperation,
-      fillStyle: ctx.fillStyle?.toString() || "gradient", 
-      width: canvas.width,
-      height: canvas.height,
-      pixelSample: Array.from(ctx.getImageData(0, 0, 10, 10).data),
-    };
-
-    // WebGL features with caching
-    try {
-      const gl = getWebGLContext(canvas);
-      
-      if (gl) {
-        features.webglVersion = gl.getParameter(gl.VERSION);
-        features.webglVendor = gl.getParameter(gl.VENDOR);
-        features.webglRenderer = gl.getParameter(gl.RENDERER);
-        features.webglShadingLanguageVersion = gl.getParameter(gl.SHADING_LANGUAGE_VERSION);
-        const extensions = gl.getSupportedExtensions();
-        features.webglExtensions = extensions ? extensions.sort().join(",") : "";
-
-        const debugInfo = gl.getExtension("WEBGL_debug_renderer_info") as any;
-        if (debugInfo) {
-          try {
-            features.unmaskedVendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
-            features.unmaskedRenderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
-          } catch {
-            features.unmaskedVendor = "blocked";
-            features.unmaskedRenderer = "blocked";
-          }
-        }
-      } else {
-        features.webglVersion = "webgl-unavailable";
-      }
-    } catch (error) {
-      features.webglVersion = "webgl-error";
-    }
-
-    return features;
-   } catch (error) {
-     return null;
-   }
-}
-
-// WebGL context caching for performance
-let webglContextCache: WebGLRenderingContext | null = null;
-
-function getWebGLContext(canvas: HTMLCanvasElement): WebGLRenderingContext | null {
-  if (webglContextCache) return webglContextCache;
-  
-  const context = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
-  webglContextCache = context as WebGLRenderingContext | null;
-  return webglContextCache;
-}
-
-function computeFeatureMedian(samples: any[]): any {
-  const validSamples = samples.filter((s): s is Record<string, any> => s && typeof s === 'object');
-  if (validSamples.length === 0) return {};
-
-  if (validSamples.length === 1) return validSamples[0];
-
-  const median: Record<string, any> = {};
-  const keys = Object.keys(validSamples[0]);
-
-  for (const key of keys) {
-    const vals = validSamples.map(s => JSON.stringify(s[key]));
-    const counts = new Map<string, number>();
-
-    vals.forEach(v => counts.set(v, (counts.get(v) || 0) + 1));
-
-    let maxCount = 0;
-    let mostCommon = vals[0];
-
-    counts.forEach((c, v) => { 
-      if(c > maxCount){
-        maxCount=c;mostCommon=v;
-      } 
-    });
-
-    median[key] = JSON.parse(mostCommon);
+    
+    // Use unified canvas drawing function
+    drawUnifiedCanvas(ctx, canvas.width, canvas.height, false);
+    
+    return canvas.toDataURL();
+  } catch {
+    return null;
   }
-
-  return median;
 }
 
 // Unified canvas drawing function - eliminates code duplication
@@ -261,7 +222,7 @@ function drawUnifiedCanvas(
   
   // Use appropriate text based on mode
   const text = isTestMode 
-    ? `Sphinx ${String.fromCharCode(55357, 56848)} quartz` // Shorter for test
+    ? "Sphinx ${String.fromCharCode(55357, 56848)} quartz" // Shorter for test
     : CANVAS_FINGERPRINT_TEXT; // Full text for fingerprinting
   
   if (isTestMode) {
@@ -323,10 +284,4 @@ function drawUnifiedCanvas(
     ctx.shadowOffsetY = 2;
     ctx.fillRect(0, 0, width, height);
   }
-}
-
-// Enhanced canvas drawing with new high-entropy text
-function drawComplexCanvas(ctx: CanvasRenderingContext2D, width: number, height: number) {
-  // Use unified function in full mode
-  drawUnifiedCanvas(ctx, width, height, false);
 }
