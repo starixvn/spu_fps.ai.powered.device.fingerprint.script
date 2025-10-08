@@ -136,6 +136,7 @@ function detectCanvasBlockerExtension(): Bit {
 
     return 0;
   } catch (error) {
+    console.log('detectCanvasBlockerExtension error', error);
     return 1; 
   }
 }
@@ -202,11 +203,13 @@ async function getCanvasFeatures(): Promise<Record<string, any> | null> {
         features.webglVersion = "webgl-unavailable";
       }
     } catch (error) {
+      console.log('getCanvasFeatures error', error);
       features.webglVersion = "webgl-error";
     }
 
     return features;
    } catch (error) {
+     console.log('getCanvasFeatures error', error);
      return null;
    }
 }
