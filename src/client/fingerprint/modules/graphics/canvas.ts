@@ -17,7 +17,7 @@ function doesBrowserPerformCanvasAntifingerprinting(): boolean {
   if (isSafari17OrNewer()) return true;
   
   // Samsung Internet 26+ has Smart Anti-Tracking
-  if (isSamsungInternet() && isChromium122OrNewer()) return true;
+  //if (isSamsungInternet() && isChromium122OrNewer()) return true;
   
   return false;
 }
