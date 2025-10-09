@@ -189,11 +189,11 @@
             ...currentFingerprint,
             // Add summary information
             summary: {
-              hardwareAvailable: !!(window.f5Attributes?.platform || window.f5Attributes?.hardwareConcurrency),
-              browserAvailable: !!(window.f5Attributes?.browserName || window.f5Attributes?.userAgent),
-              audioAvailable: !!(window.f5Attributes?.audio !== undefined || window.f5Attributes?.audioBaseLatency !== undefined),
-              preferencesAvailable: !!(window.f5Attributes?.languages || window.f5Attributes?.timezone),
-              graphicsAvailable: !!(window.f5Attributes?.canvas || window.f5Attributes?.webglBasics),
+              hardwareAvailable: !!(window.f5Attributes && (window.f5Attributes.platform || window.f5Attributes.hardwareConcurrency)),
+              browserAvailable: !!(window.f5Attributes && (window.f5Attributes.browserName || window.f5Attributes.userAgent)),
+              audioAvailable: !!(window.f5Attributes && (window.f5Attributes.audio !== undefined || window.f5Attributes.audioBaseLatency !== undefined)),
+              preferencesAvailable: !!(window.f5Attributes && (window.f5Attributes.languages || window.f5Attributes.timezone)),
+              graphicsAvailable: !!(window.f5Attributes && (window.f5Attributes.canvas || window.f5Attributes.webglBasics)),
               webrtcAvailable: window.webRTCData !== undefined,
               deviceInfoAvailable: !!window.deviceInfo,
               totalF5Attributes: window.f5Attributes ? Object.keys(window.f5Attributes).length : 0
