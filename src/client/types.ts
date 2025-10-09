@@ -6,7 +6,7 @@ export interface CollectedDeviceInfo {
     rtc?: any;
     sv?: string;
     v?: string;
-    tagType?: number;
+    taggingType?: number;
   }
 
 declare global {

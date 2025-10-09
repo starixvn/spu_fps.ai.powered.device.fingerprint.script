@@ -131,7 +131,7 @@ class ClientClass {
             const deviceInfo: CollectedDeviceInfo = { 
                 sk: sessionKey, 
                 tag: defaultTagging, 
-                tagType: DEFAULT_TAGGING_TYPE.DEFAULT, 
+                taggingType: DEFAULT_TAGGING_TYPE.DEFAULT, 
                 sv: scriptVersion, 
                 v: CONFIG.VERSION 
             };
@@ -141,9 +141,9 @@ class ClientClass {
             this.injectValueIntoHiddenField(sessionKey, "__fdi");
 
             await Promise.all([
-                this.tagging.start().then(([tagging, tagType]: [string, number]) => {
+                this.tagging.start().then(([tagging, taggingType]: [string, number]) => {
                     deviceInfo.tag = PacketTransformer.unwrapMessage(tagging);
-                    deviceInfo.tagType = tagType;
+                    deviceInfo.taggingType = taggingType;
                     this.updateDeviceInfo(deviceInfo);
                 }),
                 this.fingerprint.start((result: FingerprintResult) => {
