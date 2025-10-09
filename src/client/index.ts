@@ -123,15 +123,17 @@ class ClientClass {
             console.log('fv' + CONFIG.VERSION);
 
             const { Detecas } = window as any;
-            const scriptVersion = Detecas?.Config?.version || "";
+            const { version: scriptVersion, defaultDeviceId } = Detecas?.Config || {};
 
             const sessionKey = SessionKeyManager.getSessionKey();
+            const defaultTagging = defaultDeviceId || sessionKey;
 
             const deviceInfo: CollectedDeviceInfo = { 
                 sk: sessionKey, 
-                taggingType: DEFAULT_TAGGING_TYPE.DEFAULT, 
                 v: scriptVersion, 
-                fv: CONFIG.VERSION 
+                fv: CONFIG.VERSION,
+                tag: defaultTagging,
+                taggingType: DEFAULT_TAGGING_TYPE.DEFAULT 
             };
 
             await this.ensureDOMReady();
