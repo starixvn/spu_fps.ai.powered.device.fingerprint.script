@@ -122,19 +122,23 @@ class ClientClass {
         try {
             console.log('v' + CONFIG.VERSION);
 
-            const version = (window as any)?.Detecas?.Config?.version;
-            const defaultDeviceId = SessionKeyManager.getSessionKey();
+            const { Detecas } = window as any;
+            const { version: scriptVersion, defaultDeviceId } = Detecas?.Config || {};
+
+            const sessionKey = SessionKeyManager.getSessionKey();
+            const defaultTagging = PacketTransformer.unwrapMessage(defaultDeviceId) || sessionKey;
+
             const deviceInfo: CollectedDeviceInfo = { 
-                sk: defaultDeviceId, 
-                tag: defaultDeviceId, 
+                sk: sessionKey, 
+                tag: defaultTagging, 
                 tagType: DEFAULT_TAGGING_TYPE.DEFAULT, 
-                sv: version, 
+                sv: scriptVersion, 
                 v: CONFIG.VERSION 
             };
 
             await this.ensureDOMReady();
             
-            this.injectValueIntoHiddenField(defaultDeviceId, "__fdi");
+            this.injectValueIntoHiddenField(sessionKey, "__fdi");
 
             await Promise.all([
                 this.tagging.start().then(([tagging, tagType]: [string, number]) => {
