@@ -2,7 +2,7 @@ import { MurmurHash128 } from "../../utils/hash";
 import type { CanvasInfo } from "../../types";
 import type { Bit } from '../../types';
 import { FingerprintSpecialValue } from "../../utils/consts";
-import { isSafari17OrNewer, isSamsungInternet, isChromium122OrNewer } from "../../utils/browser";
+import { isSafariWebKit, isWebKit, isWebKit616OrNewer, isSamsungInternet, isChromium122OrNewer } from "../../utils/browser";
 
 const CANVAS_SNAPSHOTS = 3; 
 const CANVAS_FINGERPRINT_TEXT = `Sphinx ${String.fromCharCode(55357, 56848)} quartz ${String.fromCharCode(55357, 56849)} vow ${String.fromCharCode(55357, 56850)}`;
@@ -25,10 +25,10 @@ function promiseAllSettled<T>(promises: Promise<T>[]): Promise<Array<{status: 'f
 
 function doesBrowserPerformCanvasAntifingerprinting(): boolean {
   // Safari 17+ has enhanced anti-fingerprinting for canvas
-  if (isSafari17OrNewer()) return true;
-  
+  if (isWebKit() && isWebKit616OrNewer() && isSafariWebKit()) return true;
+
   // Samsung Internet 26+ has Smart Anti-Tracking
-  //if (isSamsungInternet() && isChromium122OrNewer()) return true;
+  if (isSamsungInternet() && isChromium122OrNewer()) return true;
   
   return false;
 }
@@ -72,7 +72,6 @@ function detectCanvasBlockerExtension(): Bit {
 
     return 0;
   } catch (error) {
-    console.log('detectCanvasBlockerExtension error', error);
     return 1; 
   }
 }
@@ -240,13 +239,11 @@ async function getCanvasFeatures(): Promise<Record<string, any> | null> {
         features.webglVersion = "webgl-unavailable";
       }
     } catch (error) {
-      console.log('getCanvasFeatures error', error);
       features.webglVersion = "webgl-error";
     }
 
     return features;
    } catch (error) {
-     console.log('getCanvasFeatures error', error);
      return null;
    }
 }
@@ -309,7 +306,6 @@ async function detectCanvasProtection(): Promise<CanvasProtectionResult> {
 
     return { isProtected: false, isStrong: false }; 
   } catch (error) {
-    console.log('Error detecting canvas protection:', error);
     return { isProtected: true, isStrong: false }; 
   }
 }
@@ -326,9 +322,11 @@ export async function collectCanvas(): Promise<CanvasInfo> {
 
     // Enhanced performance with timeout handling
     const snapshotPromises = Array.from({ length: CANVAS_SNAPSHOTS }, () => getCanvasFeaturesWithTimeout());
-    const results = await promiseAllSettled(snapshotPromises);
-    // const results = await Promise.allSettled(snapshotPromises);
     
+    const results = await (typeof Promise.allSettled === 'function' 
+      ? Promise.allSettled(snapshotPromises)
+      : promiseAllSettled(snapshotPromises));
+
     const samples = results
       .filter(result => result.status === 'fulfilled')
       .map(result => (result as PromiseFulfilledResult<any>).value)
@@ -343,7 +341,6 @@ export async function collectCanvas(): Promise<CanvasInfo> {
       
     return [value, 0];
   } catch (error) {
-    console.log('collectCanvas error', error);
     return [FingerprintSpecialValue.ERROR, 0];
   }
 }
