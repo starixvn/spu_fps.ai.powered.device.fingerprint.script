@@ -13,7 +13,7 @@ type CanvasProtectionResult = {
 };
 
 function doesBrowserPerformAntifingerprinting(): boolean {
-  // Safari 17
+  // Safari 17+
   if (isWebKit() && isWebKit616OrNewer() && isSafariWebKit()) return true;
   return false;
 }

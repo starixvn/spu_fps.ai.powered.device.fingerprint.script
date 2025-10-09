@@ -147,34 +147,21 @@ export function isWebKit(): Bit {
 }
 
 /**
- * Detects if browser is Safari WebKit (not other WebKit browsers like Chrome)
+ * Detects if browser is Safari WebKit 
  */
 export function isSafariWebKit(): Bit {
-  try {
-    const w = window;
-    const n = navigator;
-    const ua = n.userAgent;
+  const w = window
 
-    // Early returns for non-Safari browsers
-    if ('chrome' in w) return 0;
-    if (ua.includes('Chrome')) return 0;
-    if (ua.includes('Chromium')) return 0;
-    if (ua.includes('Edge')) return 0;
+  return boolToBit(
+    // Filters-out Chrome, Yandex, DuckDuckGo (macOS and iOS), Edge
+    isFunctionNative(w.print) &&
+    // Doesn't work in Safari < 15.4
+    String((w as unknown as Record<string, unknown>).browser) === '[object WebPageNamespace]'
+  )
+}
 
-    // Must be WebKit and have Safari indicators
-    return boolToBit(
-      isWebKit() === 1 &&
-        countTruthy([
-          'safari' in w,
-          ua.includes('Safari'),
-          ua.includes('Version/'), // Safari has Version/ in UA
-          n.vendor.includes('Apple'),
-          !ua.includes('Chrome'),
-        ]) >= 4
-    );
-  } catch {
-    return 0;
-  }
+function isFunctionNative(func: (...args: unknown[]) => unknown): boolean {
+  return /^function\s.*?\{\s*\[native code]\s*}$/.test(String(func))
 }
 
 /**
@@ -182,21 +169,19 @@ export function isSafariWebKit(): Bit {
  * Based on WebKit version detection from user agent
  */
 export function isWebKit616OrNewer(): Bit {
-  try {
-    const userAgent = navigator.userAgent;
+  const w = window
+  const n = navigator
+  const { CSS, HTMLButtonElement } = w
 
-    // Look for WebKit version in user agent
-    const webkitMatch = userAgent.match(/WebKit\/(\d+)/);
-
-    if (!webkitMatch) return 0;
-
-    const webkitVersion = parseInt(webkitMatch[1], 10);
-
-    // WebKit 616+ corresponds to Safari 17+
-    return boolToBit(webkitVersion >= 616);
-  } catch {
-    return 0;
-  }
+  return boolToBit(
+    countTruthy([
+      !('getStorageUpdates' in n),
+      HTMLButtonElement && 'popover' in HTMLButtonElement.prototype,
+      'CSSCounterStyleRule' in w,
+      CSS.supports('font-size-adjust: ex-height 0.5'),
+      CSS.supports('text-transform: full-width'),
+    ]) >= 4
+  )
 }
 
 /**

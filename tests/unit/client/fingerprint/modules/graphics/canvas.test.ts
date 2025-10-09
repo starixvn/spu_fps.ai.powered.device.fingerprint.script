@@ -2,6 +2,15 @@ import { collectCanvas } from '../../../../../../src/client/fingerprint/modules/
 import { FingerprintSpecialValue } from '../../../../../../src/client/fingerprint/utils/consts';
 import { MurmurHash128 } from '../../../../../../src/client/fingerprint/utils/hash';
 
+// Mock browser detection functions
+jest.mock('../../../../../../src/client/fingerprint/utils/browser', () => ({
+  isWebKit: jest.fn(),
+  isWebKit616OrNewer: jest.fn(),
+  isSafariWebKit: jest.fn()
+}));
+
+import { isWebKit, isWebKit616OrNewer, isSafariWebKit } from '../../../../../../src/client/fingerprint/utils/browser';
+
 // Mock MurmurHash128
 jest.mock('../../../../../../src/client/fingerprint/utils/hash', () => ({
   MurmurHash128: {
@@ -60,6 +69,11 @@ const mockCreateElement = jest.fn();
 describe('Canvas Module', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    
+    // Mock browser detection functions to return false (no anti-fingerprinting)
+    (isWebKit as jest.Mock).mockReturnValue(0);
+    (isWebKit616OrNewer as jest.Mock).mockReturnValue(0);
+    (isSafariWebKit as jest.Mock).mockReturnValue(0);
     
     // Setup global mocks
     Object.defineProperty(global, 'localStorage', {
@@ -272,10 +286,43 @@ describe('Canvas Module', () => {
     });
 
     it('should return TIMEOUT when no samples collected', async () => {
-      // Arrange - Make all canvas operations fail
-      mockCanvas.getContext.mockReturnValue(mockContext);
-      mockContext.getImageData.mockImplementation(() => {
-        throw new Error('Canvas operation failed');
+      // Arrange - Make getCanvasFeatures return null for all samples
+      // Clear all mocks first to ensure clean state
+      jest.clearAllMocks();
+      
+      // Re-setup essential mocks
+      mockLocalStorage.getItem.mockImplementation((key: string) => {
+        if (key === 'canvasBaseline') return 'data:image/png;base64,consistent-baseline';
+        if (key === 'canvasCache') return null;
+        return null;
+      });
+      
+      // Mock createElement to return canvas with proper context for protection detection
+      // but null context for actual fingerprinting
+      let callCount = 0;
+      mockCreateElement.mockImplementation((tagName: string) => {
+        if (tagName === 'canvas') {
+          callCount++;
+          if (callCount <= 2) {
+            // First 2 calls for canvas protection detection - return working canvas
+            return {
+              ...mockCanvas,
+              width: 200,
+              height: 50,
+              getContext: jest.fn().mockReturnValue(mockContext),
+              toDataURL: jest.fn().mockReturnValue('data:image/png;base64,consistent-baseline')
+            };
+          } else {
+            // Later calls for actual fingerprinting - return canvas with null context
+            return {
+              ...mockCanvas,
+              width: 400,
+              height: 100,
+              getContext: jest.fn().mockReturnValue(null)
+            };
+          }
+        }
+        return mockCanvas;
       });
 
       // Act
