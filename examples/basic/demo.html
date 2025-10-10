@@ -185,8 +185,7 @@
           };
 
           // Format and display the data
-          const formattedData = {
-            ...currentFingerprint,
+          const formattedData = Object.assign({}, currentFingerprint, {
             // Add summary information
             summary: {
               hardwareAvailable: !!(window.f5Attributes && (window.f5Attributes.platform || window.f5Attributes.hardwareConcurrency)),
@@ -198,7 +197,7 @@
               deviceInfoAvailable: !!window.deviceInfo,
               totalF5Attributes: window.f5Attributes ? Object.keys(window.f5Attributes).length : 0
             }
-          };
+          });
 
           document.getElementById("fingerprintData").textContent =
             JSON.stringify(formattedData, null, 2);
