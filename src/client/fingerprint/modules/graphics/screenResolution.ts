@@ -16,7 +16,7 @@ export function collectScreenResolution(): ScreenResolution {
 
 function getScreenResolution(): ScreenResolution {
   try {
-    const antiFingerprintingResolution = getAntiFingerprintedResolution();
+    const antiFingerprintingResolution = getScreenResolutionAntifingerprinting();
     if (antiFingerprintingResolution) return antiFingerprintingResolution;
 
     // Get raw resolution and validate
@@ -39,7 +39,7 @@ function getScreenResolution(): ScreenResolution {
   }
 }
 
-function getAntiFingerprintedResolution(): ScreenResolution | null {
+function getScreenResolutionAntifingerprinting(): ScreenResolution | null {
   // Safari WebKit anti-fingerprinting
   if (isWebKit() && isWebKit616OrNewer() && isSafariWebKit()) {
     return [
