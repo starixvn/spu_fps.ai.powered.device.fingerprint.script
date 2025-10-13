@@ -83,8 +83,10 @@ describe('Screen Resolution Module', () => {
       // Assert
       expect(Array.isArray(result)).toBe(true);
       expect(result).toHaveLength(2);
-      expect(result[0]).toBe(1920);
-      expect(result[1]).toBe(1080);
+      if (Array.isArray(result)) {
+        expect(result[0]).toBe(1920);
+        expect(result[1]).toBe(1080);
+      }
     });
 
     it('should handle different screen resolutions correctly', () => {
@@ -119,7 +121,7 @@ describe('Screen Resolution Module', () => {
       const result = collectScreenResolution();
 
       // Assert - zero dimensions are detected as suspicious (too small)
-      expect(result).toEqual([FingerprintSpecialValue.ANTI_FINGERPRINTED, FingerprintSpecialValue.ANTI_FINGERPRINTED]);
+      expect(result).toBe(FingerprintSpecialValue.ANTI_FINGERPRINTED);
     });
 
     it('should handle very large screen dimensions', () => {
@@ -143,7 +145,7 @@ describe('Screen Resolution Module', () => {
       const result = collectScreenResolution();
 
       // Assert - negative dimensions are detected as suspicious (too small)
-      expect(result).toEqual([FingerprintSpecialValue.ANTI_FINGERPRINTED, FingerprintSpecialValue.ANTI_FINGERPRINTED]);
+      expect(result).toBe(FingerprintSpecialValue.ANTI_FINGERPRINTED);
     });
 
     it('should handle non-integer screen dimensions', () => {
@@ -169,8 +171,8 @@ describe('Screen Resolution Module', () => {
       // Act
       const result = collectScreenResolution();
       
-      // Assert - Function doesn't throw, returns ERROR values due to try-catch
-      expect(result).toEqual([FingerprintSpecialValue.ERROR, FingerprintSpecialValue.ERROR]);
+      // Assert - Function doesn't throw, returns ERROR special value due to try-catch
+      expect(result).toBe(FingerprintSpecialValue.ERROR);
     });
 
     it('should handle screen object without width/height properties', () => {
@@ -184,8 +186,8 @@ describe('Screen Resolution Module', () => {
       // Act
       const result = collectScreenResolution();
 
-      // Assert - toInt(undefined) => NaN => replaceNaN => UNDEFINED (-1), but detected as suspicious
-      expect(result).toEqual([FingerprintSpecialValue.ANTI_FINGERPRINTED, FingerprintSpecialValue.ANTI_FINGERPRINTED]);
+      // Assert - toInt(undefined) => NaN => replaceNaN => UNDEFINED (-1), then flagged as suspicious
+      expect(result).toBe(FingerprintSpecialValue.ANTI_FINGERPRINTED);
     });
 
     it('should handle screen object with null width/height', () => {
@@ -199,8 +201,8 @@ describe('Screen Resolution Module', () => {
       // Act
       const result = collectScreenResolution();
 
-      // Assert - toInt(null) => NaN => replaceNaN => UNDEFINED (-1), but detected as suspicious
-      expect(result).toEqual([FingerprintSpecialValue.ANTI_FINGERPRINTED, FingerprintSpecialValue.ANTI_FINGERPRINTED]);
+      // Assert - toInt(null) => NaN => replaceNaN => UNDEFINED (-1), then flagged as suspicious
+      expect(result).toBe(FingerprintSpecialValue.ANTI_FINGERPRINTED);
     });
 
     it('should return consistent results across multiple calls', () => {
@@ -293,8 +295,10 @@ describe('Screen Resolution Module', () => {
 
       // Assert - toInt() converts fractional values to integers
       expect(result).toEqual([1366, 768]);
-      expect(typeof result[0]).toBe('number');
-      expect(typeof result[1]).toBe('number');
+      if (Array.isArray(result)) {
+        expect(typeof result[0]).toBe('number');
+        expect(typeof result[1]).toBe('number');
+      }
     });
   });
 });
