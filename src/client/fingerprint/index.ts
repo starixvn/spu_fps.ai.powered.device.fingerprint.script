@@ -14,24 +14,7 @@ export class FingerprintClass {
         this.ip = new IPClass();
     }
     
-    public sendViaBeacon(
-        endpoint: string,
-        payload: any
-    ): boolean {
-        try {
-            if (!navigator.sendBeacon) {
-                return false;
-            }
-            const formData = new FormData();
-            formData.append('request', payload);
-            return navigator.sendBeacon(endpoint, formData);
-        } catch (error) {
-            ErrorLogger.error('Failed to send data via sendBeacon:', error);
-            return false;
-        }
-    }
-
-    public async sendViaFetch(
+    public async sendToServer(
         endpoint: string,
         payload: any
     ): Promise<boolean> {
@@ -48,23 +31,6 @@ export class FingerprintClass {
             return response.ok;
         } catch (error) {
             ErrorLogger.error('Failed to send data via fetch:', error);
-            return false;
-        }
-    }
-
-    public async sendToServer(
-        endpoint: string,
-        payload: any
-    ): Promise<boolean> {
-        try {
-            const beaconSuccess = this.sendViaBeacon(endpoint, payload);
-            if (beaconSuccess) {
-                return true;
-            }
-
-            return await this.sendViaFetch(endpoint, payload);
-        } catch (error) {
-            ErrorLogger.error('Failed to send data to server:', error);
             return false;
         }
     }
