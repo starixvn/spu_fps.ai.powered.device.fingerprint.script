@@ -140,9 +140,7 @@ function isSuspiciousResolution(resolution: ScreenResolution): boolean {
     // Only flag extreme cases
     (width < 320 || height < 240) ||  // Too small for any device
     (width > 7680 || height > 4320) || // Too large (8K+)
-    (aspectRatio > 3.0) || // Extreme aspect ratios (e.g., 3:1 or more extreme)
-    // Very strict even numbers check
-    (width % 2 === 0 && height % 2 === 0 && width < 800 && height < 600);
+    (aspectRatio > 3.0); // Extreme aspect ratios (e.g., 3:1 or more extreme)
   
   return isCommonSpoofed || isSuspiciousPattern;
 }

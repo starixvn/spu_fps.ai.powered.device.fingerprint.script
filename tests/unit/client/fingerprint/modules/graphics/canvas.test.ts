@@ -7,11 +7,11 @@ jest.mock('../../../../../../src/client/fingerprint/utils/browser', () => ({
   isSafariWebKit: jest.fn(),
   isWebKit: jest.fn(),
   isWebKit616OrNewer: jest.fn(),
-  isSamsungInternet: jest.fn(),
+  isSamsungInternetV17OrNewer: jest.fn(),
   isChromium122OrNewer: jest.fn()
 }));
 
-import { isSafariWebKit, isWebKit, isWebKit616OrNewer, isSamsungInternet, isChromium122OrNewer } from '../../../../../../src/client/fingerprint/utils/browser';
+import { isSafariWebKit, isWebKit, isWebKit616OrNewer, isSamsungInternetV17OrNewer, isChromium122OrNewer } from '../../../../../../src/client/fingerprint/utils/browser';
 
 // Mock MurmurHash128
 jest.mock('../../../../../../src/client/fingerprint/utils/hash', () => ({
@@ -19,7 +19,6 @@ jest.mock('../../../../../../src/client/fingerprint/utils/hash', () => ({
     hash128: jest.fn()
   }
 }));
-
 
 // Mock localStorage
 const mockLocalStorage = {
@@ -74,10 +73,10 @@ describe('Canvas Module', () => {
     jest.clearAllMocks();
     
     // Mock browser detection functions to return false (no anti-fingerprinting)
-    (isSafariWebKit as jest.Mock).mockReturnValue(false);
     (isWebKit as jest.Mock).mockReturnValue(false);
     (isWebKit616OrNewer as jest.Mock).mockReturnValue(false);
-    (isSamsungInternet as jest.Mock).mockReturnValue(false);
+    (isSafariWebKit as jest.Mock).mockReturnValue(false);
+    (isSamsungInternetV17OrNewer as jest.Mock).mockReturnValue(false);
     (isChromium122OrNewer as jest.Mock).mockReturnValue(false);
     
     // Setup global mocks
@@ -182,7 +181,7 @@ describe('Canvas Module', () => {
     });
 
     it('should handle canvas protection detected', async () => {
-      // Arrange - Simulate canvas protection by enabling browser anti-fingerprinting
+      // Arrange - Simulate canvas protection by enabling browser anti-fingerprinting (Safari 17+)
       (isWebKit as jest.Mock).mockReturnValue(true);
       (isWebKit616OrNewer as jest.Mock).mockReturnValue(true);
       (isSafariWebKit as jest.Mock).mockReturnValue(true);
@@ -352,7 +351,7 @@ describe('Canvas Module', () => {
 
     it('should handle strong canvas protection', async () => {
       // Arrange - Simulate strong protection by enabling Samsung Internet anti-fingerprinting
-      (isSamsungInternet as jest.Mock).mockReturnValue(true);
+      (isSamsungInternetV17OrNewer as jest.Mock).mockReturnValue(true);
       (isChromium122OrNewer as jest.Mock).mockReturnValue(true);
 
       // Act
@@ -367,10 +366,10 @@ describe('Canvas Module', () => {
       jest.clearAllMocks();
       
       // Re-setup browser mocks after clearing
-      (isSafariWebKit as jest.Mock).mockReturnValue(false);
       (isWebKit as jest.Mock).mockReturnValue(false);
       (isWebKit616OrNewer as jest.Mock).mockReturnValue(false);
-      (isSamsungInternet as jest.Mock).mockReturnValue(false);
+      (isSafariWebKit as jest.Mock).mockReturnValue(false);
+      (isSamsungInternetV17OrNewer as jest.Mock).mockReturnValue(false);
       (isChromium122OrNewer as jest.Mock).mockReturnValue(false);
       
       mockCreateElement.mockReturnValue({
@@ -428,10 +427,10 @@ describe('Canvas Module', () => {
       (MurmurHash128.hash128 as jest.Mock).mockReturnValue(expectedHash);
       
       // Ensure browser mocks are set to allow normal operation
-      (isSafariWebKit as jest.Mock).mockReturnValue(false);
       (isWebKit as jest.Mock).mockReturnValue(false);
       (isWebKit616OrNewer as jest.Mock).mockReturnValue(false);
-      (isSamsungInternet as jest.Mock).mockReturnValue(false);
+      (isSafariWebKit as jest.Mock).mockReturnValue(false);
+      (isSamsungInternetV17OrNewer as jest.Mock).mockReturnValue(false);
       (isChromium122OrNewer as jest.Mock).mockReturnValue(false);
 
       // Act
@@ -443,7 +442,7 @@ describe('Canvas Module', () => {
     });
 
     it('should handle async canvas protection detection', async () => {
-      // Arrange - Simulate async protection detection by enabling browser anti-fingerprinting
+      // Arrange - Simulate async protection detection by enabling browser anti-fingerprinting (Safari 17+)
       (isWebKit as jest.Mock).mockReturnValue(true);
       (isWebKit616OrNewer as jest.Mock).mockReturnValue(true);
       (isSafariWebKit as jest.Mock).mockReturnValue(true);

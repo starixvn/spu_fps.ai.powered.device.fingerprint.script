@@ -5,7 +5,7 @@
 import { collectAudio } from '../../../../../../src/client/fingerprint/modules/audio/audio';
 import { FingerprintSpecialValue } from '../../../../../../src/client/fingerprint/utils/consts';
 import { collectBrowserName } from '../../../../../../src/client/fingerprint/modules/browser/browserName';
-import { isMobile, isWebKit, isSafariWebKit, isChromium, isChromium122OrNewer, isSamsungInternet } from '../../../../../../src/client/fingerprint/utils/browser';
+import { isMobile, isWebKit, isSafariWebKit, isChromium, isChromium122OrNewer, isSamsungInternetV17OrNewer } from '../../../../../../src/client/fingerprint/utils/browser';
 
 // Mock dependencies
 jest.mock('../../../../../../src/client/fingerprint/modules/browser/browserName');
@@ -17,7 +17,7 @@ const mockIsWebKit = jest.mocked(isWebKit);
 const mockIsSafariWebKit = jest.mocked(isSafariWebKit);
 const mockIsChromium = jest.mocked(isChromium);
 const mockIsChromium122OrNewer = jest.mocked(isChromium122OrNewer);
-const mockIsSamsungInternet = jest.mocked(isSamsungInternet);
+const mockIsSamsungInternet = jest.mocked(isSamsungInternetV17OrNewer);
 
 // Mock OfflineAudioContext
 const mockOfflineAudioContext = {
