@@ -885,13 +885,6 @@
           document.getElementById("errorLogContent").innerHTML = html;
           document.getElementById("errorLogDisplay").style.display = "block";
 
-          // Also log to console
-          console.log('=== FPS Error Logs ===');
-          console.log('Total logs:', logs.length);
-          console.log('Errors:', errorCount);
-          console.log('Warnings:', warnCount);
-          console.log('Info:', infoCount);
-          console.table(logs);
 
         } catch (error) {
           console.error("❌ Error displaying error logs:", error);
@@ -961,7 +954,6 @@
           
           URL.revokeObjectURL(url);
 
-          console.log('✅ Error logs downloaded successfully');
         } catch (error) {
           console.error("❌ Error downloading logs:", error);
           alert('Failed to download logs: ' + error.message);
