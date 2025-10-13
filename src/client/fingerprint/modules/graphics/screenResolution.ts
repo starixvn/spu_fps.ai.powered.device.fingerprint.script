@@ -2,8 +2,7 @@ import {
   isSafariWebKit, 
   isWebKit, 
   isWebKit616OrNewer,
-  isSamsungInternet,
-  isChromium122OrNewer
+  isSamsungInternetV17OrNewer
 } from '../../utils/browser';
 import { FingerprintSpecialValue } from '../../utils/consts';
 import { replaceNaN, toInt } from '../../utils/data';
@@ -17,40 +16,54 @@ export function collectScreenResolution(): ScreenResolution {
 
 function getScreenResolution(): ScreenResolution {
   try {
-    // Safari WebKit anti-fingerprinting
-    if (isWebKit() && isWebKit616OrNewer() && isSafariWebKit()) {
-      return [
-        FingerprintSpecialValue.UNDEFINED,
-        FingerprintSpecialValue.UNDEFINED,
-      ];
-    }
-
-    // Samsung Internet Smart Anti-Tracking - skip completely
-    if (isSamsungInternet() && isChromium122OrNewer()) {
-      return [
-        FingerprintSpecialValue.ANTI_FINGERPRINTED,
-        FingerprintSpecialValue.ANTI_FINGERPRINTED,
-      ];
-    }
+    const antiFingerprintingResolution = getScreenResolutionAntifingerprinting();
+    if (antiFingerprintingResolution) return antiFingerprintingResolution;
 
     // Get raw resolution and validate
     const resolution = getRawScreenResolution();
     
     // Check for anti-fingerprinting spoofing
-    if (isSuspiciousResolution(resolution)) {
-      return [
-        FingerprintSpecialValue.ANTI_FINGERPRINTED,
-        FingerprintSpecialValue.ANTI_FINGERPRINTED,
-      ];
-    }
+    const suspiciousResolution = handleSuspiciousResolution(resolution);
+    if (suspiciousResolution) return suspiciousResolution;
 
     return resolution;
-  } catch {
+  } catch (error) {
     return [
       FingerprintSpecialValue.ERROR,
       FingerprintSpecialValue.ERROR,
     ];
   }
+}
+
+function getScreenResolutionAntifingerprinting(): ScreenResolution | null {
+  // Safari WebKit anti-fingerprinting
+  if (isWebKit() && isWebKit616OrNewer() && isSafariWebKit()) {
+    return [
+      FingerprintSpecialValue.UNDEFINED,
+      FingerprintSpecialValue.UNDEFINED,
+    ];
+  }
+
+  // Samsung Internet Smart Anti-Tracking (v17+)
+  if (isSamsungInternetV17OrNewer()) {
+    return [
+      FingerprintSpecialValue.ANTI_FINGERPRINTED,
+      FingerprintSpecialValue.ANTI_FINGERPRINTED,
+    ];
+  }
+
+  return null;
+}
+
+function handleSuspiciousResolution(resolution: ScreenResolution): ScreenResolution | null {
+  if (isSuspiciousResolution(resolution)) {
+    return [
+      FingerprintSpecialValue.ANTI_FINGERPRINTED,
+      FingerprintSpecialValue.ANTI_FINGERPRINTED,
+    ];
+  }
+
+  return null;
 }
 
 export function getRawScreenResolution(): ScreenResolution {
@@ -59,7 +72,12 @@ export function getRawScreenResolution(): ScreenResolution {
   const width = parseDimension(s.width);
   const height = parseDimension(s.height);
   
-  return [width, height];
+  const normalizedResolution: ScreenResolution = 
+    typeof width === 'number' && typeof height === 'number'
+      ? [Math.max(width, height), Math.min(width, height)]
+      : [width, height];
+  
+  return normalizedResolution;
 }
 
 // Combined mobile detection approach - reliable and hard to spoof
@@ -94,10 +112,7 @@ function isLikelyMobile(): boolean {
 function isSuspiciousResolution(resolution: ScreenResolution): boolean {
   const [width, height] = resolution;
   
-  // Check for valid numbers
-  if (typeof width !== 'number' || typeof height !== 'number') {
-    return false; // Let other logic handle non-numbers
-  }
+  if (typeof width !== 'number' || typeof height !== 'number') return false;
   
   // Detect device type using combined approach
   const isMobile = isLikelyMobile();
@@ -118,12 +133,14 @@ function isSuspiciousResolution(resolution: ScreenResolution): boolean {
     width === w && height === h
   );
   
+  const aspectRatio = Math.max(width, height) / Math.min(width, height);
+  
   // Very conservative pattern detection
   const isSuspiciousPattern = 
     // Only flag extreme cases
     (width < 320 || height < 240) ||  // Too small for any device
     (width > 7680 || height > 4320) || // Too large (8K+)
-    (width / height < 1.0 || width / height > 3.0) || // Extreme aspect ratios
+    (aspectRatio > 3.0) || // Extreme aspect ratios (e.g., 3:1 or more extreme)
     // Very strict even numbers check
     (width % 2 === 0 && height % 2 === 0 && width < 800 && height < 600);
   

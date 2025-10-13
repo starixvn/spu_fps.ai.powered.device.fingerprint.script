@@ -63,9 +63,9 @@ export function isChromium122OrNewer(): boolean {
 }
 
 /**
- * Checks whether the browser is Samsung Internet
+ * Checks whether the browser is Samsung Internet 17+
  */
-export function isSamsungInternet(): boolean {
+export function isSamsungInternetV17OrNewer(): boolean {
   // Checked in Samsung Internet 21, 25 and 27
   const n = navigator;
   const w = window;

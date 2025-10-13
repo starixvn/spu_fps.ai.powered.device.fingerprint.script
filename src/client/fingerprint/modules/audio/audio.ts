@@ -7,7 +7,7 @@ import {
   isChromium122OrNewer,
   isMobile,
   isSafariWebKit,
-  isSamsungInternet,
+  isSamsungInternetV17OrNewer,
   isWebKit,
 } from '../../utils/browser';
 
@@ -95,7 +95,7 @@ function doesBrowserPerformAntifingerprinting(): Bit {
   if (isWebKit() && isSafariWebKit()) return 1;
 
   // Samsung Browser 26+ has enhanced privacy
-  if (isChromium() && isSamsungInternet() && isChromium122OrNewer()) return 1;
+  if (isChromium() && isSamsungInternetV17OrNewer() && isChromium122OrNewer()) return 1;
 
   // Brave Browser has built-in fingerprinting protection
   if (browserName === 'brave') return 1;
