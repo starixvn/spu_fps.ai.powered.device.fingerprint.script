@@ -6,73 +6,59 @@ import {
 } from '../../utils/browser';
 import { FingerprintSpecialValue } from '../../utils/consts';
 import { replaceNaN, toInt } from '../../utils/data';
+import type { ScreenResolutionInfo } from '../../types';
 
-export type ScreenResolutionValue = number | FingerprintSpecialValue
-export type ScreenResolution = [ScreenResolutionValue, ScreenResolutionValue]
-
-export function collectScreenResolution(): ScreenResolution {
+export function collectScreenResolution(): ScreenResolutionInfo {
   return getScreenResolution();
 }
 
-function getScreenResolution(): ScreenResolution {
+function getScreenResolution(): ScreenResolutionInfo {
   try {
     const antiFingerprintingResolution = getScreenResolutionAntifingerprinting();
-    if (antiFingerprintingResolution) return antiFingerprintingResolution;
+    if (antiFingerprintingResolution !== null) return antiFingerprintingResolution;
 
     // Get raw resolution and validate
     const resolution = getRawScreenResolution();
+    if (!Array.isArray(resolution)) return resolution;
     
     // Check for anti-fingerprinting spoofing
     const suspiciousResolution = handleSuspiciousResolution(resolution);
-    if (suspiciousResolution) return suspiciousResolution;
+    if (suspiciousResolution !== null) return suspiciousResolution;
 
     return resolution;
   } catch (error) {
-    return [
-      FingerprintSpecialValue.ERROR,
-      FingerprintSpecialValue.ERROR,
-    ];
+    return FingerprintSpecialValue.ERROR;
   }
 }
 
-function getScreenResolutionAntifingerprinting(): ScreenResolution | null {
-  // Safari WebKit anti-fingerprinting
+function getScreenResolutionAntifingerprinting(): ScreenResolutionInfo | null {
+  // Safari WebKit anti-fingerprinting 
   if (isWebKit() && isWebKit616OrNewer() && isSafariWebKit()) {
-    return [
-      FingerprintSpecialValue.UNDEFINED,
-      FingerprintSpecialValue.UNDEFINED,
-    ];
+    return FingerprintSpecialValue.UNDEFINED;
   }
 
   // Samsung Internet Smart Anti-Tracking (v17+)
   if (isSamsungInternetV17OrNewer()) {
-    return [
-      FingerprintSpecialValue.ANTI_FINGERPRINTED,
-      FingerprintSpecialValue.ANTI_FINGERPRINTED,
-    ];
+    return FingerprintSpecialValue.ANTI_FINGERPRINTED;
   }
 
   return null;
 }
 
-function handleSuspiciousResolution(resolution: ScreenResolution): ScreenResolution | null {
+function handleSuspiciousResolution(resolution: [number, number]): ScreenResolutionInfo | null {
   if (isSuspiciousResolution(resolution)) {
-    return [
-      FingerprintSpecialValue.ANTI_FINGERPRINTED,
-      FingerprintSpecialValue.ANTI_FINGERPRINTED,
-    ];
+    return FingerprintSpecialValue.ANTI_FINGERPRINTED;
   }
-
   return null;
 }
 
-export function getRawScreenResolution(): ScreenResolution {
+export function getRawScreenResolution(): ScreenResolutionInfo {
   const s = screen;
   const parseDimension = (value: unknown) => replaceNaN(toInt(value), FingerprintSpecialValue.UNDEFINED);
   const width = parseDimension(s.width);
   const height = parseDimension(s.height);
   
-  const normalizedResolution: ScreenResolution = 
+  const normalizedResolution: ScreenResolutionInfo = 
     typeof width === 'number' && typeof height === 'number'
       ? [Math.max(width, height), Math.min(width, height)]
       : [width, height];
@@ -109,7 +95,7 @@ function isLikelyMobile(): boolean {
 }
 
 // Detect suspicious screen resolutions that might be spoofed
-function isSuspiciousResolution(resolution: ScreenResolution): boolean {
+function isSuspiciousResolution(resolution: [number, number]): boolean {
   const [width, height] = resolution;
   
   if (typeof width !== 'number' || typeof height !== 'number') return false;
