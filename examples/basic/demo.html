@@ -64,6 +64,82 @@
       .storage-item strong {
         color: #1976d2;
       }
+      .error-log-display {
+        background: #fff3cd;
+        border: 2px solid #ffc107;
+        border-radius: 5px;
+        padding: 20px;
+        margin: 20px 0;
+        max-height: 500px;
+        overflow-y: auto;
+      }
+      .log-entry {
+        background: white;
+        border-left: 4px solid #ccc;
+        padding: 12px;
+        margin: 10px 0;
+        border-radius: 4px;
+        font-family: "Courier New", monospace;
+        font-size: 13px;
+      }
+      .log-entry.error {
+        border-left-color: #dc3545;
+        background: #fff5f5;
+      }
+      .log-entry.warn {
+        border-left-color: #ffc107;
+        background: #fffbf0;
+      }
+      .log-entry.info {
+        border-left-color: #17a2b8;
+        background: #f0f9ff;
+      }
+      .log-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-weight: bold;
+      }
+      .log-level {
+        text-transform: uppercase;
+        padding: 2px 8px;
+        border-radius: 3px;
+        font-size: 11px;
+      }
+      .log-level.error {
+        background: #dc3545;
+        color: white;
+      }
+      .log-level.warn {
+        background: #ffc107;
+        color: #333;
+      }
+      .log-level.info {
+        background: #17a2b8;
+        color: white;
+      }
+      .log-message {
+        margin: 8px 0;
+        color: #333;
+      }
+      .log-context {
+        color: #666;
+        font-size: 12px;
+        margin-top: 5px;
+      }
+      .log-timestamp {
+        color: #999;
+        font-size: 11px;
+      }
+      .log-error-details {
+        background: #f8f9fa;
+        padding: 8px;
+        border-radius: 3px;
+        margin-top: 8px;
+        color: #d32f2f;
+        font-size: 12px;
+        white-space: pre-wrap;
+      }
     </style>
   </head>
   <body>
@@ -81,6 +157,9 @@
         </button>
         <button class="button" onclick="loginTransaction()" style="background: #28a745;">
           🔐 Login Transaction
+        </button>
+        <button class="button" onclick="showErrorLogs()" style="background: #dc3545;">
+          ⚠️ View Error Logs
         </button>
       </div>
 
@@ -119,6 +198,28 @@
       >
         <h3>Login Transaction Response:</h3>
         <pre id="loginData"></pre>
+      </div>
+
+      <div
+        id="errorLogDisplay"
+        class="error-log-display"
+        style="display: none"
+      >
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+          <h3 style="margin: 0;">⚠️ Error Logs from FPS Client</h3>
+          <div>
+            <button class="button" onclick="refreshErrorLogs()" style="background: #17a2b8; margin: 0 5px;">
+              🔄 Refresh
+            </button>
+            <button class="button" onclick="clearErrorLogs()" style="background: #6c757d; margin: 0 5px;">
+              🗑️ Clear
+            </button>
+            <button class="button" onclick="downloadErrorLogs()" style="background: #28a745; margin: 0 5px;">
+              💾 Download
+            </button>
+          </div>
+        </div>
+        <div id="errorLogContent"></div>
       </div>
     </div>
 
@@ -710,6 +811,178 @@
         
         document.getElementById("loginResponse").style.display = "block";
       }
+
+      // Error Logs Management Functions
+      function showErrorLogs() {
+        try {
+          // Check if window.errorLogger exists
+          if (!window.errorLogger || !Array.isArray(window.errorLogger)) {
+            document.getElementById("errorLogContent").innerHTML = `
+              <div style="text-align: center; padding: 40px; color: #666;">
+                <p style="font-size: 18px;">📭 No error logs available</p>
+                <p style="font-size: 14px;">Error logs will appear here when FPS Client encounters issues.</p>
+                <p style="font-size: 12px; margin-top: 20px;">Make sure FPS Client is loaded and DEBUG mode is enabled.</p>
+              </div>
+            `;
+            document.getElementById("errorLogDisplay").style.display = "block";
+            return;
+          }
+
+          const logs = window.errorLogger;
+
+          if (logs.length === 0) {
+            document.getElementById("errorLogContent").innerHTML = `
+              <div style="text-align: center; padding: 40px; color: #666;">
+                <p style="font-size: 18px;">✅ No errors logged yet</p>
+                <p style="font-size: 14px;">Your FPS Client is running smoothly!</p>
+              </div>
+            `;
+            document.getElementById("errorLogDisplay").style.display = "block";
+            return;
+          }
+
+          // Get statistics
+          const errorCount = logs.filter(log => log.level === 'error').length;
+          const warnCount = logs.filter(log => log.level === 'warn').length;
+          const infoCount = logs.filter(log => log.level === 'info').length;
+
+          // Build HTML
+          let html = `
+            <div style="background: white; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+              <h4 style="margin: 0 0 10px 0;">📊 Summary</h4>
+              <div style="display: flex; gap: 20px;">
+                <div><strong>Total:</strong> ${logs.length}</div>
+                <div style="color: #dc3545;"><strong>Errors:</strong> ${errorCount}</div>
+                <div style="color: #ffc107;"><strong>Warnings:</strong> ${warnCount}</div>
+                <div style="color: #17a2b8;"><strong>Info:</strong> ${infoCount}</div>
+              </div>
+            </div>
+          `;
+
+          // Display logs (newest first)
+          for (let i = logs.length - 1; i >= 0; i--) {
+            const log = logs[i];
+            const timestamp = new Date(log.timestamp).toLocaleString('vi-VN');
+            
+            html += `
+              <div class="log-entry ${log.level}">
+                <div class="log-header">
+                  <span class="log-level ${log.level}">${log.level}</span>
+                  <span class="log-timestamp">${timestamp}</span>
+                </div>
+                <div class="log-message">${escapeHtml(log.message)}</div>
+                ${log.context ? `<div class="log-context">📍 Context: ${escapeHtml(log.context)}</div>` : ''}
+                ${log.error ? `
+                  <div class="log-error-details">
+                    ${log.error.message ? `<strong>Error:</strong> ${escapeHtml(log.error.message)}\n` : ''}
+                    ${log.error.stack ? `<strong>Stack:</strong>\n${escapeHtml(log.error.stack)}` : escapeHtml(String(log.error))}
+                  </div>
+                ` : ''}
+              </div>
+            `;
+          }
+
+          document.getElementById("errorLogContent").innerHTML = html;
+          document.getElementById("errorLogDisplay").style.display = "block";
+
+          // Also log to console
+          console.log('=== FPS Error Logs ===');
+          console.log('Total logs:', logs.length);
+          console.log('Errors:', errorCount);
+          console.log('Warnings:', warnCount);
+          console.log('Info:', infoCount);
+          console.table(logs);
+
+        } catch (error) {
+          console.error("❌ Error displaying error logs:", error);
+          document.getElementById("errorLogContent").innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #dc3545;">
+              <p style="font-size: 18px;">❌ Failed to load error logs</p>
+              <p style="font-size: 14px;">${escapeHtml(error.message)}</p>
+            </div>
+          `;
+          document.getElementById("errorLogDisplay").style.display = "block";
+        }
+      }
+
+      function refreshErrorLogs() {
+        showErrorLogs();
+      }
+
+      function clearErrorLogs() {
+        if (!confirm('Are you sure you want to clear all error logs?')) {
+          return;
+        }
+
+        try {
+          if (window.errorLogger) {
+            window.errorLogger = [];
+            document.getElementById("errorLogContent").innerHTML = `
+              <div style="text-align: center; padding: 40px; color: #28a745;">
+                <p style="font-size: 18px;">✅ Error logs cleared</p>
+                <p style="font-size: 14px;">All logs have been removed.</p>
+              </div>
+            `;
+          }
+        } catch (error) {
+          console.error("❌ Error clearing logs:", error);
+          alert('Failed to clear logs: ' + error.message);
+        }
+      }
+
+      function downloadErrorLogs() {
+        try {
+          if (!window.errorLogger || window.errorLogger.length === 0) {
+            alert('No error logs to download');
+            return;
+          }
+
+          const logs = window.errorLogger;
+          const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+          
+          // Prepare data for download
+          const exportData = {
+            exportTime: new Date().toISOString(),
+            totalLogs: logs.length,
+            errors: logs.filter(l => l.level === 'error').length,
+            warnings: logs.filter(l => l.level === 'warn').length,
+            info: logs.filter(l => l.level === 'info').length,
+            logs: logs
+          };
+
+          const logsJson = JSON.stringify(exportData, null, 2);
+          const blob = new Blob([logsJson], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `fps-error-logs-${timestamp}.json`;
+          a.click();
+          
+          URL.revokeObjectURL(url);
+
+          console.log('✅ Error logs downloaded successfully');
+        } catch (error) {
+          console.error("❌ Error downloading logs:", error);
+          alert('Failed to download logs: ' + error.message);
+        }
+      }
+
+      // Helper function to escape HTML
+      function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      // Auto-refresh error logs every 10 seconds if display is visible
+      setInterval(() => {
+        const errorLogDisplay = document.getElementById('errorLogDisplay');
+        if (errorLogDisplay && errorLogDisplay.style.display !== 'none') {
+          refreshErrorLogs();
+        }
+      }, 10000);
     </script>
   </body>
 </html>

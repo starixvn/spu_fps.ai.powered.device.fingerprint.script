@@ -1,3 +1,4 @@
+import { ErrorLogger } from "../../utils/errorLogger";
 import { IStorageHandler } from "../types";
 
 export class LocalStorageHandler implements IStorageHandler {
@@ -13,6 +14,7 @@ export class LocalStorageHandler implements IStorageHandler {
                 return null;
             }
         } catch (exception) {
+            ErrorLogger.error('Failed to get localStorage:', exception);
             return null;
         }
     }
@@ -27,6 +29,7 @@ export class LocalStorageHandler implements IStorageHandler {
                 return false;
             }
         } catch (exception) {
+            ErrorLogger.error('Failed to set localStorage:', exception);
             return false;
         }
     }

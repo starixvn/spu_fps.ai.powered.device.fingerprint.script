@@ -10,6 +10,7 @@ export class FingerprintScriptService extends ScriptService {
     return [
       // Utils
       "utils/domain.js",
+      "utils/errorLogger.js",
       "utils/hash.js",
       "deviceFactory.js",
       

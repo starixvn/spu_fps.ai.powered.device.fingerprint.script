@@ -10,6 +10,7 @@ export class CombinedScriptService extends ScriptService {
         return [
             // Utils (shared)
             "utils/domain.js",
+            "utils/errorLogger.js",
             "utils/hash.js",
             "deviceFactory.js",
             

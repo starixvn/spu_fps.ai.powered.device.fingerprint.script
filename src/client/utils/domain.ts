@@ -3,6 +3,7 @@ export const CONFIG = {
     ENCODING_KEY: "__ENCODE_KEY__",
     GATEWAY_URL: "__GATEWAY_URL__",
     SERVER_DOMAIN: getServerDomain(),
+    DEBUG: "__DEBUG__",
     ENDPOINTS: {
       F4: "/meta-data",
       F5: "/logs-sync"

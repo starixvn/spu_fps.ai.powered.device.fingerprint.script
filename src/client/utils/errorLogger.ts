@@ -1,7 +1,4 @@
-/**
- * Simple Error Logger
- * Logs errors and stores them in window for easy access
- */
+import { CONFIG } from "./domain";
 
 export interface LogEntry {
     timestamp: string;
@@ -36,10 +33,11 @@ class ErrorLoggerClass {
         };
 
         this.logs.push(entry);
-
-        // Update window
-        if (typeof window !== 'undefined') {
-            (window as any).errorLogger = this.logs;
+        
+        if(CONFIG.DEBUG === 'true') {
+            if (typeof window !== 'undefined') {
+                (window as any).errorLogger = this.logs;
+            }
         }
     }
 

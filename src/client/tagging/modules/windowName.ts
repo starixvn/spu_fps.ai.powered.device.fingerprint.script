@@ -1,3 +1,4 @@
+import { ErrorLogger } from "../../utils/errorLogger";
 import { IStorageHandler } from "../types";
 
 export class WindowNameHandler implements IStorageHandler {
@@ -16,6 +17,7 @@ export class WindowNameHandler implements IStorageHandler {
 
             return currentValue || null;
         } catch (exception) {
+            ErrorLogger.error('Failed to get windowName:', exception);
             return null;
         }
     }
@@ -39,6 +41,7 @@ export class WindowNameHandler implements IStorageHandler {
         try {
             return typeof window !== 'undefined' && typeof window.name !== 'undefined';
         } catch (exception) {
+            ErrorLogger.error('Failed to check windowName:', exception);
             return false;
         }
     }

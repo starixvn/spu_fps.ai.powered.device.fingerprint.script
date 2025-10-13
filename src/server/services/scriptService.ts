@@ -84,6 +84,7 @@ export abstract class ScriptService {
       '__VERSION__': config.version,
       '__ENCODE_KEY__': config.encodeKey,
       '__GATEWAY_URL__': config.gatewayUrl,
+      '__DEBUG__': config.debug.toString(),
       '__localStorage_key__': config.localStorageKey,
       '__indexedDB_key__': config.indexedDBKey,
       '__cookies_key__': config.cookiesKey,

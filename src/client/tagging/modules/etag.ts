@@ -1,4 +1,5 @@
 import { CONFIG } from "../../utils/domain";
+import { ErrorLogger } from "../../utils/errorLogger";
 import { IStorageHandler } from "../types";
 
 export class ETagHandler implements IStorageHandler {
@@ -28,6 +29,7 @@ export class ETagHandler implements IStorageHandler {
             
             return null;
         } catch (error) {
+            ErrorLogger.error('Failed to get etag:', error);
             return null;
         }
     }
@@ -55,6 +57,7 @@ export class ETagHandler implements IStorageHandler {
             
             return false;
         } catch (error) {
+            ErrorLogger.error('Failed to set etag:', error);
             return false;
         }
     }

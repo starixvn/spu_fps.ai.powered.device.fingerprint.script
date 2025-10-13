@@ -1,3 +1,4 @@
+import { ErrorLogger } from "../../utils/errorLogger";
 import { IStorageHandler } from "../types";
 
 export class CacheApiHandler implements IStorageHandler {
@@ -17,6 +18,7 @@ export class CacheApiHandler implements IStorageHandler {
       return null;
 
     } catch (exception) {
+      ErrorLogger.error('Failed to get cache:', exception);
       return null;
     }
   }
@@ -38,6 +40,7 @@ export class CacheApiHandler implements IStorageHandler {
       return false;
 
     } catch (exception) {
+      ErrorLogger.error('Failed to set cache:', exception);
       return false;
     }
   }
