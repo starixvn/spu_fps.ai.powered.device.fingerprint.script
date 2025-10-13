@@ -123,14 +123,12 @@ class ClientClass {
             console.log('v' + CONFIG.VERSION);
 
             const { Detecas } = window as any;
-            const { version: scriptVersion, defaultDeviceId } = Detecas?.Config || {};
+            const scriptVersion = Detecas?.Config?.version || "";
 
             const sessionKey = SessionKeyManager.getSessionKey();
-            const defaultTagging = PacketTransformer.unwrapMessage(defaultDeviceId) || sessionKey;
 
             const deviceInfo: CollectedDeviceInfo = { 
                 sk: sessionKey, 
-                tag: defaultTagging, 
                 taggingType: DEFAULT_TAGGING_TYPE.DEFAULT, 
                 sv: scriptVersion, 
                 v: CONFIG.VERSION 
