@@ -113,7 +113,7 @@ describe('TaggingScriptService', () => {
       const scriptFiles = (taggingScriptService as any).getScriptFiles();
       
       expect(scriptFiles).toBeInstanceOf(Array);
-      expect(scriptFiles.length).toBe(12);
+      expect(scriptFiles.length).toBe(13);
       
       // Check for key tagging files
       expect(scriptFiles).toContain('utils/deviceFactory.js');
@@ -400,7 +400,7 @@ describe('TaggingScriptService', () => {
       expect(scriptFiles.indexOf('utils/domain.js')).toBe(0);
       expect(scriptFiles.indexOf('utils/errorLogger.js')).toBe(1);
       expect(scriptFiles.indexOf('utils/hash.js')).toBe(2);
-      expect(scriptFiles.indexOf('deviceFactory.js')).toBe(3);
+      expect(scriptFiles.indexOf('utils/deviceFactory.js')).toBe(3);
       expect(scriptFiles.indexOf('utils/constants.js')).toBe(4);
       expect(scriptFiles.indexOf('tagging/modules/cacheApi.js')).toBe(5);
       expect(scriptFiles.indexOf('tagging/index.js')).toBe(scriptFiles.length - 1);
