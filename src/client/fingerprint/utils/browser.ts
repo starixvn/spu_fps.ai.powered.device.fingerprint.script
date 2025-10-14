@@ -63,7 +63,7 @@ export function isChromium122OrNewer(): boolean {
 }
 
 /**
- * Checks whether the browser is Samsung Internet without using user-agent.
+ * Checks whether the browser is Samsung Internet
  */
 export function isSamsungInternet(): boolean {
   // Checked in Samsung Internet 21, 25 and 27

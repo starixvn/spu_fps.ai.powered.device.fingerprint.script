@@ -1,6 +1,36 @@
 import { collectScreenResolution } from '../../../../../../src/client/fingerprint/modules/graphics/screenResolution';
 import { FingerprintSpecialValue } from '../../../../../../src/client/fingerprint/utils/consts';
 
+// Mock browser detection functions
+jest.mock('../../../../../../src/client/fingerprint/utils/browser', () => ({
+  isWebKit: jest.fn(() => false),
+  isWebKit616OrNewer: jest.fn(() => false),
+  isSafariWebKit: jest.fn(() => false),
+  isSamsungInternet: jest.fn(() => false),
+  isChromium122OrNewer: jest.fn(() => false),
+}));
+
+// Mock DOM objects - configured to make isLikelyMobile() return false
+const mockWindow = {
+  innerWidth: 1920,
+  innerHeight: 1080,
+  devicePixelRatio: 1, // Low DPR to avoid mobile detection
+  matchMedia: jest.fn(() => ({
+    matches: true // Has hover capability (desktop)
+  }))
+};
+
+const mockDocument = {
+  documentElement: {
+    clientWidth: 1920,
+    clientHeight: 1080
+  }
+};
+
+const mockNavigator = {
+  maxTouchPoints: 0 // No touch support
+};
+
 // Mock screen object
 const mockScreen = {
   width: 1920,
@@ -16,6 +46,27 @@ describe('Screen Resolution Module', () => {
     // Setup screen mock
     Object.defineProperty(global, 'screen', {
       value: mockScreen,
+      writable: true,
+      configurable: true
+    });
+
+    // Setup window mock
+    Object.defineProperty(global, 'window', {
+      value: mockWindow,
+      writable: true,
+      configurable: true
+    });
+
+    // Setup document mock
+    Object.defineProperty(global, 'document', {
+      value: mockDocument,
+      writable: true,
+      configurable: true
+    });
+
+    // Setup navigator mock
+    Object.defineProperty(global, 'navigator', {
+      value: mockNavigator,
       writable: true,
       configurable: true
     });
@@ -68,8 +119,8 @@ describe('Screen Resolution Module', () => {
       // Act
       const result = collectScreenResolution();
 
-      // Assert
-      expect(result).toEqual([0, 0]);
+      // Assert - zero dimensions are detected as suspicious (too small)
+      expect(result).toEqual([FingerprintSpecialValue.ANTI_FINGERPRINTED, FingerprintSpecialValue.ANTI_FINGERPRINTED]);
     });
 
     it('should handle very large screen dimensions', () => {
@@ -92,8 +143,8 @@ describe('Screen Resolution Module', () => {
       // Act
       const result = collectScreenResolution();
 
-      // Assert
-      expect(result).toEqual([-100, -200]);
+      // Assert - negative dimensions are detected as suspicious (too small)
+      expect(result).toEqual([FingerprintSpecialValue.ANTI_FINGERPRINTED, FingerprintSpecialValue.ANTI_FINGERPRINTED]);
     });
 
     it('should handle non-integer screen dimensions', () => {
@@ -134,8 +185,8 @@ describe('Screen Resolution Module', () => {
       // Act
       const result = collectScreenResolution();
 
-      // Assert - toInt(undefined) => NaN => replaceNaN => UNDEFINED (-1)
-      expect(result).toEqual([FingerprintSpecialValue.UNDEFINED, FingerprintSpecialValue.UNDEFINED]);
+      // Assert - toInt(undefined) => NaN => replaceNaN => UNDEFINED (-1), but detected as suspicious
+      expect(result).toEqual([FingerprintSpecialValue.ANTI_FINGERPRINTED, FingerprintSpecialValue.ANTI_FINGERPRINTED]);
     });
 
     it('should handle screen object with null width/height', () => {
@@ -149,8 +200,8 @@ describe('Screen Resolution Module', () => {
       // Act
       const result = collectScreenResolution();
 
-      // Assert - toInt(null) => NaN => replaceNaN => UNDEFINED (-1)
-      expect(result).toEqual([FingerprintSpecialValue.UNDEFINED, FingerprintSpecialValue.UNDEFINED]);
+      // Assert - toInt(null) => NaN => replaceNaN => UNDEFINED (-1), but detected as suspicious
+      expect(result).toEqual([FingerprintSpecialValue.ANTI_FINGERPRINTED, FingerprintSpecialValue.ANTI_FINGERPRINTED]);
     });
 
     it('should return consistent results across multiple calls', () => {
@@ -183,7 +234,7 @@ describe('Screen Resolution Module', () => {
     });
 
     it('should handle mobile screen resolutions', () => {
-      // Test common mobile resolutions
+      // Test common mobile resolutions - these are detected as suspicious in desktop mode
       const mobileResolutions = [
         [360, 640],   // Small mobile
         [414, 896],   // iPhone XR
@@ -200,8 +251,8 @@ describe('Screen Resolution Module', () => {
         // Act
         const result = collectScreenResolution();
 
-        // Assert
-        expect(result).toEqual([width, height]);
+        // Assert - mobile resolutions are detected as suspicious in desktop mode
+        expect(result).toEqual([FingerprintSpecialValue.ANTI_FINGERPRINTED, FingerprintSpecialValue.ANTI_FINGERPRINTED]);
       });
     });
 
@@ -218,12 +269,12 @@ describe('Screen Resolution Module', () => {
     });
 
     it('should work in different orientations', () => {
-      // Test portrait orientation
+      // Test portrait orientation - detected as suspicious due to aspect ratio
       mockScreen.width = 1080;
       mockScreen.height = 1920;
       
       let result = collectScreenResolution();
-      expect(result).toEqual([1080, 1920]);
+      expect(result).toEqual([FingerprintSpecialValue.ANTI_FINGERPRINTED, FingerprintSpecialValue.ANTI_FINGERPRINTED]);
 
       // Test landscape orientation
       mockScreen.width = 1920;

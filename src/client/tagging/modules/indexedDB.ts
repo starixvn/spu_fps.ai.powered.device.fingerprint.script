@@ -1,3 +1,4 @@
+import { ErrorLogger } from "../../utils/errorLogger";
 import { IStorageHandler } from "../types";
 
 export class IndexedDBHandler implements IStorageHandler {
@@ -93,6 +94,7 @@ export class IndexedDBHandler implements IStorageHandler {
                     resolve(null);
                 }
             } catch (exception) {
+                ErrorLogger.error('Failed to get indexedDB:', exception);
                 resolve(null);
             }
         });
@@ -177,6 +179,7 @@ export class IndexedDBHandler implements IStorageHandler {
                     resolve(false);
                 }
             } catch (exception) {
+                ErrorLogger.error('Failed to set indexedDB:', exception);
                 resolve(false);
             }
         });

@@ -8,6 +8,7 @@ import { TaggingClass } from "./tagging";
 import { FingerprintResult } from "./fingerprint/abstract/abstractFingerprint";
 import { FingerprintClass } from "./fingerprint";
 import { CONFIG } from "./utils/domain";
+import { ErrorLogger } from "./utils/errorLogger";
 
 class ClientClass {
     private readonly directory = {
@@ -46,7 +47,9 @@ class ClientClass {
                 DOMUtils.injectValueIntoHiddenField(CONFIG.FIELD_NAMES.DEVICE_INFO, value);
             }
         } catch (error) {
-          // console.error(`Failed to inject value into field ${fieldName}:`, error);
+            ErrorLogger.error(
+                "Failed to inject value into hidden field", error
+            );
         }
     }
 
@@ -141,7 +144,7 @@ class ClientClass {
                 })
             ]);
         } catch (error) {
-            // console.error('Client start failed:', error);
+            ErrorLogger.error('Client start failed:', error);
         }
     }
 

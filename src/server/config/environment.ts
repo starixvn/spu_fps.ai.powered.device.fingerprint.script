@@ -28,6 +28,7 @@ loadEnvironment();
 interface EnvironmentConfig {
   port: number;
   nodeEnv: string;
+  debug: boolean;
   localStorageKey: string;
   indexedDBKey: string;
   cookiesKey: string;
@@ -50,6 +51,7 @@ const getDefaultPort = (): number => {
 const environmentConfig: EnvironmentConfig = {
   port: getDefaultPort(),
   nodeEnv: process.env.NODE_ENV?.toLowerCase() || 'development',
+  debug: process.env.DEBUG?.toLowerCase() === 'true' || false,
 
   localStorageKey: process.env.LOCAL_STORAGE_KEY || 'awb_visitor_session',
   indexedDBKey: process.env.INDEXEDDB_KEY || 'pwr_client_sync',

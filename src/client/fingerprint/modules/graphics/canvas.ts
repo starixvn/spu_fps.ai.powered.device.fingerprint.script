@@ -2,149 +2,46 @@ import { MurmurHash128 } from "../../utils/hash";
 import type { CanvasInfo } from "../../types";
 import type { Bit } from '../../types';
 import { FingerprintSpecialValue } from "../../utils/consts";
-import { isWebKit, isWebKit616OrNewer, isSafariWebKit } from "../../utils/browser";
+import { isSafariWebKit, isWebKit, isWebKit616OrNewer, isSamsungInternet, isChromium122OrNewer } from "../../utils/browser";
 
-const CANVAS_CACHE_KEY = "canvasCache";
-const CANVAS_SNAPSHOTS = 5;
+const CANVAS_SNAPSHOTS = 3; 
+const CANVAS_FINGERPRINT_TEXT = `Sphinx ${String.fromCharCode(55357, 56848)} quartz ${String.fromCharCode(55357, 56849)} vow ${String.fromCharCode(55357, 56850)}`;
 
 type CanvasProtectionResult = {
   isProtected: boolean;
   isStrong: boolean; // baseline mismatch 
 };
 
-function doesBrowserPerformAntifingerprinting(): boolean {
-  // Safari 17+
+// Polyfill for Promise.allSettled 
+function promiseAllSettled<T>(promises: Promise<T>[]): Promise<Array<{status: 'fulfilled' | 'rejected', value?: T, reason?: any}>> {
+  return Promise.all(
+    promises.map(promise =>
+      promise
+        .then(value => ({ status: 'fulfilled' as const, value }))
+        .catch(reason => ({ status: 'rejected' as const, reason }))
+    )
+  );
+}
+
+function doesBrowserPerformCanvasAntifingerprinting(): boolean {
+  // Safari 17+ has enhanced anti-fingerprinting for canvas
   if (isWebKit() && isWebKit616OrNewer() && isSafariWebKit()) return true;
+
+  // Samsung Internet 26+ has Smart Anti-Tracking
+  if (isSamsungInternet() && isChromium122OrNewer()) return true;
+  
   return false;
 }
 
-export async function collectCanvas(): Promise<CanvasInfo> {
-  try {
-    let cachedValue: string | null = null;
-    try {
-      const rawCache = localStorage.getItem(CANVAS_CACHE_KEY);
+// WebGL context caching for performance
+let webglContextCache: WebGLRenderingContext | null = null;
 
-      if (rawCache && rawCache.length > 0) {
-        cachedValue = rawCache;
-      }
-    } catch (e) {
-    }
-
-    // Detect canvas protection
-    const canvasProtection = await detectCanvasProtection();
-    
-    // Handle canvas protection detection
-    if (canvasProtection.isStrong || canvasProtection.isProtected) {
-      return [FingerprintSpecialValue.ANTI_FINGERPRINTED, 1];
-    }
-
-    const snapshotPromises = Array.from({ length: CANVAS_SNAPSHOTS }, () => getCanvasFeatures());
-    const samples = (await Promise.all(snapshotPromises)).filter(Boolean) as any[];
-
-    if (samples.length === 0) {
-      return [FingerprintSpecialValue.TIMEOUT, 0];
-    }
-
-    const stableFeatures = computeFeatureMedian(samples);
-    const value = MurmurHash128.hash128(JSON.stringify(stableFeatures));
-     
-    if (cachedValue && cachedValue === value) {
-      return [cachedValue, 0];
-    }
-
-    try {
-      localStorage.setItem(CANVAS_CACHE_KEY, value);
-    } catch (e) {
-    }
-
-    return [value, 0];
-  } catch (error) {
-    return [FingerprintSpecialValue.ERROR, 0];
-  }
-}
-
-async function detectCanvasProtection(): Promise<CanvasProtectionResult> {
-  try {
-    // Check for Safari 17 anti-fingerprinting first
-    if (doesBrowserPerformAntifingerprinting()) {
-      return { isProtected: true, isStrong: true };
-    }
-
-    const testCanvas = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = 200;
-      canvas.height = 50;
-      
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return null;
-      
-      // Draw simple test pattern
-      ctx.textBaseline = "top";
-      ctx.font = "14px Arial, sans-serif";
-      ctx.fillStyle = "#f60";
-      ctx.fillRect(125, 1, 62, 20);
-      ctx.fillStyle = "#069";
-      ctx.fillText("Canvas Test 🎨", 2, 15);
-      ctx.fillStyle = "rgba(102, 204, 0, 0.7)";
-      ctx.fillText("Canvas Test 🎨", 4, 17);
-      
-      return canvas.toDataURL();
-    };
-
-    // Test current session consistency  
-    const dataUrl1 = testCanvas();
-    const dataUrl2 = testCanvas();
-    
-    if (!dataUrl1 || !dataUrl2) {
-      return { isProtected: true, isStrong: false }; 
-    }
-
-    // Test in-session randomization 
-    const isConsistent = dataUrl1 === dataUrl2;
-    if (!isConsistent) {
-      return { isProtected: true, isStrong: false }; 
-    }
-
-    // Compare with previous sessions 
-    const CANVAS_BASELINE_KEY = "canvasBaseline";
-    let storedBaseline: string | null = null;
-    
-    try {
-      storedBaseline = localStorage.getItem(CANVAS_BASELINE_KEY);
-    } catch (e) {
-      return { isProtected: true, isStrong: false };
-    }
-
-    if (storedBaseline) {
-      const baselineMatches = dataUrl1 === storedBaseline;
-      if (!baselineMatches) {
-        // Baseline mismatch is a strong indicator of Canvas Blocker extension
-        return { isProtected: true, isStrong: true };
-      }
-    } else {
-      try {
-        localStorage.setItem(CANVAS_BASELINE_KEY, dataUrl1);
-      } catch (e) {
-        return { isProtected: true, isStrong: false };
-      }
-    }
-
-    // Check for suspicious canvas API modifications
-    const isToDataURLFunction = typeof HTMLCanvasElement.prototype.toDataURL === 'function';
-    if (!isToDataURLFunction) {
-      return { isProtected: true, isStrong: false };
-    }
-
-    // Check for extension-specific markers
-    const extensionDetected = detectCanvasBlockerExtension();
-    if (extensionDetected === 1) {
-      return { isProtected: true, isStrong: false };
-    }
-
-    return { isProtected: false, isStrong: false }; 
-  } catch (error) {
-    return { isProtected: true, isStrong: false }; 
-  }
+function getWebGLContext(canvas: HTMLCanvasElement): WebGLRenderingContext | null {
+  if (webglContextCache) return webglContextCache;
+  
+  const context = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+  webglContextCache = context as WebGLRenderingContext | null;
+  return webglContextCache;
 }
 
 function detectCanvasBlockerExtension(): Bit {
@@ -179,62 +76,85 @@ function detectCanvasBlockerExtension(): Bit {
   }
 }
 
-async function getCanvasFeatures(): Promise<Record<string, any> | null> {
-  try {
-    const canvas = document.createElement("canvas");
+// Unified canvas drawing function - eliminates code duplication
+function drawUnifiedCanvas(
+  ctx: CanvasRenderingContext2D, 
+  width: number, 
+  height: number, 
+  isTestMode: boolean = false
+) {
+  ctx.clearRect(0, 0, width, height);
+  
+  // Use appropriate text based on mode
+  const text = isTestMode 
+    ? `Sphinx ${String.fromCharCode(55357, 56848)} quartz` // Shorter for test
+    : CANVAS_FINGERPRINT_TEXT; // Full text for fingerprinting
+  
+  if (isTestMode) {
+    // Test mode - optimized for performance
+    ctx.textBaseline = "top";
+    ctx.font = "14px Times New Roman, Times, serif";
+    ctx.fillStyle = "#f60";
+    ctx.fillRect(125, 1, 62, 20);
     
-    canvas.width = 400;
-    canvas.height = 100;
+    ctx.fillStyle = "#069";
+    ctx.fillText(text, 2, 15);
+    
+    ctx.fillStyle = "rgba(102, 204, 0, 0.7)";
+    ctx.fillText(text, 4, 30);
+    
+    // Minimal complex operation for detection
+    ctx.globalCompositeOperation = "multiply";
+    ctx.fillStyle = "rgba(255, 0, 255, 0.5)";
+    ctx.fillRect(180, 10, 15, 15);
+  } else {
+    // Full mode - maximum entropy for fingerprinting
+    // Primary text with Times New Roman (high entropy serif font)
+    ctx.font = "20px Times New Roman, Times, serif";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "rgb(255,0,255)";
+    ctx.fillText(text, 10, height / 2);
 
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return null;
+    // Secondary text with Georgia (another high entropy serif)
+    ctx.font = "18px Georgia, Times New Roman, serif";
+    ctx.fillStyle = "rgba(0,100,255,0.7)";
+    ctx.fillText(text, 10, height / 2 + 30);
 
-    drawComplexCanvas(ctx, "Canvas Test", canvas.width, canvas.height);
+    // Tertiary text with Palatino (complex serif font)
+    ctx.font = "16px Palatino, Times New Roman, serif";
+    ctx.fillStyle = "rgb(255,255,0)";
+    ctx.fillText(text, 10, height / 2 - 30);
 
-    const features: Record<string, any> = {
-      font: ctx.font,
-      shadowBlur: ctx.shadowBlur,
-      shadowColor: ctx.shadowColor,
-      globalCompositeOperation: ctx.globalCompositeOperation,
-      fillStyle: ctx.fillStyle?.toString() || "gradient", 
-      width: canvas.width,
-      height: canvas.height,
-      pixelSample: Array.from(ctx.getImageData(0, 0, 10, 10).data),
-    };
+    // Background rectangle
+    ctx.fillStyle = "rgba(0,100,255,0.7)";
+    ctx.fillRect(50, 10, 120, 60);
 
-    // WebGL features
-    try {
-      const gl = (canvas.getContext("webgl") || canvas.getContext("experimental-webgl")) as WebGLRenderingContext | null;
-      
-      if (gl) {
-        features.webglVersion = gl.getParameter(gl.VERSION);
-        features.webglVendor = gl.getParameter(gl.VENDOR);
-        features.webglRenderer = gl.getParameter(gl.RENDERER);
-        features.webglShadingLanguageVersion = gl.getParameter(gl.SHADING_LANGUAGE_VERSION);
-        const extensions = gl.getSupportedExtensions();
-        features.webglExtensions = extensions ? extensions.sort().join(",") : "";
+    // Circle with blend mode
+    ctx.globalCompositeOperation = "multiply";
+    ctx.fillStyle = "rgb(255,255,0)";
+    ctx.beginPath();
+    ctx.arc(200, height / 2, 30, 0, Math.PI * 2);
+    ctx.fill();
 
-        const debugInfo = gl.getExtension("WEBGL_debug_renderer_info") as any;
-        if (debugInfo) {
-          try {
-            features.unmaskedVendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
-            features.unmaskedRenderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
-          } catch {
-            features.unmaskedVendor = "blocked";
-            features.unmaskedRenderer = "blocked";
-          }
-        }
-      } else {
-        features.webglVersion = "webgl-unavailable";
-      }
-    } catch {
-      features.webglVersion = "webgl-error";
-    }
+    // Gradient background
+    const gradient = ctx.createLinearGradient(0, 0, width, height);
+    gradient.addColorStop(0, "rgba(255,0,0,0.3)");
+    gradient.addColorStop(1, "rgba(0,0,255,0.3)");
+    ctx.fillStyle = gradient;
 
-    return features;
-   } catch (error) {
-     return null;
-   }
+    // Shadow effects
+    ctx.shadowColor = "rgba(0,0,0,0.5)";
+    ctx.shadowBlur = 5;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
+    ctx.fillRect(0, 0, width, height);
+  }
+}
+
+// Enhanced canvas drawing with new high-entropy text
+function drawComplexCanvas(ctx: CanvasRenderingContext2D, width: number, height: number) {
+  // Use unified function in full mode
+  drawUnifiedCanvas(ctx, width, height, false);
 }
 
 function computeFeatureMedian(samples: any[]): any {
@@ -267,31 +187,160 @@ function computeFeatureMedian(samples: any[]): any {
   return median;
 }
 
-// Draw canvas
-function drawComplexCanvas(ctx: CanvasRenderingContext2D, text: string, width: number, height: number) {
-  ctx.clearRect(0, 0, width, height);
-  ctx.font = "20px Arial";
-  ctx.textBaseline = "middle";
-  ctx.fillStyle = "rgb(255,0,255)";
-  ctx.fillText(text, 10, height / 2);
+async function getCanvasFeatures(): Promise<Record<string, any> | null> {
+  try {
+    const canvas = document.createElement("canvas");
+    
+    canvas.width = 400;
+    canvas.height = 100;
 
-  ctx.fillStyle = "rgba(0,100,255,0.7)";
-  ctx.fillRect(50, 10, 120, 60);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      return null;
+    }
 
-  ctx.globalCompositeOperation = "multiply";
-  ctx.fillStyle = "rgb(255,255,0)";
-  ctx.beginPath();
-  ctx.arc(200, height / 2, 30, 0, Math.PI * 2);
-  ctx.fill();
+    // Use new high-entropy text
+    drawComplexCanvas(ctx, canvas.width, canvas.height);
 
-  const gradient = ctx.createLinearGradient(0, 0, width, height);
-  gradient.addColorStop(0, "rgba(255,0,0,0.3)");
-  gradient.addColorStop(1, "rgba(0,0,255,0.3)");
-  ctx.fillStyle = gradient;
+    const features: Record<string, any> = {
+      font: ctx.font,
+      shadowBlur: ctx.shadowBlur,
+      shadowColor: ctx.shadowColor,
+      globalCompositeOperation: ctx.globalCompositeOperation,
+      fillStyle: ctx.fillStyle?.toString() || "gradient", 
+      width: canvas.width,
+      height: canvas.height,
+      pixelSample: Array.from(ctx.getImageData(0, 0, 10, 10).data),
+    };
 
-  ctx.shadowColor = "rgba(0,0,0,0.5)";
-  ctx.shadowBlur = 5;
-  ctx.shadowOffsetX = 2;
-  ctx.shadowOffsetY = 2;
-  ctx.fillRect(0, 0, width, height);
+    // WebGL features with caching
+    try {
+      const gl = getWebGLContext(canvas);
+      
+      if (gl) {
+        features.webglVersion = gl.getParameter(gl.VERSION);
+        features.webglVendor = gl.getParameter(gl.VENDOR);
+        features.webglRenderer = gl.getParameter(gl.RENDERER);
+        features.webglShadingLanguageVersion = gl.getParameter(gl.SHADING_LANGUAGE_VERSION);
+        const extensions = gl.getSupportedExtensions();
+        features.webglExtensions = extensions ? extensions.sort().join(",") : "";
+
+        const debugInfo = gl.getExtension("WEBGL_debug_renderer_info") as any;
+        if (debugInfo) {
+          try {
+            features.unmaskedVendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+            features.unmaskedRenderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+          } catch {
+            features.unmaskedVendor = "blocked";
+            features.unmaskedRenderer = "blocked";
+          }
+        }
+      } else {
+        features.webglVersion = "webgl-unavailable";
+      }
+    } catch (error) {
+      features.webglVersion = "webgl-error";
+    }
+
+    return features;
+   } catch (error) {
+     return null;
+   }
+}
+
+// Enhanced function with timeout
+async function getCanvasFeaturesWithTimeout(): Promise<Record<string, any> | null> {
+  return Promise.race([
+    getCanvasFeatures(),
+    new Promise<null>((_, reject) => 
+      setTimeout(() => reject(new Error('Canvas timeout')), 2000)
+    )
+  ]).catch(() => null);
+}
+
+async function detectCanvasProtection(): Promise<CanvasProtectionResult> {
+  try {
+    if (doesBrowserPerformCanvasAntifingerprinting()) {
+      return { isProtected: true, isStrong: true };
+    }
+
+    const testCanvas = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 200; // Optimized size - balance between detection and performance
+      canvas.height = 50;
+      
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return null;
+      
+      // Use unified function in test mode
+      drawUnifiedCanvas(ctx, canvas.width, canvas.height, true);
+      
+      return canvas.toDataURL();
+    };
+
+    // Test current session consistency  
+    const dataUrl1 = testCanvas();
+    const dataUrl2 = testCanvas();
+    
+    if (!dataUrl1 || !dataUrl2) {
+      return { isProtected: true, isStrong: false }; 
+    }
+
+    // Test in-session randomization 
+    const isConsistent = dataUrl1 === dataUrl2;
+    if (!isConsistent) {
+      return { isProtected: true, isStrong: false }; 
+    }
+
+    // Check for suspicious canvas API modifications
+    const isToDataURLFunction = typeof HTMLCanvasElement.prototype.toDataURL === 'function';
+    if (!isToDataURLFunction) {
+      return { isProtected: true, isStrong: false };
+    }
+
+    // Check for extension-specific markers
+    const extensionDetected = detectCanvasBlockerExtension();
+    if (extensionDetected === 1) {
+      return { isProtected: true, isStrong: false };
+    }
+
+    return { isProtected: false, isStrong: false }; 
+  } catch (error) {
+    return { isProtected: true, isStrong: false }; 
+  }
+}
+
+export async function collectCanvas(): Promise<CanvasInfo> {
+  try {
+    // Detect canvas protection
+    const canvasProtection = await detectCanvasProtection();
+    
+    // Handle canvas protection detection
+    if (canvasProtection.isStrong || canvasProtection.isProtected) {
+      return [FingerprintSpecialValue.ANTI_FINGERPRINTED, 1];
+    }
+
+    // Enhanced performance with timeout handling
+    const snapshotPromises = Array.from({ length: CANVAS_SNAPSHOTS }, () => getCanvasFeaturesWithTimeout());
+    
+    const results = await (typeof Promise.allSettled === 'function' 
+      ? Promise.allSettled(snapshotPromises)
+      : promiseAllSettled(snapshotPromises));
+
+    const samples = results
+      .filter(result => result.status === 'fulfilled')
+      .map(result => (result as PromiseFulfilledResult<any>).value)
+      .filter(Boolean);
+
+    if (samples.length === 0) {
+      return [FingerprintSpecialValue.TIMEOUT, 0];
+    }
+
+    const stableFeatures = computeFeatureMedian(samples);
+    const value = MurmurHash128.hash128(JSON.stringify(stableFeatures));
+      
+    return [value, 0];
+  } catch (error) {
+    return [FingerprintSpecialValue.ERROR, 0];
+  }
 }

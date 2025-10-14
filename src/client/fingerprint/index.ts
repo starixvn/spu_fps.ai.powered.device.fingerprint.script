@@ -1,6 +1,7 @@
 import { F4Fingerprint } from "./f4Fingerprint";
 import { F5Fingerprint } from "./f5Fingerprint";
 import { IPClass } from "../ip";
+import { ErrorLogger } from "../utils/errorLogger";
 
 export class FingerprintClass {
     private readonly f4Fingerprint: F4Fingerprint;
@@ -12,26 +13,8 @@ export class FingerprintClass {
         this.f5Fingerprint = new F5Fingerprint();
         this.ip = new IPClass();
     }
-
     
-    public async sendViaBeacon(
-        endpoint: string,
-        payload: any
-    ): Promise<boolean> {
-        try {
-            if (!navigator.sendBeacon) {
-                return false;
-            }
-            const formData = new FormData();
-            formData.append('request', payload);
-            return navigator.sendBeacon(endpoint, formData);
-        } catch (error) {
-            // console.error('Failed to send data via sendBeacon:', error);
-            return false;
-        }
-    }
-
-    public async sendViaFetch(
+    public async sendToServer(
         endpoint: string,
         payload: any
     ): Promise<boolean> {
@@ -42,28 +25,12 @@ export class FingerprintClass {
             const response = await fetch(endpoint, {
                 method: 'POST',
                 body: formData,
+                keepalive: true
             });
 
             return response.ok;
         } catch (error) {
-            // console.error('Failed to send data via fetch:', error);
-            return false;
-        }
-    }
-
-    public async sendToServer(
-        endpoint: string,
-        payload: any
-    ): Promise<boolean> {
-        try {
-            const beaconSuccess = await this.sendViaBeacon(endpoint, payload);
-            if (beaconSuccess) {
-                return true;
-            }
-
-            return await this.sendViaFetch(endpoint, payload);
-        } catch (error) {
-            // console.error('Failed to send data to server:', error);
+            ErrorLogger.error('Failed to send data via fetch:', error);
             return false;
         }
     }

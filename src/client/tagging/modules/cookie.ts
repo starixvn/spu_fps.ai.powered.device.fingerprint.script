@@ -1,3 +1,4 @@
+import { ErrorLogger } from "../../utils/errorLogger";
 import { IStorageHandler } from "../types";
 
 export class CookiesHandler implements IStorageHandler {
@@ -22,6 +23,7 @@ export class CookiesHandler implements IStorageHandler {
       }
       return null;
     } catch (error) {
+      ErrorLogger.error('Failed to get cookie:', error);
       return null;
     }
   }
@@ -41,6 +43,7 @@ export class CookiesHandler implements IStorageHandler {
       
       return true;
     } catch (error) {
+      ErrorLogger.error('Failed to set cookie:', error);
       return false;
     }
   }
