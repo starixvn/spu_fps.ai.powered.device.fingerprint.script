@@ -120,7 +120,7 @@ class ClientClass {
 
     public async start(): Promise<void> {
         try {
-            console.log('v' + CONFIG.VERSION);
+            console.log('fv' + CONFIG.VERSION);
 
             const { Detecas } = window as any;
             const scriptVersion = Detecas?.Config?.version || "";
@@ -130,8 +130,8 @@ class ClientClass {
             const deviceInfo: CollectedDeviceInfo = { 
                 sk: sessionKey, 
                 taggingType: DEFAULT_TAGGING_TYPE.DEFAULT, 
-                sv: scriptVersion, 
-                v: CONFIG.VERSION 
+                v: scriptVersion, 
+                fv: CONFIG.VERSION 
             };
 
             await this.ensureDOMReady();

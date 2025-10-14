@@ -4,8 +4,8 @@ export interface CollectedDeviceInfo {
     f4?: string;
     f5?: string;
     rtc?: any;
-    sv?: string;
     v?: string;
+    fv?: string;
     taggingType?: number;
   }
 
