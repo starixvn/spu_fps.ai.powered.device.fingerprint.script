@@ -2,7 +2,8 @@ import {
   isSafariWebKit, 
   isWebKit, 
   isWebKit616OrNewer,
-  isSamsungInternet
+  isSamsungInternet,
+  isChromium122OrNewer
 } from '../../utils/browser';
 import { FingerprintSpecialValue } from '../../utils/consts';
 import { replaceNaN, toInt } from '../../utils/data';
@@ -16,8 +17,21 @@ export function collectScreenResolution(): ScreenResolution {
 
 function getScreenResolution(): ScreenResolution {
   try {
-    const antiFingerprintingResolution = getScreenResolutionAntifingerprinting();
-    if (antiFingerprintingResolution) return antiFingerprintingResolution;
+    // Safari WebKit anti-fingerprinting
+    if (isWebKit() && isWebKit616OrNewer() && isSafariWebKit()) {
+      return [
+        FingerprintSpecialValue.UNDEFINED,
+        FingerprintSpecialValue.UNDEFINED,
+      ];
+    }
+
+    // Samsung Internet Smart Anti-Tracking - skip completely
+    if (isSamsungInternet() && isChromium122OrNewer()) {
+      return [
+        FingerprintSpecialValue.ANTI_FINGERPRINTED,
+        FingerprintSpecialValue.ANTI_FINGERPRINTED,
+      ];
+    }
 
     // Get raw resolution and validate
     const resolution = getRawScreenResolution();
@@ -31,32 +45,12 @@ function getScreenResolution(): ScreenResolution {
     }
 
     return resolution;
-  } catch (error) {
+  } catch {
     return [
       FingerprintSpecialValue.ERROR,
       FingerprintSpecialValue.ERROR,
     ];
   }
-}
-
-function getScreenResolutionAntifingerprinting(): ScreenResolution | null {
-  // Safari WebKit anti-fingerprinting
-  if (isWebKit() && isWebKit616OrNewer() && isSafariWebKit()) {
-    return [
-      FingerprintSpecialValue.UNDEFINED,
-      FingerprintSpecialValue.UNDEFINED,
-    ];
-  }
-
-  // Samsung Internet Smart Anti-Tracking - skip completely
-  if (isSamsungInternet()) {
-    return [
-      FingerprintSpecialValue.ANTI_FINGERPRINTED,
-      FingerprintSpecialValue.ANTI_FINGERPRINTED,
-    ];
-  }
-
-  return null;
 }
 
 export function getRawScreenResolution(): ScreenResolution {

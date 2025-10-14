@@ -63,47 +63,24 @@ export function isChromium122OrNewer(): boolean {
 }
 
 /**
- * Checks whether the browser is Samsung Internet 
+ * Checks whether the browser is Samsung Internet
  */
 export function isSamsungInternet(): boolean {
-  const n = navigator as any;
-  const w = window as any;
+  // Checked in Samsung Internet 21, 25 and 27
+  const n = navigator;
+  const w = window;
   const audioPrototype = Audio.prototype;
   const { visualViewport } = w;
 
-  // Modern Samsung features 
-  const modernFeatures = [
-    'srLatency' in audioPrototype,
-    'srChannelCount' in audioPrototype,
-    'devicePosture' in n,
-    visualViewport && 'segments' in visualViewport,
-    'getTextInformation' in Image.prototype,
-  ];
-
-  // Samsung Internet hints (for v7 – v15)
-  const legacyHints = [
-    'samsung' in w,
-    'samsungApp' in w,
-    'samsungPay' in w,
-    'samsung' in n,
-    'samsungApp' in n,
-    'webkitAudioContext' in w, 
-    'CSSSamsungInternet' in w,
-  ];
-
-  const chromeHints = [
-    'chrome' in w,
-    !!(w.chrome && w.chrome.webstore),
-    !!(w.chrome && w.chrome.runtime),
-  ];
-
-  const modernCount = modernFeatures.filter(Boolean).length;
-  const legacyCount = legacyHints.filter(Boolean).length;
-  const chromeCount = chromeHints.filter(Boolean).length;
-
-  const isSamsung = (modernCount >= 3 || legacyCount >= 2) && chromeCount < 2;
-
-  return isSamsung;
+  return (
+    countTruthy([
+      'srLatency' in audioPrototype,
+      'srChannelCount' in audioPrototype,
+      'devicePosture' in n, // Not available in HTTP
+      visualViewport && 'segments' in visualViewport,
+      'getTextInformation' in Image.prototype, // Not available in Samsung Internet 21
+    ]) >= 3
+  )
 }
 
 /**
