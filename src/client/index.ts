@@ -126,7 +126,7 @@ class ClientClass {
             const { version: scriptVersion, defaultDeviceId } = Detecas?.Config || {};
 
             const sessionKey = SessionKeyManager.getSessionKey();
-            const defaultTagging = defaultDeviceId || sessionKey;
+            const defaultTagging = PacketTransformer.unwrapMessage(defaultDeviceId) || sessionKey;
 
             const deviceInfo: CollectedDeviceInfo = { 
                 sk: sessionKey, 
