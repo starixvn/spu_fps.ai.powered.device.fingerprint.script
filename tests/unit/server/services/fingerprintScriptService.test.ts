@@ -339,8 +339,8 @@ describe('FingerprintScriptService', () => {
       
       // Core files
       expect(scriptFiles).toContain('fingerprint/index.js');
-      expect(scriptFiles).toContain('dom.js');
-      expect(scriptFiles).toContain('deviceFactory.js');
+      expect(scriptFiles).toContain('utils/dom.js');
+      expect(scriptFiles).toContain('utils/deviceFactory.js');
       
       // Utils
       expect(scriptFiles).toContain('utils/hash.js');
@@ -402,9 +402,9 @@ describe('FingerprintScriptService', () => {
       const domainUtilsIndex = scriptFiles.findIndex((file: string) => file === 'utils/domain.js');
       expect(domainUtilsIndex).toBeLessThan(fingerprintIndex);
       
-      // Core dom.js should come last
-      const domJsIndex = scriptFiles.findIndex((file: string) => file === 'dom.js');
-      expect(domJsIndex).toBe(scriptFiles.length - 1); // should be the last file
+      // Core fingerprint/index.js should come last
+      const fingerprintIndexJsIndex = scriptFiles.findIndex((file: string) => file === 'fingerprint/index.js');
+      expect(fingerprintIndexJsIndex).toBe(scriptFiles.length - 1); // should be the last file
     });
   });
 });

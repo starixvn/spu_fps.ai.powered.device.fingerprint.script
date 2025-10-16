@@ -1,5 +1,5 @@
 // Mock dependencies before imports
-jest.mock('../../../src/client/utils/hash', () => ({
+jest.mock('../../../../src/client/utils/hash', () => ({
   GuidGenerator: {
     generateGuid: jest.fn()
   },
@@ -10,8 +10,8 @@ jest.mock('../../../src/client/utils/hash', () => ({
 }));
 
 // Import the mocked modules
-import { GuidGenerator, PacketTransformer } from '../../../src/client/utils/hash';
-import { DeviceFactory } from '../../../src/client/deviceFactory';
+import { GuidGenerator, PacketTransformer } from '../../../../src/client/utils/hash';
+import { DeviceFactory } from '../../../../src/client/utils/deviceFactory';
 
 // Get mocked instances
 const mockGuidGenerator = GuidGenerator as any;

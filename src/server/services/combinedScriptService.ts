@@ -12,7 +12,9 @@ export class CombinedScriptService extends ScriptService {
             "utils/domain.js",
             "utils/errorLogger.js",
             "utils/hash.js",
-            "deviceFactory.js",
+            "utils/deviceFactory.js",
+            "utils/dom.js",
+            "utils/constants.js",
             
             // Session
             "sessionKey/index.js",
@@ -94,7 +96,6 @@ export class CombinedScriptService extends ScriptService {
 
             // Core files
             "index.js", 
-            "dom.js"
         ];
     }
 

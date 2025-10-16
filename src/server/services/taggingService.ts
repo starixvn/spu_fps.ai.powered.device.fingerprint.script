@@ -1,21 +1,19 @@
-
 import { Request, Response } from 'express';
-export class TaggingService {
-    private _etag: string | null = null;
+export class TaggingService {   
 
-    public getEtag(req: Request): string | null {
-        return this._etag || req.headers['if-none-match'] as string || null;
+    public set(res: Response, key: string, value: string): void {
+        res.setHeader(key, `${value}`);
     }
 
-    public setEtag(res: Response, etag: string): void {
-        if (this._etag === etag) {
-            return;
+    public get(req: Request, key: string): string | null {
+        // For now, we only support headers        
+        return req.headers[key] as string | null;
+    }   
+    
+    public formatEtag(etag: string | null): string | null {
+        if (!etag) {
+          return null;
         }
-
-        this._etag = etag;
-        
-        res.setHeader('Etag', etag);
-
-        res.setHeader('Cache-Control', 'private, max-age=600');
-    }
+        return etag.replace(/^W\//, "").replace(/^"|"$/g, "");
+      }
 }

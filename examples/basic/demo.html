@@ -140,6 +140,42 @@
         font-size: 12px;
         white-space: pre-wrap;
       }
+      .performance-display {
+        background: #e8f5e9;
+        border: 2px solid #4caf50;
+        border-radius: 5px;
+        padding: 20px;
+        margin: 20px 0;
+      }
+      .timing-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        margin: 8px 0;
+        background: white;
+        border-radius: 4px;
+        border-left: 4px solid #4caf50;
+      }
+      .timing-item.pending {
+        border-left-color: #ffc107;
+        opacity: 0.6;
+      }
+      .timing-item.complete {
+        border-left-color: #4caf50;
+      }
+      .timing-label {
+        font-weight: bold;
+        color: #333;
+      }
+      .timing-value {
+        font-family: 'Courier New', monospace;
+        color: #4caf50;
+        font-weight: bold;
+      }
+      .timing-value.pending {
+        color: #ffc107;
+      }
     </style>
   </head>
   <body>
@@ -165,6 +201,27 @@
 
       <!-- Hidden elements for transaction data -->
       <input type="hidden" id="detecas-analysis" name="detecas-analysis" value="DetecasAnalysis_Sample_Data" />
+
+      <!-- Performance Timing Display -->
+      <div id="performanceDisplay" class="performance-display" style="display: block">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+          <h3 style="margin: 0;">⏱️ Performance Timing</h3>
+          <div>
+            <button class="button" onclick="exportTimings()" style="background: #28a745; padding: 5px 15px; font-size: 14px; margin: 0 5px;">
+              💾 Export
+            </button>
+            <button class="button" onclick="copyTimings()" style="background: #17a2b8; padding: 5px 15px; font-size: 14px; margin: 0 5px;">
+              📋 Copy
+            </button>
+            <button class="button" onclick="resetTimings()" style="background: #ff9800; padding: 5px 15px; font-size: 14px; margin: 0 5px;">
+              🔄 Reset
+            </button>
+          </div>
+        </div>
+        <div id="performanceContent">
+          <p style="text-align: center; color: #666;">⏳ Waiting for data collection to start...</p>
+        </div>
+      </div>
 
       <div id="statusDisplay" class="fingerprint-display" style="display: block">
         <h3>Data Availability Status:</h3>
@@ -226,6 +283,235 @@
     <script>
       let currentFingerprint = null;
       let scriptsLoaded = false;
+      
+      // Performance timing tracker
+      const performanceTracker = {
+        startTime: null,
+        timings: {},
+        
+        init() {
+          this.startTime = performance.now();
+          this.timings = {
+            pageLoad: { time: 0, status: 'complete' },
+            scriptLoaded: { time: null, status: 'pending' },
+            f4Attributes: { time: null, status: 'pending' },
+            f5Attributes: { time: null, status: 'pending' },
+            webRTCData: { time: null, status: 'pending' },
+            allComplete: { time: null, status: 'pending' }
+          };
+        },
+        
+        mark(eventName) {
+          const elapsed = performance.now() - this.startTime;
+          if (this.timings[eventName]) {
+            this.timings[eventName].time = elapsed;
+            this.timings[eventName].status = 'complete';
+            
+            // Check if all required data is complete
+            if (eventName === 'f4Attributes' || eventName === 'f5Attributes' || eventName === 'webRTCData') {
+              if (this.timings.f4Attributes.status === 'complete' && 
+                  this.timings.f5Attributes.status === 'complete' && 
+                  this.timings.webRTCData.status === 'complete' &&
+                  this.timings.allComplete.status === 'pending') {
+                this.mark('allComplete');
+              }
+            }
+            
+            this.updateDisplay();
+          }
+        },
+        
+        formatTime(ms) {
+          if (ms === null) return '⏳ Waiting...';
+          if (ms < 1000) return `${ms.toFixed(0)}ms`;
+          return `${(ms / 1000).toFixed(2)}s`;
+        },
+        
+        updateDisplay() {
+          const content = document.getElementById('performanceContent');
+          if (!content) return;
+          
+          let html = '';
+          
+          const events = [
+            { key: 'pageLoad', label: 'Page Load (DOMContentLoaded)', icon: '✅' },
+            { key: 'scriptLoaded', label: 'FPS Script Loaded', icon: '📜' },
+            { key: 'f4Attributes', label: 'collect f4Attributes Ready', icon: '🔍' },
+            { key: 'f5Attributes', label: 'collect f5Attributes Ready', icon: '🔍' },
+            { key: 'webRTCData', label: 'collect webRTCData Ready', icon: '🌐' },
+            { key: 'allComplete', label: '✨ All Data Complete', icon: '✨' }
+          ];
+          
+          for (const event of events) {
+            const timing = this.timings[event.key];
+            const isComplete = timing.status === 'complete';
+            const statusClass = isComplete ? 'complete' : 'pending';
+            const timeClass = isComplete ? '' : 'pending';
+            
+            html += `
+              <div class="timing-item ${statusClass}">
+                <span class="timing-label">${event.icon} ${event.label}</span>
+                <span class="timing-value ${timeClass}">${this.formatTime(timing.time)}</span>
+              </div>
+            `;
+          }
+          
+          // Add summary if all complete
+          if (this.timings.allComplete.status === 'complete') {
+            const totalTime = this.timings.allComplete.time;
+            html += `
+              <div style="margin-top: 20px; padding: 15px; background: #4caf50; color: white; border-radius: 5px; text-align: center;">
+                <strong>🎉 Total Time: ${this.formatTime(totalTime)}</strong>
+              </div>
+            `;
+          }
+          
+          content.innerHTML = html;
+        },
+        
+        reset() {
+          this.init();
+          this.updateDisplay();
+        }
+      };
+      
+      // Monitor window objects
+      function startPerformanceMonitoring() {
+        const checkInterval = setInterval(() => {
+          // Check f4Attributes
+          if (window.f4Attributes && performanceTracker.timings.f4Attributes.status === 'pending') {
+            performanceTracker.mark('f4Attributes');
+          }
+          
+          // Check f5Attributes
+          if (window.f5Attributes && performanceTracker.timings.f5Attributes.status === 'pending') {
+            performanceTracker.mark('f5Attributes');
+          }
+          
+          // Check webRTCData
+          if (window.webRTCData !== undefined && performanceTracker.timings.webRTCData.status === 'pending') {
+            performanceTracker.mark('webRTCData');
+          }
+          
+          // Stop checking when all complete
+          if (performanceTracker.timings.allComplete.status === 'complete') {
+            clearInterval(checkInterval);
+          }
+        }, 50); // Check every 50ms for better precision
+        
+        // Stop after 30 seconds to prevent infinite loop
+        setTimeout(() => {
+          clearInterval(checkInterval);
+          console.log('⏱️ Performance monitoring timeout (30s)');
+        }, 30000);
+      }
+      
+      function resetTimings() {
+        if (confirm('Reset performance timings and reload the page?')) {
+          window.location.reload();
+        }
+      }
+      
+      function exportTimings() {
+        try {
+          const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+          
+          const exportData = {
+            exportTime: new Date().toISOString(),
+            userAgent: navigator.userAgent,
+            performanceTimings: {},
+            browserPerformance: {
+              navigationStart: performance.timing.navigationStart,
+              domContentLoadedEventEnd: performance.timing.domContentLoadedEventEnd - performance.timing.navigationStart,
+              loadEventEnd: performance.timing.loadEventEnd - performance.timing.navigationStart
+            }
+          };
+          
+          // Add all timing data
+          for (const [key, value] of Object.entries(performanceTracker.timings)) {
+            exportData.performanceTimings[key] = {
+              timeMs: value.time,
+              timeSec: value.time ? (value.time / 1000).toFixed(2) : null,
+              status: value.status
+            };
+          }
+          
+          const json = JSON.stringify(exportData, null, 2);
+          const blob = new Blob([json], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `fps-performance-${timestamp}.json`;
+          a.click();
+          
+          URL.revokeObjectURL(url);
+          
+          console.log('✅ Performance data exported successfully');
+        } catch (error) {
+          console.error('❌ Error exporting performance data:', error);
+          alert('Failed to export: ' + error.message);
+        }
+      }
+      
+      function copyTimings() {
+        try {
+          const data = {
+            timestamp: new Date().toISOString(),
+            timings: {}
+          };
+          
+          for (const [key, value] of Object.entries(performanceTracker.timings)) {
+            data.timings[key] = {
+              time: value.time ? performanceTracker.formatTime(value.time) : 'N/A',
+              timeMs: value.time,
+              status: value.status
+            };
+          }
+          
+          const text = JSON.stringify(data, null, 2);
+          
+          // Use modern clipboard API
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => {
+              alert('✅ Performance timings copied to clipboard!');
+            }).catch(err => {
+              // Fallback for older browsers
+              fallbackCopyTextToClipboard(text);
+            });
+          } else {
+            fallbackCopyTextToClipboard(text);
+          }
+        } catch (error) {
+          console.error('❌ Error copying timings:', error);
+          alert('Failed to copy: ' + error.message);
+        }
+      }
+      
+      function fallbackCopyTextToClipboard(text) {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.top = '0';
+        textArea.style.left = '0';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+          const successful = document.execCommand('copy');
+          if (successful) {
+            alert('✅ Performance timings copied to clipboard!');
+          } else {
+            alert('❌ Failed to copy to clipboard');
+          }
+        } catch (err) {
+          alert('❌ Failed to copy to clipboard: ' + err.message);
+        }
+        
+        document.body.removeChild(textArea);
+      }
 
       function loadMainScript() {
         // Load fingerprint script first
@@ -235,6 +521,7 @@
         taggingScript.onload = () => {
           scriptsLoaded = true;
           toggleStorageButton(true);
+          performanceTracker.mark('scriptLoaded');
           console.log('✅ Fingerprint script loaded successfully');
         }
 
@@ -269,15 +556,16 @@
           await new Promise(resolve => setTimeout(resolve, 1000));
 
           // Check if fingerprint data is available in window objects
-          if (!window.f5Attributes) {
+          if (!window.f4Attributes && !window.f5Attributes) {
             document.getElementById("fingerprintData").textContent =
-              "F5 fingerprint data not ready yet. Please try again in a moment.";
+              "Fingerprint data not ready yet. Please try again in a moment.";
             document.getElementById("fingerprintDisplay").style.display = "block";
             return;
           }
 
           // Collect data from window objects  
           currentFingerprint = {
+            f4Data: window.f4Attributes || null,
             f5Data: window.f5Attributes || null,
             webrtcData: window.webrtcData || null,
             deviceInfo: window.deviceInfo || null,
@@ -289,6 +577,8 @@
           const formattedData = Object.assign({}, currentFingerprint, {
             // Add summary information
             summary: {
+              f4AttributesAvailable: !!window.f4Attributes,
+              totalF4Attributes: window.f4Attributes ? Object.keys(window.f4Attributes).length : 0,
               hardwareAvailable: !!(window.f5Attributes && (window.f5Attributes.platform || window.f5Attributes.hardwareConcurrency)),
               browserAvailable: !!(window.f5Attributes && (window.f5Attributes.browserName || window.f5Attributes.userAgent)),
               audioAvailable: !!(window.f5Attributes && (window.f5Attributes.audio !== undefined || window.f5Attributes.audioBaseLatency !== undefined)),
@@ -335,25 +625,27 @@
       function checkDataAvailability() {
         const checkInterval = setInterval(() => {
           const status = {
+            f4: !!window.f4Attributes,
             f5: !!window.f5Attributes,
             webrtc: window.webRTCData !== undefined,
           };
 
           let statusHtml = "<div style='font-family: monospace;'>";
-          statusHtml += `<p>🖥️ Hardware Data: ${status.f5 ? '✅ Available' : '⏳ Loading...'}</p>`;
-          statusHtml += `<p>🌐 Browser Data: ${status.f5 ? '✅ Available' : '⏳ Loading...'}</p>`;
-          statusHtml += `<p>🎵 Audio Data: ${status.f5 ? '✅ Available' : '⏳ Loading...'}</p>`;
-          statusHtml += `<p>⚙️ Preferences Data: ${status.f5 ? '✅ Available' : '⏳ Loading...'}</p>`;
-          statusHtml += `<p>🎨 Graphics Data: ${status.f5 ? '✅ Available' : '⏳ Loading...'}</p>`;
+          statusHtml += `<p>🔍 F4 Attributes: ${status.f4 ? '✅ Available' : '⏳ Loading...'}</p>`;
+          statusHtml += `<p>🖥️ Hardware Data (F5): ${status.f5 ? '✅ Available' : '⏳ Loading...'}</p>`;
+          statusHtml += `<p>🌐 Browser Data (F5): ${status.f5 ? '✅ Available' : '⏳ Loading...'}</p>`;
+          statusHtml += `<p>🎵 Audio Data (F5): ${status.f5 ? '✅ Available' : '⏳ Loading...'}</p>`;
+          statusHtml += `<p>⚙️ Preferences Data (F5): ${status.f5 ? '✅ Available' : '⏳ Loading...'}</p>`;
+          statusHtml += `<p>🎨 Graphics Data (F5): ${status.f5 ? '✅ Available' : '⏳ Loading...'}</p>`;
           statusHtml += `<p>🌐 WebRTC Data: ${status.webrtc ? '✅ Available' : '⏳ Loading...'}</p>`;
           statusHtml += "</div>";
 
           document.getElementById("statusInfo").innerHTML = statusHtml;
 
           // If all data is available, we can stop checking
-          if (status.f5 && status.webrtc) {
+          if (status.f4 && status.f5 && status.webrtc) {
             clearInterval(checkInterval);
-            statusHtml += "<p style='color: green; font-weight: bold;'>🎉 All fingerprint groups are ready! Use the group buttons to explore data.</p>";
+            statusHtml += "<p style='color: green; font-weight: bold;'>🎉 All fingerprint data is ready! Use the buttons to explore data.</p>";
             document.getElementById("statusInfo").innerHTML = statusHtml;
           }
         }, 1000);
@@ -452,10 +744,18 @@
       }
 
       document.addEventListener("DOMContentLoaded", () => {
+        // Initialize performance tracking
+        performanceTracker.init();
+        performanceTracker.updateDisplay();
+        
         loadMainScript();
         toggleStorageButton(false);
+        
         // Start checking data availability
         checkDataAvailability();
+        
+        // Start performance monitoring
+        startPerformanceMonitoring();
       });
 
       async function collectIPs() {

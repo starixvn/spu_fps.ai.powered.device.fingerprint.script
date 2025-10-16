@@ -4,6 +4,12 @@ export interface IStorageHandler {
     available(): boolean;
 }
 
+export interface ITaggingResult {
+    key?: string;
+    value?: string;
+    type?: number;
+}
+
 declare global {
   interface Window {
     taggingReady: Promise<string>;

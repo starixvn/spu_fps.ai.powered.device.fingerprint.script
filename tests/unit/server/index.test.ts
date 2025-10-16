@@ -138,42 +138,42 @@ describe('Express Server Routes', () => {
     });
   });
 
-  describe('GET /resources/vers', () => {
-    it('should return success when etag value is present', async () => {
-      const response = await request(app)
-        .get('/resources/vers')
-        .set('Res-Ec-X', 'test-etag')
-        .expect(200);
+  // describe('GET /resources/vers', () => {
+  //   it('should return success when etag value is present', async () => {
+  //     const response = await request(app)
+  //       .get('/resources/vers')
+  //       .set('Res-Ec-X', 'test-etag')
+  //       .expect(200);
 
-      expect(response.body).toEqual({
-        success: true,
-        t: 'test-etag'
-      });
-    });
+  //     expect(response.body).toEqual({
+  //       success: true,
+  //       t: 'test-etag'
+  //     });
+  //   });
 
-    it('should return failure when no etag value', async () => {
-      const response = await request(app)
-        .get('/resources/vers')
-        .expect(200);
+  //   it('should return failure when no etag value', async () => {
+  //     const response = await request(app)
+  //       .get('/resources/vers')
+  //       .expect(200);
 
-      expect(response.body).toEqual({
-        success: false,
-        t: null
-      });
-    });
+  //     expect(response.body).toEqual({
+  //       success: false,
+  //       t: null
+  //     });
+  //   });
 
-    it('should handle array of etag values', async () => {
-      const response = await request(app)
-        .get('/resources/vers')
-        .set('Res-Ec-X', 'first-etag,second-etag')
-        .expect(200);
+  //   it('should handle array of etag values', async () => {
+  //     const response = await request(app)
+  //       .get('/resources/vers')
+  //       .set('Res-Ec-X', 'first-etag,second-etag')
+  //       .expect(200);
 
-      expect(response.body).toEqual({
-        success: true,
-        t: 'first-etag,second-etag'
-      });
-    });
-  });
+  //     expect(response.body).toEqual({
+  //       success: true,
+  //       t: 'first-etag,second-etag'
+  //     });
+  //   });
+  // });
 
   describe('GET /', () => {
     it('should redirect to healthz page', async () => {

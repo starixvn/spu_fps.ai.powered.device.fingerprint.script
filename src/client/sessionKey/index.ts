@@ -1,4 +1,4 @@
-import { DeviceFactory } from "../deviceFactory";
+import { DeviceFactory } from "../utils/deviceFactory";
 import { SessionKeyData } from "./types";
 
 export class SessionKeyManager {

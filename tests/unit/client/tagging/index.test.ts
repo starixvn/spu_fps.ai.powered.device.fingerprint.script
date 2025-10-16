@@ -7,7 +7,7 @@ jest.mock('../../../../src/client/tagging/modules/localStorage');
 jest.mock('../../../../src/client/tagging/modules/windowName');
 
 // Mock DeviceFactory
-jest.mock('../../../../src/client/deviceFactory', () => ({
+jest.mock('../../../../src/client/utils/deviceFactory', () => ({
   DeviceFactory: {
     generateId: jest.fn(),
     generateTagging: jest.fn(),
@@ -26,7 +26,7 @@ jest.mock('../../../../src/client/tagging/tagging', () => ({
     etag: "__etag_key__"
   },
   TaggingHandler: {
-    getTaggingValue: jest.fn()
+    getTaggingFromStorages: jest.fn()
   }
 }));
 
@@ -73,7 +73,7 @@ import { LocalStorageHandler } from '../../../../src/client/tagging/modules/loca
 import { TaggingHandler } from '../../../../src/client/tagging/tagging';
 import { WindowNameHandler } from '../../../../src/client/tagging/modules/windowName';
 import { TaggingClass } from '../../../../src/client/tagging/index';
-import { DeviceFactory } from '../../../../src/client/deviceFactory';
+import { DeviceFactory } from '../../../../src/client/utils/deviceFactory';
 
 //
 
@@ -136,7 +136,11 @@ describe('Tagging Index', () => {
     (ETagHandler as jest.MockedClass<typeof ETagHandler>).mockImplementation(() => mockETag);
     
     // Set default mock values for TaggingHandler and DeviceFactory
-    (TaggingHandler.getTaggingValue as jest.Mock).mockResolvedValue('test-tag-value');
+    (TaggingHandler.getTaggingFromStorages as jest.Mock).mockResolvedValue({
+      key: '__indexedDB_key__',
+      value: 'test-tag-value',
+      type: 110
+    });
     (DeviceFactory.generateTagging as jest.Mock).mockReturnValue('generated-tag-value');
     
     // Create TaggingClass instance
@@ -160,36 +164,25 @@ describe('Tagging Index', () => {
     });
   });
 
-  describe('getStorage method', () => {
+  describe('syncStorageValue method', () => {
     it('should get tagging value and update all storage handlers when they have different values', async () => {
       const testTagValue = 'test-tag-123';
+      const testType = 110;
       
       // Ensure the mock is set up correctly - override the default
-      (TaggingHandler.getTaggingValue as jest.Mock).mockResolvedValue(testTagValue);
-      
-      // Mock all handlers to return different values to trigger updates
-      mockIndexedDB.get.mockResolvedValue('old-value-1');
-      mockCacheApi.get.mockResolvedValue('old-value-2');
-      mockCookies.get.mockResolvedValue('old-value-3');
-      mockLocalStorage.get.mockResolvedValue('old-value-4');
-      mockWindowName.get.mockResolvedValue('old-value-5');
-      mockETag.get.mockResolvedValue('old-value-6');
+      (TaggingHandler.getTaggingFromStorages as jest.Mock).mockResolvedValue({
+        key: '__indexedDB_key__',
+        value: testTagValue,
+        type: testType
+      });
 
-      const result = await taggingInstance.getStorage();
+      const result = await taggingInstance.syncStorageValue();
 
-      expect(TaggingHandler.getTaggingValue).toHaveBeenCalled();
-      expect(result).toBe(testTagValue);
+      expect(TaggingHandler.getTaggingFromStorages).toHaveBeenCalled();
+      expect(result).toEqual([testTagValue, testType]);
 
-      // Verify all handlers were called to get current values
-      expect(mockIndexedDB.get).toHaveBeenCalledWith('__indexedDB_key__');
-      expect(mockCacheApi.get).toHaveBeenCalledWith('__cache_key__');
-      expect(mockCookies.get).toHaveBeenCalledWith('__cookies_key__');
-      expect(mockLocalStorage.get).toHaveBeenCalledWith('__localStorage_key__');
-      expect(mockWindowName.get).toHaveBeenCalledWith('__window_key__');
-      expect(mockETag.get).toHaveBeenCalledWith('__etag_key__');
-
-      // Verify all handlers were called to set new values
-      expect(mockIndexedDB.set).toHaveBeenCalledWith('__indexedDB_key__', testTagValue);
+      // Verify all handlers were called to set new values (except the one that already has the value)
+      expect(mockIndexedDB.set).not.toHaveBeenCalled(); // Already has the value
       expect(mockCacheApi.set).toHaveBeenCalledWith('__cache_key__', testTagValue);
       expect(mockCookies.set).toHaveBeenCalledWith('__cookies_key__', testTagValue);
       expect(mockLocalStorage.set).toHaveBeenCalledWith('__localStorage_key__', testTagValue);
@@ -199,80 +192,64 @@ describe('Tagging Index', () => {
 
     it('should not update handlers when current value matches target value', async () => {
       const testTagValue = 'matching-tag-value';
-      (TaggingHandler.getTaggingValue as jest.Mock).mockResolvedValue(testTagValue);
+      const testType = 220;
       
-      // Mock all handlers to return the same value as target
-      mockIndexedDB.get.mockResolvedValue(testTagValue);
-      mockCacheApi.get.mockResolvedValue(testTagValue);
-      mockCookies.get.mockResolvedValue(testTagValue);
-      mockLocalStorage.get.mockResolvedValue(testTagValue);
-      mockWindowName.get.mockResolvedValue(testTagValue);
-      mockETag.get.mockResolvedValue(testTagValue);
+      (TaggingHandler.getTaggingFromStorages as jest.Mock).mockResolvedValue({
+        key: '__etag_key__',
+        value: testTagValue,
+        type: testType
+      });
 
-      const result = await taggingInstance.getStorage();
+      const result = await taggingInstance.syncStorageValue();
 
-      expect(result).toBe(testTagValue);
+      expect(result).toEqual([testTagValue, testType]);
 
-      // Verify handlers were called to get values but not to set
-      expect(mockIndexedDB.get).toHaveBeenCalledWith('__indexedDB_key__');
-      expect(mockCacheApi.get).toHaveBeenCalledWith('__cache_key__');
-      expect(mockCookies.get).toHaveBeenCalledWith('__cookies_key__');
-      expect(mockLocalStorage.get).toHaveBeenCalledWith('__localStorage_key__');
-      expect(mockWindowName.get).toHaveBeenCalledWith('__window_key__');
-      expect(mockETag.get).toHaveBeenCalledWith('__etag_key__');
-
-      // Verify no set calls were made since values match
-      expect(mockIndexedDB.set).not.toHaveBeenCalled();
-      expect(mockCacheApi.set).not.toHaveBeenCalled();
-      expect(mockCookies.set).not.toHaveBeenCalled();
-      expect(mockLocalStorage.set).not.toHaveBeenCalled();
-      expect(mockWindowName.set).not.toHaveBeenCalled();
-      expect(mockETag.set).not.toHaveBeenCalled();
+      // Verify all handlers were called to set new values (except the one that already has the value)
+      expect(mockIndexedDB.set).toHaveBeenCalledWith('__indexedDB_key__', testTagValue);
+      expect(mockCacheApi.set).toHaveBeenCalledWith('__cache_key__', testTagValue);
+      expect(mockCookies.set).toHaveBeenCalledWith('__cookies_key__', testTagValue);
+      expect(mockLocalStorage.set).toHaveBeenCalledWith('__localStorage_key__', testTagValue);
+      expect(mockWindowName.set).toHaveBeenCalledWith('__window_key__', testTagValue);
+      expect(mockETag.set).not.toHaveBeenCalled(); // Already has the value
     });
 
     it('should handle mixed scenarios where some handlers need updates', async () => {
       const testTagValue = 'mixed-scenario-value';
-      (TaggingHandler.getTaggingValue as jest.Mock).mockResolvedValue(testTagValue);
+      const testType = 330;
       
-      // Some handlers match, some don't
-      mockIndexedDB.get.mockResolvedValue(testTagValue); // matches
-      mockCacheApi.get.mockResolvedValue('different-value'); // needs update
-      mockCookies.get.mockResolvedValue(testTagValue); // matches
-      mockLocalStorage.get.mockResolvedValue('another-different-value'); // needs update
-      mockWindowName.get.mockResolvedValue(testTagValue); // matches
-      mockETag.get.mockResolvedValue('etag-different-value'); // needs update
+      (TaggingHandler.getTaggingFromStorages as jest.Mock).mockResolvedValue({
+        key: '__cache_key__',
+        value: testTagValue,
+        type: testType
+      });
 
-      const result = await taggingInstance.getStorage();
+      const result = await taggingInstance.syncStorageValue();
 
-      expect(result).toBe(testTagValue);
+      expect(result).toEqual([testTagValue, testType]);
 
-      // Only handlers with different values should be updated
-      expect(mockIndexedDB.set).not.toHaveBeenCalled();
-      expect(mockCacheApi.set).toHaveBeenCalledWith('__cache_key__', testTagValue);
-      expect(mockCookies.set).not.toHaveBeenCalled();
+      // All handlers except the one that already has the value should be updated
+      expect(mockIndexedDB.set).toHaveBeenCalledWith('__indexedDB_key__', testTagValue);
+      expect(mockCacheApi.set).not.toHaveBeenCalled(); // Already has the value
+      expect(mockCookies.set).toHaveBeenCalledWith('__cookies_key__', testTagValue);
       expect(mockLocalStorage.set).toHaveBeenCalledWith('__localStorage_key__', testTagValue);
-      expect(mockWindowName.set).not.toHaveBeenCalled();
+      expect(mockWindowName.set).toHaveBeenCalledWith('__window_key__', testTagValue);
       expect(mockETag.set).toHaveBeenCalledWith('__etag_key__', testTagValue);
     });
 
-    it('should generate new tagging when getTaggingValue returns null', async () => {
+    it('should generate new tagging when getTaggingFromStorages returns no value', async () => {
       const generatedTagValue = 'generated-tag-123';
-      (TaggingHandler.getTaggingValue as jest.Mock).mockResolvedValue(null);
+      (TaggingHandler.getTaggingFromStorages as jest.Mock).mockResolvedValue({
+        key: undefined,
+        value: undefined,
+        type: undefined
+      });
       (DeviceFactory.generateTagging as jest.Mock).mockReturnValue(generatedTagValue);
-      
-      // Mock all handlers to return different values to trigger updates
-      mockIndexedDB.get.mockResolvedValue('old-value');
-      mockCacheApi.get.mockResolvedValue('old-value');
-      mockCookies.get.mockResolvedValue('old-value');
-      mockLocalStorage.get.mockResolvedValue('old-value');
-      mockWindowName.get.mockResolvedValue('old-value');
-      mockETag.get.mockResolvedValue('old-value');
 
-      const result = await taggingInstance.getStorage();
+      const result = await taggingInstance.syncStorageValue();
 
-      expect(TaggingHandler.getTaggingValue).toHaveBeenCalled();
+      expect(TaggingHandler.getTaggingFromStorages).toHaveBeenCalled();
       expect(DeviceFactory.generateTagging).toHaveBeenCalled();
-      expect(result).toBe(generatedTagValue);
+      expect(result).toEqual([generatedTagValue, 7000]);
 
       // Verify all handlers were updated with generated value
       expect(mockIndexedDB.set).toHaveBeenCalledWith('__indexedDB_key__', generatedTagValue);
@@ -285,24 +262,22 @@ describe('Tagging Index', () => {
 
     it('should handle async and sync handlers correctly', async () => {
       const testTagValue = 'async-sync-test';
-      (TaggingHandler.getTaggingValue as jest.Mock).mockResolvedValue(testTagValue);
+      const testType = 440;
       
-      // Mix of async and sync handlers returning different values
-      mockIndexedDB.get.mockResolvedValue('async-old-value');
-      mockCacheApi.get.mockResolvedValue('async-old-value');
-      mockCookies.get.mockResolvedValue('sync-old-value');
-      mockLocalStorage.get.mockResolvedValue('sync-old-value');
-      mockWindowName.get.mockResolvedValue('sync-old-value');
-      mockETag.get.mockResolvedValue('async-old-value');
+      (TaggingHandler.getTaggingFromStorages as jest.Mock).mockResolvedValue({
+        key: '__cookies_key__',
+        value: testTagValue,
+        type: testType
+      });
 
-      const result = await taggingInstance.getStorage();
+      const result = await taggingInstance.syncStorageValue();
 
-      expect(result).toBe(testTagValue);
+      expect(result).toEqual([testTagValue, testType]);
 
-      // All should be updated
+      // All should be updated except the one that already has the value
       expect(mockIndexedDB.set).toHaveBeenCalledWith('__indexedDB_key__', testTagValue);
       expect(mockCacheApi.set).toHaveBeenCalledWith('__cache_key__', testTagValue);
-      expect(mockCookies.set).toHaveBeenCalledWith('__cookies_key__', testTagValue);
+      expect(mockCookies.set).not.toHaveBeenCalled(); // Already has the value
       expect(mockLocalStorage.set).toHaveBeenCalledWith('__localStorage_key__', testTagValue);
       expect(mockWindowName.set).toHaveBeenCalledWith('__window_key__', testTagValue);
       expect(mockETag.set).toHaveBeenCalledWith('__etag_key__', testTagValue);
@@ -336,27 +311,77 @@ describe('Tagging Index', () => {
 
     it('should handle null and undefined values correctly', async () => {
       const testTagValue = 'null-undefined-test';
-      (TaggingHandler.getTaggingValue as jest.Mock).mockResolvedValue(testTagValue);
+      const testType = 550;
       
-      // Handlers return null/undefined
-      mockIndexedDB.get.mockResolvedValue(null);
-      mockCacheApi.get.mockResolvedValue(undefined);
-      mockCookies.get.mockResolvedValue(null);
-      mockLocalStorage.get.mockResolvedValue(undefined);
-      mockWindowName.get.mockResolvedValue(null);
-      mockETag.get.mockResolvedValue(undefined);
+      (TaggingHandler.getTaggingFromStorages as jest.Mock).mockResolvedValue({
+        key: '__localStorage_key__',
+        value: testTagValue,
+        type: testType
+      });
 
-      const result = await taggingInstance.getStorage();
+      const result = await taggingInstance.syncStorageValue();
 
-      expect(result).toBe(testTagValue);
+      expect(result).toEqual([testTagValue, testType]);
 
-      // All should be updated since null/undefined !== testTagValue
+      // All should be updated except the one that already has the value
       expect(mockIndexedDB.set).toHaveBeenCalledWith('__indexedDB_key__', testTagValue);
       expect(mockCacheApi.set).toHaveBeenCalledWith('__cache_key__', testTagValue);
       expect(mockCookies.set).toHaveBeenCalledWith('__cookies_key__', testTagValue);
-      expect(mockLocalStorage.set).toHaveBeenCalledWith('__localStorage_key__', testTagValue);
+      expect(mockLocalStorage.set).not.toHaveBeenCalled(); // Already has the value
       expect(mockWindowName.set).toHaveBeenCalledWith('__window_key__', testTagValue);
       expect(mockETag.set).toHaveBeenCalledWith('__etag_key__', testTagValue);
+    });
+  });
+
+  describe('getTaggingValue method', () => {
+    it('should return only the tagging value from syncStorageValue', async () => {
+      const testTagValue = 'test-tag-value';
+      const testType = 110;
+      
+      (TaggingHandler.getTaggingFromStorages as jest.Mock).mockResolvedValue({
+        key: '__indexedDB_key__',
+        value: testTagValue,
+        type: testType
+      });
+
+      const result = await taggingInstance.getTaggingValue();
+
+      expect(TaggingHandler.getTaggingFromStorages).toHaveBeenCalled();
+      expect(result).toBe(testTagValue);
+    });
+
+    it('should return generated value when no tagging found', async () => {
+      const generatedTagValue = 'generated-tag-value';
+      
+      (TaggingHandler.getTaggingFromStorages as jest.Mock).mockResolvedValue({
+        key: undefined,
+        value: undefined,
+        type: undefined
+      });
+      (DeviceFactory.generateTagging as jest.Mock).mockReturnValue(generatedTagValue);
+
+      const result = await taggingInstance.getTaggingValue();
+
+      expect(DeviceFactory.generateTagging).toHaveBeenCalled();
+      expect(result).toBe(generatedTagValue);
+    });
+  });
+
+  describe('start method', () => {
+    it('should return the same result as syncStorageValue', async () => {
+      const testTagValue = 'start-test-value';
+      const testType = 220;
+      
+      (TaggingHandler.getTaggingFromStorages as jest.Mock).mockResolvedValue({
+        key: '__etag_key__',
+        value: testTagValue,
+        type: testType
+      });
+
+      const result = await taggingInstance.start();
+
+      expect(TaggingHandler.getTaggingFromStorages).toHaveBeenCalled();
+      expect(result).toEqual([testTagValue, testType]);
     });
   });
 
@@ -409,54 +434,71 @@ describe('Tagging Index', () => {
   describe('Integration scenarios', () => {
     it('should handle complete workflow with mixed storage states', async () => {
       const testTagValue = 'integration-test-value';
-      (TaggingHandler.getTaggingValue as jest.Mock).mockResolvedValue(testTagValue);
+      const testType = 440;
       
-      // Simulate real-world scenario with mixed storage states
-      mockIndexedDB.get.mockResolvedValue(null);
-      mockCacheApi.get.mockResolvedValue('old-cache-value');
-      mockCookies.get.mockResolvedValue(testTagValue);
-      mockLocalStorage.get.mockResolvedValue('old-local-value');
-      mockWindowName.get.mockResolvedValue(null);
-      mockETag.get.mockResolvedValue('old-etag-value');
+      (TaggingHandler.getTaggingFromStorages as jest.Mock).mockResolvedValue({
+        key: '__cookies_key__',
+        value: testTagValue,
+        type: testType
+      });
 
-      const result = await taggingInstance.getStorage();
+      const result = await taggingInstance.syncStorageValue();
 
-      expect(result).toBe(testTagValue);
+      expect(result).toEqual([testTagValue, testType]);
 
-      // Verify selective updates
+      // Verify selective updates - all except the one that already has the value
       expect(mockIndexedDB.set).toHaveBeenCalledWith('__indexedDB_key__', testTagValue);
       expect(mockCacheApi.set).toHaveBeenCalledWith('__cache_key__', testTagValue);
-      expect(mockCookies.set).not.toHaveBeenCalled(); // Already matches
+      expect(mockCookies.set).not.toHaveBeenCalled(); // Already has the value
       expect(mockLocalStorage.set).toHaveBeenCalledWith('__localStorage_key__', testTagValue);
       expect(mockWindowName.set).toHaveBeenCalledWith('__window_key__', testTagValue);
       expect(mockETag.set).toHaveBeenCalledWith('__etag_key__', testTagValue);
     });
 
-    it('should handle multiple calls to getStorage correctly', async () => {
+    it('should handle multiple calls to syncStorageValue correctly', async () => {
       const firstTagValue = 'first-call-value';
+      const firstType = 110;
       const secondTagValue = 'second-call-value';
+      const secondType = 220;
       
       // First call
-      (TaggingHandler.getTaggingValue as jest.Mock).mockResolvedValueOnce(firstTagValue);
-      mockIndexedDB.get.mockResolvedValue('old-value');
+      (TaggingHandler.getTaggingFromStorages as jest.Mock).mockResolvedValueOnce({
+        key: '__indexedDB_key__',
+        value: firstTagValue,
+        type: firstType
+      });
       
-      const firstResult = await taggingInstance.getStorage();
-      expect(firstResult).toBe(firstTagValue);
-      expect(mockIndexedDB.set).toHaveBeenCalledWith('__indexedDB_key__', firstTagValue);
+      const firstResult = await taggingInstance.syncStorageValue();
+      expect(firstResult).toEqual([firstTagValue, firstType]);
+      expect(mockIndexedDB.set).not.toHaveBeenCalled(); // Already has the value
+      expect(mockCacheApi.set).toHaveBeenCalledWith('__cache_key__', firstTagValue);
       
       // Reset mocks for second call
       jest.clearAllMocks();
       
       // Re-setup mocks
-      mockIndexedDB.get = jest.fn().mockResolvedValue(firstTagValue);
       mockIndexedDB.set = jest.fn().mockResolvedValue(true);
+      mockCacheApi.set = jest.fn().mockResolvedValue(true);
+      mockCookies.set = jest.fn().mockResolvedValue(true);
+      mockLocalStorage.set = jest.fn().mockResolvedValue(true);
+      mockWindowName.set = jest.fn().mockResolvedValue(true);
+      mockETag.set = jest.fn().mockResolvedValue(true);
       
       // Second call with different tag value
-      (TaggingHandler.getTaggingValue as jest.Mock).mockResolvedValueOnce(secondTagValue);
+      (TaggingHandler.getTaggingFromStorages as jest.Mock).mockResolvedValueOnce({
+        key: '__etag_key__',
+        value: secondTagValue,
+        type: secondType
+      });
       
-      const secondResult = await taggingInstance.getStorage();
-      expect(secondResult).toBe(secondTagValue);
+      const secondResult = await taggingInstance.syncStorageValue();
+      expect(secondResult).toEqual([secondTagValue, secondType]);
       expect(mockIndexedDB.set).toHaveBeenCalledWith('__indexedDB_key__', secondTagValue);
+      expect(mockCacheApi.set).toHaveBeenCalledWith('__cache_key__', secondTagValue);
+      expect(mockCookies.set).toHaveBeenCalledWith('__cookies_key__', secondTagValue);
+      expect(mockLocalStorage.set).toHaveBeenCalledWith('__localStorage_key__', secondTagValue);
+      expect(mockWindowName.set).toHaveBeenCalledWith('__window_key__', secondTagValue);
+      expect(mockETag.set).not.toHaveBeenCalled(); // Already has the value
     });
 
     // it('should handle storage handler failures gracefully', async () => {
@@ -476,11 +518,17 @@ describe('Tagging Index', () => {
 
     it('should handle start method correctly', async () => {
       const testTagValue = 'start-method-test';
-      (TaggingHandler.getTaggingValue as jest.Mock).mockResolvedValue(testTagValue);
+      const testType = 330;
+      
+      (TaggingHandler.getTaggingFromStorages as jest.Mock).mockResolvedValue({
+        key: '__cache_key__',
+        value: testTagValue,
+        type: testType
+      });
       
       const result = await taggingInstance.start();
-      expect(result).toBe(testTagValue);
-      expect(TaggingHandler.getTaggingValue).toHaveBeenCalled();
+      expect(result).toEqual([testTagValue, testType]);
+      expect(TaggingHandler.getTaggingFromStorages).toHaveBeenCalled();
     });
   });
 });

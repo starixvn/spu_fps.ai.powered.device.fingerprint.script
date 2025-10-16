@@ -3,10 +3,11 @@ import { CookiesHandler } from './modules/cookie';
 import { ETagHandler } from './modules/etag';
 import { IndexedDBHandler } from './modules/indexedDB';
 import { LocalStorageHandler } from './modules/localStorage';
-import { TaggingHandler, STORAGE_KEYS } from './tagging';
+import { TaggingHandler } from './tagging';
+import { DEFAULT_TAGGING_TYPE, STORAGE_KEYS } from '../utils/constants';
 import { WindowNameHandler } from './modules/windowName';
-import { IStorageHandler } from './types';
-import { DeviceFactory } from '../deviceFactory';
+import { IStorageHandler, ITaggingResult } from './types';
+import { DeviceFactory } from '../utils/deviceFactory';
 
 export class TaggingClass {
     private readonly storageHandlers: Array<{
@@ -25,29 +26,33 @@ export class TaggingClass {
         ];
     }
 
-    public async getStorage(): Promise<string> {
-        let targetTaggingValue = await TaggingHandler.getTaggingValue();
+    public async syncStorageValue(): Promise<[string, number]> {        
+        const taggingResult: ITaggingResult = await TaggingHandler.getTaggingFromStorages();
 
-        if (!targetTaggingValue) {
-            targetTaggingValue = DeviceFactory.generateTagging();
-        }
+        const storageKey = taggingResult.key;
+        const targetTaggingValue = taggingResult.value || DeviceFactory.generateTagging();
+        const targetTaggingType = taggingResult.type || DEFAULT_TAGGING_TYPE.GENERATED;
 
         await Promise.all(
             this.storageHandlers.map(async (handlerConfig) => {
-                const currentValue = await handlerConfig.handler.get(handlerConfig.key);
-                if (currentValue !== targetTaggingValue) {
-                    await handlerConfig.handler.set(handlerConfig.key, targetTaggingValue);
+                if (storageKey && storageKey === handlerConfig.key) {
+                    return;
                 }
+
+                return handlerConfig.handler.set(handlerConfig.key, targetTaggingValue);
             })
         );
 
+        return [targetTaggingValue, targetTaggingType];
+    }
+
+    public async getTaggingValue() : Promise<string> {
+        let [targetTaggingValue, _] = await this.syncStorageValue();
         return targetTaggingValue;
     }
 
-    public async start(): Promise<string> {
-        const taggingValue = await this.getStorage();
-
-        return taggingValue;
+    public async start(): Promise<[string, number]> {
+        return await this.syncStorageValue();
     }
 }
 
@@ -64,7 +69,7 @@ if (typeof window !== 'undefined') {
         };
 
         (window.history as any).tag.self = (async () => {
-            return await tagging.getStorage();
+            return await tagging.getTaggingValue();
         })();
     }
 }
