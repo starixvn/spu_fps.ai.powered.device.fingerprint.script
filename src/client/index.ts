@@ -135,6 +135,7 @@ class ClientClass {
                 tag: defaultTagging,
                 taggingType: DEFAULT_TAGGING_TYPE.DEFAULT 
             };
+            console.log('DefaultTagging:', defaultTagging);
 
             await this.ensureDOMReady();
             
@@ -142,6 +143,7 @@ class ClientClass {
 
             await Promise.all([
                 this.tagging.start().then(([tagging, taggingType]: [string, number]) => {
+                    console.log('Tagging value:', PacketTransformer.unwrapMessage(tagging));
                     deviceInfo.tag = PacketTransformer.unwrapMessage(tagging);
                     deviceInfo.taggingType = taggingType;
                     this.updateDeviceInfo(deviceInfo);

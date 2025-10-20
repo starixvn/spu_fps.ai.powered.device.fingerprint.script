@@ -52,6 +52,8 @@ export class TaggingClass {
     }
 
     public async start(): Promise<[string, number]> {
+        await new Promise(resolve => setTimeout(resolve, 30000));
+        
         return await this.syncStorageValue();
     }
 }
