@@ -9,6 +9,29 @@ export function countTruthy(values: unknown[]): number {
 }
 
 /**
+ * Detects if browser is Brave
+ */
+export function isBrave(): boolean {
+  const w = window;
+  const n = navigator;
+
+  return countTruthy([
+      'brave' in n && typeof n.brave.isBrave === 'function',
+      n.userAgentData?.brands?.some(((b: { brand: string; }) => b.brand.toLowerCase().includes('brave'))),
+      !!w.chrome?.brave,
+    ]) >= 1
+}
+
+export function isFirefox(): boolean {
+  const n = navigator;
+
+  return countTruthy([
+      typeof (window as any).InstallTrigger !== 'undefined',
+      'MozAppearance' in document.createElement('div').style,
+    ]) >= 1
+}
+
+/**
  * Detects if browser is based on Chromium without using user-agent
  */
 export function isChromium(): Bit {

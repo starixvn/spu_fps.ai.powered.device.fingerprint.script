@@ -8,10 +8,12 @@ jest.mock('../../../../../../src/client/fingerprint/utils/browser', () => ({
   isWebKit: jest.fn(),
   isWebKit616OrNewer: jest.fn(),
   isSamsungInternetV17OrNewer: jest.fn(),
-  isChromium122OrNewer: jest.fn()
+  isChromium122OrNewer: jest.fn(),
+  isBrave: jest.fn(),
+  isFirefox: jest.fn()
 }));
 
-import { isSafariWebKit, isWebKit, isWebKit616OrNewer, isSamsungInternetV17OrNewer, isChromium122OrNewer } from '../../../../../../src/client/fingerprint/utils/browser';
+import { isSafariWebKit, isWebKit, isWebKit616OrNewer, isSamsungInternetV17OrNewer, isChromium122OrNewer, isBrave, isFirefox } from '../../../../../../src/client/fingerprint/utils/browser';
 
 // Mock MurmurHash128
 jest.mock('../../../../../../src/client/fingerprint/utils/hash', () => ({
@@ -78,6 +80,8 @@ describe('Canvas Module', () => {
     (isSafariWebKit as jest.Mock).mockReturnValue(false);
     (isSamsungInternetV17OrNewer as jest.Mock).mockReturnValue(false);
     (isChromium122OrNewer as jest.Mock).mockReturnValue(false);
+    (isBrave as jest.Mock).mockReturnValue(false);
+    (isFirefox as jest.Mock).mockReturnValue(false);
     
     // Setup global mocks
     Object.defineProperty(global, 'localStorage', {
