@@ -33,18 +33,10 @@ export function collectPlugins(): PluginsInfo {
 }
 
 function getPluginsAntifingerprinting(): PluginsInfo | null {
-  const rawBrowserName = collectBrowserName();
-  const browserName = typeof rawBrowserName === 'string'  ? rawBrowserName.toLowerCase() : '';  
-
   // Samsung Internet Smart Anti-Tracking (v17+)
   if (isSamsungInternetV17OrNewer()) {
     return FingerprintSpecialValue.ANTI_FINGERPRINTED;
   }
-
-  // Brave Browser has built-in fingerprinting protection
-  // if (browserName === 'brave') {
-  //   return FingerprintSpecialValue.ANTI_FINGERPRINTED;
-  // }
 
   return null;
 }
