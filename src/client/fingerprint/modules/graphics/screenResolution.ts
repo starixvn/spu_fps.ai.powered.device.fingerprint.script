@@ -32,7 +32,7 @@ function getScreenResolution(): ScreenResolutionInfo {
 }
 
 function getScreenResolutionAntifingerprinting(): ScreenResolutionInfo | null {
-  // Safari WebKit anti-fingerprinting 
+  // Safari 17+ has enhanced anti-fingerprinting for canvas
   if (isWebKit() && isWebKit616OrNewer() && isSafariWebKit()) {
     return FingerprintSpecialValue.UNDEFINED;
   }

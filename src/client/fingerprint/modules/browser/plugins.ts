@@ -42,9 +42,9 @@ function getPluginsAntifingerprinting(): PluginsInfo | null {
   }
 
   // Brave Browser has built-in fingerprinting protection
-  if (browserName === 'brave') {
-    return FingerprintSpecialValue.ANTI_FINGERPRINTED;
-  }
+  // if (browserName === 'brave') {
+  //   return FingerprintSpecialValue.ANTI_FINGERPRINTED;
+  // }
 
   return null;
 }

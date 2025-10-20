@@ -27,7 +27,7 @@ function doesBrowserPerformCanvasAntifingerprinting(): boolean {
   // Safari 17+ has enhanced anti-fingerprinting for canvas
   if (isWebKit() && isWebKit616OrNewer() && isSafariWebKit()) return true;
 
-  // Samsung Internet 17+ (Smart Anti-Fingerprinting / Anti-Tracking)
+  // Samsung Internet 26+ has Smart Anti-Tracking
   if (isSamsungInternetV17OrNewer() && isChromium122OrNewer()) return true;
   
   return false;
