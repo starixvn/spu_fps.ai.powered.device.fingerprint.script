@@ -1,7 +1,6 @@
 import type { PluginsInfo } from "../../types";
 import { isSamsungInternetV17OrNewer } from "../../utils/browser";
 import { FingerprintSpecialValue } from "../../utils/consts";
-import { collectBrowserName } from "./browserName";
 
 export function collectPlugins(): PluginsInfo {
   try {
