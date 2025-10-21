@@ -1,4 +1,5 @@
 import type { HardwareConcurrencyInfo } from "../../types";
+import { isBrave } from "../../utils/browser";
 import { FingerprintSpecialValue } from "../../utils/consts";
 
 const HARDWARE_CONCURRENCY_RUNS = 5;
@@ -7,6 +8,9 @@ const MAX_VALID_CORES = 128;
 
 export async function collectHardwareConcurrency(): Promise<HardwareConcurrencyInfo> {
   try {
+    const antiFingerprintingResult = getHardwareConcurrencyAntiFp();
+    if (antiFingerprintingResult !== null) return antiFingerprintingResult;
+
     if (!("hardwareConcurrency" in navigator))
       return FingerprintSpecialValue.UNDEFINED;
 
@@ -33,6 +37,15 @@ export async function collectHardwareConcurrency(): Promise<HardwareConcurrencyI
     return FingerprintSpecialValue.ERROR;
   }
 }
+
+function getHardwareConcurrencyAntiFp(): HardwareConcurrencyInfo | null {
+  if (isBrave()) {
+    return FingerprintSpecialValue.ANTI_FINGERPRINTED;
+  }
+
+  return null;
+}
+
 
 function getHardwareConcurrencyOnce(): number | FingerprintSpecialValue {
   try {

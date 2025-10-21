@@ -310,3 +310,33 @@ export function isIPad(): Bit {
     ]) >= 2
   );
 }
+
+/**
+ * Detects if browser is Brave
+ */
+export function isBrave(): Bit {
+  const w = window;
+  const n = navigator;
+
+  return boolToBit(
+    countTruthy([
+      'brave' in n && typeof (n as any).brave.isBrave === 'function',
+      (navigator as any).userAgentData?.brands?.some(((b: { brand: string; }) => b.brand.toLowerCase().includes('brave'))),
+      !!(w as any).chrome?.brave,
+    ]) >= 1
+  );
+}
+
+/**
+ * Detects if browser is Firefox
+ */
+export function isFirefox(): Bit {
+  const n = navigator;
+
+  return boolToBit(
+    countTruthy([
+      typeof (window as any).InstallTrigger !== 'undefined',
+      'MozAppearance' in document.createElement('div').style,
+    ]) >= 1
+  );
+}
