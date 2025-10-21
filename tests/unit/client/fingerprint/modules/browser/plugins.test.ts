@@ -1,6 +1,13 @@
 import { collectPlugins } from '../../../../../../src/client/fingerprint/modules/browser/plugins';
 import { FingerprintSpecialValue } from '../../../../../../src/client/fingerprint/utils/consts';
 
+// Mock browser detection functions
+jest.mock('../../../../../../src/client/fingerprint/utils/browser', () => ({
+  isSamsungInternetV17OrNewer: jest.fn(() => false),
+}));
+
+import { isSamsungInternetV17OrNewer } from '../../../../../../src/client/fingerprint/utils/browser';
+
 // Mock navigator
 const mockNavigator = {
   plugins: undefined as any,
@@ -15,6 +22,9 @@ describe('Plugins Module', () => {
   beforeEach(() => {
     // Reset all mocks
     jest.clearAllMocks();
+    
+    // Ensure browser detection returns false
+    (isSamsungInternetV17OrNewer as jest.Mock).mockReturnValue(false);
     
     // Reset mock values using defineProperty to avoid getter-only errors
     try {
@@ -241,6 +251,23 @@ describe('Plugins Module', () => {
 
       // Assert
       expect(result).toBe(FingerprintSpecialValue.ERROR);
+    });
+
+    it('should return ANTI_FINGERPRINTED when Samsung Internet v17+ is detected', () => {
+      // Arrange
+      (isSamsungInternetV17OrNewer as jest.Mock).mockReturnValue(true);
+      const mockPlugins = {
+        length: 2,
+        0: { name: 'Plugin 1' },
+        1: { name: 'Plugin 2' }
+      };
+      mockNavigator.plugins = mockPlugins;
+
+      // Act
+      const result = collectPlugins();
+
+      // Assert
+      expect(result).toBe(FingerprintSpecialValue.ANTI_FINGERPRINTED);
     });
 
     it('should handle plugins collection that throws on access', () => {

@@ -2,7 +2,7 @@ import { MurmurHash128 } from "../../utils/hash";
 import type { CanvasInfo } from "../../types";
 import type { Bit } from '../../types';
 import { FingerprintSpecialValue } from "../../utils/consts";
-import { isSafariWebKit, isWebKit, isWebKit616OrNewer, isSamsungInternet, isChromium122OrNewer } from "../../utils/browser";
+import { isSafariWebKit, isWebKit, isWebKit616OrNewer, isSamsungInternetV17OrNewer, isChromium122OrNewer } from "../../utils/browser";
 
 const CANVAS_SNAPSHOTS = 3; 
 const CANVAS_FINGERPRINT_TEXT = `Sphinx ${String.fromCharCode(55357, 56848)} quartz ${String.fromCharCode(55357, 56849)} vow ${String.fromCharCode(55357, 56850)}`;
@@ -28,7 +28,7 @@ function doesBrowserPerformCanvasAntifingerprinting(): boolean {
   if (isWebKit() && isWebKit616OrNewer() && isSafariWebKit()) return true;
 
   // Samsung Internet 26+ has Smart Anti-Tracking
-  if (isSamsungInternet() && isChromium122OrNewer()) return true;
+  if (isSamsungInternetV17OrNewer() && isChromium122OrNewer()) return true;
   
   return false;
 }

@@ -2,64 +2,68 @@ import {
   isSafariWebKit, 
   isWebKit, 
   isWebKit616OrNewer,
-  isSamsungInternet,
-  isChromium122OrNewer
+  isSamsungInternetV17OrNewer
 } from '../../utils/browser';
 import { FingerprintSpecialValue } from '../../utils/consts';
 import { replaceNaN, toInt } from '../../utils/data';
+import type { ScreenResolutionInfo } from '../../types';
 
-export type ScreenResolutionValue = number | FingerprintSpecialValue
-export type ScreenResolution = [ScreenResolutionValue, ScreenResolutionValue]
-
-export function collectScreenResolution(): ScreenResolution {
+export function collectScreenResolution(): ScreenResolutionInfo {
   return getScreenResolution();
 }
 
-function getScreenResolution(): ScreenResolution {
+function getScreenResolution(): ScreenResolutionInfo {
   try {
-    // Safari WebKit anti-fingerprinting
-    if (isWebKit() && isWebKit616OrNewer() && isSafariWebKit()) {
-      return [
-        FingerprintSpecialValue.UNDEFINED,
-        FingerprintSpecialValue.UNDEFINED,
-      ];
-    }
-
-    // Samsung Internet Smart Anti-Tracking - skip completely
-    if (isSamsungInternet() && isChromium122OrNewer()) {
-      return [
-        FingerprintSpecialValue.ANTI_FINGERPRINTED,
-        FingerprintSpecialValue.ANTI_FINGERPRINTED,
-      ];
-    }
+    const antiFingerprintingResolution = getScreenResolutionAntifingerprinting();
+    if (antiFingerprintingResolution !== null) return antiFingerprintingResolution;
 
     // Get raw resolution and validate
     const resolution = getRawScreenResolution();
+    if (!Array.isArray(resolution)) return resolution;
     
     // Check for anti-fingerprinting spoofing
-    if (isSuspiciousResolution(resolution)) {
-      return [
-        FingerprintSpecialValue.ANTI_FINGERPRINTED,
-        FingerprintSpecialValue.ANTI_FINGERPRINTED,
-      ];
-    }
+    const suspiciousResolution = handleSuspiciousResolution(resolution);
+    if (suspiciousResolution !== null) return suspiciousResolution;
 
     return resolution;
-  } catch {
-    return [
-      FingerprintSpecialValue.ERROR,
-      FingerprintSpecialValue.ERROR,
-    ];
+  } catch (error) {
+    return FingerprintSpecialValue.ERROR;
   }
 }
 
-export function getRawScreenResolution(): ScreenResolution {
+function getScreenResolutionAntifingerprinting(): ScreenResolutionInfo | null {
+  // Safari 17+ has enhanced anti-fingerprinting for canvas
+  if (isWebKit() && isWebKit616OrNewer() && isSafariWebKit()) {
+    return FingerprintSpecialValue.UNDEFINED;
+  }
+
+  // Samsung Internet Smart Anti-Tracking (v17+)
+  if (isSamsungInternetV17OrNewer()) {
+    return FingerprintSpecialValue.ANTI_FINGERPRINTED;
+  }
+
+  return null;
+}
+
+function handleSuspiciousResolution(resolution: [number, number]): ScreenResolutionInfo | null {
+  if (isSuspiciousResolution(resolution)) {
+    return FingerprintSpecialValue.ANTI_FINGERPRINTED;
+  }
+  return null;
+}
+
+export function getRawScreenResolution(): ScreenResolutionInfo {
   const s = screen;
   const parseDimension = (value: unknown) => replaceNaN(toInt(value), FingerprintSpecialValue.UNDEFINED);
   const width = parseDimension(s.width);
   const height = parseDimension(s.height);
   
-  return [width, height];
+  const normalizedResolution: ScreenResolutionInfo = 
+    typeof width === 'number' && typeof height === 'number'
+      ? [Math.max(width, height), Math.min(width, height)]
+      : [width, height];
+  
+  return normalizedResolution;
 }
 
 // Combined mobile detection approach - reliable and hard to spoof
@@ -91,13 +95,10 @@ function isLikelyMobile(): boolean {
 }
 
 // Detect suspicious screen resolutions that might be spoofed
-function isSuspiciousResolution(resolution: ScreenResolution): boolean {
+function isSuspiciousResolution(resolution: [number, number]): boolean {
   const [width, height] = resolution;
   
-  // Check for valid numbers
-  if (typeof width !== 'number' || typeof height !== 'number') {
-    return false; // Let other logic handle non-numbers
-  }
+  if (typeof width !== 'number' || typeof height !== 'number') return false;
   
   // Detect device type using combined approach
   const isMobile = isLikelyMobile();
@@ -118,14 +119,14 @@ function isSuspiciousResolution(resolution: ScreenResolution): boolean {
     width === w && height === h
   );
   
+  const aspectRatio = Math.max(width, height) / Math.min(width, height);
+  
   // Very conservative pattern detection
   const isSuspiciousPattern = 
     // Only flag extreme cases
     (width < 320 || height < 240) ||  // Too small for any device
     (width > 7680 || height > 4320) || // Too large (8K+)
-    (width / height < 1.0 || width / height > 3.0) || // Extreme aspect ratios
-    // Very strict even numbers check
-    (width % 2 === 0 && height % 2 === 0 && width < 800 && height < 600);
+    (aspectRatio > 3.0); // Extreme aspect ratios (e.g., 3:1 or more extreme)
   
   return isCommonSpoofed || isSuspiciousPattern;
 }

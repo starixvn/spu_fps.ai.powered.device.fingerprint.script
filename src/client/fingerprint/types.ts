@@ -58,7 +58,7 @@ export interface GraphicsGroupInfo {
   webglExtensions: WebGLExtensionsInfo;
   fonts: FontsInfo | FingerprintSpecialValue;
   fontPreferences: FontPreferencesInfo;
-  screenResolution: [number, number];
+  screenResolution: ScreenResolutionInfo;
   screenFrame: [number, number, number, number];
   colorDepth: number | FingerprintSpecialValue;
   colorGamut: 'srgb' | 'p3' | 'rec2020' | FingerprintSpecialValue;
@@ -97,6 +97,8 @@ export interface FontPreferencesInfo {
   min: number | FingerprintSpecialValue;
   system: number | FingerprintSpecialValue;
 }
+
+export type ScreenResolutionInfo = [number, number] | FingerprintSpecialValue;
 // #endregion
 
 // #region Audio

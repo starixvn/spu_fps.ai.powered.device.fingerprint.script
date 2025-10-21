@@ -1,15 +1,18 @@
 import type { PluginsInfo } from "../../types";
+import { isSamsungInternetV17OrNewer } from "../../utils/browser";
 import { FingerprintSpecialValue } from "../../utils/consts";
 
 export function collectPlugins(): PluginsInfo {
-   try {
+  try {
+    const antiFingerprintingResult = getPluginsAntifingerprinting();
+    if (antiFingerprintingResult !== null) return antiFingerprintingResult;
+
     const rawPlugins = navigator.plugins;
+    const plugins: string[] = [];
 
     if (!rawPlugins) {
       return FingerprintSpecialValue.UNDEFINED;
     }
-
-    const plugins: string[] = [];
 
     // Safari 10 doesn't support iterating navigator.plugins with for...of
     for (let i = 0; i < rawPlugins.length; ++i) {
@@ -24,6 +27,15 @@ export function collectPlugins(): PluginsInfo {
 
     return plugins;
   } catch {
-      return FingerprintSpecialValue.ERROR;
+    return FingerprintSpecialValue.ERROR;
   }
+}
+
+function getPluginsAntifingerprinting(): PluginsInfo | null {
+  // Samsung Internet Smart Anti-Tracking (v17+)
+  if (isSamsungInternetV17OrNewer()) {
+    return FingerprintSpecialValue.ANTI_FINGERPRINTED;
+  }
+
+  return null;
 }
