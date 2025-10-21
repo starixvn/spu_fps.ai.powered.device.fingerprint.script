@@ -7,25 +7,7 @@ export function collectPlugins(): PluginsInfo {
     const antiFingerprintingResult = getPluginsAntiFp();
     if (antiFingerprintingResult !== null) return antiFingerprintingResult;
 
-    const rawPlugins = navigator.plugins;
-    const plugins: string[] = [];
-
-    if (!rawPlugins) {
-      return FingerprintSpecialValue.UNDEFINED;
-    }
-
-    // Safari 10 doesn't support iterating navigator.plugins with for...of
-    for (let i = 0; i < rawPlugins.length; ++i) {
-      const plugin = rawPlugins[i];
-      
-      if (!plugin) {
-        continue;
-      }
-
-      plugins.push(plugin.name);
-    }
-
-    return plugins;
+    return getRawPlugins();
   } catch {
     return FingerprintSpecialValue.ERROR;
   }
@@ -42,4 +24,26 @@ function getPluginsAntiFp(): PluginsInfo | null {
   }
 
   return null;
+}
+
+function getRawPlugins(): PluginsInfo {
+  const rawPlugins = navigator.plugins;
+  const plugins: string[] = [];
+
+  if (!rawPlugins) {
+    return FingerprintSpecialValue.UNDEFINED;
+  }
+
+  // Safari 10 doesn't support iterating navigator.plugins with for...of
+  for (let i = 0; i < rawPlugins.length; ++i) {
+    const plugin = rawPlugins[i];
+    
+    if (!plugin) {
+      continue;
+    }
+
+    plugins.push(plugin.name);
+  }
+
+  return plugins;
 }
