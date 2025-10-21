@@ -5,15 +5,16 @@ export class CacheApiHandler implements IStorageHandler {
 
   public async get(key: string): Promise<string | null> {
     try {
-      if (this.available() || !key) {
+      if (!this.available() || !key) { // Sửa từ this.available() thành !this.available()
+        return null;
+      }
 
-        const cache = await caches.open(key);
-        const response = await cache.match(new Request(`/cache/${key}`));
-        
-        if (response) {
-          const data = await response.text();
-          return data;
-        }
+      const cache = await caches.open(key);
+      const response = await cache.match(new Request(`/cache/${key}`));
+      
+      if (response) {
+        const data = await response.text();
+        return data;
       }
       return null;
 
@@ -25,19 +26,20 @@ export class CacheApiHandler implements IStorageHandler {
 
   public async set(key: string, value: string): Promise<boolean> {
     try {
-      if (this.available() || !key || !value) {
-        const cache = await caches.open(key);
-        const response = new Response(value, {
-          headers: {
-            'Content-Type': 'text/plain',
-            'Cache-Control': 'max-age=31536000'
-          }
-        });
-        
-        await cache.put(new Request(`/cache/${key}`), response);
-        return true;
+      if (!this.available() || !key || !value) { // Sửa từ this.available() thành !this.available()
+        return false;
       }
-      return false;
+      
+      const cache = await caches.open(key);
+      const response = new Response(value, {
+        headers: {
+          'Content-Type': 'text/plain',
+          'Cache-Control': 'max-age=31536000'
+        }
+      });
+      
+      await cache.put(new Request(`/cache/${key}`), response);
+      return true;
 
     } catch (exception) {
       ErrorLogger.error('Failed to set cache:', exception);

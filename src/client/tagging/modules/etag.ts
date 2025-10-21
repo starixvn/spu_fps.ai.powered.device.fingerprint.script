@@ -4,6 +4,7 @@ import { IStorageHandler } from "../types";
 
 export class ETagHandler implements IStorageHandler {
     private _baseUrl: string;
+    private readonly TIMEOUT_MS = 5000; // 5 seconds timeout
 
     constructor() {
         this._baseUrl = `${CONFIG.SERVER_DOMAIN}/resources/vers`;
@@ -15,16 +16,24 @@ export class ETagHandler implements IStorageHandler {
                 return null;
             }
 
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT_MS);
+
             const response = await fetch(this._baseUrl, {
-                method: 'GET'
+                method: 'GET',
+                signal: controller.signal
             });
 
+            clearTimeout(timeoutId);
             const etag = response.headers.get('etag');
-
             return this.formatEtag(etag || "");
                 
-        } catch (error) {
-            ErrorLogger.error('Failed to get etag:', error);
+        } catch (error: any) {
+            if (error.name === 'AbortError') {
+                ErrorLogger.warn('ETag request timeout:', error);
+            } else {
+                ErrorLogger.error('Failed to get etag:', error);
+            }
             return null;
         }
     }
@@ -35,16 +44,25 @@ export class ETagHandler implements IStorageHandler {
                 return false;
             }
 
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT_MS);
+
             const response = await fetch(this._baseUrl, {
                 method: 'GET',
                 headers: {
                     'Res-Ec-X': `${value}`
-                }
+                },
+                signal: controller.signal
             });
 
+            clearTimeout(timeoutId);
             return response.ok;
-        } catch (error) {
-            ErrorLogger.error('Failed to set etag:', error);
+        } catch (error: any) {
+            if (error.name === 'AbortError') {
+                ErrorLogger.warn('ETag set request timeout:', error);
+            } else {
+                ErrorLogger.error('Failed to set etag:', error);
+            }
             return false;
         }
     }
