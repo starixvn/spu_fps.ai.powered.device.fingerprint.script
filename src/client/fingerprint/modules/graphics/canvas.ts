@@ -23,7 +23,7 @@ function promiseAllSettled<T>(promises: Promise<T>[]): Promise<Array<{status: 'f
   );
 }
 
-function doesBrowserPerformCanvasAntifingerprinting(): boolean {
+function doesBrowserPerformCanvasAntiFp(): boolean {
   // Safari 17+ has enhanced anti-fingerprinting for canvas
   if (isWebKit() && isWebKit616OrNewer() && isSafariWebKit()) return true;
 
@@ -268,7 +268,7 @@ async function getCanvasFeaturesWithTimeout(): Promise<Record<string, any> | nul
 
 async function detectCanvasProtection(): Promise<CanvasProtectionResult> {
   try {
-    if (doesBrowserPerformCanvasAntifingerprinting()) {
+    if (doesBrowserPerformCanvasAntiFp()) {
       return { isProtected: true, isStrong: true };
     }
 
