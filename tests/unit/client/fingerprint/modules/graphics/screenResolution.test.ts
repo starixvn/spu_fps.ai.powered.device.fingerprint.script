@@ -1,4 +1,5 @@
 import { collectScreenResolution } from '../../../../../../src/client/fingerprint/modules/graphics/screenResolution';
+import { isBrave } from '../../../../../../src/client/fingerprint/utils/browser';
 import { FingerprintSpecialValue } from '../../../../../../src/client/fingerprint/utils/consts';
 
 // Mock browser detection functions
@@ -7,6 +8,7 @@ jest.mock('../../../../../../src/client/fingerprint/utils/browser', () => ({
   isWebKit616OrNewer: jest.fn(() => false),
   isSafariWebKit: jest.fn(() => false),
   isSamsungInternetV17OrNewer: jest.fn(() => false),
+  isBrave: jest.fn(() => false),
 }));
 
 // Mock DOM objects - configured to make isLikelyMobile() return false
@@ -69,6 +71,8 @@ describe('Screen Resolution Module', () => {
       writable: true,
       configurable: true
     });
+    
+    (isBrave as jest.Mock).mockReturnValue(false);
   });
 
   describe('collectScreenResolution', () => {

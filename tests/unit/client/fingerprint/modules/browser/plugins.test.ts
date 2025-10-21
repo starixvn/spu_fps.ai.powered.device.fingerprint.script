@@ -4,9 +4,10 @@ import { FingerprintSpecialValue } from '../../../../../../src/client/fingerprin
 // Mock browser detection functions
 jest.mock('../../../../../../src/client/fingerprint/utils/browser', () => ({
   isSamsungInternetV17OrNewer: jest.fn(() => false),
+  isBrave: jest.fn(() => false),
 }));
 
-import { isSamsungInternetV17OrNewer } from '../../../../../../src/client/fingerprint/utils/browser';
+import { isBrave, isSamsungInternetV17OrNewer } from '../../../../../../src/client/fingerprint/utils/browser';
 
 // Mock navigator
 const mockNavigator = {
@@ -25,6 +26,7 @@ describe('Plugins Module', () => {
     
     // Ensure browser detection returns false
     (isSamsungInternetV17OrNewer as jest.Mock).mockReturnValue(false);
+    (isBrave as jest.Mock).mockReturnValue(false);
     
     // Reset mock values using defineProperty to avoid getter-only errors
     try {
