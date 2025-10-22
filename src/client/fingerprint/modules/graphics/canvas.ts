@@ -325,7 +325,7 @@ export async function collectCanvas(): Promise<CanvasInfo> {
     
     // Handle canvas protection detection
     if (canvasProtection.isStrong || canvasProtection.isProtected) {
-      return [FingerprintSpecialValue.ANTI_FINGERPRINTED, 1];
+      return FingerprintSpecialValue.ANTI_FINGERPRINTED;
     }
 
     // Enhanced performance with timeout handling
@@ -341,14 +341,14 @@ export async function collectCanvas(): Promise<CanvasInfo> {
       .filter(Boolean);
 
     if (samples.length === 0) {
-      return [FingerprintSpecialValue.TIMEOUT, 0];
+      return FingerprintSpecialValue.TIMEOUT;
     }
 
     const stableFeatures = computeFeatureMedian(samples);
     const value = MurmurHash128.hash128(JSON.stringify(stableFeatures));
       
-    return [value, 0];
+    return value;
   } catch (error) {
-    return [FingerprintSpecialValue.ERROR, 0];
+    return FingerprintSpecialValue.ERROR;
   }
 }

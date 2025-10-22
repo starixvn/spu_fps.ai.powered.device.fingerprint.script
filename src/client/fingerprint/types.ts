@@ -64,7 +64,7 @@ export interface GraphicsGroupInfo {
   colorGamut: 'srgb' | 'p3' | 'rec2020' | FingerprintSpecialValue;
 }
 
-export type CanvasInfo = [string | FingerprintSpecialValue, Bit]; // [value, canvasProtection]
+export type CanvasInfo = string | FingerprintSpecialValue; // [value, canvasProtection]
 
 export type WebGLBasicsInfo = [
   string | FingerprintSpecialValue,
