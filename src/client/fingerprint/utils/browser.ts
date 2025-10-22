@@ -23,11 +23,11 @@ export function isBrave(): boolean {
 }
 
 export function isFirefox(): boolean {
-  const n = navigator;
-
+  const webKit = isWebKit();
   return countTruthy([
       typeof (window as any).InstallTrigger !== 'undefined',
       'MozAppearance' in document.createElement('div').style,
+      webKit && navigator.userAgent.toLowerCase().includes('fxios'),
     ]) >= 1
 }
 
