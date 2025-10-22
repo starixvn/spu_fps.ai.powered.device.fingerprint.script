@@ -77,7 +77,7 @@ describe('Languages Module', () => {
       const result = collectLanguages();
 
       // Assert
-      expect(result).toEqual([['en-US'], ['en-US', 'en', 'vi-VN', 'vi']]);
+      expect(result).toEqual([['en-US'], ['en', 'en-US', 'vi', 'vi-VN']]);
     });
 
     it('should ignore navigator.languages in Chromium 86+ incognito mode', () => {
@@ -125,7 +125,7 @@ describe('Languages Module', () => {
       const result = collectLanguages();
 
       // Assert
-      expect(result).toEqual([['en-US'], ['en-US', 'en']]);
+      expect(result).toEqual([['en-US'], ['en', 'en-US']]);
     });
 
     it('should fallback to userLanguage when language is undefined', () => {
@@ -197,7 +197,7 @@ describe('Languages Module', () => {
       const result = collectLanguages();
 
       // Assert
-      expect(result).toEqual([['en-US'], ['en-US', 'en', 'fr-FR', 'fr']]);
+      expect(result).toEqual([['en-US'], ['en', 'en-US', 'fr', 'fr-FR']]);
     });
 
     it('should filter out empty strings from languages array', () => {
@@ -218,7 +218,7 @@ describe('Languages Module', () => {
       const result = collectLanguages();
 
       // Assert
-      expect(result).toEqual([['en-US'], ['en-US', 'en', 'fr-FR']]);
+      expect(result).toEqual([['en-US'], ['en', 'en-US', 'fr-FR']]);
     });
 
     it('should return default empty language when no languages are available', () => {

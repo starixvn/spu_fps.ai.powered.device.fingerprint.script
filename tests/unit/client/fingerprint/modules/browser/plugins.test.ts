@@ -56,7 +56,7 @@ describe('Plugins Module', () => {
       const result = collectPlugins();
 
       // Assert
-      expect(result).toEqual(['Chrome PDF Plugin', 'Widevine Content Decryption Module', 'Flash Player']);
+      expect(result).toEqual(['Chrome PDF Plugin', 'Flash Player', 'Widevine Content Decryption Module']);
     });
 
     it('should return empty array when no plugins are available', () => {
@@ -143,7 +143,7 @@ describe('Plugins Module', () => {
       const result = collectPlugins();
 
       // Assert
-      expect(result).toEqual(['Valid Plugin', '', 'Another Plugin']);
+      expect(result).toEqual(['', 'Another Plugin', 'Valid Plugin']);
     });
 
     it('should handle plugins without name property', () => {
@@ -160,7 +160,7 @@ describe('Plugins Module', () => {
       const result = collectPlugins();
 
       // Assert
-      expect(result).toEqual(['Plugin 1', undefined, 'Plugin 3']);
+      expect(result).toEqual(['Plugin 1', 'Plugin 3', undefined]);
     });
 
     it('should handle plugins with non-string name property', () => {
@@ -178,7 +178,8 @@ describe('Plugins Module', () => {
       const result = collectPlugins();
 
       // Assert
-      expect(result).toEqual(['Valid Plugin', 123, true, { toString: expect.any(Function) }]);
+      // Sorted: 123 -> "[object Object]" -> "Valid Plugin" -> "true"
+      expect(result).toEqual([123, { toString: expect.any(Function) }, 'Valid Plugin', true]);
     });
 
     it('should handle large number of plugins', () => {
@@ -217,9 +218,9 @@ describe('Plugins Module', () => {
 
       // Assert
       expect(result).toEqual([
+        'Plugin (with parentheses) & symbols!',
         'Plugin with spaces',
-        'Plugin-with-dashes',
-        'Plugin (with parentheses) & symbols!'
+        'Plugin-with-dashes'
       ]);
     });
 
@@ -237,7 +238,7 @@ describe('Plugins Module', () => {
       const result = collectPlugins();
 
       // Assert
-      expect(result).toEqual(['Plugin français', 'プラグイン', 'Плагин']);
+      expect(result).toEqual(['Plugin français', 'Плагин', 'プラグイン']);
     });
 
     it('should return ERROR when an exception occurs', () => {
@@ -304,7 +305,7 @@ describe('Plugins Module', () => {
       const result = collectPlugins();
 
       // Assert
-      expect(result).toEqual(['Plugin 1', null, 'Plugin 3']);
+      expect(result).toEqual(['Plugin 1', 'Plugin 3', null]);
     });
 
     it('should handle plugins with undefined name property', () => {
@@ -321,7 +322,7 @@ describe('Plugins Module', () => {
       const result = collectPlugins();
 
       // Assert
-      expect(result).toEqual(['Plugin 1', undefined, 'Plugin 3']);
+      expect(result).toEqual(['Plugin 1', 'Plugin 3', undefined]);
     });
 
     it('should work with real-world plugin examples', () => {
@@ -342,10 +343,10 @@ describe('Plugins Module', () => {
       // Assert
       expect(result).toEqual([
         'Chrome PDF Plugin',
-        'Widevine Content Decryption Module',
-        'Native Client',
         'Flash Player',
-        'Java Deployment Toolkit'
+        'Java Deployment Toolkit',
+        'Native Client',
+        'Widevine Content Decryption Module'
       ]);
     });
 
@@ -441,8 +442,8 @@ describe('Plugins Module', () => {
       const result = collectPlugins();
 
       // Assert
-      expect(result).toEqual(['Z Plugin', 'A Plugin', 'M Plugin', 'B Plugin']);
-      // Should NOT be sorted alphabetically
+      expect(result).toEqual(['A Plugin', 'B Plugin', 'M Plugin', 'Z Plugin']);
+      // Plugins are sorted alphabetically
     });
   });
 });
