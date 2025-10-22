@@ -95,7 +95,7 @@ function getFontsInfo(): Promise<FontsInfo | FingerprintSpecialValue> {
       // check available fonts
       const availableFonts = fontsToTest.filter((font) => isFontAvailable(fontsSpans[font]));
       
-      return availableFonts as FontsInfo;
+      return availableFonts.sort() as FontsInfo;
       
   }).catch(() => {
     return FingerprintSpecialValue.ERROR;
