@@ -45,5 +45,7 @@ function getRawPlugins(): PluginsInfo {
     plugins.push(plugin.name);
   }
 
+  plugins.sort();
+
   return plugins;
 }
