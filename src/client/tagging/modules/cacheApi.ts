@@ -5,7 +5,7 @@ export class CacheApiHandler implements IStorageHandler {
 
   public async get(key: string): Promise<string | null> {
     try {
-      if (!this.available() || !key) { // Sửa từ this.available() thành !this.available()
+      if (!this.available() || !key) {
         return null;
       }
 
@@ -26,7 +26,7 @@ export class CacheApiHandler implements IStorageHandler {
 
   public async set(key: string, value: string): Promise<boolean> {
     try {
-      if (!this.available() || !key || !value) { // Sửa từ this.available() thành !this.available()
+      if (!this.available() || !key || !value) {
         return false;
       }
       
