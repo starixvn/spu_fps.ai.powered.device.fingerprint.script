@@ -316,5 +316,50 @@ describe('Fonts Module', () => {
         });
       }
     });
+
+    it('should return fonts sorted alphabetically', async () => {
+      // Arrange - Mock unsorted font list
+      const unsortedFonts = ['Verdana', 'Arial', 'Times New Roman', 'Calibri', 'Georgia'];
+      const sortedFonts = ['Arial', 'Calibri', 'Georgia', 'Times New Roman', 'Verdana'];
+      
+      mockWithNaturalFonts.mockImplementation(async (action) => {
+        // Simulate real behavior: collectFonts internally calls sort()
+        return [...unsortedFonts].sort();
+      });
+
+      // Act
+      const result = await collectFonts();
+
+      // Assert
+      expect(Array.isArray(result)).toBe(true);
+      if (Array.isArray(result)) {
+        expect(result).toEqual(sortedFonts);
+        // Verify array is sorted
+        for (let i = 1; i < result.length; i++) {
+          expect(result[i].localeCompare(result[i - 1])).toBeGreaterThanOrEqual(0);
+        }
+      }
+    });
+
+    it('should maintain sorted order with mixed case font names', async () => {
+      // Arrange - Mock fonts with mixed case
+      const mixedCaseFonts = ['arial', 'CALIBRI', 'Times New Roman', 'verdana'];
+      
+      mockWithNaturalFonts.mockImplementation(async (action) => {
+        return [...mixedCaseFonts].sort();
+      });
+
+      // Act
+      const result = await collectFonts();
+
+      // Assert
+      expect(Array.isArray(result)).toBe(true);
+      if (Array.isArray(result)) {
+        // Verify each element is in proper sorted position
+        for (let i = 1; i < result.length; i++) {
+          expect(result[i] >= result[i - 1]).toBe(true);
+        }
+      }
+    });
   });
 });

@@ -2,7 +2,7 @@ import { MurmurHash128 } from "../../utils/hash";
 import type { CanvasInfo } from "../../types";
 import type { Bit } from '../../types';
 import { FingerprintSpecialValue } from "../../utils/consts";
-import { isSafariWebKit, isWebKit, isWebKit616OrNewer, isSamsungInternetV17OrNewer, isChromium122OrNewer } from "../../utils/browser";
+import { isSafariWebKit, isWebKit, isWebKit616OrNewer, isSamsungInternetV17OrNewer, isChromium122OrNewer, isBrave, isFirefox } from "../../utils/browser";
 
 const CANVAS_SNAPSHOTS = 3; 
 const CANVAS_FINGERPRINT_TEXT = `Sphinx ${String.fromCharCode(55357, 56848)} quartz ${String.fromCharCode(55357, 56849)} vow ${String.fromCharCode(55357, 56850)}`;
@@ -23,13 +23,21 @@ function promiseAllSettled<T>(promises: Promise<T>[]): Promise<Array<{status: 'f
   );
 }
 
-function doesBrowserPerformCanvasAntifingerprinting(): boolean {
+function doesBrowserPerformCanvasAntiFp(): boolean {
   // Safari 17+ has enhanced anti-fingerprinting for canvas
   if (isWebKit() && isWebKit616OrNewer() && isSafariWebKit()) return true;
 
   // Samsung Internet 26+ has Smart Anti-Tracking
   if (isSamsungInternetV17OrNewer() && isChromium122OrNewer()) return true;
-  
+
+  if (isBrave()) {
+    return true;
+  }
+
+  if (isFirefox()) {
+    return true;
+  }
+
   return false;
 }
 
@@ -260,7 +268,7 @@ async function getCanvasFeaturesWithTimeout(): Promise<Record<string, any> | nul
 
 async function detectCanvasProtection(): Promise<CanvasProtectionResult> {
   try {
-    if (doesBrowserPerformCanvasAntifingerprinting()) {
+    if (doesBrowserPerformCanvasAntiFp()) {
       return { isProtected: true, isStrong: true };
     }
 
@@ -317,7 +325,7 @@ export async function collectCanvas(): Promise<CanvasInfo> {
     
     // Handle canvas protection detection
     if (canvasProtection.isStrong || canvasProtection.isProtected) {
-      return [FingerprintSpecialValue.ANTI_FINGERPRINTED, 1];
+      return FingerprintSpecialValue.ANTI_FINGERPRINTED;
     }
 
     // Enhanced performance with timeout handling
@@ -333,14 +341,14 @@ export async function collectCanvas(): Promise<CanvasInfo> {
       .filter(Boolean);
 
     if (samples.length === 0) {
-      return [FingerprintSpecialValue.TIMEOUT, 0];
+      return FingerprintSpecialValue.TIMEOUT;
     }
 
     const stableFeatures = computeFeatureMedian(samples);
     const value = MurmurHash128.hash128(JSON.stringify(stableFeatures));
       
-    return [value, 0];
+    return value;
   } catch (error) {
-    return [FingerprintSpecialValue.ERROR, 0];
+    return FingerprintSpecialValue.ERROR;
   }
 }

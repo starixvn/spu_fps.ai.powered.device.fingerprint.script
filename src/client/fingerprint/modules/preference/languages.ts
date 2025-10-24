@@ -40,7 +40,7 @@ export function collectLanguages(): LanguagesInfo {
       }
     }
 
-    return result;
+    return result.map(langArray => langArray.sort());
   } catch {
     return FingerprintSpecialValue.ERROR;
   }

@@ -7,6 +7,12 @@ import { collectHardwareConcurrency } from "../../../../../../src/client/fingerp
 import { collectDeviceMemory } from "../../../../../../src/client/fingerprint/modules/hardware/deviceMemory";
 import { FingerprintSpecialValue } from "../../../../../../src/client/fingerprint/utils/consts";
 
+import { isBrave } from '../../../../../../src/client/fingerprint/utils/browser';
+
+jest.mock('../../../../../../src/client/fingerprint/utils/browser', () => ({
+  isBrave: jest.fn(() => false),
+}));
+
 // Mock navigator object for all tests
 const mockNavigator: any = {
   userAgentData: undefined,
@@ -34,6 +40,8 @@ describe("Hardware Modules Integration Tests", () => {
     mockNavigator.deviceMemory = undefined;
     mockNavigator.oscpu = undefined;
     mockNavigator.userAgent = "";
+
+    (isBrave as jest.Mock).mockReturnValue(false);
   });
 
   describe("Complete Hardware Fingerprint Collection", () => {

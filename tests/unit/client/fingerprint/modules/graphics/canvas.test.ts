@@ -8,10 +8,12 @@ jest.mock('../../../../../../src/client/fingerprint/utils/browser', () => ({
   isWebKit: jest.fn(),
   isWebKit616OrNewer: jest.fn(),
   isSamsungInternetV17OrNewer: jest.fn(),
-  isChromium122OrNewer: jest.fn()
+  isChromium122OrNewer: jest.fn(),
+  isBrave: jest.fn(),
+  isFirefox: jest.fn()
 }));
 
-import { isSafariWebKit, isWebKit, isWebKit616OrNewer, isSamsungInternetV17OrNewer, isChromium122OrNewer } from '../../../../../../src/client/fingerprint/utils/browser';
+import { isSafariWebKit, isWebKit, isWebKit616OrNewer, isSamsungInternetV17OrNewer, isChromium122OrNewer, isBrave, isFirefox } from '../../../../../../src/client/fingerprint/utils/browser';
 
 // Mock MurmurHash128
 jest.mock('../../../../../../src/client/fingerprint/utils/hash', () => ({
@@ -78,6 +80,8 @@ describe('Canvas Module', () => {
     (isSafariWebKit as jest.Mock).mockReturnValue(false);
     (isSamsungInternetV17OrNewer as jest.Mock).mockReturnValue(false);
     (isChromium122OrNewer as jest.Mock).mockReturnValue(false);
+    (isBrave as jest.Mock).mockReturnValue(false);
+    (isFirefox as jest.Mock).mockReturnValue(false);
     
     // Setup global mocks
     Object.defineProperty(global, 'localStorage', {
@@ -163,7 +167,7 @@ describe('Canvas Module', () => {
       const result = await collectCanvas();
 
       // Assert
-      expect(result).toEqual([expectedHash, 0]);
+      expect(result).toEqual(expectedHash);
       expect(mockCanvas.getContext).toHaveBeenCalledWith('2d');
     });
 
@@ -176,7 +180,7 @@ describe('Canvas Module', () => {
       const result = await collectCanvas();
 
       // Assert
-      expect(result).toEqual([expectedHash, 0]);
+      expect(result).toEqual(expectedHash);
       expect(mockCanvas.getContext).toHaveBeenCalledWith('2d');
     });
 
@@ -190,7 +194,7 @@ describe('Canvas Module', () => {
       const result = await collectCanvas();
 
       // Assert
-      expect(result).toEqual([FingerprintSpecialValue.ANTI_FINGERPRINTED, 1]);
+      expect(result).toEqual(FingerprintSpecialValue.ANTI_FINGERPRINTED);
     });
 
     it('should handle canvas creation failure', async () => {
@@ -221,7 +225,7 @@ describe('Canvas Module', () => {
       const result = await collectCanvas();
 
       // Assert - Canvas creation failure during fingerprinting may still trigger protection  
-      expect(result).toEqual([FingerprintSpecialValue.ANTI_FINGERPRINTED, 1]);
+      expect(result).toEqual(FingerprintSpecialValue.ANTI_FINGERPRINTED);
     });
 
     it('should handle context creation failure', async () => {
@@ -248,7 +252,7 @@ describe('Canvas Module', () => {
       const result = await collectCanvas();
 
       // Assert
-      expect(result).toEqual([FingerprintSpecialValue.TIMEOUT, 0]); // Should be TIMEOUT when context fails
+      expect(result).toEqual(FingerprintSpecialValue.TIMEOUT); // Should be TIMEOUT when context fails
     });
 
     it('should handle localStorage errors gracefully', async () => {
@@ -260,7 +264,7 @@ describe('Canvas Module', () => {
       const result = await collectCanvas();
 
       // Assert - Should work normally without localStorage
-      expect(result).toEqual([expectedHash, 0]);
+      expect(result).toEqual(expectedHash);
     });
 
     it('should handle localStorage setItem errors gracefully', async () => {
@@ -275,7 +279,7 @@ describe('Canvas Module', () => {
       const result = await collectCanvas();
 
       // Assert
-      expect(result).toEqual([expectedHash, 0]);
+      expect(result).toEqual(expectedHash);
       // Should not throw error
     });
 
@@ -323,7 +327,7 @@ describe('Canvas Module', () => {
       const result = await collectCanvas();
 
       // Assert
-      expect(result).toEqual([FingerprintSpecialValue.TIMEOUT, 0]);
+      expect(result).toEqual(FingerprintSpecialValue.TIMEOUT);
     });
 
     it('should generate different hashes for different canvas features', async () => {
@@ -345,8 +349,8 @@ describe('Canvas Module', () => {
       const result2 = await collectCanvas();
 
       // Assert - Both calls should succeed with different hashes
-      expect(result1).toEqual([hash1, 0]);
-      expect(result2).toEqual([hash2, 0]);
+      expect(result1).toEqual(hash1);
+      expect(result2).toEqual(hash2);
     });
 
     it('should handle strong canvas protection', async () => {
@@ -358,7 +362,7 @@ describe('Canvas Module', () => {
       const result = await collectCanvas();
 
       // Assert
-      expect(result).toEqual([FingerprintSpecialValue.ANTI_FINGERPRINTED, 1]);
+      expect(result).toEqual(FingerprintSpecialValue.ANTI_FINGERPRINTED);
     });
 
     it('should perform multiple canvas operations for fingerprinting', async () => {
@@ -408,11 +412,10 @@ describe('Canvas Module', () => {
       const result = await collectCanvas();
 
       // Assert - Verify successful fingerprinting (not protection)
-      expect(typeof result[0]).toBe('string'); // Should be a hash string
-      expect(result[0]).not.toBe(FingerprintSpecialValue.ANTI_FINGERPRINTED);
-      expect(result[0]).not.toBe(FingerprintSpecialValue.ERROR);
-      expect(result[0]).not.toBe(FingerprintSpecialValue.TIMEOUT);
-      expect(result[1]).toBe(0); // Canvas protection flag should be 0
+      expect(typeof result).toBe('string'); // Should be a hash string
+      expect(result).not.toBe(FingerprintSpecialValue.ANTI_FINGERPRINTED);
+      expect(result).not.toBe(FingerprintSpecialValue.ERROR);
+      expect(result).not.toBe(FingerprintSpecialValue.TIMEOUT);
       expect(mockContext.fillRect).toHaveBeenCalled();
       expect(mockContext.fillText).toHaveBeenCalled();
       expect(mockContext.arc).toHaveBeenCalled();
@@ -437,7 +440,7 @@ describe('Canvas Module', () => {
       const result = await collectCanvas();
 
       // Assert
-      expect(result).toEqual([expectedHash, 0]);
+      expect(result).toEqual(expectedHash);
       expect(mockCanvas.getContext).toHaveBeenCalledWith('2d');
     });
 
@@ -451,10 +454,7 @@ describe('Canvas Module', () => {
       const result = await collectCanvas();
 
       // Assert
-      expect(Array.isArray(result)).toBe(true);
-      expect(result).toHaveLength(2);
-      expect(typeof result[1]).toBe('number');
-      expect(result[0]).toBe(FingerprintSpecialValue.ANTI_FINGERPRINTED);
+      expect(result).toBe(FingerprintSpecialValue.ANTI_FINGERPRINTED);
     });
   });
 });

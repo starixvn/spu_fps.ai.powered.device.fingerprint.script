@@ -259,11 +259,6 @@ describe('Graphics Fingerprint Module', () => {
       const result = await GraphicsFingerprint.collect();
 
       // Assert
-      expect(Array.isArray(result.canvas)).toBe(true);
-      expect(result.canvas).toHaveLength(2);
-      expect(typeof result.canvas[0]).toBe('string');
-      expect([0, 1]).toContain(result.canvas[1]);
-
       expect(Array.isArray(result.webglBasics)).toBe(true);
       expect(result.webglBasics).toHaveLength(6);
 
@@ -423,7 +418,7 @@ describe('Graphics Fingerprint Module', () => {
       ];
 
       for (const specialValue of specialValues) {
-        mockCollectCanvas.mockResolvedValue([specialValue, 0] as [FingerprintSpecialValue, 0 | 1]);
+        mockCollectCanvas.mockResolvedValue(specialValue);
         mockCollectWebGLBasics.mockReturnValue(specialValue);
         mockCollectWebGLExtensions.mockResolvedValue(specialValue);
         mockCollectFonts.mockResolvedValue(specialValue);
@@ -445,7 +440,7 @@ describe('Graphics Fingerprint Module', () => {
         const result = await GraphicsFingerprint.collect();
 
         // Assert
-        expect(result.canvas[0]).toBe(specialValue);
+        expect(result.canvas).toBe(specialValue);
         expect(result.webglBasics).toBe(specialValue);
         expect(result.webglExtensions).toBe(specialValue);
         expect(result.fonts).toBe(specialValue);
@@ -469,7 +464,7 @@ describe('Graphics Fingerprint Module', () => {
       ];
 
       for (const testCase of testCases) {
-        mockCollectCanvas.mockResolvedValue([testCase.canvasHash, testCase.protection]);
+        mockCollectCanvas.mockResolvedValue(testCase.canvasHash);
         mockCollectWebGLBasics.mockReturnValue([
           'WebGL 1.0', 'Vendor', 'UnmaskedVendor', 'Renderer', 'UnmaskedRenderer', 'GLSL 1.0'
         ] as [string, string, string, string, string, string]);
@@ -487,8 +482,7 @@ describe('Graphics Fingerprint Module', () => {
         const result = await GraphicsFingerprint.collect();
 
         // Assert
-        expect(result.canvas).toEqual([testCase.canvasHash, testCase.protection]);
-        expect(result.canvas[1]).toBe(testCase.protection);
+        expect(result.canvas).toEqual(testCase.canvasHash);
       }
     });
 

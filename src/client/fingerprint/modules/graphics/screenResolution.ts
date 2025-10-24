@@ -2,11 +2,48 @@ import {
   isSafariWebKit, 
   isWebKit, 
   isWebKit616OrNewer,
-  isSamsungInternetV17OrNewer
+  isSamsungInternetV17OrNewer,
+  isBrave
 } from '../../utils/browser';
 import { FingerprintSpecialValue } from '../../utils/consts';
 import { replaceNaN, toInt } from '../../utils/data';
 import type { ScreenResolutionInfo } from '../../types';
+
+// Screen size thresholds
+const SCREEN_SIZE_THRESHOLDS = {
+  MIN_VALID_WIDTH: 320,
+  MIN_VALID_HEIGHT: 240,
+  MAX_VALID_WIDTH: 7680,   // 8K width
+  MAX_VALID_HEIGHT: 4320,  // 8K height
+  MOBILE_MAX_SCREEN: 1024,
+  MOBILE_MAX_VIEWPORT: 768,
+} as const;
+
+// Device detection thresholds
+const DEVICE_DETECTION = {
+  MIN_HIGH_DPR: 2,
+  MIN_MOBILE_INDICATORS: 3,
+  MAX_ASPECT_RATIO: 3.0,
+} as const;
+
+// Known suspicious/spoofed resolutions
+const SUSPICIOUS_RESOLUTIONS = {
+  MOBILE: [
+    [320, 240] as [number, number],  // Too small for mobile
+    [480, 320] as [number, number],  // Too small for mobile
+  ],
+  DESKTOP: [
+    [640, 480] as [number, number],  // VGA - too old
+    [800, 600] as [number, number],  // SVGA - too old
+    [320, 240] as [number, number],  // QVGA - too small
+  ],
+} as const;
+
+// Default values
+const DEFAULT_VALUES = {
+  INITIAL_SIZE: 0,
+  DEFAULT_DPR: 1,
+} as const;
 
 export function collectScreenResolution(): ScreenResolutionInfo {
   return getScreenResolution();
@@ -14,7 +51,7 @@ export function collectScreenResolution(): ScreenResolutionInfo {
 
 function getScreenResolution(): ScreenResolutionInfo {
   try {
-    const antiFingerprintingResolution = getScreenResolutionAntifingerprinting();
+    const antiFingerprintingResolution = getScreenResolutionAntiFp();
     if (antiFingerprintingResolution !== null) return antiFingerprintingResolution;
 
     // Get raw resolution and validate
@@ -31,7 +68,7 @@ function getScreenResolution(): ScreenResolutionInfo {
   }
 }
 
-function getScreenResolutionAntifingerprinting(): ScreenResolutionInfo | null {
+function getScreenResolutionAntiFp(): ScreenResolutionInfo | null {
   // Safari 17+ has enhanced anti-fingerprinting for canvas
   if (isWebKit() && isWebKit616OrNewer() && isSafariWebKit()) {
     return FingerprintSpecialValue.UNDEFINED;
@@ -39,6 +76,10 @@ function getScreenResolutionAntifingerprinting(): ScreenResolutionInfo | null {
 
   // Samsung Internet Smart Anti-Tracking (v17+)
   if (isSamsungInternetV17OrNewer()) {
+    return FingerprintSpecialValue.ANTI_FINGERPRINTED;
+  }
+
+  if (isBrave()) {
     return FingerprintSpecialValue.ANTI_FINGERPRINTED;
   }
 
@@ -69,29 +110,29 @@ export function getRawScreenResolution(): ScreenResolutionInfo {
 // Combined mobile detection approach - reliable and hard to spoof
 function isLikelyMobile(): boolean {
   // Multiple detection methods for reliability
-  const touchSupport = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  const touchSupport = 'ontouchstart' in window || navigator.maxTouchPoints > DEFAULT_VALUES.INITIAL_SIZE;
   const screenSize = Math.min(screen.width, screen.height);
   const viewportSize = Math.min(
-    Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0),
-    Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0)
+    Math.max(document.documentElement.clientWidth || DEFAULT_VALUES.INITIAL_SIZE, window.innerWidth || DEFAULT_VALUES.INITIAL_SIZE),
+    Math.max(document.documentElement.clientHeight || DEFAULT_VALUES.INITIAL_SIZE, window.innerHeight || DEFAULT_VALUES.INITIAL_SIZE)
   );
   const hasHover = window.matchMedia('(hover: hover)').matches;
-  const dpr = window.devicePixelRatio || 1;
+  const dpr = window.devicePixelRatio || DEFAULT_VALUES.DEFAULT_DPR;
   
   // Mobile indicators
   const indicators = [
-    touchSupport,                    // Touch support
-    screenSize < 1024,              // Small screen
-    viewportSize < 768,             // Small viewport
-    !hasHover,                      // No hover capability
-    dpr >= 2                        // High pixel density
+    touchSupport,                                        // Touch support
+    screenSize < SCREEN_SIZE_THRESHOLDS.MOBILE_MAX_SCREEN,     // Small screen
+    viewportSize < SCREEN_SIZE_THRESHOLDS.MOBILE_MAX_VIEWPORT, // Small viewport
+    !hasHover,                                          // No hover capability
+    dpr >= DEVICE_DETECTION.MIN_HIGH_DPR                // High pixel density
   ];
   
   // Count positive indicators
   const positiveIndicators = indicators.filter(Boolean).length;
   
-  // Mobile if 3+ indicators are positive
-  return positiveIndicators >= 3;
+  // Mobile if minimum indicators threshold met
+  return positiveIndicators >= DEVICE_DETECTION.MIN_MOBILE_INDICATORS;
 }
 
 // Detect suspicious screen resolutions that might be spoofed
@@ -100,19 +141,12 @@ function isSuspiciousResolution(resolution: [number, number]): boolean {
   
   if (typeof width !== 'number' || typeof height !== 'number') return false;
   
-  // Detect device type using combined approach
   const isMobile = isLikelyMobile();
   
   // Very conservative suspicious resolutions - only flag obvious spoofs
-  const suspiciousResolutions = isMobile ? [
-    [320, 240],    // Too small for mobile
-    [480, 320],    // Too small for mobile
-  ] : [
-    // Only flag very old/obvious spoofs - removed common resolutions
-    [640, 480],    // VGA - too old
-    [800, 600],    // SVGA - too old
-    [320, 240],    // QVGA - too small
-  ];
+  const suspiciousResolutions = isMobile 
+    ? SUSPICIOUS_RESOLUTIONS.MOBILE 
+    : SUSPICIOUS_RESOLUTIONS.DESKTOP;
   
   // Check if resolution matches obvious spoofed values
   const isCommonSpoofed = suspiciousResolutions.some(([w, h]) => 
@@ -121,12 +155,11 @@ function isSuspiciousResolution(resolution: [number, number]): boolean {
   
   const aspectRatio = Math.max(width, height) / Math.min(width, height);
   
-  // Very conservative pattern detection
+  // Very conservative pattern detection - only flag extreme cases
   const isSuspiciousPattern = 
-    // Only flag extreme cases
-    (width < 320 || height < 240) ||  // Too small for any device
-    (width > 7680 || height > 4320) || // Too large (8K+)
-    (aspectRatio > 3.0); // Extreme aspect ratios (e.g., 3:1 or more extreme)
+    (width < SCREEN_SIZE_THRESHOLDS.MIN_VALID_WIDTH || height < SCREEN_SIZE_THRESHOLDS.MIN_VALID_HEIGHT) ||  // Too small for any device
+    (width > SCREEN_SIZE_THRESHOLDS.MAX_VALID_WIDTH || height > SCREEN_SIZE_THRESHOLDS.MAX_VALID_HEIGHT) || // Too large (8K+)
+    (aspectRatio > DEVICE_DETECTION.MAX_ASPECT_RATIO); // Extreme aspect ratios (e.g., 3:1 or more extreme)
   
   return isCommonSpoofed || isSuspiciousPattern;
 }
