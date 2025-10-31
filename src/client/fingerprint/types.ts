@@ -59,7 +59,7 @@ export interface GraphicsGroupInfo {
   fonts: FontsInfo | FingerprintSpecialValue;
   fontPreferences: FontPreferencesInfo;
   screenResolution: ScreenResolutionInfo;
-  screenFrame: [number, number, number, number];
+  screenFrame: ScreenFrameInfo;
   colorDepth: number | FingerprintSpecialValue;
   colorGamut: 'srgb' | 'p3' | 'rec2020' | FingerprintSpecialValue;
 }
@@ -99,6 +99,8 @@ export interface FontPreferencesInfo {
 }
 
 export type ScreenResolutionInfo = [number, number] | FingerprintSpecialValue;
+
+export type ScreenFrameInfo = [number, number, number, number] | FingerprintSpecialValue;
 // #endregion
 
 // #region Audio

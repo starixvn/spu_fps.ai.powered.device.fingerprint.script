@@ -1,6 +1,6 @@
 import { replaceNaN, toFloat, round } from '../../utils/data';
 import { exitFullscreen, getFullscreenElement, isSafariWebKit, isWebKit, isWebKit616OrNewer } from '../../utils/browser';
-import type { Bit } from '../../types';
+import type { Bit, ScreenFrameInfo } from '../../types';
 import { FingerprintSpecialValue } from '../../utils/consts';
 
 export type FrameSizeValue = number | FingerprintSpecialValue;
@@ -11,25 +11,27 @@ const roundingPrecision = 10;
 let screenFrameBackup: Readonly<FrameSize> | undefined;
 let screenFrameSizeTimeoutId: number | undefined;
 
-export async function collectScreenFrame(): Promise<FrameSize> {
+export async function collectScreenFrame(): Promise<ScreenFrameInfo> {
   const getFrameAsync = getScreenFrame();
   const frameSize = await getFrameAsync();
 
   if (!frameSize) {
-    return [
-      FingerprintSpecialValue.UNDEFINED,
-      FingerprintSpecialValue.UNDEFINED,
-      FingerprintSpecialValue.UNDEFINED,
-      FingerprintSpecialValue.UNDEFINED,
-    ];
+    return FingerprintSpecialValue.UNDEFINED;
   }
 
-  return [
+  const result: FrameSize = [
     frameSize[0] === null ? FingerprintSpecialValue.UNDEFINED : frameSize[0],
     frameSize[1] === null ? FingerprintSpecialValue.UNDEFINED : frameSize[1],
     frameSize[2] === null ? FingerprintSpecialValue.UNDEFINED : frameSize[2],
     frameSize[3] === null ? FingerprintSpecialValue.UNDEFINED : frameSize[3],
   ];
+
+  const allUndefined = result.every(val => val === FingerprintSpecialValue.UNDEFINED);
+  if (allUndefined) {
+    return FingerprintSpecialValue.UNDEFINED;
+  }
+
+  return result;
 }
 
 export function resetScreenFrameWatch(): void {
