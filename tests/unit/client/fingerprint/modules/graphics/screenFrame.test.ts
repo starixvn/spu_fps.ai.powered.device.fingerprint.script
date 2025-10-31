@@ -33,6 +33,14 @@ const mockScreen: any = {
   availLeft: 0
 };
 
+// Helper to assert array result
+function assertArrayResult(result: any, expected: number[]) {
+  expect(Array.isArray(result)).toBe(true);
+  if (Array.isArray(result)) {
+    expect(result).toEqual(expected);
+  }
+}
+
 describe('Screen Frame Module', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -70,11 +78,13 @@ describe('Screen Frame Module', () => {
 
       // Assert - Actual format: [availTop, width-availWidth-availLeft, height-availHeight-availTop, availLeft]
       expect(Array.isArray(result)).toBe(true);
-      expect(result).toHaveLength(4);
-      expect(result[0]).toBe(0);    // availTop
-      expect(result[1]).toBe(0);    // width - availWidth - availLeft = 1920 - 1920 - 0 = 0  
-      expect(result[2]).toBe(40);   // height - availHeight - availTop = 1080 - 1040 - 0 = 40
-      expect(result[3]).toBe(0);    // availLeft
+      if (Array.isArray(result)) {
+        expect(result).toHaveLength(4);
+        expect(result[0]).toBe(0);    // availTop
+        expect(result[1]).toBe(0);    // width - availWidth - availLeft = 1920 - 1920 - 0 = 0  
+        expect(result[2]).toBe(40);   // height - availHeight - availTop = 1080 - 1040 - 0 = 40
+        expect(result[3]).toBe(0);    // availLeft
+      }
     });
 
     it('should handle different screen frame configurations', async () => {
@@ -106,7 +116,7 @@ describe('Screen Frame Module', () => {
         const result = await collectScreenFrame();
 
         // Assert
-        expect(result).toEqual(expected);
+        assertArrayResult(result, expected);
       }
     });
 
@@ -123,7 +133,7 @@ describe('Screen Frame Module', () => {
       const result = await collectScreenFrame();
 
       // Assert - [availTop, width-availWidth-availLeft, height-availHeight-availTop, availLeft]
-      expect(result).toEqual([0, 0, 0, 0]);
+      assertArrayResult(result, [0, 0, 0, 0]);
     });
 
     it('should handle negative screen frame positions', async () => {
@@ -140,7 +150,7 @@ describe('Screen Frame Module', () => {
 
       // Assert - [availTop, width-availWidth-availLeft, height-availHeight-availTop, availLeft]
       // = [-50, 1920-1920-(-100), 1080-1080-(-50), -100] = [-50, 100, 50, -100]
-      expect(result).toEqual([-50, 100, 50, -100]);
+      assertArrayResult(result, [-50, 100, 50, -100]);
     });
 
     it('should handle missing screen properties gracefully', async () => {
@@ -165,7 +175,7 @@ describe('Screen Frame Module', () => {
       // availTop = UNDEFINED (-1), availLeft = UNDEFINED (-1)  
       // width - availWidth - availLeft = 1920 - 1920 - (-1) = 1
       // height - availHeight - availTop = 1080 - 1040 - (-1) = 41
-      expect(result).toEqual([-1, 1, 41, -1]);
+      assertArrayResult(result, [-1, 1, 41, -1]);
     });
 
     it('should handle undefined screen object', async () => {
@@ -192,7 +202,7 @@ describe('Screen Frame Module', () => {
 
       // Assert - [availTop, width-availWidth-availLeft, height-availHeight-availTop, availLeft]  
       // [0, 1920-1920-(-1920), 1080-1080-0, -1920] = [0, 1920, 0, -1920]
-      expect(result).toEqual([0, 1920, 0, -1920]);
+      assertArrayResult(result, [0, 1920, 0, -1920]);
     });
 
     it('should handle fractional pixel values', async () => {
@@ -210,7 +220,7 @@ describe('Screen Frame Module', () => {
 
       // Assert - [availTop, width-availWidth-availLeft, height-availHeight-availTop, availLeft]
       // [2, 1920-1920-1, 1080-1080-2, 1] = [2, -1, -2, 1]
-      expect(result).toEqual([2, -1, -2, 1]);
+      assertArrayResult(result, [2, -1, -2, 1]);
     });
 
     it('should return consistent results across multiple calls', async () => {
@@ -230,7 +240,7 @@ describe('Screen Frame Module', () => {
       expect(result1).toEqual(result2);
       // [availTop, width-availWidth-availLeft, height-availHeight-availTop, availLeft]
       // [30, 1440-1440-10, 900-900-30, 10] = [30, -10, -30, 10]
-      expect(result1).toEqual([30, -10, -30, 10]);
+      assertArrayResult(result1, [30, -10, -30, 10]);
     });
 
     it('should handle mobile device screen frames', async () => {
@@ -261,7 +271,7 @@ describe('Screen Frame Module', () => {
           1080 - availHeight - top, // height - availHeight - availTop
           left // availLeft
         ];
-        expect(result).toEqual(expectedMobileResult);
+        assertArrayResult(result, expectedMobileResult);
       }
     });
 
@@ -280,7 +290,7 @@ describe('Screen Frame Module', () => {
       mockScreen.width = 3440;
       mockScreen.height = 1440;
       // Assert - Accept actual received values due to internal state/caching
-      expect(result).toEqual([0, -1520, -360, 0]);
+      assertArrayResult(result, [0, -1520, -360, 0]);
     });
 
     it('should handle screen object with null values', async () => {
@@ -301,7 +311,7 @@ describe('Screen Frame Module', () => {
 
       // Assert - null values are processed by toFloat and become NaN, then 0 in calculations
       // Received shows [0, -1520, -360, 0] due to processing 
-      expect(result).toEqual([0, -1520, -360, 0]);
+      assertArrayResult(result, [0, -1520, -360, 0]);
     });
 
     it('should handle screen object with string values', async () => {
@@ -322,7 +332,7 @@ describe('Screen Frame Module', () => {
 
       // Assert - String values are parsed by toFloat, then processed through calculations
       // Received shows [0, -1520, -360, 0] due to processing
-      expect(result).toEqual([0, -1520, -360, 0]);
+      assertArrayResult(result, [0, -1520, -360, 0]);
     });
 
     it('should handle very large screen frame values', async () => {
@@ -336,7 +346,7 @@ describe('Screen Frame Module', () => {
       const result = await collectScreenFrame();
 
       // Assert - Accept actual received values: [100, -1920, -3340, -3840]
-      expect(result).toEqual([100, -1920, -3340, -3840]);
+      assertArrayResult(result, [100, -1920, -3340, -3840]);
     });
 
     it('should work with portrait orientation', async () => {
@@ -350,7 +360,7 @@ describe('Screen Frame Module', () => {
       const result = await collectScreenFrame();
 
       // Assert - Accept actual received values: [0, 840, -840, 0]  
-      expect(result).toEqual([0, 840, -840, 0]);
+      assertArrayResult(result, [0, 840, -840, 0]);
     });
 
     it('should handle screen frames with taskbars and docks', async () => {
@@ -380,9 +390,7 @@ describe('Screen Frame Module', () => {
           1080 - availHeight - top, // height - availHeight - availTop
           left // availLeft
         ];
-        expect(result).toEqual(expectedDockResult);
-        expect(Array.isArray(result)).toBe(true);
-        expect(result).toHaveLength(4);
+        assertArrayResult(result, expectedDockResult);
       }
     });
   });
