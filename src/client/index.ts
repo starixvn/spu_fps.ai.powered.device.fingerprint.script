@@ -18,6 +18,10 @@ class ClientClass {
         preferences: "pf",
         graphics: "gp",
       };
+    private readonly STORAGE_KEYS = {
+        F4_CODE: '__f4Code',
+        F5_CODE: '__f5Code'
+    };
     private readonly fingerprint: FingerprintClass;
     private readonly tagging: TaggingClass;
     private readonly ip: IPClass;
@@ -63,8 +67,15 @@ class ClientClass {
     }
 
     private handleF4(deviceInfo: CollectedDeviceInfo, result: FingerprintResult): void {
-        deviceInfo.f4 = result.hashed;
-        this.updateDeviceInfo(deviceInfo);
+        if (deviceInfo.f4 !== result.hashed) {
+            deviceInfo.f4 = result.hashed;
+            this.updateDeviceInfo(deviceInfo);
+            
+            try {
+                localStorage.setItem(this.STORAGE_KEYS.F4_CODE, result.hashed);
+            } catch (error) {
+            }
+        }
 
         const payload = this.buildF4Payload(deviceInfo.sk, result.attributes, result.hashed);
         this.fingerprint.sendToServer(`${this.getGatewayUrl()}${CONFIG.ENDPOINTS.F4}`, payload);
@@ -75,8 +86,15 @@ class ClientClass {
     }
 
     private handleF5(deviceInfo: CollectedDeviceInfo, result: FingerprintResult): void {
-        deviceInfo.f5 = result.hashed;
-        this.updateDeviceInfo(deviceInfo);
+        if (deviceInfo.f5 !== result.hashed) {
+            deviceInfo.f5 = result.hashed;
+            this.updateDeviceInfo(deviceInfo);
+            
+            try {
+                localStorage.setItem(this.STORAGE_KEYS.F5_CODE, result.hashed);
+            } catch (error) {
+            }
+        }
 
         const payload = this.buildF5Payload(deviceInfo.sk, result.attributes, result.hashed);
         this.fingerprint.sendToServer(`${this.getGatewayUrl()}${CONFIG.ENDPOINTS.F5}`, payload);
@@ -128,17 +146,32 @@ class ClientClass {
             const sessionKey = SessionKeyManager.getSessionKey();
             const defaultTagging = PacketTransformer.unwrapMessage(defaultDeviceId) || sessionKey;
 
+            let cachedF4: string | null = null;
+            let cachedF5: string | null = null;
+
+            try {
+                cachedF4 = localStorage.getItem(this.STORAGE_KEYS.F4_CODE);
+                cachedF5 = localStorage.getItem(this.STORAGE_KEYS.F5_CODE);
+            } catch (error) {
+            }
+
             const deviceInfo: CollectedDeviceInfo = { 
                 sk: sessionKey, 
                 v: scriptVersion, 
                 fv: CONFIG.VERSION,
                 tag: defaultTagging,
-                taggingType: DEFAULT_TAGGING_TYPE.DEFAULT 
+                taggingType: DEFAULT_TAGGING_TYPE.DEFAULT,
+                f4: cachedF4 || undefined,
+                f5: cachedF5 || undefined
             };
 
             await this.ensureDOMReady();
             
             this.injectValueIntoHiddenField(sessionKey, "__fdi");
+
+            if (cachedF4 || cachedF5) {
+                this.updateDeviceInfo(deviceInfo);
+            }
 
             await Promise.all([
                 this.tagging.start().then(([tagging, taggingType]: [string, number]) => {
