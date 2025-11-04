@@ -115,17 +115,17 @@ function getCurrentScreenFrame(): FrameSize {
   const s = screen as any;
 
   // Handle undefined availTop and availLeft - major issue on many browsers
-  const availTop = s.availTop !== undefined ? toFloat(s.availTop) : FingerprintSpecialValue.UNDEFINED;
-  const availLeft = s.availLeft !== undefined ? toFloat(s.availLeft) : FingerprintSpecialValue.UNDEFINED;
-  const width = toFloat(s.width) ?? FingerprintSpecialValue.UNDEFINED;
-  const height = toFloat(s.height) ?? FingerprintSpecialValue.UNDEFINED;
-  const availWidth = toFloat(s.availWidth) ?? FingerprintSpecialValue.UNDEFINED;
-  const availHeight = toFloat(s.availHeight) ?? FingerprintSpecialValue.UNDEFINED;
+  const availTop = toFloat(s.availTop);
+  const availLeft = toFloat(s.availLeft);
+  const width = toFloat(s.width);
+  const height = toFloat(s.height);
+  const availWidth = toFloat(s.availWidth);
+  const availHeight = toFloat(s.availHeight);
 
   return [
     replaceNaN(availTop, FingerprintSpecialValue.UNDEFINED),
-    replaceNaN(width - availWidth - replaceNaN(availLeft, FingerprintSpecialValue.UNDEFINED), FingerprintSpecialValue.UNDEFINED),
-    replaceNaN(height - availHeight - replaceNaN(availTop, FingerprintSpecialValue.UNDEFINED), FingerprintSpecialValue.UNDEFINED),
+    replaceNaN(width - availWidth - replaceNaN(availLeft, 0), FingerprintSpecialValue.UNDEFINED),
+    replaceNaN(height - availHeight - replaceNaN(availTop, 0), FingerprintSpecialValue.UNDEFINED),
     replaceNaN(availLeft, FingerprintSpecialValue.UNDEFINED),
   ];
 }
