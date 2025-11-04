@@ -170,12 +170,8 @@ describe('Screen Frame Module', () => {
       // Act
       const result = await collectScreenFrame();
 
-      // Assert - When availTop/availLeft missing, they become UNDEFINED (-1), others might be calculated
-      // Actual result shows: [-1, 1, 41, -1] meaning some calculations still work with available values
-      // availTop = UNDEFINED (-1), availLeft = UNDEFINED (-1)  
-      // width - availWidth - availLeft = 1920 - 1920 - (-1) = 1
-      // height - availHeight - availTop = 1080 - 1040 - (-1) = 41
-      assertArrayResult(result, [-1, 1, 41, -1]);
+      // Assert - When availTop/availLeft missing, they become UNDEFINED (-1) in their direct positions
+      assertArrayResult(result, [-1, 0, 40, -1]);
     });
 
     it('should handle undefined screen object', async () => {
