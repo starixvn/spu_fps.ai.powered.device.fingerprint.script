@@ -68,6 +68,7 @@ class ClientClass {
     }
 
     private handleF4(deviceInfo: CollectedDeviceInfo, result: FingerprintResult): void {
+        console.log('Received F4 fingerprint result:', result);
         if (deviceInfo.f4 !== result.hashed) {
             deviceInfo.f4 = result.hashed;
             deviceInfo.f5 = null;
@@ -89,6 +90,7 @@ class ClientClass {
     }
 
     private handleF5(deviceInfo: CollectedDeviceInfo, result: FingerprintResult): void {
+        console.log('Received F5 fingerprint result:', result);
         if (deviceInfo.f5 !== result.hashed) {
             deviceInfo.f5 = result.hashed;
             this.updateDeviceInfo(deviceInfo);
