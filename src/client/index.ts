@@ -19,8 +19,8 @@ class ClientClass {
         graphics: "gp",
       };
     private readonly STORAGE_KEYS = {
-        F4_CODE: '__f4Code',
-        F5_CODE: '__f5Code'
+        F4_CODE: '__fp_acde_key__',
+        F5_CODE: '__fp_b_key__'
     };
     private readonly fingerprint: FingerprintClass;
     private readonly tagging: TaggingClass;
@@ -150,8 +150,8 @@ class ClientClass {
             let cachedF5: string | null = null;
 
             try {
-                cachedF4 = localStorage.getItem(this.STORAGE_KEYS.F4_CODE);
-                cachedF5 = localStorage.getItem(this.STORAGE_KEYS.F5_CODE);
+                cachedF4 = localStorage.getItem(this.STORAGE_KEYS.F4_CODE) || null;
+                cachedF5 = localStorage.getItem(this.STORAGE_KEYS.F5_CODE) || null;
             } catch (error) {
             }
 
@@ -161,17 +161,13 @@ class ClientClass {
                 fv: CONFIG.VERSION,
                 tag: defaultTagging,
                 taggingType: DEFAULT_TAGGING_TYPE.DEFAULT,
-                f4: cachedF4 || undefined,
-                f5: cachedF5 || undefined
+                f4: cachedF4,
+                f5: cachedF5
             };
 
             await this.ensureDOMReady();
             
             this.injectValueIntoHiddenField(sessionKey, "__fdi");
-
-            if (cachedF4 || cachedF5) {
-                this.updateDeviceInfo(deviceInfo);
-            }
 
             await Promise.all([
                 this.tagging.start().then(([tagging, taggingType]: [string, number]) => {
