@@ -345,6 +345,11 @@ export async function collectCanvas(): Promise<CanvasInfo> {
     }
 
     const stableFeatures = computeFeatureMedian(samples);
+    
+    if (typeof window !== 'undefined') {
+      (window as any).canvasRaw = stableFeatures;
+    }
+    
     const value = MurmurHash128.hash128(JSON.stringify(stableFeatures));
       
     return value;

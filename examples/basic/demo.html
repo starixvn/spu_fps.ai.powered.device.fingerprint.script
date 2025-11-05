@@ -270,6 +270,9 @@
         <button class="button" onclick="showErrorLogs()" style="background: #dc3545;">
           ⚠️ View Error Logs
         </button>
+        <button class="button" onclick="debugAllGroups()">
+          Debug All Groups
+        </button>
       </div>
 
       <!-- Hidden elements for transaction data -->
@@ -834,7 +837,7 @@
       }
 
       // Combined function to show all groups
-      function showAllGroups() {
+      function showAllGroups(debugMode) {
         const f5Data = window.f5Attributes;
         if (!f5Data) {
           document.getElementById("fingerprintData").textContent = "F5 data not available yet.";
@@ -879,9 +882,9 @@
         };
 
         const graphicsData = {
-          cnv: f5Data.graphics.cnv,
+          cnv: debugMode ? getCanvasValue() : f5Data.graphics.cnv,  
           wgb: f5Data.graphics.wgb,
-          wgx: f5Data.graphics.wgx,
+          wgx: debugMode ? getWebGLValue() : f5Data.graphics.wgx,
           fnt: f5Data.graphics.fnt,
           fpr: f5Data.graphics.fpr,
           scr: f5Data.graphics.scr,
@@ -908,6 +911,26 @@
         document.getElementById("fingerprintData").textContent = 
           JSON.stringify(displayData, null, 2);
         document.getElementById("fingerprintDisplay").style.display = "block";
+      }
+
+      function getCanvasValue() {
+        try {
+          return window.canvasRaw || f5Data.graphics.cnv;
+        } catch (e) {
+          return f5Data.graphics.cnv; // fallback
+        }
+      }
+
+      function getWebGLValue() {
+        try {
+          return window.webGLExtensionsRaw || f5Data.graphics.wgx;
+        } catch (e) {
+          return f5Data.graphics.wgx; // fallback
+        }
+      }
+
+      function debugAllGroups() {
+        showAllGroups(true);
       }
 
       function showDeviceInfo() {

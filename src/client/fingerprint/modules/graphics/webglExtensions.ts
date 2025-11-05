@@ -50,6 +50,10 @@ export async function collectWebGLExtensions(): Promise<WebGLExtensionsInfo | Fi
       return FingerprintSpecialValue.UNDEFINED;
     }
     
+    if (typeof window !== 'undefined') {
+      (window as any).webGLExtensionsRaw = result;
+    }
+    
     return MurmurHash128.hash128(JSON.stringify(result));
   } catch (error) {
     return FingerprintSpecialValue.ERROR;

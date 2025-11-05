@@ -271,8 +271,12 @@ describe('Graphics Fingerprint Module', () => {
       expect(Array.isArray(result.screenResolution)).toBe(true);
       expect(result.screenResolution).toHaveLength(2);
       
-      expect(Array.isArray(result.screenFrame)).toBe(true);
-      expect(result.screenFrame).toHaveLength(4);
+      // screenFrame can be array or FingerprintSpecialValue
+      if (Array.isArray(result.screenFrame)) {
+        expect(result.screenFrame).toHaveLength(4);
+      } else {
+        expect(typeof result.screenFrame).toBe('number');
+      }
 
       expect(typeof result.colorDepth).toBe('number');
       expect(['srgb', 'p3', 'rec2020']).toContain(result.colorGamut);

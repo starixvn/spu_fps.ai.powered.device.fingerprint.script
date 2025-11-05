@@ -13,8 +13,7 @@ export function collectUserAgent(): UserAgentInfo {
         .join(' ');
 
       var platform = navigator.userAgentData.platform;
-      var mobile = Number(navigator.userAgentData.mobile);
-      return `${brands}|${platform}|${mobile}`;
+      return `${brands}|${platform}`;
     }
 
     return FingerprintSpecialValue.UNDEFINED;

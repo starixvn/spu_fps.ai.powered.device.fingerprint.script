@@ -37,7 +37,7 @@ describe('User Agent Module', () => {
       const result = collectUserAgent();
 
       // Assert
-      expect(result).toBe('Chromium/120.0.6099 Google Chrome/120.0.6099|Windows|0');
+      expect(result).toBe('Chromium/120.0.6099 Google Chrome/120.0.6099|Windows');
     });
 
     it('should filter out "Not A Brand" entries', () => {
@@ -56,7 +56,7 @@ describe('User Agent Module', () => {
       const result = collectUserAgent();
 
       // Assert
-      expect(result).toBe('Chromium/120.0.0.0 Microsoft Edge/120.0.0.0|Windows|0');
+      expect(result).toBe('Chromium/120.0.0.0 Microsoft Edge/120.0.0.0|Windows');
       expect(result).not.toContain('Not A Brand');
     });
 
@@ -76,42 +76,9 @@ describe('User Agent Module', () => {
       const result = collectUserAgent();
 
       // Assert
-      expect(result).toBe('Aaa Browser/2.0 Mmm Browser/3.0 Zzz Browser/1.0|Linux|0');
+      expect(result).toBe('Aaa Browser/2.0 Mmm Browser/3.0 Zzz Browser/1.0|Linux');
     });
 
-    it('should handle mobile flag correctly when true', () => {
-      // Arrange
-      mockNavigator.userAgentData = {
-        brands: [
-          { brand: 'Chrome Mobile', version: '120.0.0.0' }
-        ],
-        platform: 'Android',
-        mobile: true
-      };
-
-      // Act
-      const result = collectUserAgent();
-
-      // Assert
-      expect(result).toBe('Chrome Mobile/120.0.0.0|Android|1');
-    });
-
-    it('should handle mobile flag correctly when false', () => {
-      // Arrange
-      mockNavigator.userAgentData = {
-        brands: [
-          { brand: 'Chrome', version: '120.0.0.0' }
-        ],
-        platform: 'Windows',
-        mobile: false
-      };
-
-      // Act
-      const result = collectUserAgent();
-
-      // Assert
-      expect(result).toBe('Chrome/120.0.0.0|Windows|0');
-    });
 
     it('should handle empty brands array', () => {
       // Arrange
@@ -125,7 +92,7 @@ describe('User Agent Module', () => {
       const result = collectUserAgent();
 
       // Assert
-      expect(result).toBe('|macOS|0');
+      expect(result).toBe('|macOS');
     });
 
     it('should handle brands array with only "Not A Brand" entries', () => {
@@ -143,7 +110,7 @@ describe('User Agent Module', () => {
       const result = collectUserAgent();
 
       // Assert
-      expect(result).toBe('|Chrome OS|0');
+      expect(result).toBe('|Chrome OS');
     });
 
     it('should handle different platform values', () => {
@@ -162,7 +129,8 @@ describe('User Agent Module', () => {
         const result = collectUserAgent();
 
         // Assert
-        expect(result).toContain(`|${platform}|`);
+        expect(typeof result).toBe('string');
+        expect(result).toContain(`|${platform}`);
       }
     });
 
@@ -182,7 +150,7 @@ describe('User Agent Module', () => {
       const result = collectUserAgent();
 
       // Assert
-      expect(result).toBe('Brand (Test)/1.0 Brand-Name/2.0 Chrome/Test/120.0.0.0|Windows|0');
+      expect(result).toBe('Brand (Test)/1.0 Brand-Name/2.0 Chrome/Test/120.0.0.0|Windows');
     });
 
     it('should handle version strings with different formats', () => {
@@ -201,7 +169,7 @@ describe('User Agent Module', () => {
       const result = collectUserAgent();
 
       // Assert
-      expect(result).toBe('Browser A/120.0.6099.199 Browser B/15.0 Browser C/1|Linux|0');
+      expect(result).toBe('Browser A/120.0.6099.199 Browser B/15.0 Browser C/1|Linux');
     });
 
     it('should return UNDEFINED when userAgentData is not available', () => {
@@ -256,23 +224,9 @@ describe('User Agent Module', () => {
       const result = collectUserAgent();
 
       // Assert
-      expect(result).toBe('Test Browser/1.0|undefined|0');
+      expect(result).toBe('Test Browser/1.0|undefined');
     });
 
-    it('should handle userAgentData with missing mobile property', () => {
-      // Arrange
-      mockNavigator.userAgentData = {
-        brands: [{ brand: 'Test Browser', version: '1.0' }],
-        platform: 'Windows'
-        // mobile property is missing
-      };
-
-      // Act
-      const result = collectUserAgent();
-
-      // Assert
-      expect(result).toBe('Test Browser/1.0|Windows|NaN');
-    });
 
     it('should handle brands with empty brand names', () => {
       // Arrange
@@ -290,7 +244,7 @@ describe('User Agent Module', () => {
       const result = collectUserAgent();
 
       // Assert  
-      expect(result).toBe('/1.0  /3.0 Valid Browser/2.0|Linux|0');
+      expect(result).toBe('/1.0  /3.0 Valid Browser/2.0|Linux');
     });
 
     it('should handle brands with empty version strings', () => {
@@ -308,7 +262,7 @@ describe('User Agent Module', () => {
       const result = collectUserAgent();
 
       // Assert
-      expect(result).toBe('Browser A/ Browser B/1.0|Windows|0');
+      expect(result).toBe('Browser A/ Browser B/1.0|Windows');
     });
 
     it('should filter all "notabrand" variations (case insensitive)', () => {
@@ -329,7 +283,7 @@ describe('User Agent Module', () => {
       const result = collectUserAgent();
 
       // Assert
-      expect(result).toBe('Chrome/120.0.0.0|Windows|0');
+      expect(result).toBe('Chrome/120.0.0.0|Windows');
       expect(result).not.toContain('Not A Brand');
       expect(result).not.toContain('NOT A BRAND');
       expect(result).not.toContain('not a brand');
@@ -353,7 +307,7 @@ describe('User Agent Module', () => {
       const result = collectUserAgent();
 
       // Assert
-      expect(result).toBe('Edge/120.0.0.0|Windows|0');
+      expect(result).toBe('Edge/120.0.0.0|Windows');
       // All "Not A Brand" variations should be filtered out
     });
   });

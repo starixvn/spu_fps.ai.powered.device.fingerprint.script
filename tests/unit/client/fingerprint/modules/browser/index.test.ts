@@ -29,7 +29,7 @@ describe('Browser Fingerprint Module', () => {
       // Arrange
       const mockBrowserNameResult = 'Chrome';
       const mockOSNameResult = 'Windows';
-      const mockUserAgentResult = 'Chrome/120.0.0.0|Windows|0';
+      const mockUserAgentResult = 'Chrome/120.0.0.0|Windows';
       const mockVendorResult = 'Google Inc.';
       const mockVendorFlavorsResult = ['chrome', 'webkit'];
       const mockPluginsResult = ['Chrome PDF Plugin', 'Widevine Content Decryption Module'];
@@ -46,7 +46,7 @@ describe('Browser Fingerprint Module', () => {
       const expectedResult = {
         browserName: 'Chrome',
         osName: 'Windows',
-        userAgent: 'Chrome/120.0.0.0|Windows|0',
+        userAgent: 'Chrome/120.0.0.0|Windows',
         vendor: 'Google Inc.',
         vendorFlavors: ['chrome', 'webkit'],
         plugins: ['Chrome PDF Plugin', 'Widevine Content Decryption Module'],
@@ -127,7 +127,7 @@ describe('Browser Fingerprint Module', () => {
       mockCollectOSName.mockImplementation(() => {
         throw new Error('OS Name collection failed');
       });
-      mockCollectUserAgent.mockReturnValue('Safari/605.1.15|macOS|0');
+      mockCollectUserAgent.mockReturnValue('Safari/605.1.15|macOS');
       mockCollectVendor.mockReturnValue('Apple Computer, Inc.');
       mockCollectVendorFlavors.mockReturnValue(['safari', 'webkit']);
       mockCollectPlugins.mockReturnValue([]);
@@ -141,7 +141,7 @@ describe('Browser Fingerprint Module', () => {
       // Arrange
       mockCollectBrowserName.mockReturnValue('Edge');
       mockCollectOSName.mockReturnValue('Windows');
-      mockCollectUserAgent.mockReturnValue('Edge/120.0.0.0|Windows|0');
+      mockCollectUserAgent.mockReturnValue('Edge/120.0.0.0|Windows');
       mockCollectVendor.mockReturnValue('Microsoft Corporation');
       mockCollectVendorFlavors.mockReturnValue(['chrome', 'webkit']);
       mockCollectPlugins.mockReturnValue(['PDF Viewer']);
@@ -247,7 +247,7 @@ describe('Browser Fingerprint Module', () => {
       const mockResults = {
         browserName: 'Brave',
         osName: 'Linux',
-        userAgent: 'Brave/1.60.0|Linux|0',
+        userAgent: 'Brave/1.60.0|Linux',
         vendor: 'Brave Software Inc.',
         vendorFlavors: ['chrome', 'webkit'],
         plugins: ['Brave Ad Blocker', 'Brave Shields'],
@@ -309,7 +309,7 @@ describe('Browser Fingerprint Module', () => {
       // Arrange
       mockCollectBrowserName.mockReturnValue('Opera');
       mockCollectOSName.mockReturnValue('Windows');
-      mockCollectUserAgent.mockReturnValue('Opera/120.0.0.0|Windows|0');
+      mockCollectUserAgent.mockReturnValue('Opera/120.0.0.0|Windows');
       mockCollectVendor.mockReturnValue('Opera Software ASA');
       mockCollectVendorFlavors.mockReturnValue(['opr', 'webkit']);
       mockCollectPlugins.mockReturnValue(['Opera Plugin']);
@@ -325,7 +325,7 @@ describe('Browser Fingerprint Module', () => {
         expect(result).toEqual({
           browserName: 'Opera',
           osName: 'Windows',
-          userAgent: 'Opera/120.0.0.0|Windows|0',
+          userAgent: 'Opera/120.0.0.0|Windows',
           vendor: 'Opera Software ASA',
           vendorFlavors: ['opr', 'webkit'],
           plugins: ['Opera Plugin'],
@@ -356,7 +356,7 @@ describe('Browser Fingerprint Module', () => {
         // Arrange
         mockCollectBrowserName.mockReturnValue('Chrome');
         mockCollectOSName.mockReturnValue('Windows');
-        mockCollectUserAgent.mockReturnValue('Chrome/120.0.0.0|Windows|0');
+        mockCollectUserAgent.mockReturnValue('Chrome/120.0.0.0|Windows');
         mockCollectVendor.mockReturnValue('Google Inc.');
         mockCollectVendorFlavors.mockReturnValue(['chrome', 'webkit']);
         mockCollectPlugins.mockReturnValue(plugins);
@@ -388,7 +388,7 @@ describe('Browser Fingerprint Module', () => {
         // Arrange
         mockCollectBrowserName.mockReturnValue('Test Browser');
         mockCollectOSName.mockReturnValue('Test OS');
-        mockCollectUserAgent.mockReturnValue('Test/1.0|TestOS|0');
+        mockCollectUserAgent.mockReturnValue('Test/1.0|TestOS');
         mockCollectVendor.mockReturnValue('Test Vendor');
         mockCollectVendorFlavors.mockReturnValue(vendorFlavors);
         mockCollectPlugins.mockReturnValue([]);
@@ -419,7 +419,7 @@ describe('Browser Fingerprint Module', () => {
         // Arrange
         mockCollectBrowserName.mockReturnValue('Test Browser');
         mockCollectOSName.mockReturnValue('Test OS');
-        mockCollectUserAgent.mockReturnValue('Test/1.0|TestOS|0');
+        mockCollectUserAgent.mockReturnValue('Test/1.0|TestOS');
         mockCollectVendor.mockReturnValue('Test Vendor');
         mockCollectVendorFlavors.mockReturnValue([]);
         mockCollectPlugins.mockReturnValue([]);
