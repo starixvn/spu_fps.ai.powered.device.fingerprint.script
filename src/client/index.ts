@@ -10,6 +10,7 @@ import { FingerprintClass } from "./fingerprint";
 import { CONFIG } from "./utils/domain";
 import { ErrorLogger } from "./utils/errorLogger";
 import { DEFAULT_TAGGING_TYPE } from "./utils/constants";
+
 class ClientClass {
     private readonly directory = {
         audio: "au",
@@ -136,31 +137,16 @@ class ClientClass {
         return payload;
       }
 
-    private getFingerprintCodesFromStorage() {
-        try {
-            return {
-                f4Code: localStorage.getItem("__fp_acde_key__"),
-                f5Code: localStorage.getItem("__fp_b_key__")
-            };
-        } catch {
-            return {
-                f4Code: null,
-                f5Code: null
-            };
-        }
-    }
-
     public async start(): Promise<void> {
         try {
             console.log('fv' + CONFIG.VERSION);
 
             const { Detecas } = window as any;
             const { version: scriptVersion, defaultDeviceId } = Detecas?.Config || {};
-
+            const { f4: cachedF4, f5: cachedF5 } = Detecas?.Config?.di;
+            
             const sessionKey = SessionKeyManager.getSessionKey();
             const defaultTagging = PacketTransformer.unwrapMessage(defaultDeviceId) || sessionKey;
-
-            const { cachedF4, cachedF5 } = this.getFingerprintCodesFromStorage() as any;
             
             const deviceInfo: CollectedDeviceInfo = { 
                 sk: sessionKey, 
