@@ -136,6 +136,20 @@ class ClientClass {
         return payload;
       }
 
+    private getFingerprintCodesFromStorage() {
+        try {
+            return {
+                f4Code: localStorage.getItem("__fp_acde_key__"),
+                f5Code: localStorage.getItem("__fp_b_key__")
+            };
+        } catch {
+            return {
+                f4Code: null,
+                f5Code: null
+            };
+        }
+    }
+
     public async start(): Promise<void> {
         try {
             console.log('fv' + CONFIG.VERSION);
@@ -146,15 +160,8 @@ class ClientClass {
             const sessionKey = SessionKeyManager.getSessionKey();
             const defaultTagging = PacketTransformer.unwrapMessage(defaultDeviceId) || sessionKey;
 
-            let cachedF4: string | null = null;
-            let cachedF5: string | null = null;
-
-            try {
-                cachedF4 = localStorage.getItem(this.STORAGE_KEYS.F4_CODE) || null;
-                cachedF5 = localStorage.getItem(this.STORAGE_KEYS.F5_CODE) || null;
-            } catch (error) {
-            }
-
+            const { cachedF4, cachedF5 } = this.getFingerprintCodesFromStorage() as any;
+            
             const deviceInfo: CollectedDeviceInfo = { 
                 sk: sessionKey, 
                 v: scriptVersion, 
