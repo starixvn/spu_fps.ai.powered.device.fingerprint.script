@@ -143,7 +143,7 @@ class ClientClass {
 
             const { Detecas } = window as any;
             const { version: scriptVersion, defaultDeviceId } = Detecas?.Config || {};
-            const { f4: cachedF4, f5: cachedF5 } = Detecas?.Config?.di;
+            const { f4: cachedF4, f5: cachedF5 } = Detecas?.Config?.di || {f4: null, f5: null};
             
             const sessionKey = SessionKeyManager.getSessionKey();
             const defaultTagging = PacketTransformer.unwrapMessage(defaultDeviceId) || sessionKey;
