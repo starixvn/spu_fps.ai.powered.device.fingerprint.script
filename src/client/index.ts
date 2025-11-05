@@ -20,8 +20,8 @@ class ClientClass {
         graphics: "gp",
       };
     private readonly STORAGE_KEYS = {
-        F4_CODE: '__fp_acde_key__',
-        F5_CODE: '__fp_b_key__'
+        F4_CODE: 'awb_h4_session',
+        F5_CODE: 'awb_h5_session'
     };
     private readonly fingerprint: FingerprintClass;
     private readonly tagging: TaggingClass;
