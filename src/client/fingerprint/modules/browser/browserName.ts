@@ -4,20 +4,25 @@ import { isBrave, isFirefox, isGecko } from '../../utils/browser';
 
 export function collectBrowserName(): BrowserNameInfo {
   try {
-    // Mobile browsers (kiểm tra trước vì có thể override)
+    console.log('User Agent:', navigator.userAgent);
+    
+    // Mobile browsers 
     const mobile = findMatch(mobileDetectors);
     if (mobile) return mobile;
 
-    // UA-CH brands (Chromium) - method chính xác nhất
+    // // UA-CH brands (Chromium)  
     const brands = (navigator as any).userAgentData?.brands || [];
+    console.log('UA-CH brands:', brands);
     const fromBrands = parseFromBrands(brands);
+    console.log('parseFromBrands result:', fromBrands);
     if (fromBrands) return fromBrands;
 
-    // Features detection (fallback)
+    // Features detection 
     const feat = findMatch(featureDetectors);
+    console.log('Feature detector result:', feat);
     if (feat) return feat;
 
-    // CSS fallback (last resort)
+    // CSS fallback
     const css = findMatch(cssDetectors);
     if (css) {
       if (css === "Safari/WebKit") return "Safari";
@@ -106,12 +111,12 @@ const mobileDetectors: Detector[] = [
 ];
 
 const featureDetectors: Detector[] = [
-  // Brave - sử dụng utility function
+  // Brave 
   {
     name: 'Brave',
     test: () => isBrave(),
   },
-  // DuckDuckGo - check trước Chrome vì có thể có window.chrome
+  // DuckDuckGo 
   {
     name: 'DuckDuckGo',
     test: () =>
@@ -119,7 +124,7 @@ const featureDetectors: Detector[] = [
       ((window as any).chrome &&
         navigator.vendor?.includes('DuckDuckGo')),
   },
-  // Edge Chromium - check trước Chrome
+  // Edge Chromium 
   {
     name: 'Edge',
     test: () =>
@@ -131,19 +136,25 @@ const featureDetectors: Detector[] = [
       !(navigator as any).brave &&
       !(navigator as any).duckduckgo,
   },
-  // Opera - check trước Chrome
+  // Opera 
   { 
     name: 'Opera', 
     test: () => (window as any).opr || (window as any).opera 
   },
-  // Yandex - thêm detection
+  // Yandex 
   {
     name: 'Yandex Browser',
-    test: () =>
-      (window as any).yandex ||
-      ((window as any).chrome && navigator.vendor?.includes('Yandex')),
+    test: () => {
+      const hasYandexWindow = !!(window as any).yandex;
+      const hasYandexVendor = navigator.vendor?.includes('Yandex') || false;
+      const hasChrome = !!(window as any).chrome;
+      console.log('[Yandex Detector] window.yandex:', hasYandexWindow);
+      console.log('[Yandex Detector] vendor includes Yandex:', hasYandexVendor);
+      console.log('[Yandex Detector] window.chrome:', hasChrome);
+      return hasYandexWindow || (hasChrome && hasYandexVendor);
+    },
   },
-  // Vivaldi - thêm detection
+  // Vivaldi 
   {
     name: 'Vivaldi',
     test: () =>
@@ -151,7 +162,7 @@ const featureDetectors: Detector[] = [
       navigator.vendor?.includes('Vivaldi') &&
       !(navigator as any).duckduckgo,
   },
-  // Chrome - check sau các browser Chromium khác
+  // Chrome 
   {
     name: 'Chrome',
     test: () =>
@@ -165,12 +176,12 @@ const featureDetectors: Detector[] = [
         b.brand.toLowerCase().includes('edge')
       ),
   },
-  // Firefox - sử dụng utility function
+  // Firefox 
   {
     name: 'Firefox',
     test: () => isFirefox(),
   },
-  // Safari - cải thiện detection
+  // Safari 
   {
     name: 'Safari',
     test: () =>
@@ -180,7 +191,7 @@ const featureDetectors: Detector[] = [
         'WebkitAppearance' in document.createElement('div').style &&
         navigator.vendor?.includes('Apple')),
   },
-  // Edge (Legacy) - giữ nguyên
+  // Edge (Legacy) 
   {
     name: 'Edge (Legacy)',
     test: () => (window as any).StyleMedia || (navigator as any).msLaunchUri,
@@ -188,7 +199,7 @@ const featureDetectors: Detector[] = [
 ];
 
 const cssDetectors: Detector[] = [
-  // Firefox - sử dụng utility function
+  // Firefox 
   {
     name: 'Firefox',
     test: () => isGecko() === 1,
@@ -223,12 +234,12 @@ function parseFromBrands(
   
   const names = brands.map((b) => b.brand.toLowerCase());
 
-  // Thứ tự quan trọng: kiểm tra các browser đặc biệt trước Chrome
   if (names.some((n) => n.includes('brave'))) return 'Brave';
   if (names.some((n) => n.includes('duckduckgo'))) return 'DuckDuckGo';
   if (names.some((n) => n.includes('edge') && !n.includes('edgehtml'))) return 'Edge';
   if (names.some((n) => n.includes('opera') || n.includes('opr'))) return 'Opera';
-  if (names.some((n) => n.includes('yandex'))) return 'Yandex Browser';
+  if (names.some((n) => n.includes('yabrowser') || n.includes('yowser'))) return 'Yandex Browser';
+  console.log('[parseFromBrands] Matched: Yandex Browser');
   if (names.some((n) => n.includes('vivaldi'))) return 'Vivaldi';
   if (names.some((n) => n.includes('samsung'))) return 'Samsung Browser';
   if (names.some((n) => n.includes('miui'))) return 'Mi Browser';
