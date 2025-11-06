@@ -4,22 +4,17 @@ import { isBrave, isFirefox, isGecko } from '../../utils/browser';
 
 export function collectBrowserName(): BrowserNameInfo {
   try {
-    console.log('User Agent:', navigator.userAgent);
-    
     // Mobile browsers 
     const mobile = findMatch(mobileDetectors);
     if (mobile) return mobile;
 
-    // // UA-CH brands (Chromium)  
+    // UA-CH brands (Chromium)  
     const brands = (navigator as any).userAgentData?.brands || [];
-    console.log('UA-CH brands:', brands);
     const fromBrands = parseFromBrands(brands);
-    console.log('parseFromBrands result:', fromBrands);
     if (fromBrands) return fromBrands;
 
     // Features detection 
     const feat = findMatch(featureDetectors);
-    console.log('Feature detector result:', feat);
     if (feat) return feat;
 
     // CSS fallback
@@ -144,15 +139,9 @@ const featureDetectors: Detector[] = [
   // Yandex 
   {
     name: 'Yandex Browser',
-    test: () => {
-      const hasYandexWindow = !!(window as any).yandex;
-      const hasYandexVendor = navigator.vendor?.includes('Yandex') || false;
-      const hasChrome = !!(window as any).chrome;
-      console.log('[Yandex Detector] window.yandex:', hasYandexWindow);
-      console.log('[Yandex Detector] vendor includes Yandex:', hasYandexVendor);
-      console.log('[Yandex Detector] window.chrome:', hasChrome);
-      return hasYandexWindow || (hasChrome && hasYandexVendor);
-    },
+    test: () =>
+      (window as any).yandex ||
+      ((window as any).chrome && navigator.vendor?.includes('Yandex')),
   },
   // Vivaldi 
   {
@@ -239,7 +228,6 @@ function parseFromBrands(
   if (names.some((n) => n.includes('edge') && !n.includes('edgehtml'))) return 'Edge';
   if (names.some((n) => n.includes('opera') || n.includes('opr'))) return 'Opera';
   if (names.some((n) => n.includes('yabrowser') || n.includes('yowser'))) return 'Yandex Browser';
-  console.log('[parseFromBrands] Matched: Yandex Browser');
   if (names.some((n) => n.includes('vivaldi'))) return 'Vivaldi';
   if (names.some((n) => n.includes('samsung'))) return 'Samsung Browser';
   if (names.some((n) => n.includes('miui'))) return 'Mi Browser';
