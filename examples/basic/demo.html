@@ -914,6 +914,9 @@
       }
 
       function getCanvasValue() {
+        const f5Data = window.f5Attributes;
+        if (!f5Data) return null;
+        
         try {
           return window.canvasRaw || f5Data.graphics.cnv;
         } catch (e) {
@@ -922,6 +925,9 @@
       }
 
       function getWebGLValue() {
+        const f5Data = window.f5Attributes;
+        if (!f5Data) return null;
+        
         try {
           return window.webGLExtensionsRaw || f5Data.graphics.wgx;
         } catch (e) {

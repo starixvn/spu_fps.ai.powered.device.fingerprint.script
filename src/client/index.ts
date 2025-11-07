@@ -10,6 +10,7 @@ import { FingerprintClass } from "./fingerprint";
 import { CONFIG } from "./utils/domain";
 import { ErrorLogger } from "./utils/errorLogger";
 import { DEFAULT_TAGGING_TYPE } from "./utils/constants";
+
 class ClientClass {
     private readonly directory = {
         audio: "au",
@@ -18,6 +19,10 @@ class ClientClass {
         preferences: "pf",
         graphics: "gp",
       };
+    private readonly STORAGE_KEYS = {
+        F4_CODE: 'awb_h4_session',
+        F5_CODE: 'awb_h5_session'
+    };
     private readonly fingerprint: FingerprintClass;
     private readonly tagging: TaggingClass;
     private readonly ip: IPClass;
@@ -63,8 +68,15 @@ class ClientClass {
     }
 
     private handleF4(deviceInfo: CollectedDeviceInfo, result: FingerprintResult): void {
-        deviceInfo.f4 = result.hashed;
-        this.updateDeviceInfo(deviceInfo);
+        if (deviceInfo.f4 !== result.hashed) {
+            deviceInfo.f4 = result.hashed;
+            this.updateDeviceInfo(deviceInfo);
+            
+            try {
+                localStorage.setItem(this.STORAGE_KEYS.F4_CODE, result.hashed);
+            } catch (error) {
+            }
+        }
 
         const payload = this.buildF4Payload(deviceInfo.sk, result.attributes, result.hashed);
         this.fingerprint.sendToServer(`${this.getGatewayUrl()}${CONFIG.ENDPOINTS.F4}`, payload);
@@ -75,8 +87,15 @@ class ClientClass {
     }
 
     private handleF5(deviceInfo: CollectedDeviceInfo, result: FingerprintResult): void {
-        deviceInfo.f5 = result.hashed;
-        this.updateDeviceInfo(deviceInfo);
+        if (deviceInfo.f5 !== result.hashed) {
+            deviceInfo.f5 = result.hashed;
+            this.updateDeviceInfo(deviceInfo);
+            
+            try {
+                localStorage.setItem(this.STORAGE_KEYS.F5_CODE, result.hashed);
+            } catch (error) {
+            }
+        }
 
         const payload = this.buildF5Payload(deviceInfo.sk, result.attributes, result.hashed);
         this.fingerprint.sendToServer(`${this.getGatewayUrl()}${CONFIG.ENDPOINTS.F5}`, payload);
@@ -124,16 +143,19 @@ class ClientClass {
 
             const { Detecas } = window as any;
             const { version: scriptVersion, defaultDeviceId } = Detecas?.Config || {};
-
+            const { f4: cachedF4, f5: cachedF5 } = Detecas?.Config?.di || {f4: null, f5: null};
+            
             const sessionKey = SessionKeyManager.getSessionKey();
             const defaultTagging = PacketTransformer.unwrapMessage(defaultDeviceId) || sessionKey;
-
+            
             const deviceInfo: CollectedDeviceInfo = { 
                 sk: sessionKey, 
                 v: scriptVersion, 
                 fv: CONFIG.VERSION,
                 tag: defaultTagging,
-                taggingType: DEFAULT_TAGGING_TYPE.DEFAULT 
+                taggingType: DEFAULT_TAGGING_TYPE.DEFAULT,
+                f4: cachedF4,
+                f5: cachedF5
             };
 
             await this.ensureDOMReady();

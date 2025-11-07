@@ -1,8 +1,8 @@
 export interface CollectedDeviceInfo {
     sk: string;
     tag?: string;
-    f4?: string;
-    f5?: string;
+    f4: string | null;
+    f5: string | null;
     rtc?: any;
     v?: string;
     fv?: string;
