@@ -178,18 +178,8 @@ function parseFromBrands(
   if (names.some((n) => n.includes('huawei'))) return 'Huawei Browser';
   if (names.some((n) => n.includes('oppo'))) return 'OPPO Browser';
   if (names.some((n) => n.includes('vivo'))) return 'Vivo Browser';
-  if (names.some((n) => n.includes('chrome')))
-    return isMobileDevice() ? 'Mobile Chrome' : 'Chrome';
+  if (names.some((n) => n.includes('chrome'))) return 'Chrome';
   if (names.some((n) => n.includes('chromium'))) return 'Chromium';
 
   return null;
-}
-
-function isMobileDevice(): boolean {
-  return (
-    'ontouchstart' in window ||
-    navigator.maxTouchPoints > 0 ||
-    window.innerWidth <= 768 ||
-    /Mobi|Android/i.test(navigator.userAgent)
-  );
 }

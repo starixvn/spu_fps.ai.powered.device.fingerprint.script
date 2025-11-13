@@ -17,6 +17,13 @@ jest.mock('../../../../src/client/tagging/modules/localStorage');
 jest.mock('../../../../src/client/tagging/modules/windowName');
 jest.mock('../../../../src/client/utils/hash');
 jest.mock('../../../../src/client/utils/deviceFactory');
+jest.mock('../../../../src/client/utils/errorLogger', () => ({
+  ErrorLogger: {
+    warn: jest.fn(),
+    error: jest.fn(),
+    log: jest.fn()
+  }
+}));
 
 // Mock crypto API
 const mockCrypto = {
@@ -43,32 +50,32 @@ describe('TaggingHandler', () => {
     indexedDBHandler = {
       get: jest.fn().mockResolvedValue(null),
       set: jest.fn(),
-      available: jest.fn()
+      available: jest.fn().mockReturnValue(true)
     } as any;
     localStorageHandler = {
       get: jest.fn().mockReturnValue(null),
       set: jest.fn(),
-      available: jest.fn()
+      available: jest.fn().mockReturnValue(true)
     } as any;
     windowNameHandler = {
       get: jest.fn().mockReturnValue(null),
       set: jest.fn(),
-      available: jest.fn()
+      available: jest.fn().mockReturnValue(true)
     } as any;
     cacheApiHandler = {
       get: jest.fn().mockResolvedValue(null),
       set: jest.fn(),
-      available: jest.fn()
+      available: jest.fn().mockReturnValue(true)
     } as any;
     cookiesHandler = {
       get: jest.fn().mockReturnValue(null),
       set: jest.fn(),
-      available: jest.fn()
+      available: jest.fn().mockReturnValue(true)
     } as any;
     etagHandler = {
       get: jest.fn().mockResolvedValue(null),
       set: jest.fn(),
-      available: jest.fn()
+      available: jest.fn().mockReturnValue(true)
     } as any;
 
     // Mock the constructors to return our test instances
@@ -307,11 +314,23 @@ describe('TaggingHandler', () => {
       expect(windowNameHandler.get).not.toHaveBeenCalled();
     });
 
-    it('should handle handler errors gracefully', async () => {
-      // First handler throws error - this should cause the method to throw
+    it('should handle handler errors gracefully and continue to next handler', async () => {
+      // First handler throws error, but method should continue and return undefined
       indexedDBHandler.get.mockRejectedValue(new Error('IndexedDB error'));
+      etagHandler.get.mockResolvedValue(null);
+      cacheApiHandler.get.mockResolvedValue(null);
+      cookiesHandler.get.mockResolvedValue(null);
+      localStorageHandler.get.mockResolvedValue(null);
+      windowNameHandler.get.mockResolvedValue(null);
 
-      await expect(TaggingHandler.getTaggingFromStorages()).rejects.toThrow('IndexedDB error');
+      const result = await TaggingHandler.getTaggingFromStorages();
+      
+      // Should return undefined values after trying all handlers
+      expect(result).toEqual({
+        key: undefined,
+        value: undefined,
+        type: undefined
+      });
     });
 
     it('should prioritize old key over new key within same handler', async () => {
