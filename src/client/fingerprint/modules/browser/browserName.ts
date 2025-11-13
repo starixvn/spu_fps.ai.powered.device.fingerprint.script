@@ -1,6 +1,6 @@
 import type { BrowserNameInfo } from '../../types';
 import { FingerprintSpecialValue } from '../../utils/consts';
-import { isBrave, isFirefox, isGecko } from '../../utils/browser';
+import { isBrave, isDuckDuckGo, isFirefox, isGecko, isVivaldi, isYandex } from '../../utils/browser';
 
 export function collectBrowserName(): BrowserNameInfo {
   try {
@@ -109,15 +109,12 @@ const featureDetectors: Detector[] = [
   // Brave 
   {
     name: 'Brave',
-    test: () => isBrave(),
+    test: isBrave
   },
   // DuckDuckGo 
   {
     name: 'DuckDuckGo',
-    test: () =>
-      (navigator as any).duckduckgo ||
-      ((window as any).chrome &&
-        navigator.vendor?.includes('DuckDuckGo')),
+    test: isDuckDuckGo,
   },
   // Edge Chromium 
   {
@@ -139,17 +136,12 @@ const featureDetectors: Detector[] = [
   // Yandex 
   {
     name: 'Yandex Browser',
-    test: () =>
-      (window as any).yandex ||
-      ((window as any).chrome && navigator.vendor?.includes('Yandex')),
+    test: isYandex,
   },
   // Vivaldi 
   {
     name: 'Vivaldi',
-    test: () =>
-      (window as any).chrome &&
-      navigator.vendor?.includes('Vivaldi') &&
-      !(navigator as any).duckduckgo,
+    test: isVivaldi,
   },
   // Chrome 
   {
@@ -168,7 +160,7 @@ const featureDetectors: Detector[] = [
   // Firefox 
   {
     name: 'Firefox',
-    test: () => isFirefox(),
+    test: isFirefox,
   },
   // Safari 
   {

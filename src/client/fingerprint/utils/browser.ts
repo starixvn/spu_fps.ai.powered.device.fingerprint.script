@@ -333,3 +333,20 @@ export function isIPad(): Bit {
     ]) >= 2
   );
 }
+
+export function isYandex(): boolean {
+  const w = window as any;
+  return w.yandex || (w.chrome && navigator.vendor?.includes('Yandex'));
+}
+
+export function isVivaldi(): boolean {
+  const w = window as any;
+  const n = navigator as any;
+
+  return w.chrome && n.vendor?.includes('Vivaldi') && !n.duckduckgo;
+}
+
+export function isDuckDuckGo(): boolean {
+  const n = navigator as any;
+  return n.duckduckgo || ((window as any).chrome && n.vendor?.includes('DuckDuckGo'));
+}
