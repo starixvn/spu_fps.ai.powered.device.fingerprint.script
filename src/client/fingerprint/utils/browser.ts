@@ -1,6 +1,18 @@
 import type { Bit } from '../types';
 import { boolToBit } from './data';
 
+function createBrowserCheck(
+  check: (w: Window & typeof globalThis, n: Navigator) => boolean
+): () => boolean {
+  return () => {
+    try {
+      return check(window, navigator);
+    } catch {
+      return false;
+    }
+  };
+}
+
 /**
  * Counts truthy values in an array
  */
@@ -334,19 +346,30 @@ export function isIPad(): Bit {
   );
 }
 
-export function isYandex(): boolean {
-  const w = window as any;
-  return w.yandex || (w.chrome && navigator.vendor?.includes('Yandex'));
-}
+export const isYandex = createBrowserCheck(
+  (w: any, n) => w.yandex || (w.chrome && n.vendor?.includes('Yandex'))
+);
 
-export function isVivaldi(): boolean {
-  const w = window as any;
-  const n = navigator as any;
+export const isVivaldi = createBrowserCheck(
+  (w: any, n: any) => w.chrome && n.vendor?.includes('Vivaldi') && !n.duckduckgo
+);
 
-  return w.chrome && n.vendor?.includes('Vivaldi') && !n.duckduckgo;
-}
+export const isDuckDuckGo = createBrowserCheck(
+  (w: any, n: any) => n.duckduckgo || (w.chrome && n.vendor?.includes('DuckDuckGo'))
+);
 
-export function isDuckDuckGo(): boolean {
-  const n = navigator as any;
-  return n.duckduckgo || ((window as any).chrome && n.vendor?.includes('DuckDuckGo'));
-}
+export const isMiBrowser = createBrowserCheck((w: any, n: any) => w.miui || n.miui || w.MiWebView);
+
+export const isUCBrowser = createBrowserCheck((w: any, n: any) => w.ucweb || w.UCShellJava || n.ucweb);
+
+export const isXiaomiBrowser = createBrowserCheck((w: any, n: any) => w.xiaomi || n.xiaomi);
+
+export const isHuaweiBrowser = createBrowserCheck((w: any, n: any) => w.huawei || n.huawei || w.HuaweiBrowser);
+
+export const isOppoBrowser = createBrowserCheck((w: any, n: any) => w.oppo || n.oppo || w.OppoBrowser);
+
+export const isVivoBrowser = createBrowserCheck((w: any, n: any) => w.vivo || n.vivo || w.VivoBrowser);
+
+export const isSogouBrowser = createBrowserCheck((w: any, n: any) => w.sogou || n.sogou || w.SogouBrowser);
+
+export const isBaiduBrowser = createBrowserCheck((w: any, n: any) => w.baidu || n.baidu || w.BaiduBrowser); 

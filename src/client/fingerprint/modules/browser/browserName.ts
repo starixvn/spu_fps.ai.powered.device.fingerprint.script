@@ -1,6 +1,21 @@
 import type { BrowserNameInfo } from '../../types';
 import { FingerprintSpecialValue } from '../../utils/consts';
-import { isBrave, isDuckDuckGo, isFirefox, isGecko, isVivaldi, isYandex } from '../../utils/browser';
+import {
+  isBaiduBrowser,
+  isBrave,
+  isDuckDuckGo,
+  isFirefox,
+  isGecko,
+  isHuaweiBrowser,
+  isMiBrowser,
+  isOppoBrowser,
+  isSogouBrowser,
+  isUCBrowser,
+  isVivaldi,
+  isVivoBrowser,
+  isXiaomiBrowser,
+  isYandex,
+} from '../../utils/browser';
 
 export function collectBrowserName(): BrowserNameInfo {
   try {
@@ -35,10 +50,7 @@ type Detector = { name: string; test: () => boolean };
 const mobileDetectors: Detector[] = [
   {
     name: 'Mi Browser',
-    test: () =>
-      (window as any).miui ||
-      (navigator as any).miui ||
-      (window as any).MiWebView,
+    test: isMiBrowser,
   },
   {
     name: 'Samsung Browser',
@@ -50,35 +62,23 @@ const mobileDetectors: Detector[] = [
   },
   {
     name: 'UC Browser',
-    test: () =>
-      (window as any).ucweb ||
-      (window as any).UCShellJava ||
-      (navigator as any).ucweb,
+    test: isUCBrowser,
   },
   {
     name: 'Xiaomi Browser',
-    test: () => (window as any).xiaomi || (navigator as any).xiaomi,
+    test: isXiaomiBrowser,
   },
   {
     name: 'Huawei Browser',
-    test: () =>
-      (window as any).huawei ||
-      (navigator as any).huawei ||
-      (window as any).HuaweiBrowser,
+    test: isHuaweiBrowser,
   },
   {
     name: 'OPPO Browser',
-    test: () =>
-      (window as any).oppo ||
-      (navigator as any).oppo ||
-      (window as any).OppoBrowser,
+    test: isOppoBrowser,
   },
   {
     name: 'Vivo Browser',
-    test: () =>
-      (window as any).vivo ||
-      (navigator as any).vivo ||
-      (window as any).VivoBrowser,
+    test: isVivoBrowser,
   },
   {
     name: 'QQ Browser',
@@ -91,17 +91,11 @@ const mobileDetectors: Detector[] = [
   },
   {
     name: 'Sogou Browser',
-    test: () =>
-      (window as any).sogou ||
-      (navigator as any).sogou ||
-      (window as any).SogouBrowser,
+    test: isSogouBrowser,
   },
   {
     name: 'Baidu Browser',
-    test: () =>
-      (window as any).baidu ||
-      (navigator as any).baidu ||
-      (window as any).BaiduBrowser,
+    test: isBaiduBrowser,
   },
 ];
 
