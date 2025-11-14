@@ -18,6 +18,9 @@ import {
   isXiaomiBrowser,
   isYandex,
   isEdgeHTML,
+  isEdgeLegacyByCSS,
+  isChrome,
+  isEdgeChromium,
 } from '../../utils/browser';
 
 export enum BrowserName {
@@ -147,14 +150,7 @@ const featureDetectors: Detector[] = [
   // Edge Chromium 
   {
     name: BrowserName.Edge,
-    test: () =>
-      (window as any).chrome &&
-      (navigator as any).userAgentData?.brands?.some((b: any) =>
-        b.brand.toLowerCase().includes('edge')
-      ) &&
-      !(window as any).opr &&
-      !(navigator as any).brave &&
-      !(navigator as any).duckduckgo,
+    test: isEdgeChromium,
   },
   // Opera
   {
@@ -174,16 +170,7 @@ const featureDetectors: Detector[] = [
   // Chrome 
   {
     name: BrowserName.Chrome,
-    test: () =>
-      (window as any).chrome &&
-      !(window as any).opr &&
-      !(navigator as any).brave &&
-      !(navigator as any).duckduckgo &&
-      !navigator.vendor?.includes('Yandex') &&
-      !navigator.vendor?.includes('Vivaldi') &&
-      !(navigator as any).userAgentData?.brands?.some((b: any) =>
-        b.brand.toLowerCase().includes('edge')
-      ),
+    test: isChrome,
   },
   // Firefox 
   {
@@ -210,9 +197,7 @@ const cssDetectors: Detector[] = [
   },
   {
     name: BrowserName.EdgeLegacy,
-    test: () =>
-      'msScrollLimit' in document.createElement('div').style ||
-      'msImeAlign' in document.createElement('div').style,
+    test: isEdgeLegacyByCSS,
   },
 ];
 

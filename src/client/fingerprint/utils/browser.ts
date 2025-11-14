@@ -63,6 +63,38 @@ export function isChromium(): Bit {
   );
 }
 
+export function isChrome(): boolean {
+  const nonChromeBrowsers = [
+    isBrave(),
+    isEdgeChromium(),
+    isOpera(),
+    isVivaldi(),
+    isYandex(),
+    isDuckDuckGo(),
+    isEdgeHTML(),
+  ];
+
+  if (isChromium() !== 1) return false;
+  if (nonChromeBrowsers.some(Boolean)) return false;
+
+  return true;
+}
+
+export function isEdgeChromium(): boolean {
+  const n = navigator as any;
+
+  if (isChromium() !== 1) return false;
+  if (
+    !(n.userAgentData?.brands?.some((b: any) => b.brand.toLowerCase().includes('edge'))) ||
+    (window as any).opr ||
+    (navigator as any).brave ||
+    (navigator as any).duckduckgo
+  ) 
+    return false;
+
+  return true;
+}
+
 /**
  * Detects if browser is based on Chromium version ≥86 without using user-agent
  */
@@ -153,6 +185,11 @@ export function isEdgeHTML(): boolean {
       'msSaveBlob' in n,
     ]) >= 3 && !isTrident()
   );
+}
+
+export function isEdgeLegacyByCSS(): boolean {
+  const style = document.createElement('div').style;
+  return 'msScrollLimit' in style || 'msImeAlign' in style;
 }
 
 /**
