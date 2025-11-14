@@ -70,8 +70,7 @@ export function isChrome(): boolean {
     isOpera(),
     isVivaldi(),
     isYandex(),
-    isDuckDuckGo(),
-    isEdgeHTML(),
+    isDuckDuckGo()
   ];
 
   if (isChromium() !== 1) return false;
@@ -82,15 +81,14 @@ export function isChrome(): boolean {
 
 export function isEdgeChromium(): boolean {
   const n = navigator as any;
+  const hasEdgeBrand = 
+    n.userAgentData?.brands?.some((b: any) => 
+      b.brand.toLowerCase().includes('edge')
+    );
+  const isOtherBrowser = (window as any).opr || (navigator as any).brave || (navigator as any).duckduckgo;
 
   if (isChromium() !== 1) return false;
-  if (
-    !(n.userAgentData?.brands?.some((b: any) => b.brand.toLowerCase().includes('edge'))) ||
-    (window as any).opr ||
-    (navigator as any).brave ||
-    (navigator as any).duckduckgo
-  ) 
-    return false;
+  if (!hasEdgeBrand || isOtherBrowser) return false;
 
   return true;
 }
@@ -127,6 +125,23 @@ export function isChromium122OrNewer(): boolean {
       'RGB8' in WebGLRenderingContext.prototype,
     ]) >= 3
   )
+}
+
+export function isSamsungBrowser(): boolean {
+  const n = navigator as any;
+  const w = window as any;
+
+  const hasSamsungWindow = w.SamsungBrowser;
+  const hasSamsungBrand =
+    n.userAgentData?.brands?.some((b: any) =>
+      b.brand.toLowerCase().includes('samsung')
+    );
+  const hasSamsungFeatures = isSamsungInternetV17OrNewer();
+
+  if (!hasSamsungWindow && !hasSamsungBrand && !hasSamsungFeatures) 
+    return false;
+
+  return true;
 }
 
 /**

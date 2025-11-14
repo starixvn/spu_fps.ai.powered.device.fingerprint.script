@@ -21,6 +21,7 @@ import {
   isEdgeLegacyByCSS,
   isChrome,
   isEdgeChromium,
+  isSamsungBrowser,
 } from '../../utils/browser';
 
 export enum BrowserName {
@@ -91,11 +92,7 @@ const mobileDetectors: Detector[] = [
   },
   {
     name: BrowserName.SamsungBrowser,
-    test: () =>
-      (window as any).SamsungBrowser ||
-      (navigator as any).userAgentData?.brands?.some((b: any) =>
-        b.brand.toLowerCase().includes('samsung')
-      ),
+    test: isSamsungBrowser,
   },
   {
     name: BrowserName.UcBrowser,
