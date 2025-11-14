@@ -9,13 +9,43 @@ import {
   isHuaweiBrowser,
   isMiBrowser,
   isOppoBrowser,
+  isOpera,
+  isSafariWebKit,
   isSogouBrowser,
   isUCBrowser,
   isVivaldi,
   isVivoBrowser,
   isXiaomiBrowser,
   isYandex,
+  isEdgeHTML,
 } from '../../utils/browser';
+
+export enum BrowserName {
+  MiBrowser = 'Mi Browser',
+  SamsungBrowser = 'Samsung Browser',
+  UcBrowser = 'UC Browser',
+  XiaomiBrowser = 'Xiaomi Browser',
+  HuaweiBrowser = 'Huawei Browser',
+  OppoBrowser = 'OPPO Browser',
+  VivoBrowser = 'Vivo Browser',
+  QqBrowser = 'QQ Browser',
+  Browser360 = '360 Browser',
+  SogouBrowser = 'Sogou Browser',
+  BaiduBrowser = 'Baidu Browser',
+  Brave = 'Brave',
+  DuckDuckGo = 'DuckDuckGo',
+  Edge = 'Edge',
+  Opera = 'Opera',
+  YandexBrowser = 'Yandex Browser',
+  Vivaldi = 'Vivaldi',
+  Chrome = 'Chrome',
+  Firefox = 'Firefox',
+  Safari = 'Safari',
+  EdgeLegacy = 'Edge (Legacy)',
+  Chromium = 'Chromium',
+}
+
+type Detector = { name: BrowserName; test: () => boolean };
 
 export function collectBrowserName(): BrowserNameInfo {
   try {
@@ -34,10 +64,7 @@ export function collectBrowserName(): BrowserNameInfo {
 
     // CSS fallback
     const css = findMatch(cssDetectors);
-    if (css) {
-      if (css === "Safari/WebKit") return "Safari";
-      return css;
-    }
+    if (css) return css;
 
     return FingerprintSpecialValue.UNDEFINED;
   } catch {
@@ -45,15 +72,22 @@ export function collectBrowserName(): BrowserNameInfo {
   }
 }
 
-type Detector = { name: string; test: () => boolean };
+function findMatch(list: Detector[]): BrowserName | null {
+  for (const d of list) {
+    try {
+      if (d.test()) return d.name;
+    } catch {}
+  }
+  return null;
+}
 
 const mobileDetectors: Detector[] = [
   {
-    name: 'Mi Browser',
+    name: BrowserName.MiBrowser,
     test: isMiBrowser,
   },
   {
-    name: 'Samsung Browser',
+    name: BrowserName.SamsungBrowser,
     test: () =>
       (window as any).SamsungBrowser ||
       (navigator as any).userAgentData?.brands?.some((b: any) =>
@@ -61,40 +95,40 @@ const mobileDetectors: Detector[] = [
       ),
   },
   {
-    name: 'UC Browser',
+    name: BrowserName.UcBrowser,
     test: isUCBrowser,
   },
   {
-    name: 'Xiaomi Browser',
+    name: BrowserName.XiaomiBrowser,
     test: isXiaomiBrowser,
   },
   {
-    name: 'Huawei Browser',
+    name: BrowserName.HuaweiBrowser,
     test: isHuaweiBrowser,
   },
   {
-    name: 'OPPO Browser',
+    name: BrowserName.OppoBrowser,
     test: isOppoBrowser,
   },
   {
-    name: 'Vivo Browser',
+    name: BrowserName.VivoBrowser,
     test: isVivoBrowser,
   },
   {
-    name: 'QQ Browser',
+    name: BrowserName.QqBrowser,
     test: () => (window as any).qq || (navigator as any).qq || (window as any).QQBrowser,
   },
   {
-    name: '360 Browser',
+    name: BrowserName.Browser360,
     test: () =>
       (window as any).so || (window as any).browser360 || (navigator as any).so,
   },
   {
-    name: 'Sogou Browser',
+    name: BrowserName.SogouBrowser,
     test: isSogouBrowser,
   },
   {
-    name: 'Baidu Browser',
+    name: BrowserName.BaiduBrowser,
     test: isBaiduBrowser,
   },
 ];
@@ -102,17 +136,17 @@ const mobileDetectors: Detector[] = [
 const featureDetectors: Detector[] = [
   // Brave 
   {
-    name: 'Brave',
-    test: isBrave
+    name: BrowserName.Brave,
+    test: isBrave,
   },
   // DuckDuckGo 
   {
-    name: 'DuckDuckGo',
+    name: BrowserName.DuckDuckGo,
     test: isDuckDuckGo,
   },
   // Edge Chromium 
   {
-    name: 'Edge',
+    name: BrowserName.Edge,
     test: () =>
       (window as any).chrome &&
       (navigator as any).userAgentData?.brands?.some((b: any) =>
@@ -122,24 +156,24 @@ const featureDetectors: Detector[] = [
       !(navigator as any).brave &&
       !(navigator as any).duckduckgo,
   },
-  // Opera 
-  { 
-    name: 'Opera', 
-    test: () => (window as any).opr || (window as any).opera 
+  // Opera
+  {
+    name: BrowserName.Opera,
+    test: isOpera,
   },
   // Yandex 
   {
-    name: 'Yandex Browser',
+    name: BrowserName.YandexBrowser,
     test: isYandex,
   },
   // Vivaldi 
   {
-    name: 'Vivaldi',
+    name: BrowserName.Vivaldi,
     test: isVivaldi,
   },
   // Chrome 
   {
-    name: 'Chrome',
+    name: BrowserName.Chrome,
     test: () =>
       (window as any).chrome &&
       !(window as any).opr &&
@@ -153,75 +187,55 @@ const featureDetectors: Detector[] = [
   },
   // Firefox 
   {
-    name: 'Firefox',
+    name: BrowserName.Firefox,
     test: isFirefox,
   },
   // Safari 
   {
-    name: 'Safari',
-    test: () =>
-      ((window as any).safari &&
-        (window as any).safari.pushNotification) ||
-      (!(window as any).chrome &&
-        'WebkitAppearance' in document.createElement('div').style &&
-        navigator.vendor?.includes('Apple')),
+    name: BrowserName.Safari,
+    test: () => isSafariWebKit() === 1,
   },
   // Edge (Legacy) 
   {
-    name: 'Edge (Legacy)',
-    test: () => (window as any).StyleMedia || (navigator as any).msLaunchUri,
+    name: BrowserName.EdgeLegacy,
+    test: isEdgeHTML,
   },
 ];
 
 const cssDetectors: Detector[] = [
   // Firefox 
   {
-    name: 'Firefox',
+    name: BrowserName.Firefox,
     test: () => isGecko() === 1,
   },
   {
-    name: 'Edge (Legacy)',
+    name: BrowserName.EdgeLegacy,
     test: () =>
       'msScrollLimit' in document.createElement('div').style ||
       'msImeAlign' in document.createElement('div').style,
   },
-  {
-    name: 'Safari/WebKit',
-    test: () =>
-      'WebkitAppearance' in document.createElement('div').style &&
-      !(window as any).chrome,
-  },
 ];
-
-function findMatch(list: Detector[]): string | null {
-  for (const d of list) {
-    try {
-      if (d.test()) return d.name;
-    } catch {}
-  }
-  return null;
-}
 
 function parseFromBrands(
   brands: ReadonlyArray<{ brand: string; version: string }>
-): string | null {
+): BrowserName | null {
   if (!brands || brands.length === 0) return null;
   
   const names = brands.map((b) => b.brand.toLowerCase());
 
-  if (names.some((n) => n.includes('brave'))) return 'Brave';
-  if (names.some((n) => n.includes('duckduckgo'))) return 'DuckDuckGo';
-  if (names.some((n) => n.includes('edge') && !n.includes('edgehtml'))) return 'Edge';
-  if (names.some((n) => n.includes('opera') || n.includes('opr'))) return 'Opera';
-  if (names.some((n) => n.includes('yabrowser') || n.includes('yowser'))) return 'Yandex Browser';
-  if (names.some((n) => n.includes('vivaldi'))) return 'Vivaldi';
-  if (names.some((n) => n.includes('samsung'))) return 'Samsung Browser';
-  if (names.some((n) => n.includes('miui'))) return 'Mi Browser';
-  if (names.some((n) => n.includes('huawei'))) return 'Huawei Browser';
-  if (names.some((n) => n.includes('oppo'))) return 'OPPO Browser';
-  if (names.some((n) => n.includes('vivo'))) return 'Vivo Browser';
-  if (names.some((n) => n.includes('chrome'))) return 'Chrome';
-  if (names.some((n) => n.includes('chromium'))) return 'Chromium';
+  if (names.some((n) => n.includes('brave'))) return BrowserName.Brave;
+  if (names.some((n) => n.includes('duckduckgo'))) return BrowserName.DuckDuckGo;
+  if (names.some((n) => n.includes('edge') && !n.includes('edgehtml'))) return BrowserName.Edge;
+  if (names.some((n) => n.includes('opera') || n.includes('opr'))) return BrowserName.Opera;
+  if (names.some((n) => n.includes('yabrowser') || n.includes('yowser'))) return BrowserName.YandexBrowser;
+  if (names.some((n) => n.includes('vivaldi'))) return BrowserName.Vivaldi;
+  if (names.some((n) => n.includes('samsung'))) return BrowserName.SamsungBrowser;
+  if (names.some((n) => n.includes('miui'))) return BrowserName.MiBrowser;
+  if (names.some((n) => n.includes('huawei'))) return BrowserName.HuaweiBrowser;
+  if (names.some((n) => n.includes('oppo'))) return BrowserName.OppoBrowser;
+  if (names.some((n) => n.includes('vivo'))) return BrowserName.VivoBrowser;
+  if (names.some((n) => n.includes('chrome'))) return BrowserName.Chrome;
+  if (names.some((n) => n.includes('chromium'))) return BrowserName.Chromium;
 
   return null;
 }

@@ -372,4 +372,6 @@ export const isVivoBrowser = createBrowserCheck((w: any, n: any) => w.vivo || n.
 
 export const isSogouBrowser = createBrowserCheck((w: any, n: any) => w.sogou || n.sogou || w.SogouBrowser);
 
-export const isBaiduBrowser = createBrowserCheck((w: any, n: any) => w.baidu || n.baidu || w.BaiduBrowser); 
+export const isBaiduBrowser = createBrowserCheck((w: any, n: any) => w.baidu || n.baidu || w.BaiduBrowser);
+
+export const isOpera = createBrowserCheck((w: any) => w.opr || w.opera); 
