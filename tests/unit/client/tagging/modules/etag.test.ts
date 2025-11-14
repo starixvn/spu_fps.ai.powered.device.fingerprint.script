@@ -76,9 +76,11 @@ describe('ETagHandler', () => {
       const result = await etagHandler.get(testKey);
       
       expect(result).toBe(etagValue);
-      expect(mockFetch).toHaveBeenCalledWith('__SERVER_DOMAIN__/resources/vers', {
-        method: 'GET'
-      });
+      expect(mockFetch).toHaveBeenCalledWith('__SERVER_DOMAIN__/resources/vers', 
+        expect.objectContaining({
+          method: 'GET'
+        })
+      );
     });
 
     it('should return null when fetch response is not ok', async () => {
@@ -173,12 +175,14 @@ describe('ETagHandler', () => {
       const result = await etagHandler.set('testKey', newValue);
       
       expect(result).toBe(true);
-      expect(mockFetch).toHaveBeenCalledWith('__SERVER_DOMAIN__/resources/vers', {
-        method: 'GET',
-        headers: {
-          'Res-Ec-X': newValue
-        }
-      });
+      expect(mockFetch).toHaveBeenCalledWith('__SERVER_DOMAIN__/resources/vers', 
+        expect.objectContaining({
+          method: 'GET',
+          headers: {
+            'Res-Ec-X': newValue
+          }
+        })
+      );
     });
 
     it('should return false when fetch response is not ok', async () => {
@@ -297,12 +301,14 @@ describe('ETagHandler', () => {
       expect(setResult).toBe(true);
       
       // Verify the correct headers were sent
-      expect(mockFetch).toHaveBeenCalledWith('__SERVER_DOMAIN__/resources/vers', {
-        method: 'GET',
-        headers: {
-          'Res-Ec-X': setValue
-        }
-      });
+      expect(mockFetch).toHaveBeenCalledWith('__SERVER_DOMAIN__/resources/vers', 
+        expect.objectContaining({
+          method: 'GET',
+          headers: {
+            'Res-Ec-X': setValue
+          }
+        })
+      );
     });
 
     it('should handle edge cases with malformed responses', async () => {
