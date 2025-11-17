@@ -1,18 +1,6 @@
 import type { Bit } from '../types';
 import { boolToBit } from './data';
 
-function createBrowserCheck(
-  check: (w: Window & typeof globalThis, n: Navigator) => boolean
-): () => boolean {
-  return () => {
-    try {
-      return check(window, navigator);
-    } catch {
-      return false;
-    }
-  };
-}
-
 /**
  * Counts truthy values in an array
  */
@@ -391,60 +379,70 @@ export function isIPad(): Bit {
   );
 }
 
-export const isYandex = createBrowserCheck(
-  (w: any, n) => 
-    !!(w.yandex || (w.chrome && n.vendor?.includes('Yandex')))
-);
+export function isYandex(): boolean {
+  const w = window as any;
+  const n = navigator as any;
+  return !!(w.yandex || (w.chrome && n.vendor?.includes('Yandex')));
+}
 
-export const isVivaldi = createBrowserCheck(
-  (w: any, n: any) => 
-    !!(w.chrome && n.vendor?.includes('Vivaldi') && !n.duckduckgo)
-);
+export function isVivaldi(): boolean {
+  const w = window as any;
+  const n = navigator as any;
+  return !!(w.chrome && n.vendor?.includes('Vivaldi') && !n.duckduckgo);
+}
 
-export const isDuckDuckGo = createBrowserCheck(
-  (w: any, n: any) => 
-    !!(n.duckduckgo || (w.chrome && n.vendor?.includes('DuckDuckGo')))
-);
+export function isDuckDuckGo(): boolean {
+  const w = window as any;
+  const n = navigator as any;
+  return !!(n.duckduckgo || (w.chrome && n.vendor?.includes('DuckDuckGo')));
+}
 
-export const isMiBrowser = createBrowserCheck(
-  (w: any, n: any) => 
-    !!(w.miui || n.miui || w.MiWebView)
-);
+export function isMiBrowser(): boolean {
+  const w = window as any;
+  const n = navigator as any;
+  return !!(w.miui || n.miui || w.MiWebView);
+}
 
-export const isUCBrowser = createBrowserCheck(
-  (w: any, n: any) => 
-    !!(w.ucweb || w.UCShellJava || n.ucweb)
-);
+export function isUCBrowser(): boolean {
+  const w = window as any;
+  const n = navigator as any;
+  return !!(w.ucweb || w.UCShellJava || n.ucweb);
+}
 
-export const isXiaomiBrowser = createBrowserCheck(
-  (w: any, n: any) => 
-    !!(w.xiaomi || n.xiaomi)
-);
+export function isXiaomiBrowser(): boolean {
+  const w = window as any;
+  const n = navigator as any;
+  return !!(w.xiaomi || n.xiaomi);
+}
 
-export const isHuaweiBrowser = createBrowserCheck(
-  (w: any, n: any) => 
-    !!(w.huawei || n.huawei || w.HuaweiBrowser)
-);
+export function isHuaweiBrowser(): boolean {
+  const w = window as any;
+  const n = navigator as any;
+  return !!(w.huawei || n.huawei || w.HuaweiBrowser);
+}
 
-export const isOppoBrowser = createBrowserCheck(
-  (w: any, n: any) => 
-    !!(w.oppo || n.oppo || w.OppoBrowser)
-);
+export function isOppoBrowser(): boolean {
+  const w = window as any;
+  const n = navigator as any;
+  return !!(w.oppo || n.oppo || w.OppoBrowser);
+}
 
-export const isVivoBrowser = createBrowserCheck(
-  (w: any, n: any) => 
-    !!(w.vivo || n.vivo || w.VivoBrowser)
-);
+export function isVivoBrowser(): boolean {
+  const w = window as any;
+  const n = navigator as any;
+  return !!(w.vivo || n.vivo || w.VivoBrowser);
+}
 
-export const isBaiduBrowser = createBrowserCheck(
-  (w: any, n: any) => 
-    !!(w.baidu || n.baidu || w.BaiduBrowser)
-);
+export function isBaiduBrowser(): boolean {
+  const w = window as any;
+  const n = navigator as any;
+  return !!(w.baidu || n.baidu || w.BaiduBrowser);
+}
 
-export const isOpera = createBrowserCheck(
-  (w: any) => 
-    !!(w.opr || w.opera)
-); 
+export function isOpera(): boolean {
+  const w = window as any;
+  return !!(w.opr || w.opera);
+}
 
 export function isQqFamily(): boolean {
   return countTruthy([
