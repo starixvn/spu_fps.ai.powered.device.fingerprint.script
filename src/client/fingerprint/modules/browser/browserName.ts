@@ -11,7 +11,6 @@ import {
   isOppoBrowser,
   isOpera,
   isSafariWebKit,
-  isSogouBrowser,
   isUCBrowser,
   isVivaldi,
   isVivoBrowser,
@@ -22,8 +21,7 @@ import {
   isChrome,
   isEdgeChromium,
   isSamsungBrowser,
-  isQQBrowser,
-  isBrowser360,
+  isQqFamily
 } from '../../utils/browser';
 
 export enum BrowserName {
@@ -34,9 +32,7 @@ export enum BrowserName {
   HuaweiBrowser = 'Huawei Browser',
   OppoBrowser = 'OPPO Browser',
   VivoBrowser = 'Vivo Browser',
-  QqBrowser = 'QQ Browser',
-  Browser360 = '360 Browser',
-  SogouBrowser = 'Sogou Browser',
+  QqFamily = 'QQ Family',
   BaiduBrowser = 'Baidu Browser',
   Brave = 'Brave',
   DuckDuckGo = 'DuckDuckGo',
@@ -117,16 +113,8 @@ const mobileDetectors: Detector[] = [
     test: isVivoBrowser,
   },
   {
-    name: BrowserName.SogouBrowser,
-    test: isSogouBrowser,
-  },
-  {
-    name: BrowserName.QqBrowser,
-    test: isQQBrowser,
-  },
-  {
-    name: BrowserName.Browser360,
-    test: isBrowser360,
+    name: BrowserName.QqFamily,
+    test: isQqFamily,
   },
   {
     name: BrowserName.BaiduBrowser,

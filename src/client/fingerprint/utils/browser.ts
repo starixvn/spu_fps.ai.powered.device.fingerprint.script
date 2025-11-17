@@ -446,12 +446,7 @@ export const isOpera = createBrowserCheck(
     !!(w.opr || w.opera)
 ); 
 
-export const isBrowser360 = createBrowserCheck(
-  (w: any, n: any) => 
-    !!(w.so || w.browser360 || n.so)
-);
-
-export function hasQbSignature(): boolean {
+export function isQqFamily(): boolean {
   return countTruthy([
     'qb_external' in window,
     'qb_mediahistory' in window,
@@ -459,14 +454,4 @@ export function hasQbSignature(): boolean {
     'qb_minivideo' in window,
     'qbmv' in window
   ]) >= 1;
-}
-
-export function isSogouBrowser(): boolean {
-  const ua = navigator.userAgent?.toLowerCase() ?? '';
-  return hasQbSignature() && (ua.includes('metasr') || ua.includes(' se 2.x'));
-}
-
-export function isQQBrowser(): boolean {
-  const ua = navigator.userAgent?.toLowerCase() ?? '';
-  return hasQbSignature() && (ua.includes('qqbrowser'));
 }
