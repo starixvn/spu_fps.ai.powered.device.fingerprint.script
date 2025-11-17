@@ -22,6 +22,8 @@ import {
   isChrome,
   isEdgeChromium,
   isSamsungBrowser,
+  isQQBrowser,
+  isBrowser360,
 } from '../../utils/browser';
 
 export enum BrowserName {
@@ -116,12 +118,11 @@ const mobileDetectors: Detector[] = [
   },
   {
     name: BrowserName.QqBrowser,
-    test: () => (window as any).qq || (navigator as any).qq || (window as any).QQBrowser,
+    test: isQQBrowser,
   },
   {
     name: BrowserName.Browser360,
-    test: () =>
-      (window as any).so || (window as any).browser360 || (navigator as any).so,
+    test: isBrowser360,
   },
   {
     name: BrowserName.SogouBrowser,

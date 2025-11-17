@@ -138,10 +138,7 @@ export function isSamsungBrowser(): boolean {
     );
   const hasSamsungFeatures = isSamsungInternetV17OrNewer();
 
-  if (!hasSamsungWindow && !hasSamsungBrand && !hasSamsungFeatures) 
-    return false;
-
-  return true;
+  return (hasSamsungWindow || hasSamsungBrand || hasSamsungFeatures);
 }
 
 /**
@@ -399,31 +396,80 @@ export function isIPad(): Bit {
 }
 
 export const isYandex = createBrowserCheck(
-  (w: any, n) => w.yandex || (w.chrome && n.vendor?.includes('Yandex'))
+  (w: any, n) => 
+    !!(w.yandex || (w.chrome && n.vendor?.includes('Yandex')))
 );
 
 export const isVivaldi = createBrowserCheck(
-  (w: any, n: any) => w.chrome && n.vendor?.includes('Vivaldi') && !n.duckduckgo
+  (w: any, n: any) => 
+    !!(w.chrome && n.vendor?.includes('Vivaldi') && !n.duckduckgo)
 );
 
 export const isDuckDuckGo = createBrowserCheck(
-  (w: any, n: any) => n.duckduckgo || (w.chrome && n.vendor?.includes('DuckDuckGo'))
+  (w: any, n: any) => 
+    !!(n.duckduckgo || (w.chrome && n.vendor?.includes('DuckDuckGo')))
 );
 
-export const isMiBrowser = createBrowserCheck((w: any, n: any) => w.miui || n.miui || w.MiWebView);
+export const isMiBrowser = createBrowserCheck(
+  (w: any, n: any) => 
+    !!(w.miui || n.miui || w.MiWebView)
+);
 
-export const isUCBrowser = createBrowserCheck((w: any, n: any) => w.ucweb || w.UCShellJava || n.ucweb);
+export const isUCBrowser = createBrowserCheck(
+  (w: any, n: any) => 
+    !!(w.ucweb || w.UCShellJava || n.ucweb)
+);
 
-export const isXiaomiBrowser = createBrowserCheck((w: any, n: any) => w.xiaomi || n.xiaomi);
+export const isXiaomiBrowser = createBrowserCheck(
+  (w: any, n: any) => 
+    !!(w.xiaomi || n.xiaomi)
+);
 
-export const isHuaweiBrowser = createBrowserCheck((w: any, n: any) => w.huawei || n.huawei || w.HuaweiBrowser);
+export const isHuaweiBrowser = createBrowserCheck(
+  (w: any, n: any) => 
+    !!(w.huawei || n.huawei || w.HuaweiBrowser)
+);
 
-export const isOppoBrowser = createBrowserCheck((w: any, n: any) => w.oppo || n.oppo || w.OppoBrowser);
+export const isOppoBrowser = createBrowserCheck(
+  (w: any, n: any) => 
+    !!(w.oppo || n.oppo || w.OppoBrowser)
+);
 
-export const isVivoBrowser = createBrowserCheck((w: any, n: any) => w.vivo || n.vivo || w.VivoBrowser);
+export const isVivoBrowser = createBrowserCheck(
+  (w: any, n: any) => 
+    !!(w.vivo || n.vivo || w.VivoBrowser)
+);
 
-export const isSogouBrowser = createBrowserCheck((w: any, n: any) => w.sogou || n.sogou || w.SogouBrowser);
+export const isSogouBrowser = createBrowserCheck(
+  (w: any, n: any) => 
+    !!(w.sogou || n.sogou || w.SogouBrowser)
+);
 
-export const isBaiduBrowser = createBrowserCheck((w: any, n: any) => w.baidu || n.baidu || w.BaiduBrowser);
+export const isBaiduBrowser = createBrowserCheck(
+  (w: any, n: any) => 
+    !!(w.baidu || n.baidu || w.BaiduBrowser)
+);
 
-export const isOpera = createBrowserCheck((w: any) => w.opr || w.opera); 
+export const isOpera = createBrowserCheck(
+  (w: any) => 
+    !!(w.opr || w.opera)
+); 
+
+export const isQQBrowser = createBrowserCheck(
+  (w: any, n: any) =>
+    !!(
+      w.qb_external ||
+      w.qb_mediahistory ||
+      w.qb_miniread ||
+      w.qb_minivideo ||
+      w.qbmv ||
+      w.qq ||
+      n.qq ||
+      w.QQBrowser
+    )
+);
+
+export const isBrowser360 = createBrowserCheck(
+  (w: any, n: any) => 
+    !!(w.so || w.browser360 || n.so)
+);
