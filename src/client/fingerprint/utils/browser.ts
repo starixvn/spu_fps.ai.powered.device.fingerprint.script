@@ -436,11 +436,6 @@ export const isVivoBrowser = createBrowserCheck(
     !!(w.vivo || n.vivo || w.VivoBrowser)
 );
 
-export const isSogouBrowser = createBrowserCheck(
-  (w: any, n: any) => 
-    !!(w.sogou || n.sogou || w.SogouBrowser)
-);
-
 export const isBaiduBrowser = createBrowserCheck(
   (w: any, n: any) => 
     !!(w.baidu || n.baidu || w.BaiduBrowser)
@@ -451,21 +446,27 @@ export const isOpera = createBrowserCheck(
     !!(w.opr || w.opera)
 ); 
 
-export const isQQBrowser = createBrowserCheck(
-  (w: any, n: any) =>
-    !!(
-      w.qb_external ||
-      w.qb_mediahistory ||
-      w.qb_miniread ||
-      w.qb_minivideo ||
-      w.qbmv ||
-      w.qq ||
-      n.qq ||
-      w.QQBrowser
-    )
-);
-
 export const isBrowser360 = createBrowserCheck(
   (w: any, n: any) => 
     !!(w.so || w.browser360 || n.so)
 );
+
+export function hasQbSignature(): boolean {
+  return countTruthy([
+    'qb_external' in window,
+    'qb_mediahistory' in window,
+    'qb_miniread' in window,
+    'qb_minivideo' in window,
+    'qbmv' in window
+  ]) >= 1;
+}
+
+export function isSogouBrowser(): boolean {
+  const ua = navigator.userAgent?.toLowerCase() ?? '';
+  return hasQbSignature() && (ua.includes('metasr') || ua.includes(' se 2.x'));
+}
+
+export function isQQBrowser(): boolean {
+  const ua = navigator.userAgent?.toLowerCase() ?? '';
+  return hasQbSignature() && (ua.includes('qqbrowser'));
+}

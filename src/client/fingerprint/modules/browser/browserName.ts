@@ -117,16 +117,16 @@ const mobileDetectors: Detector[] = [
     test: isVivoBrowser,
   },
   {
+    name: BrowserName.SogouBrowser,
+    test: isSogouBrowser,
+  },
+  {
     name: BrowserName.QqBrowser,
     test: isQQBrowser,
   },
   {
     name: BrowserName.Browser360,
     test: isBrowser360,
-  },
-  {
-    name: BrowserName.SogouBrowser,
-    test: isSogouBrowser,
   },
   {
     name: BrowserName.BaiduBrowser,
