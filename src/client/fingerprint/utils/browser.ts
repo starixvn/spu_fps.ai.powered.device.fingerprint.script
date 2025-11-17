@@ -64,6 +64,7 @@ export function isChromium(): Bit {
 }
 
 export function isChrome(): boolean {
+  const isChromiumBuild = isChromium() === 1;
   const nonChromeBrowsers = [
     isBrave(),
     isEdgeChromium(),
@@ -73,24 +74,20 @@ export function isChrome(): boolean {
     isDuckDuckGo()
   ];
 
-  if (isChromium() !== 1) return false;
-  if (nonChromeBrowsers.some(Boolean)) return false;
-
-  return true;
+  return (isChromiumBuild && !nonChromeBrowsers.some(Boolean));
 }
 
 export function isEdgeChromium(): boolean {
   const n = navigator as any;
-  const hasEdgeBrand = 
-    n.userAgentData?.brands?.some((b: any) => 
+  const isChromiumBuild = isChromium() === 1;
+  const hasEdgeBrand =
+    n.userAgentData?.brands?.some((b: any) =>
       b.brand.toLowerCase().includes('edge')
     );
-  const isOtherBrowser = (window as any).opr || (navigator as any).brave || (navigator as any).duckduckgo;
+  const isOtherBrowser =
+    (window as any).opr || (navigator as any).brave || (navigator as any).duckduckgo;
 
-  if (isChromium() !== 1) return false;
-  if (!hasEdgeBrand || isOtherBrowser) return false;
-
-  return true;
+  return (isChromiumBuild && hasEdgeBrand && !isOtherBrowser);
 }
 
 /**
@@ -130,7 +127,6 @@ export function isChromium122OrNewer(): boolean {
 export function isSamsungBrowser(): boolean {
   const n = navigator as any;
   const w = window as any;
-
   const hasSamsungWindow = w.SamsungBrowser;
   const hasSamsungBrand =
     n.userAgentData?.brands?.some((b: any) =>
