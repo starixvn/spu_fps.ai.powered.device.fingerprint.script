@@ -908,9 +908,25 @@
           "GRAPHICS": graphicsData
         };
 
-        document.getElementById("fingerprintData").textContent = 
-          JSON.stringify(displayData, null, 2);
-        document.getElementById("fingerprintDisplay").style.display = "block";
+        const qqFamilyProps = ["qb_external", "qb_mediahistory", "qb_miniread", "qb_minivideo", "qbmv"].reduce(
+          (acc, prop) => {
+            acc[prop] = prop in window;
+            return acc;
+          },
+          {}
+        );
+
+        const fingerprintDataElement = document.getElementById("fingerprintData");
+        if (fingerprintDataElement) {
+          fingerprintDataElement.textContent = JSON.stringify(displayData, null, 2);
+          fingerprintDataElement.textContent +=
+            "\n\nQQ Family Window Properties:\n" + JSON.stringify(qqFamilyProps, null, 2);
+        }
+
+        const fingerprintDisplayElement = document.getElementById("fingerprintDisplay");
+        if (fingerprintDisplayElement) {
+          fingerprintDisplayElement.style.display = "block";
+        }
       }
 
       function getCanvasValue() {
