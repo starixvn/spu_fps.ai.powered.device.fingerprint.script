@@ -21,7 +21,8 @@ import {
   isChrome,
   isEdgeChromium,
   isSamsungBrowser,
-  isQqFamily
+  isQqFamily,
+  isSafariOrWebKit
 } from '../../utils/browser';
 
 export enum BrowserName {
@@ -157,7 +158,7 @@ const featureDetectors: Detector[] = [
   },
   {
     name: BrowserName.Safari,
-    test: () => isSafariWebKit() === 1,
+    test: isSafariOrWebKit,
   },
   {
     name: BrowserName.EdgeLegacy,

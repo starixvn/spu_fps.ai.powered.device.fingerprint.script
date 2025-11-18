@@ -233,6 +233,17 @@ function isFunctionNative(func: (...args: unknown[]) => unknown): boolean {
   return /^function\s.*?\{\s*\[native code]\s*}$/.test(String(func))
 }
 
+export function isWebKitWithoutChrome(): boolean {
+  const hasWebkitAppearance = 'WebkitAppearance' in (document.createElement('div')?.style ?? {});
+  const hasChromeObject = Boolean((window as any).chrome);
+
+  return hasWebkitAppearance && !hasChromeObject;
+}
+
+export function isSafariOrWebKit(): boolean {
+  return isSafariWebKit() === 1 || isWebKitWithoutChrome();
+}
+
 /**
  * Detects if WebKit version is 616 or newer (Safari 17+)
  * Based on WebKit version detection from user agent

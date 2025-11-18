@@ -908,55 +908,9 @@
           "GRAPHICS": graphicsData
         };
 
-        const qqFamilyProps = [
-          "qb_external",
-          "qb_mediahistory",
-          "qb_miniread",
-          "qb_minivideo",
-          "qbmv",
-          "qb_bridge",
-          "qb_web_platform",
-          "qbbookshelf",
-          "x5mtt",
-          "QBVideoHook",
-          "qb_worker_hooker_enable",
-          "qb_post_body_sender"
-        ].reduce(
-          (acc, prop) => {
-            acc[prop] = prop in window;
-            return acc;
-          },
-          {}
-        );
-
-        const userAgentInfo = navigator?.userAgent || "Unavailable";
-
         const fingerprintDataElement = document.getElementById("fingerprintData");
         if (fingerprintDataElement) {
           fingerprintDataElement.textContent = JSON.stringify(displayData, null, 2);
-          fingerprintDataElement.textContent +=
-            "\n\nQQ Family Window Properties:\n" + JSON.stringify(qqFamilyProps, null, 2);
-
-          const allWindowProps = Object.getOwnPropertyNames(window).sort();
-          fingerprintDataElement.textContent +=
-            "\n\nAll Window Properties:\n" + JSON.stringify(allWindowProps, null, 2);
-            
-          const qqMatchedProps = Object.entries(qqFamilyProps)
-            .filter(([, present]) => present)
-            .map(([prop]) => prop);
-          const qqDetected = qqMatchedProps.length > 0;
-          const browserNameReported = browserData?.brn ?? "unknown";
-
-          const qqDebugLines = [
-            "QQ Detection Debug:",
-            `- qqDetectedByProps: ${qqDetected}`,
-            `- matchedProps (${qqMatchedProps.length}): ${qqMatchedProps.join(", ") || "None"}`,
-            `- reportedBrowser (brn): ${browserNameReported}`
-          ].join("\n");
-
-          fingerprintDataElement.textContent += `\n\n${qqDebugLines}`;
-          fingerprintDataElement.textContent +=
-            "\n\nnavigator.userAgent:\n" + userAgentInfo;
         }
 
         const fingerprintDisplayElement = document.getElementById("fingerprintDisplay");
