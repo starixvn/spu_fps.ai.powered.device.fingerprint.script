@@ -120,55 +120,45 @@ const mobileDetectors: Detector[] = [
     name: BrowserName.BaiduBrowser,
     test: isBaiduBrowser,
   },
-];
-
-const featureDetectors: Detector[] = [
-  // Brave 
-  {
-    name: BrowserName.Brave,
-    test: isBrave,
-  },
-  // DuckDuckGo 
   {
     name: BrowserName.DuckDuckGo,
     test: isDuckDuckGo,
   },
-  // Edge Chromium 
+];
+
+const featureDetectors: Detector[] = [
+  {
+    name: BrowserName.Brave,
+    test: isBrave,
+  },
   {
     name: BrowserName.Edge,
     test: isEdgeChromium,
   },
-  // Opera
   {
     name: BrowserName.Opera,
     test: isOpera,
   },
-  // Yandex 
   {
     name: BrowserName.YandexBrowser,
     test: isYandex,
   },
-  // Vivaldi 
   {
     name: BrowserName.Vivaldi,
     test: isVivaldi,
   },
-  // Chrome 
   {
     name: BrowserName.Chrome,
     test: isChrome,
   },
-  // Firefox 
   {
     name: BrowserName.Firefox,
     test: isFirefox,
   },
-  // Safari 
   {
     name: BrowserName.Safari,
     test: () => isSafariWebKit() === 1,
   },
-  // Edge (Legacy) 
   {
     name: BrowserName.EdgeLegacy,
     test: isEdgeHTML,
@@ -176,7 +166,6 @@ const featureDetectors: Detector[] = [
 ];
 
 const cssDetectors: Detector[] = [
-  // Firefox 
   {
     name: BrowserName.Firefox,
     test: () => isGecko() === 1,
@@ -191,12 +180,11 @@ function parseFromBrands(
   brands: ReadonlyArray<{ brand: string; version: string }>
 ): BrowserName | null {
   if (!brands || brands.length === 0) return null;
-  
-  const names = brands.map((b) => (b.brand || '').toLowerCase());
+  const names = brands.map((b) => b.brand.toLowerCase());
 
   if (names.some((n) => n.includes('brave'))) return BrowserName.Brave;
   if (names.some((n) => n.includes('duckduckgo'))) return BrowserName.DuckDuckGo;
-  if (detectEdgeFromBrands(brands)) return BrowserName.Edge;
+  if (names.some((n) => n.includes('edge') && !n.includes('edgehtml'))) return BrowserName.Edge;
   if (names.some((n) => n.includes('opera') || n.includes('opr'))) return BrowserName.Opera;
   if (names.some((n) => n.includes('yabrowser') || n.includes('yowser') || n.includes('yandex'))) return BrowserName.YandexBrowser;
   if (names.some((n) => n.includes('vivaldi'))) return BrowserName.Vivaldi;
@@ -209,16 +197,4 @@ function parseFromBrands(
   if (names.some((n) => n.includes('chromium'))) return BrowserName.Chromium;
 
   return null;
-}
-
-function detectEdgeFromBrands(
-  brands: ReadonlyArray<{ brand: string; version: string }>
-): boolean {
-  const filtered = (brands || [])
-    .map((b) => (b.brand || '').toLowerCase())
-    .filter((name) => !name.includes('webview'));
-
-  return filtered.some(
-    (name) => name.includes('edge') && !name.includes('edgehtml')
-  );
 }
