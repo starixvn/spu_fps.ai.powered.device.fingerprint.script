@@ -450,6 +450,13 @@ export function isQqFamily(): boolean {
     'qb_mediahistory' in window,
     'qb_miniread' in window,
     'qb_minivideo' in window,
-    'qbmv' in window
+    'qbmv' in window,
+    'qb_bridge' in window,
+    'qb_web_platform' in window,
+    'qbbookshelf' in window,
+    'x5mtt' in window,
+    'QBVideoHook' in window,
+    'qb_worker_hooker_enable' in window,
+    'qb_post_body_sender' in window,
   ]) >= 1;
 }

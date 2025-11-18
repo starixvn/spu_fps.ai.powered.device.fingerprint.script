@@ -192,13 +192,13 @@ function parseFromBrands(
 ): BrowserName | null {
   if (!brands || brands.length === 0) return null;
   
-  const names = brands.map((b) => b.brand.toLowerCase());
+  const names = brands.map((b) => (b.brand || '').toLowerCase());
 
   if (names.some((n) => n.includes('brave'))) return BrowserName.Brave;
   if (names.some((n) => n.includes('duckduckgo'))) return BrowserName.DuckDuckGo;
-  if (names.some((n) => n.includes('edge') && !n.includes('edgehtml'))) return BrowserName.Edge;
+  if (detectEdgeFromBrands(brands)) return BrowserName.Edge;
   if (names.some((n) => n.includes('opera') || n.includes('opr'))) return BrowserName.Opera;
-  if (names.some((n) => n.includes('yabrowser') || n.includes('yowser'))) return BrowserName.YandexBrowser;
+  if (names.some((n) => n.includes('yabrowser') || n.includes('yowser') || n.includes('yandex'))) return BrowserName.YandexBrowser;
   if (names.some((n) => n.includes('vivaldi'))) return BrowserName.Vivaldi;
   if (names.some((n) => n.includes('samsung'))) return BrowserName.SamsungBrowser;
   if (names.some((n) => n.includes('miui'))) return BrowserName.MiBrowser;
@@ -209,4 +209,16 @@ function parseFromBrands(
   if (names.some((n) => n.includes('chromium'))) return BrowserName.Chromium;
 
   return null;
+}
+
+function detectEdgeFromBrands(
+  brands: ReadonlyArray<{ brand: string; version: string }>
+): boolean {
+  const filtered = (brands || [])
+    .map((b) => (b.brand || '').toLowerCase())
+    .filter((name) => !name.includes('webview'));
+
+  return filtered.some(
+    (name) => name.includes('edge') && !name.includes('edgehtml')
+  );
 }
