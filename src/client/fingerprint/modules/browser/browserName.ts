@@ -10,7 +10,6 @@ import {
   isMiBrowser,
   isOppoBrowser,
   isOpera,
-  isSafariWebKit,
   isUCBrowser,
   isVivaldi,
   isVivoBrowser,
