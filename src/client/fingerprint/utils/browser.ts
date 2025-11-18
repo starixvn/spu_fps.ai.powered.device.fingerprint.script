@@ -10,13 +10,14 @@ export function countTruthy(values: unknown[]): number {
 
 /**
  * Detects if browser is Brave
+ * 360 Safe Browser has Brave-like properties, so we exclude it
  */
 export function isBrave(): boolean {
-  const w = window;
+  const w = window as any;
   const n = navigator;
 
   return countTruthy([
-      'brave' in n && typeof n.brave.isBrave === 'function',
+      'brave' in n && typeof n.brave.isBrave === 'function' && !w.__$_qihoo360_$__,
       n.userAgentData?.brands?.some(((b: { brand: string; }) => b.brand.toLowerCase().includes('brave'))),
       !!w.chrome?.brave,
     ]) >= 1
