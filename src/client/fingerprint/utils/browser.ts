@@ -10,13 +10,14 @@ export function countTruthy(values: unknown[]): number {
 
 /**
  * Detects if browser is Brave
+ * 360 Safe Browser has Brave-like properties on Webkit, so we exclude it
  */
 export function isBrave(): boolean {
-  const w = window;
-  const n = navigator;
-
+  const w = window as any;
+  const n = navigator as any;
+  const webKit = isWebKit();
   return countTruthy([
-      'brave' in n && typeof n.brave.isBrave === 'function',
+      'brave' in n && typeof n.brave.isBrave === 'function' && (!webKit || !w.__$_qihoo360_$__),
       n.userAgentData?.brands?.some(((b: { brand: string; }) => b.brand.toLowerCase().includes('brave'))),
       !!w.chrome?.brave,
     ]) >= 1
@@ -51,6 +52,33 @@ export function isChromium(): Bit {
   );
 }
 
+export function isChrome(): boolean {
+  const isChromiumBuild = isChromium() === 1;
+  const nonChromeBrowsers = [
+    isBrave(),
+    isEdgeChromium(),
+    isOpera(),
+    isVivaldi(),
+    isYandex(),
+    isDuckDuckGo()
+  ];
+
+  return (isChromiumBuild && !nonChromeBrowsers.some(Boolean));
+}
+
+export function isEdgeChromium(): boolean {
+  const n = navigator as any;
+  const isChromiumBuild = isChromium() === 1;
+  const hasEdgeBrand =
+    n.userAgentData?.brands?.some((b: any) =>
+      b.brand.toLowerCase().includes('edge')
+    );
+  const isOtherBrowser =
+    (window as any).opr || (navigator as any).brave || (navigator as any).duckduckgo;
+
+  return (isChromiumBuild && hasEdgeBrand && !isOtherBrowser);
+}
+
 /**
  * Detects if browser is based on Chromium version ≥86 without using user-agent
  */
@@ -83,6 +111,19 @@ export function isChromium122OrNewer(): boolean {
       'RGB8' in WebGLRenderingContext.prototype,
     ]) >= 3
   )
+}
+
+export function isSamsungBrowser(): boolean {
+  const n = navigator as any;
+  const w = window as any;
+  const hasSamsungWindow = w.SamsungBrowser;
+  const hasSamsungBrand =
+    n.userAgentData?.brands?.some((b: any) =>
+      b.brand.toLowerCase().includes('samsung')
+    );
+  const hasSamsungFeatures = isSamsungInternetV17OrNewer();
+
+  return (hasSamsungWindow || hasSamsungBrand || hasSamsungFeatures);
 }
 
 /**
@@ -143,6 +184,11 @@ export function isEdgeHTML(): boolean {
   );
 }
 
+export function isEdgeLegacyByCSS(): boolean {
+  const style = document.createElement('div').style;
+  return 'msScrollLimit' in style || 'msImeAlign' in style;
+}
+
 /**
  * Detects if browser is WebKit-based
  */
@@ -185,6 +231,17 @@ export function isSafariWebKit(): Bit {
 
 function isFunctionNative(func: (...args: unknown[]) => unknown): boolean {
   return /^function\s.*?\{\s*\[native code]\s*}$/.test(String(func))
+}
+
+export function isWebKitWithoutChrome(): boolean {
+  const hasWebkitAppearance = 'WebkitAppearance' in (document.createElement('div')?.style ?? {});
+  const hasChromeObject = Boolean((window as any).chrome);
+
+  return hasWebkitAppearance && !hasChromeObject;
+}
+
+export function isSafariOrWebKit(): boolean {
+  return isSafariWebKit() === 1 || isWebKitWithoutChrome();
 }
 
 /**
@@ -332,4 +389,86 @@ export function isIPad(): Bit {
       screenRatio > 0.65 && screenRatio < 1.53,
     ]) >= 2
   );
+}
+
+export function isYandex(): boolean {
+  const w = window as any;
+  const n = navigator as any;
+  return !!(w.yandex || (w.chrome && n.vendor?.includes('Yandex')));
+}
+
+export function isVivaldi(): boolean {
+  const w = window as any;
+  const n = navigator as any;
+  return !!(w.chrome && n.vendor?.includes('Vivaldi') && !n.duckduckgo);
+}
+
+export function isDuckDuckGo(): boolean {
+  const w = window as any;
+  const n = navigator as any;
+  return !!(n.duckduckgo || (w.chrome && n.vendor?.includes('DuckDuckGo')));
+}
+
+export function isMiBrowser(): boolean {
+  const w = window as any;
+  const n = navigator as any;
+  return !!(w.miui || n.miui || w.MiWebView);
+}
+
+export function isUCBrowser(): boolean {
+  const w = window as any;
+  const n = navigator as any;
+  return !!(w.ucweb || w.UCShellJava || n.ucweb);
+}
+
+export function isXiaomiBrowser(): boolean {
+  const w = window as any;
+  const n = navigator as any;
+  return !!(w.xiaomi || n.xiaomi);
+}
+
+export function isHuaweiBrowser(): boolean {
+  const w = window as any;
+  const n = navigator as any;
+  return !!(w.huawei || n.huawei || w.HuaweiBrowser);
+}
+
+export function isOppoBrowser(): boolean {
+  const w = window as any;
+  const n = navigator as any;
+  return !!(w.oppo || n.oppo || w.OppoBrowser);
+}
+
+export function isVivoBrowser(): boolean {
+  const w = window as any;
+  const n = navigator as any;
+  return !!(w.vivo || n.vivo || w.VivoBrowser);
+}
+
+export function isBaiduBrowser(): boolean {
+  const w = window as any;
+  const n = navigator as any;
+  return !!(w.baidu || n.baidu || w.BaiduBrowser);
+}
+
+export function isOpera(): boolean {
+  const w = window as any;
+  return !!(w.opr || w.opera);
+}
+
+export function isQqFamily(): boolean {
+  return countTruthy([
+    'qb_external' in window,
+    'qb_mediahistory' in window,
+    'qb_miniread' in window,
+    'qb_minivideo' in window,
+    'qbmv' in window,
+    'qb_bridge' in window,
+    'qb_web_platform' in window,
+    'qbbookshelf' in window,
+    'x5mtt' in window,
+    'QBVideoHook' in window,
+    'qb_worker_hooker_enable' in window,
+    'qb_post_body_sender' in window,
+  ]) >= 1;
 }

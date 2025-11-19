@@ -83,9 +83,29 @@ describe('Browser Name Module', () => {
     jest.clearAllMocks();
   });
 
+  const enableChromiumSignals = () => {
+    mockNavigator.webkitPersistentStorage = {};
+    mockNavigator.webkitTemporaryStorage = {};
+    mockNavigator.vendor = 'Google Inc.';
+    mockWindow.webkitResolveLocalFileSystemURL = () => {};
+    mockWindow.BatteryManager = function BatteryManagerMock() {};
+    mockWindow.webkitMediaStream = function WebkitMediaStreamMock() {};
+    mockWindow.webkitSpeechGrammar = function WebkitSpeechGrammarMock() {};
+  };
+
+  const enableSafariSignals = () => {
+    const nativePrint = function print() {};
+    nativePrint.toString = () => 'function print() { [native code] }';
+    mockWindow.print = nativePrint;
+    mockWindow.browser = {
+      toString: () => '[object WebPageNamespace]'
+    };
+  };
+
   describe('collectBrowserName', () => {
     it('should detect Chrome browser correctly', () => {
       // Arrange
+      enableChromiumSignals();
       mockWindow.chrome = { runtime: {} };
       mockWindow.opr = undefined;
       mockNavigator.userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
@@ -113,6 +133,7 @@ describe('Browser Name Module', () => {
 
     it('should detect Safari browser correctly', () => {
       // Arrange
+      enableSafariSignals();
       mockWindow.safari = {
         pushNotification: {}
       };
@@ -212,6 +233,7 @@ describe('Browser Name Module', () => {
 
     it('should detect Chrome on mobile devices correctly', () => {
       // Arrange
+      enableChromiumSignals();
       mockNavigator.userAgentData = {
         brands: [
           { brand: 'Google Chrome', version: '120.0.0.0' },
@@ -261,6 +283,7 @@ describe('Browser Name Module', () => {
 
     it('should return Safari when WebKit detected but not Chrome', () => {
       // Arrange
+      enableSafariSignals();
       mockDocument.createElement.mockReturnValue({
         style: { WebkitAppearance: '' }
       });
@@ -403,6 +426,7 @@ describe('Browser Name Module', () => {
 
     it('should handle navigator without userAgentData', () => {
       // Arrange
+      enableChromiumSignals();
       mockNavigator.userAgentData = undefined;
       mockWindow.chrome = {};
 

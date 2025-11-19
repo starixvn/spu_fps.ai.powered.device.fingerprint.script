@@ -908,9 +908,15 @@
           "GRAPHICS": graphicsData
         };
 
-        document.getElementById("fingerprintData").textContent = 
-          JSON.stringify(displayData, null, 2);
-        document.getElementById("fingerprintDisplay").style.display = "block";
+        const fingerprintDataElement = document.getElementById("fingerprintData");
+        if (fingerprintDataElement) {
+          fingerprintDataElement.textContent = JSON.stringify(displayData, null, 2);
+        }
+
+        const fingerprintDisplayElement = document.getElementById("fingerprintDisplay");
+        if (fingerprintDisplayElement) {
+          fingerprintDisplayElement.style.display = "block";
+        }
       }
 
       function getCanvasValue() {
