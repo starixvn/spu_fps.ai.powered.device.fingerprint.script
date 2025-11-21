@@ -1,22 +1,92 @@
 import type { CpuClassInfo } from "../../types";
 import { FingerprintSpecialValue } from "../../utils/consts";
 
-export function collectCpuClass(): CpuClassInfo {
-  const cpuClass = getCpuClass();
-  return cpuClass;
+enum CpuClassEnum {
+  X86 = "x86",
+  X64 = "x64",
+  ARM = "ARM",
 }
 
-function getCpuClass(): string | FingerprintSpecialValue {
+const CPU_MAP: Record<string, CpuClassEnum> = {
+  x86: CpuClassEnum.X86,
+  i386: CpuClassEnum.X86,
+  i486: CpuClassEnum.X86,
+  i586: CpuClassEnum.X86,
+  i686: CpuClassEnum.X86,
+  ia32: CpuClassEnum.X86,
+  i86pc: CpuClassEnum.X86,
+  x32: CpuClassEnum.X86,
+  win32: CpuClassEnum.X86, 
+
+  x64: CpuClassEnum.X64,
+  "x86_64": CpuClassEnum.X64,
+  amd64: CpuClassEnum.X64,
+  win64: CpuClassEnum.X64,
+  wow64: CpuClassEnum.X64,
+  ia64: CpuClassEnum.X64,
+  intel: CpuClassEnum.X64,
+  
+  arm: CpuClassEnum.ARM,
+  arm64: CpuClassEnum.ARM,
+  aarch64: CpuClassEnum.ARM,
+  aarch: CpuClassEnum.ARM,
+};
+
+export async function collectCpuClass(): Promise<CpuClassInfo> {
   try {
-    if (!("cpuClass" in navigator)) return FingerprintSpecialValue.UNDEFINED;
+    const highEntropy = await getHighEntropyArchitecture();
+    if (highEntropy) return highEntropy;
 
-    const rawCpuClass = (navigator as any).cpuClass;
+    const navClass = getNavigatorCpuClass();
+    if (navClass) return navClass;
 
-    if (typeof rawCpuClass !== "string") return FingerprintSpecialValue.UNDEFINED;
+    const osCpu = getCpuClassFromOsCpu();
+    if (osCpu) return osCpu;
 
-    const trimmed = rawCpuClass.trim();
-    return trimmed || FingerprintSpecialValue.UNDEFINED;
+    return FingerprintSpecialValue.UNDEFINED;
   } catch {
     return FingerprintSpecialValue.ERROR;
   }
+}
+
+function getNavigatorCpuClass(): CpuClassEnum | undefined {
+  if (!("cpuClass" in navigator)) return undefined;
+
+  const cpuClass = navigator.cpuClass;
+  if (typeof cpuClass !== "string") return undefined;
+  return normalizeCpuClass(cpuClass);
+}
+
+async function getHighEntropyArchitecture(): Promise<CpuClassEnum | undefined> {
+  if (!navigator.userAgentData?.getHighEntropyValues) return undefined;
+
+  const data = await navigator.userAgentData.getHighEntropyValues([
+    "architecture",
+  ]);
+
+  if (typeof data.architecture !== "string") return undefined;
+
+  return normalizeCpuClass(data.architecture);
+}
+
+function getCpuClassFromOsCpu(): CpuClassEnum | undefined {
+  if (!("oscpu" in navigator)) return undefined;
+
+  const oscpu = navigator.oscpu;
+  if (typeof oscpu !== "string") return undefined;
+
+  const key = oscpu.toLowerCase();
+   for (const pattern in CPU_MAP) {
+    if (key.includes(pattern)) {
+      return CPU_MAP[pattern];
+    }
+  }
+
+
+  return undefined;
+}
+
+function normalizeCpuClass(value: string): CpuClassEnum | undefined {
+  const key = value.trim().toLowerCase();
+  return key ? CPU_MAP[key] : undefined;
 }
