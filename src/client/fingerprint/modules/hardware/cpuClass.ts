@@ -9,6 +9,7 @@ enum CpuClassEnum {
 
 const CPU_MAP: Record<string, CpuClassEnum> = {
   x86: CpuClassEnum.X86,
+  i286: CpuClassEnum.X86,
   i386: CpuClassEnum.X86,
   i486: CpuClassEnum.X86,
   i586: CpuClassEnum.X86,
@@ -25,10 +26,16 @@ const CPU_MAP: Record<string, CpuClassEnum> = {
   wow64: CpuClassEnum.X64,
   intel: CpuClassEnum.X64,
   
-  arm: CpuClassEnum.ARM,
-  arm64: CpuClassEnum.ARM,
-  aarch64: CpuClassEnum.ARM,
-  aarch: CpuClassEnum.ARM,
+  arm: CpuClassEnum.ARM, 
+  arm32: CpuClassEnum.ARM, // ARM 32-bit 
+  armv6: CpuClassEnum.ARM, // ARM 32-bit 
+  armv7: CpuClassEnum.ARM, // ARM 32-bit
+  armhf: CpuClassEnum.ARM, // ARM 32-bit hard float (Linux)
+  armeabi: CpuClassEnum.ARM, // Android legacy 32-bit
+  arm64: CpuClassEnum.ARM, // ARM 64-bit
+  armv8: CpuClassEnum.ARM, // 64-bit ISA
+  aarch64: CpuClassEnum.ARM, // ARM 64-bit (Linux/Android)
+  aarch: CpuClassEnum.ARM
 };
 
 export async function collectCpuClass(): Promise<CpuClassInfo> {
