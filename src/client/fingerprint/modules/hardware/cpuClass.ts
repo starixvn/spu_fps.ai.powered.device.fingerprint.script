@@ -40,14 +40,17 @@ const CPU_MAP: Record<string, CpuClassEnum> = {
 
 export async function collectCpuClass(): Promise<CpuClassInfo> {
   try {
-    const navClass = getNavigatorCpuClass();
-    if (navClass) return navClass;
+    const cpuClass = getCpuClassFromNavigator();
+    if (cpuClass) return cpuClass;
 
-    const highEntropy = await getHighEntropyArchitecture();
+    const highEntropy = await getCpuClassFromHighEntropy();
     if (highEntropy) return highEntropy;
 
     const osCpu = getCpuClassFromOsCpu();
     if (osCpu) return osCpu;
+
+    const ua = getCpuClassFromUa();
+    if (ua) return ua;
 
     return FingerprintSpecialValue.UNDEFINED;
   } catch {
@@ -55,40 +58,48 @@ export async function collectCpuClass(): Promise<CpuClassInfo> {
   }
 }
 
-function getNavigatorCpuClass(): CpuClassEnum | undefined {
+function getCpuClassFromNavigator(): CpuClassEnum | undefined {
   if (!("cpuClass" in navigator)) return undefined;
-
   const cpuClass = navigator.cpuClass;
-  if (typeof cpuClass !== "string") return undefined;
   
-  return normalizeCpuClass(cpuClass);
+  return (typeof cpuClass === "string") 
+    ? normalizeCpuClass(cpuClass) 
+    : undefined;
 }
 
-async function getHighEntropyArchitecture(): Promise<CpuClassEnum | undefined> {
+async function getCpuClassFromHighEntropy(): Promise<CpuClassEnum | undefined> {
   if (!navigator.userAgentData?.getHighEntropyValues) return undefined;
-
   const data = await navigator.userAgentData.getHighEntropyValues(["architecture"]);
-  if (typeof data.architecture !== "string") return undefined;
 
-  return normalizeCpuClass(data.architecture);
+  return (typeof data.architecture === "string") 
+    ? normalizeCpuClass(data.architecture) 
+    : undefined;
 }
 
 function getCpuClassFromOsCpu(): CpuClassEnum | undefined {
   if (!("oscpu" in navigator)) return undefined;
   const oscpu = navigator.oscpu;
   if (typeof oscpu !== "string") return undefined;
-
   const key = oscpu.toLowerCase();
+  
+  return matchCpuMap(key);
+}
 
-  for (const pattern of Object.keys(CPU_MAP)) {
-    const regex = new RegExp(`\\b${pattern}\\b`);
-    if (regex.test(key)) return CPU_MAP[pattern];
-  }
-
-  return undefined;
+function getCpuClassFromUa(): CpuClassEnum | undefined {
+  const ua = navigator.userAgent.toLowerCase();
+  return matchCpuMap(ua);
 }
 
 function normalizeCpuClass(value: string): CpuClassEnum | undefined {
   const key = value.trim().toLowerCase();
-  return key ? CPU_MAP[key] : undefined;
+  return CPU_MAP[key];
+}
+
+function matchCpuMap(str: string) : CpuClassEnum | undefined {
+  for (const key of Object.keys(CPU_MAP)) {
+    const regex = new RegExp(`\\b${key}\\b`);
+    if (regex.test(str)) return CPU_MAP[key];
+  }
+
+  return undefined;
 }
