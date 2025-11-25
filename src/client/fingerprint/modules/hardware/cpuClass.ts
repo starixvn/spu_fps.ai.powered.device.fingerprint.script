@@ -129,11 +129,6 @@ function getCpuClassFromOsCpu(): CpuClassEnum | undefined {
   return matchCpuMap(oscpu.trim().toLowerCase());
 }
 
-function getCpuClassFromUa(): string | undefined {
-  const ua = navigator.userAgent.trim().toLowerCase();;
-  return parseWithRegexes(ua);
-}
-
 function matchCpuMap(str: string) : CpuClassEnum | undefined {
   for (const key of Object.keys(CPU_MAP)) {
     const regex = new RegExp(`\\b${key}\\b`);
@@ -141,6 +136,11 @@ function matchCpuMap(str: string) : CpuClassEnum | undefined {
   }
 
   return undefined;
+}
+
+function getCpuClassFromUa(): string | undefined {
+  const ua = navigator.userAgent.trim().toLowerCase();;
+  return parseWithRegexes(ua);
 }
 
 function parseWithRegexes(str: string) : string | undefined {

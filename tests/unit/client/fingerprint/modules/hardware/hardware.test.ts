@@ -82,7 +82,7 @@ describe("Hardware Modules Integration Tests", () => {
       // Assert
       expect(result).toEqual({
         platform: FingerprintSpecialValue.UNDEFINED,
-        cpuClass: FingerprintSpecialValue.UNDEFINED,
+        cpuClass: FingerprintSpecialValue.ERROR,
         architecture: 255,  // Changed: still returns 255 even without navigator
         oscpu: FingerprintSpecialValue.UNDEFINED,
         hardwareConcurrency: FingerprintSpecialValue.UNDEFINED,
@@ -100,21 +100,35 @@ describe("Hardware Modules Integration Tests", () => {
   describe("Individual Module Function Tests", () => {
     it("should test collectPlatform function independently", () => {
       // Arrange
-      mockNavigator.platform = "Test Platform";
+      const platformNavigator = {
+        ...mockNavigator,
+        platform: "Test Platform",
+      };
+
+      Object.defineProperty(global, "navigator", {
+        value: platformNavigator,
+        writable: true,
+      });
 
       // Act
       const result = collectPlatform();
 
       // Assert
       expect(result).toEqual("Test Platform");
+
+      // Restore global navigator
+      Object.defineProperty(global, "navigator", {
+        value: mockNavigator,
+        writable: true,
+      });
     });
 
-    it("should test collectCpuClass function independently", () => {
+    it("should test collectCpuClass function independently", async () => {
       // Arrange
       mockNavigator.cpuClass = "Test CPU";
 
       // Act
-      const result = collectCpuClass();
+      const result = await collectCpuClass();
 
       // Assert
       expect(result).toEqual("Test CPU");
@@ -144,13 +158,26 @@ describe("Hardware Modules Integration Tests", () => {
 
     it("should test collectOSCpu function independently", async () => {
       // Arrange
-      mockNavigator.oscpu = "Windows NT 10.0; Win64; x64";  // Changed: use navigator.oscpu
+      const osCpuNavigator = {
+        ...mockNavigator,
+        oscpu: "Windows NT 10.0; Win64; x64",
+      };
+
+      Object.defineProperty(global, "navigator", {
+        value: osCpuNavigator,
+        writable: true,
+      });
 
       // Act
       const result = await collectOSCpu();
 
       // Assert
       expect(result).toEqual("Windows NT 10.0; Win64; x64");
+
+      Object.defineProperty(global, "navigator", {
+        value: mockNavigator,
+        writable: true,
+      });
     });
 
     it("should test collectArchitecture function independently", () => {

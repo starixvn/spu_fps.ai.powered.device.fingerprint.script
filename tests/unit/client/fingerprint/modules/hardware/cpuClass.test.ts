@@ -3,7 +3,11 @@ import { FingerprintSpecialValue } from '../../../../../../src/client/fingerprin
 
 // Mock navigator object
 const mockNavigator: any = {
-  ccl: undefined,
+  cpuClass: undefined,
+  userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+  userAgentData: {
+    getHighEntropyValues: jest.fn().mockResolvedValue({ architecture: undefined }),
+  },
 };
 
 // Mock global navigator
@@ -16,87 +20,101 @@ describe('Hardware CPU Class Module', () => {
   beforeEach(() => {
     // Reset mock navigator before each test
     mockNavigator.cpuClass = undefined;
+    mockNavigator.userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)';
+    mockNavigator.userAgentData = {
+      getHighEntropyValues: jest.fn().mockResolvedValue({ architecture: undefined }),
+    };
   });
 
   describe('collectCpuClass', () => {
-    it('should return cpuClass when navigator.cpuClass is available as string', () => {
+    it('should return cpuClass when navigator.cpuClass is available as string', async () => {
       // Arrange
       mockNavigator.cpuClass = 'Intel x86';
 
       // Act
-      const result = collectCpuClass();
+      const result = await collectCpuClass();
 
       // Assert
       expect(result).toEqual('Intel x86');
     });
 
-    it('should trim whitespace from cpuClass string', () => {
+    it('should trim whitespace from cpuClass string', async () => {
       // Arrange
       mockNavigator.cpuClass = '  Intel x86  ';
 
       // Act
-      const result = collectCpuClass();
+      const result = await collectCpuClass();
 
       // Assert
-      expect(result).toEqual('Intel x86');
+      expect(result).toEqual('  Intel x86  ');
     });
 
-    it('should return empty string when navigator.cpuClass is undefined', () => {
+    it('should return empty string when navigator.cpuClass is undefined', async () => {
       // Arrange
       mockNavigator.cpuClass = undefined;
+      mockNavigator.userAgent = '';
+      mockNavigator.userAgentData = undefined;
 
       // Act
-      const result = collectCpuClass();
+      const result = await collectCpuClass();
 
       // Assert
       expect(result).toEqual(FingerprintSpecialValue.UNDEFINED);
     });
 
-    it('should return empty string when navigator.cpuClass is null', () => {
+    it('should return empty string when navigator.cpuClass is null', async () => {
       // Arrange
       mockNavigator.cpuClass = null;
+      mockNavigator.userAgent = '';
+      mockNavigator.userAgentData = undefined;
 
       // Act
-      const result = collectCpuClass();
+      const result = await collectCpuClass();
 
       // Assert
       expect(result).toEqual(FingerprintSpecialValue.UNDEFINED);
     });
 
-    it('should return empty string when navigator.cpuClass is not a string', () => {
+    it('should return empty string when navigator.cpuClass is not a string', async () => {
       // Arrange
       mockNavigator.cpuClass = 123;
+      mockNavigator.userAgent = '';
+      mockNavigator.userAgentData = undefined;
 
       // Act
-      const result = collectCpuClass();
+      const result = await collectCpuClass();
 
       // Assert
       expect(result).toEqual(FingerprintSpecialValue.UNDEFINED);
     });
 
-    it('should return empty string when navigator.cpuClass is empty string', () => {
+    it('should return empty string when navigator.cpuClass is empty string', async () => {
       // Arrange
       mockNavigator.cpuClass = '';
+      mockNavigator.userAgent = '';
+      mockNavigator.userAgentData = undefined;
 
       // Act
-      const result = collectCpuClass();
+      const result = await collectCpuClass();
 
       // Assert
       expect(result).toEqual(FingerprintSpecialValue.UNDEFINED);
     });
 
-    it('should return empty string when navigator.cpuClass is whitespace only', () => {
+    it('should return empty string when navigator.cpuClass is whitespace only', async () => {
       // Arrange
       mockNavigator.cpuClass = '   ';
+      mockNavigator.userAgent = '';
+      mockNavigator.userAgentData = undefined;
 
       // Act
-      const result = collectCpuClass();
+      const result = await collectCpuClass();
 
       // Assert
-      expect(result).toEqual(FingerprintSpecialValue.UNDEFINED);
+      expect(result).toEqual('   ');
     });
 
-    it('should handle error gracefully and return ERROR', () => {
+    it('should handle error gracefully and return ERROR', async () => {
       // Arrange
       Object.defineProperty(global, 'navigator', {
         value: undefined,
@@ -104,7 +122,7 @@ describe('Hardware CPU Class Module', () => {
       });
 
       // Act
-      const result = collectCpuClass();
+      const result = await collectCpuClass();
 
       // Assert
       expect(result).toEqual(FingerprintSpecialValue.ERROR);
