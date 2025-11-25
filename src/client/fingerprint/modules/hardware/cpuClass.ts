@@ -5,6 +5,9 @@ enum CpuClassEnum {
   X86 = "x86",
   X64 = "x64",
   ARM = "ARM",
+  M68K = "68K",
+  ALPHA = "Alpha",
+  PPC = "PPC"
 }
 
 const CPU_MAP: Record<string, CpuClassEnum> = {
@@ -35,7 +38,11 @@ const CPU_MAP: Record<string, CpuClassEnum> = {
   arm64: CpuClassEnum.ARM, // ARM 64-bit
   armv8: CpuClassEnum.ARM, // 64-bit ISA
   aarch64: CpuClassEnum.ARM, // ARM 64-bit (Linux/Android)
-  aarch: CpuClassEnum.ARM
+  aarch: CpuClassEnum.ARM,
+
+  "68k": CpuClassEnum.M68K, 
+  alpha: CpuClassEnum.ALPHA,
+  ppc: CpuClassEnum.PPC
 };
 
 export async function collectCpuClass(): Promise<CpuClassInfo> {
@@ -63,7 +70,7 @@ function getCpuClassFromNavigator(): CpuClassEnum | undefined {
   const cpuClass = navigator.cpuClass;
   
   return (typeof cpuClass === "string") 
-    ? normalizeCpuClass(cpuClass) 
+    ? matchCpuMap(cpuClass) 
     : undefined;
 }
 
@@ -72,7 +79,7 @@ async function getCpuClassFromHighEntropy(): Promise<CpuClassEnum | undefined> {
   const data = await navigator.userAgentData.getHighEntropyValues(["architecture"]);
 
   return (typeof data.architecture === "string") 
-    ? normalizeCpuClass(data.architecture) 
+    ? matchCpuMap(data.architecture) 
     : undefined;
 }
 
@@ -82,20 +89,20 @@ function getCpuClassFromOsCpu(): CpuClassEnum | undefined {
   if (typeof oscpu !== "string") return undefined;
   const key = oscpu.toLowerCase();
   
-  return matchCpuMap(key);
+  return normalizeCpuClass(key);
 }
 
 function getCpuClassFromUa(): CpuClassEnum | undefined {
   const ua = navigator.userAgent.toLowerCase();
-  return matchCpuMap(ua);
+  return normalizeCpuClass(ua);
 }
 
-function normalizeCpuClass(value: string): CpuClassEnum | undefined {
+function matchCpuMap(value: string): CpuClassEnum | undefined {
   const key = value.trim().toLowerCase();
   return CPU_MAP[key];
 }
 
-function matchCpuMap(str: string) : CpuClassEnum | undefined {
+function normalizeCpuClass(str: string) : CpuClassEnum | undefined {
   for (const key of Object.keys(CPU_MAP)) {
     const regex = new RegExp(`\\b${key}\\b`);
     if (regex.test(str)) return CPU_MAP[key];
