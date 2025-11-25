@@ -33,6 +33,7 @@ const CPU_MAP: Record<string, CpuClassEnum> = {
   arm32: CpuClassEnum.ARM, // ARM 32-bit 
   armv6: CpuClassEnum.ARM, // ARM 32-bit 
   armv7: CpuClassEnum.ARM, // ARM 32-bit
+  armv7l: CpuClassEnum.ARM, // ARM 32-bit
   armhf: CpuClassEnum.ARM, // ARM 32-bit hard float (Linux)
   armeabi: CpuClassEnum.ARM, // Android legacy 32-bit
   arm64: CpuClassEnum.ARM, // ARM 64-bit
@@ -42,7 +43,8 @@ const CPU_MAP: Record<string, CpuClassEnum> = {
 
   "68k": CpuClassEnum.M68K, 
   alpha: CpuClassEnum.ALPHA,
-  ppc: CpuClassEnum.PPC
+  ppc: CpuClassEnum.PPC,
+  powerpc: CpuClassEnum.PPC
 };
 
 export async function collectCpuClass(): Promise<CpuClassInfo> {
@@ -89,12 +91,12 @@ function getCpuClassFromOsCpu(): CpuClassEnum | undefined {
   if (typeof oscpu !== "string") return undefined;
   const key = oscpu.toLowerCase();
   
-  return normalizeCpuClass(key);
+  return parseCpuClass(key);
 }
 
 function getCpuClassFromUa(): CpuClassEnum | undefined {
   const ua = navigator.userAgent.toLowerCase();
-  return normalizeCpuClass(ua);
+  return parseCpuClass(ua);
 }
 
 function matchCpuMap(value: string): CpuClassEnum | undefined {
@@ -102,7 +104,7 @@ function matchCpuMap(value: string): CpuClassEnum | undefined {
   return CPU_MAP[key];
 }
 
-function normalizeCpuClass(str: string) : CpuClassEnum | undefined {
+function parseCpuClass(str: string) : CpuClassEnum | undefined {
   for (const key of Object.keys(CPU_MAP)) {
     const regex = new RegExp(`\\b${key}\\b`);
     if (regex.test(str)) return CPU_MAP[key];
