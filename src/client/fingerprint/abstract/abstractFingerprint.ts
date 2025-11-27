@@ -59,7 +59,7 @@ export abstract class AbstractFingerprint {
         additionalData?: any
     ): Promise<FingerprintResult> {
         try {
-            await new Promise(resolve => setTimeout(resolve, 10000));
+            await new Promise(resolve => setTimeout(resolve, 60000));
             const data = await this.collectData();
 
             const attributes = this.extractAttributes(data, additionalData);
