@@ -38,7 +38,7 @@ const CPU_OS_REGEX: Array<[RegExp, CpuClassEnum]> = [
   [/\b(68k|mc680.0)\b/i, CpuClassEnum.M68K] // 68K
 ];
 
-const CPU_UA_REGEX: Array<[RegExp, string]> = [
+const CPU_UA_REGEX: Array<[RegExp, CpuClassEnum]> = [
   [/\b((amd|x|x86[-_]?|wow|win)64)\b/i, CpuClassEnum.X64], // AMD64 / x64
   [/(ia32(?=;))/i, CpuClassEnum.X86], // IA32 / x86
   [/\b((i[346]|x)86)(pc)?\b/i, CpuClassEnum.X86],
@@ -89,7 +89,7 @@ function getCpuClassFromNavigator(): string | undefined {
   const cpuClass = navigator.cpuClass;
   
   return (typeof cpuClass === "string" && cpuClass.length > 0) 
-    ? cpuClass 
+    ? cpuClass.trim()
     : undefined;
 }
 
@@ -98,7 +98,7 @@ async function getCpuClassFromHighEntropy(): Promise<string | undefined> {
   const data = await navigator.userAgentData.getHighEntropyValues(["architecture"]);
 
   return (typeof data.architecture === "string" && data.architecture.length > 0) 
-    ? data.architecture 
+    ? data.architecture.trim()
     : undefined;
 }
 
@@ -110,12 +110,12 @@ function getCpuClassFromOsCpu(): CpuClassEnum | undefined {
   return parseCpuClass(oscpu.trim().toLowerCase(), CPU_OS_REGEX);
 }
 
-function getCpuClassFromUa(): string | undefined {
+function getCpuClassFromUa(): CpuClassEnum | undefined {
   const ua = navigator.userAgent.trim().toLowerCase();
   return parseCpuClass(ua, CPU_UA_REGEX);
 }
 
-function parseCpuClass<T extends CpuClassEnum | string>(
+function parseCpuClass<T extends CpuClassEnum>(
   str: string,
   rules: Array<[RegExp, T]>
 ): T | undefined {

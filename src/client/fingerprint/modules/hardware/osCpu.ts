@@ -2,21 +2,36 @@ import type { OSCpuInfo } from "../../types";
 import { FingerprintSpecialValue } from "../../utils/consts";
 
 export async function collectOSCpu(): Promise<OSCpuInfo> {
-  const oscpu = await getOSCpu();
-  return oscpu;
-}
-
-async function getOSCpu(): Promise<string | FingerprintSpecialValue> {
   try {
-    if (!("oscpu" in navigator)) return FingerprintSpecialValue.UNDEFINED;
+    const osCpu = getOsCpuFromNavigator();
+    if (osCpu) return osCpu;
 
-    const rawOSCpu = (navigator as any).oscpu;
-    
-    if (typeof rawOSCpu !== "string") return FingerprintSpecialValue.UNDEFINED;
+    const highEntropy = await getOsCpuFromHighEntropy();  
+    if (highEntropy) return highEntropy;
 
-    const trimmed = rawOSCpu.trim();
-    return trimmed || FingerprintSpecialValue.UNDEFINED;
+    return FingerprintSpecialValue.UNDEFINED;
   } catch {
     return FingerprintSpecialValue.ERROR;
   }
+}
+
+function getOsCpuFromNavigator(): string | undefined {
+  if (!("oscpu" in navigator)) return undefined;
+  const oscpu = navigator.oscpu;
+  
+  return (typeof oscpu === "string" && oscpu.length > 0) 
+    ? oscpu.trim() 
+    : undefined;
+}
+
+async function getOsCpuFromHighEntropy(): Promise<string | undefined> {
+  if (!navigator.userAgentData?.getHighEntropyValues) return undefined;
+  const data = await navigator.userAgentData.getHighEntropyValues(["platform", "architecture"]);
+
+  if (typeof data.platform === "string" && typeof data.architecture === "string" 
+    && data.platform.length > 0 && data.architecture.length > 0) {
+      return `${data.platform} ${data.architecture}`.trim()
+  }
+
+  return undefined;
 }

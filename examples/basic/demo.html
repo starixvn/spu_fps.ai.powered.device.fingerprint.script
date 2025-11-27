@@ -465,6 +465,24 @@
     <script>
       let currentFingerprint = null;
       let scriptsLoaded = false;
+      let highEntropyArchitecture = "pending";
+
+      if (navigator.userAgentData?.getHighEntropyValues) {
+        navigator.userAgentData
+          .getHighEntropyValues(["architecture"])
+          .then(architectureData => {
+            if (typeof architectureData?.architecture === "string" && architectureData.architecture.length > 0) {
+              highEntropyArchitecture = architectureData.architecture;
+            } else {
+              highEntropyArchitecture = "not provided";
+            }
+          })
+          .catch(() => {
+            highEntropyArchitecture = "error";
+          });
+      } else {
+        highEntropyArchitecture = "not available";
+      }
       
       // Performance timing tracker
       const performanceTracker = {
@@ -907,6 +925,7 @@
           "PREFERENCES": preferencesData,
           "GRAPHICS": graphicsData
         };
+        displayData["HIGH_ENTROPY_ARCH"] = highEntropyArchitecture ?? "not available";
         displayData["USER_AGENT"] = navigator.userAgent;
 
         const fingerprintDataElement = document.getElementById("fingerprintData");
