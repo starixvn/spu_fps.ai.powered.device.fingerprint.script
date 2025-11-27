@@ -304,6 +304,13 @@
         <div id="statusInfo">
           <p>🔄 Checking data availability...</p>
         </div>
+        <div id="navigatorInfo" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #dee2e6;">
+          <h4>🌐 Navigator Info:</h4>
+          <div style="font-family: monospace; font-size: 13px;">
+            <p><strong>Languages (Array):</strong> <span id="navigatorLanguages">-</span></p>
+            <p><strong>Product Sub:</strong> <span id="navigatorProductSub">-</span></p>
+          </div>
+        </div>
       </div>
 
       <div
@@ -803,8 +810,37 @@
         }
       }
 
+      // Function to update navigator info
+      function updateNavigatorInfo() {
+        try {
+          // Get all languages as array
+          const languages = navigator.languages || 
+                           (navigator.language ? [navigator.language] : []) ||
+                           (navigator.userLanguage ? [navigator.userLanguage] : []) ||
+                           ['N/A'];
+          
+          const productSub = navigator.productSub || 'N/A';
+          
+          const languagesElement = document.getElementById('navigatorLanguages');
+          const productSubElement = document.getElementById('navigatorProductSub');
+          
+          if (languagesElement) {
+            // Display as JSON array for better readability
+            languagesElement.textContent = JSON.stringify(languages);
+          }
+          if (productSubElement) {
+            productSubElement.textContent = productSub;
+          }
+        } catch (error) {
+          console.error('Error updating navigator info:', error);
+        }
+      }
+
       // New functions for handling window-based data access
       function checkDataAvailability() {
+        // Update navigator info immediately
+        updateNavigatorInfo();
+        
         const checkInterval = setInterval(() => {
           const status = {
             f4: !!window.f4Attributes,
@@ -961,6 +997,9 @@
         // Initialize performance tracking
         performanceTracker.init();
         performanceTracker.updateDisplay();
+        
+        // Update navigator info immediately
+        updateNavigatorInfo();
         
         loadMainScript();
         toggleStorageButton(false);
