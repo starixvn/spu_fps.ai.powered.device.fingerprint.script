@@ -1,23 +1,7 @@
 import type { OSCpuInfo } from "../../types";
 import { FingerprintSpecialValue } from "../../utils/consts";
-import { CpuClassEnum } from "./cpuClass";
-
-const BITNESS_MAP: Record<CpuClassEnum, string> = {
-  x64: "64",
-  x86: "32",
-  arm64: "64",
-  arm: "32",
-  armhf: "32",
-  ia64: "64",
-  ppc: "32",      
-  sparc: "64",    
-  alpha: "64",    
-  avr32: "32",
-  irix: "64",
-  mips: "64",
-  "pa-risc": "64",
-  "68k": "32",
-};
+import { getPlatformFromNavigator } from "./platform";
+import { collectCpuClass } from "./cpuClass";
 
 export async function collectOSCpu(): Promise<OSCpuInfo> {
   try {
@@ -26,6 +10,9 @@ export async function collectOSCpu(): Promise<OSCpuInfo> {
 
     const highEntropy = await getOsCpuFromHighEntropy();  
     if (highEntropy) return highEntropy;
+
+    const platformCpuClass = await getOsCpuFromPlatform();
+    if (platformCpuClass) return platformCpuClass;
 
     return FingerprintSpecialValue.UNDEFINED;
   } catch {
@@ -66,4 +53,18 @@ async function getOsCpuFromHighEntropy(): Promise<string | undefined> {
 
 function trimIfString(value: any): string | undefined {
   return typeof value === "string" && value.length > 0 ? value.trim() : undefined;
+}
+
+async function getOsCpuFromPlatform(): Promise<string | undefined> {
+  try {
+    const platform = getPlatformFromNavigator();
+    if (!platform) return undefined;
+
+    const cpuClass = await collectCpuClass();
+    if (typeof cpuClass !== "string" || cpuClass.length === 0) return undefined;
+
+    return `${platform} ${cpuClass}`;
+  } catch {
+    return undefined;
+  }
 }
