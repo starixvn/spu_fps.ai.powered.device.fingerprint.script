@@ -74,35 +74,32 @@ function trimIfString(value: any): string | undefined {
 function getOsCpuFromUserAgent(): string | undefined {
   const ua = navigator.userAgent.trim();
   const architecture = getCpuClassFromUserAgent();
-  if (!architecture) return undefined;
-
-  const bitness = BITNESS_MAP[architecture as CpuClassEnum];
+  const bitness = architecture ? BITNESS_MAP[architecture as CpuClassEnum] : undefined;
   let platform: string | undefined;
   let wow64: string | undefined;
 
-  // Windows
   if (/Windows NT/i.test(ua)) {
     platform = "Windows";
     wow64 = /\bwow64\b/i.test(ua) ? "WOW64" : undefined;
   }
-  // macOS
   else if (/Mac OS X/i.test(ua) || /Macintosh/i.test(ua)) {
     platform = "macOS";
   }
-  // Android
   else if (/Android/i.test(ua)) {
     platform = "Android";
   }
-  // Linux
   else if (/Linux/i.test(ua)) {
     platform = "Linux";
   }
-  // iOS
   else if (/\((iPhone|iPad|iPod);.*OS/i.test(ua)) {
     platform = "iOS";
   }
 
   if (!platform) return undefined;
 
-  return [platform, bitness, architecture, wow64].filter(Boolean).join("; ");
+  const osCpu = [platform, bitness, architecture, wow64]
+    .filter(v => v !== undefined)
+    .join("; ");
+
+  return osCpu.length > 0 ? osCpu : undefined;
 }
