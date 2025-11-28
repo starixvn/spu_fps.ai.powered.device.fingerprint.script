@@ -22,3 +22,12 @@ export function getPlatform(): string | FingerprintSpecialValue {
     return FingerprintSpecialValue.ERROR;
   }
 }
+
+export function getPlatformFromNavigator(): string | undefined {
+  if (!("platform" in navigator)) return undefined;
+  const platform = navigator.platform;
+  
+  return (typeof platform === "string" && platform.length > 0) 
+    ? platform.trim() 
+    : undefined;
+}
