@@ -36,6 +36,7 @@ interface EnvironmentConfig {
   gatewayUrl: string;
   encodeKey: string;
   sessionKey: string;
+  scoringSessionKey: string;
   version: string;
   cacheExpireTime: string;
   sentryDns: string;
@@ -58,7 +59,7 @@ const environmentConfig: EnvironmentConfig = {
   cookiesKey: process.env.COOKIES_KEY || 'cke_anchor_key',
   cacheKey: process.env.CACHE_KEY || 'msn_identity_tag',
   sessionKey: process.env.SESSION_KEY || '',
-  
+  scoringSessionKey: process.env.SESSION_KEY_SCORING || '',
   gatewayUrl: process.env.GATEWAY_URL || '',
   encodeKey: process.env.ENCODE_KEY || '',
   version: process.env.VERSION || '',

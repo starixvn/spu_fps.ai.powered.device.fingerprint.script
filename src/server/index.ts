@@ -10,6 +10,7 @@ import { FingerprintScriptService } from './services/fingerprintScriptService';
 import { TaggingScriptService } from './services/taggingScriptService';
 import { CombinedScriptService } from './services/combinedScriptService';
 import { Logger } from './components/sentry';
+import { ScoringScriptService } from './services/scoringScriptService';
 
 const app = express();
 
@@ -40,6 +41,7 @@ const fingerprintScript = new FingerprintScriptService();
 const taggingScript = new TaggingScriptService();
 const combinedScript = new CombinedScriptService();
 const taggingService = new TaggingService();
+const scoringScript = new ScoringScriptService();
 
 Logger.captureMessage('APD Server is starting');
 
@@ -128,6 +130,30 @@ app.get('/libs/apd-unified.min.js', async (req: Request, res: Response, next: Ne
   }
 });
 
+app.get('/libs/utils-core.js', restrictInProduction, (req: Request, res: Response) => {
+  const script = scoringScript.getScoringScript();
+
+  res.setHeader('Content-Type', 'application/javascript');
+  res.setHeader('Cache-Control', `private, max-age=${config.cacheExpireTime}`); // Cache for 1 hour
+  res.send(script);
+});
+
+app.get('/libs/utils-core.min.js', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const script = await scoringScript.getMinifiedScoringScript();
+
+    res.setHeader('Content-Type', 'application/javascript');
+    res.setHeader('Cache-Control', `private, max-age=${config.cacheExpireTime}`); // Cache for 1 hour
+    res.send(script);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get('/libs/info', restrictInProduction, (req: Request, res: Response) => {
+  res.json({ version: config.version });
+});
+
 app.get('/resources/vers', (req: Request, res: Response) => {
   const resEcXValue = taggingService.get(req, resEcXKey);
   const ifNoneMatchValue = taggingService.get(req, ifNoneMatchKey);
@@ -159,6 +185,10 @@ app.get('/', (req: Request, res: Response) => {
 // Serve HTML demo pages
 app.get('/demo.html', restrictInProduction, (req: Request, res: Response) => {
   res.sendFile('demo.html', { root: path.join(__dirname, '../../examples/basic') });
+});
+
+app.get('/scoring-demo.html', restrictInProduction, (req: Request, res: Response) => {
+  res.sendFile('scoring-demo.html', { root: path.join(__dirname, '../../examples/basic') });
 });
 
 app.get('/examples.html', restrictInProduction, (req: Request, res: Response) => {
