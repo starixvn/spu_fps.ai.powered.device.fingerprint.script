@@ -1,6 +1,6 @@
 import type { OSCpuInfo } from "../../types";
 import { FingerprintSpecialValue } from "../../utils/consts";
-import { CpuClassEnum, getCpuClassFromUserAgent } from "./cpuClass";
+import { CpuClassEnum } from "./cpuClass";
 
 const BITNESS_MAP: Record<CpuClassEnum, string> = {
   x64: "64",
@@ -26,9 +26,6 @@ export async function collectOSCpu(): Promise<OSCpuInfo> {
 
     const highEntropy = await getOsCpuFromHighEntropy();  
     if (highEntropy) return highEntropy;
-
-    const ua = getOsCpuFromUserAgent();
-    if (ua) return ua;
 
     return FingerprintSpecialValue.UNDEFINED;
   } catch {
@@ -69,37 +66,4 @@ async function getOsCpuFromHighEntropy(): Promise<string | undefined> {
 
 function trimIfString(value: any): string | undefined {
   return typeof value === "string" && value.length > 0 ? value.trim() : undefined;
-}
-
-function getOsCpuFromUserAgent(): string | undefined {
-  const ua = navigator.userAgent.trim();
-  const architecture = getCpuClassFromUserAgent();
-  const bitness = architecture ? BITNESS_MAP[architecture as CpuClassEnum] : undefined;
-  let platform: string | undefined;
-  let wow64: string | undefined;
-
-  if (/Windows NT/i.test(ua)) {
-    platform = "Windows";
-    wow64 = /\bwow64\b/i.test(ua) ? "WOW64" : undefined;
-  }
-  else if (/Mac OS X/i.test(ua) || /Macintosh/i.test(ua)) {
-    platform = "macOS";
-  }
-  else if (/Android/i.test(ua)) {
-    platform = "Android";
-  }
-  else if (/Linux/i.test(ua)) {
-    platform = "Linux";
-  }
-  else if (/\((iPhone|iPad|iPod);.*OS/i.test(ua)) {
-    platform = "iOS";
-  }
-
-  if (!platform) return undefined;
-
-  const osCpu = [platform, bitness, architecture, wow64]
-    .filter(v => v !== undefined)
-    .join("; ");
-
-  return osCpu.length > 0 ? osCpu : undefined;
 }

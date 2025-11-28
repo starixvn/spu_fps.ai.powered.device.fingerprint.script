@@ -38,32 +38,6 @@ const CPU_OS_REGEX: Array<[RegExp, CpuClassEnum]> = [
   [/\b(68k|mc680.0)\b/i, CpuClassEnum.M68K] // 68K
 ];
 
-const CPU_UA_REGEX: Array<[RegExp, CpuClassEnum]> = [
-  [/\b((amd|x|x86[-_]?|wow|win)64)\b/i, CpuClassEnum.X64], // AMD64 / x64
-  [/(ia32(?=;))/i, CpuClassEnum.X86], // IA32 / x86
-  [/\b((i[346]|x)86)(pc)?\b/i, CpuClassEnum.X86],
-
-  [/\b(aarch64|arm(v?[89]e?l?|_?64))\b/i, CpuClassEnum.ARM64], // ARM64
-  [/\b(arm(v[67])?ht?n?[fl]p?)\b/i, CpuClassEnum.ARMHF], // ARMHF
-  [/\barm(?=v([1-7]|[5-7]1)l?|;|eabi)/i, CpuClassEnum.ARM], // ARM 
-  [/( (ce|mobile); ppc;|\/[\w\.]+arm\b)/i, CpuClassEnum.ARM], // ARM (PocketPC / mobile)
-
-  [/((ppc|powerpc)(64)?)( mac|;|\))/i, CpuClassEnum.PPC], // PowerPC
-
-  [/\bsparc(64)?\b/i, CpuClassEnum.SPARC], // SPARC
-  [/\ssun4\w[;\)]/i, CpuClassEnum.SPARC], 
-
-  [/(?:osf1|[freopnt]{3,4}bsd) (alpha)/i, CpuClassEnum.ALPHA], // Alpha
-  [/winnt.+\[axp/i, CpuClassEnum.ALPHA], 
-  [/\bavr32\b/i, CpuClassEnum.AVR32], // AVR32
-  [/\bia64\b/i, CpuClassEnum.IA64], // IA64
-  [/\birix(64)?\b/i, CpuClassEnum.IRIX], // IRIX
-  [/\bmips(64)?\b/i, CpuClassEnum.MIPS], // MIPS
-  [/\bpa-risc\b/i, CpuClassEnum.PA_RISC], // PA-RISC
-  [/\b68k\b/i, CpuClassEnum.M68K], // 68K
-  [/mc680.0/i, CpuClassEnum.M68K] 
-];
-
 export async function collectCpuClass(): Promise<CpuClassInfo> {
   try {
     const cpuClass = getCpuClassFromNavigator();
@@ -74,9 +48,6 @@ export async function collectCpuClass(): Promise<CpuClassInfo> {
 
     const osCpu = getCpuClassFromOsCpu();
     if (osCpu) return osCpu;
-
-    const ua = getCpuClassFromUserAgent();
-    if (ua) return ua;
 
     return FingerprintSpecialValue.UNDEFINED;
   } catch {
@@ -108,11 +79,6 @@ function getCpuClassFromOsCpu(): CpuClassEnum | undefined {
   if (typeof oscpu !== "string") return undefined;
 
   return parseCpuClass(oscpu.trim(), CPU_OS_REGEX);
-}
-
-export function getCpuClassFromUserAgent(): CpuClassEnum | undefined {
-  const ua = navigator.userAgent.trim();
-  return parseCpuClass(ua, CPU_UA_REGEX);
 }
 
 function parseCpuClass<T extends CpuClassEnum>(
