@@ -26,12 +26,26 @@ function getOsCpuFromNavigator(): string | undefined {
 
 async function getOsCpuFromHighEntropy(): Promise<string | undefined> {
   if (!navigator.userAgentData?.getHighEntropyValues) return undefined;
-  const data = await navigator.userAgentData.getHighEntropyValues(["platform", "architecture"]);
 
-  if (typeof data.platform === "string" && typeof data.architecture === "string" 
-    && data.platform.length > 0 && data.architecture.length > 0) {
-      return `${data.platform} ${data.architecture}`.trim()
-  }
+  const data = await navigator.userAgentData.getHighEntropyValues([
+    "platform",
+    "bitness",
+    "architecture",
+    "wow64",
+  ]);
 
-  return undefined;
+  const platform = trimIfString(data.platform);
+  const bitness = trimIfString(data.bitness);
+  const architecture = trimIfString(data.architecture);
+  const wow64 = data.wow64 ? "WOW64" : undefined;
+
+  const osCpu = [platform, bitness, architecture, wow64]
+    .filter(v => v !== undefined)
+    .join("; ");
+    
+  return osCpu.length > 0 ? osCpu : undefined;
+}
+
+function trimIfString(value: any): string | undefined {
+  return typeof value === "string" && value.length > 0 ? value.trim() : undefined;
 }
