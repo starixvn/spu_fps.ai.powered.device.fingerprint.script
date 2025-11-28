@@ -70,10 +70,12 @@ class ClientClass {
     private handleF4(deviceInfo: CollectedDeviceInfo, result: FingerprintResult): void {
         if (deviceInfo.f4 !== result.hashed) {
             deviceInfo.f4 = result.hashed;
+            deviceInfo.f5 = null;
             this.updateDeviceInfo(deviceInfo);
             
             try {
                 localStorage.setItem(this.STORAGE_KEYS.F4_CODE, result.hashed);
+                localStorage.removeItem(this.STORAGE_KEYS.F5_CODE);
             } catch (error) {
             }
         }
