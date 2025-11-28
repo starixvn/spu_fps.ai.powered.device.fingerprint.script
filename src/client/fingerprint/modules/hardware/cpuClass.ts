@@ -1,7 +1,7 @@
 import type { CpuClassInfo } from "../../types";
 import { FingerprintSpecialValue } from "../../utils/consts";
 
-enum CpuClassEnum {
+export enum CpuClassEnum {
   X64 = "x64",
   X86 = "x86",
   ARM64 = "arm64",
@@ -75,7 +75,7 @@ export async function collectCpuClass(): Promise<CpuClassInfo> {
     const osCpu = getCpuClassFromOsCpu();
     if (osCpu) return osCpu;
 
-    const ua = getCpuClassFromUa();
+    const ua = getCpuClassFromUserAgent();
     if (ua) return ua;
 
     return FingerprintSpecialValue.UNDEFINED;
@@ -107,11 +107,11 @@ function getCpuClassFromOsCpu(): CpuClassEnum | undefined {
   const oscpu = navigator.oscpu;
   if (typeof oscpu !== "string") return undefined;
 
-  return parseCpuClass(oscpu.trim().toLowerCase(), CPU_OS_REGEX);
+  return parseCpuClass(oscpu.trim(), CPU_OS_REGEX);
 }
 
-function getCpuClassFromUa(): CpuClassEnum | undefined {
-  const ua = navigator.userAgent.trim().toLowerCase();
+export function getCpuClassFromUserAgent(): CpuClassEnum | undefined {
+  const ua = navigator.userAgent.trim();
   return parseCpuClass(ua, CPU_UA_REGEX);
 }
 
