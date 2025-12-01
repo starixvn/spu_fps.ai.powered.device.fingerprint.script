@@ -45,7 +45,7 @@ async function getOsCpuFromHighEntropy(): Promise<string | undefined> {
   const wow64 = data.wow64 ? "WOW64" : undefined;
 
   const osCpu = [platform, bitness, architecture, wow64]
-    .filter(v => v !== undefined)
+    .filter(v => !!v)
     .join("; ");
     
   return osCpu.length > 0 ? osCpu : undefined;
