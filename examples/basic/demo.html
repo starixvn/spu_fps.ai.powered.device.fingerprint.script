@@ -963,12 +963,12 @@
           "GRAPHICS": graphicsData
         };
         displayData["USER_AGENT"] = navigator.userAgent;
-        displayData["USER_AGENT_DATA"] = navigator.userAgentData ?? "not available";
-        displayData["HIGH_ENTROPY_PLATFORM"] = highEntropyPlatform ?? "not available";
-        displayData["HIGH_ENTROPY_BITNESS"] = highEntropyBitness ?? "not available";
-        displayData["HIGH_ENTROPY_ARCHITECTURE"] = highEntropyArchitectureFull ?? "not available";
-        displayData["HIGH_ENTROPY_WOW64"] = highEntropyWow64 ?? "not available";
-        displayData["HIGH_ENTROPY_OS_CPU"] = highEntropyOsCpu ?? "not available";
+        displayData["USER_AGENT_DATA"] = navigator.userAgentData !== undefined && navigator.userAgentData !== null ? navigator.userAgentData : "not available";
+        displayData["HIGH_ENTROPY_PLATFORM"] = highEntropyPlatform !== undefined && highEntropyPlatform !== null ? highEntropyPlatform : "not available";
+        displayData["HIGH_ENTROPY_BITNESS"] = highEntropyBitness !== undefined && highEntropyBitness !== null ? highEntropyBitness : "not available";
+        displayData["HIGH_ENTROPY_ARCHITECTURE"] = highEntropyArchitectureFull !== undefined && highEntropyArchitectureFull !== null ? highEntropyArchitectureFull : "not available";
+        displayData["HIGH_ENTROPY_WOW64"] = highEntropyWow64 !== undefined && highEntropyWow64 !== null ? highEntropyWow64 : "not available";
+        displayData["HIGH_ENTROPY_OS_CPU"] = highEntropyOsCpu !== undefined && highEntropyOsCpu !== null ? highEntropyOsCpu : "not available";
 
         const fingerprintDataElement = document.getElementById("fingerprintData");
         if (fingerprintDataElement) {
