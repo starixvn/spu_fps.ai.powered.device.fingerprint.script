@@ -82,7 +82,7 @@ describe("Hardware Modules Integration Tests", () => {
       // Assert
       expect(result).toEqual({
         platform: FingerprintSpecialValue.UNDEFINED,
-        cpuClass: FingerprintSpecialValue.ERROR,
+        cpuClass: FingerprintSpecialValue.UNDEFINED,
         architecture: 255,  // Changed: still returns 255 even without navigator
         oscpu: FingerprintSpecialValue.UNDEFINED,
         hardwareConcurrency: FingerprintSpecialValue.UNDEFINED,

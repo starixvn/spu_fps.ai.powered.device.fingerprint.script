@@ -46,7 +46,7 @@ describe('Hardware CPU Class Module', () => {
       const result = await collectCpuClass();
 
       // Assert
-      expect(result).toEqual('  Intel x86  ');
+      expect(result).toEqual('Intel x86');
     });
 
     it('should return empty string when navigator.cpuClass is undefined', async () => {
@@ -111,7 +111,7 @@ describe('Hardware CPU Class Module', () => {
       const result = await collectCpuClass();
 
       // Assert
-      expect(result).toEqual('   ');
+      expect(result).toEqual(FingerprintSpecialValue.UNDEFINED);
     });
 
     it('should handle error gracefully and return ERROR', async () => {
