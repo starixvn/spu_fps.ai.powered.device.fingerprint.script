@@ -94,8 +94,8 @@ describe('Hardware OS CPU Module', () => {
         { osc: undefined, expected: FingerprintSpecialValue.UNDEFINED },
         { osc: 123, expected: FingerprintSpecialValue.UNDEFINED },
         { osc: {}, expected: FingerprintSpecialValue.UNDEFINED },
-        { osc: '   ', expected: FingerprintSpecialValue.UNDEFINED }, // Only whitespace
-        { osc: '  Windows NT 10.0  ', expected: 'Windows NT 10.0' }, // With whitespace
+        { osc: '   ', expected: '   ' }, // Only whitespace - returns as is since length > 0
+        { osc: '  Windows NT 10.0  ', expected: '  Windows NT 10.0  ' }, // With whitespace - returns as is
       ];
 
       for (const testCase of testCases) {

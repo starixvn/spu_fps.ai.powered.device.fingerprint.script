@@ -25,7 +25,7 @@ function getOsCpuFromNavigator(): string | undefined {
   const oscpu = navigator.oscpu;
   
   return (typeof oscpu === "string" && oscpu.length > 0) 
-    ? oscpu.trim() 
+    ? oscpu
     : undefined;
 }
 
@@ -39,9 +39,9 @@ async function getOsCpuFromHighEntropy(): Promise<string | undefined> {
     "wow64",
   ]);
 
-  const platform = trimIfString(data.platform);
-  const bitness = trimIfString(data.bitness);
-  const architecture = trimIfString(data.architecture);
+  const platform = data.platform;
+  const bitness = data.bitness;
+  const architecture = data.architecture;
   const wow64 = data.wow64 ? "WOW64" : undefined;
 
   const osCpu = [platform, bitness, architecture, wow64]
@@ -49,10 +49,6 @@ async function getOsCpuFromHighEntropy(): Promise<string | undefined> {
     .join("; ");
     
   return osCpu.length > 0 ? osCpu : undefined;
-}
-
-function trimIfString(value: any): string | undefined {
-  return typeof value === "string" && value.length > 0 ? value.trim() : undefined;
 }
 
 async function getOsCpuFromPlatform(): Promise<string | undefined> {

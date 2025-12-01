@@ -466,6 +466,11 @@
       let currentFingerprint = null;
       let scriptsLoaded = false;
       let highEntropyArchitecture = "pending";
+      let highEntropyPlatform = "pending";
+      let highEntropyBitness = "pending";
+      let highEntropyArchitectureFull = "pending";
+      let highEntropyWow64 = "pending";
+      let highEntropyOsCpu = "pending";
 
       if (navigator.userAgentData?.getHighEntropyValues) {
         navigator.userAgentData
@@ -480,8 +485,40 @@
           .catch(() => {
             highEntropyArchitecture = "error";
           });
+
+        navigator.userAgentData
+          .getHighEntropyValues(["platform", "bitness", "architecture", "wow64"])
+          .then(data => {
+            const platform = data.platform;
+            const bitness = data.bitness;
+            const architecture = data.architecture;
+            const wow64 = data.wow64 ? "WOW64" : undefined;
+
+            highEntropyPlatform = platform ?? "not provided";
+            highEntropyBitness = bitness ?? "not provided";
+            highEntropyArchitectureFull = architecture ?? "not provided";
+            highEntropyWow64 = wow64 ?? "not provided";
+
+            const osCpu = [platform, bitness, architecture, wow64]
+              .filter(v => v !== undefined)
+              .join("; ");
+            
+            highEntropyOsCpu = osCpu.length > 0 ? osCpu : "not provided";
+          })
+          .catch(() => {
+            highEntropyPlatform = "error";
+            highEntropyBitness = "error";
+            highEntropyArchitectureFull = "error";
+            highEntropyWow64 = "error";
+            highEntropyOsCpu = "error";
+          });
       } else {
         highEntropyArchitecture = "not available";
+        highEntropyPlatform = "not available";
+        highEntropyBitness = "not available";
+        highEntropyArchitectureFull = "not available";
+        highEntropyWow64 = "not available";
+        highEntropyOsCpu = "not available";
       }
       
       // Performance timing tracker
@@ -925,9 +962,13 @@
           "PREFERENCES": preferencesData,
           "GRAPHICS": graphicsData
         };
-        displayData["HIGH_ENTROPY_ARCH"] = highEntropyArchitecture ?? "not available";
         displayData["USER_AGENT"] = navigator.userAgent;
         displayData["USER_AGENT_DATA"] = navigator.userAgentData ?? "not available";
+        displayData["HIGH_ENTROPY_PLATFORM"] = highEntropyPlatform ?? "not available";
+        displayData["HIGH_ENTROPY_BITNESS"] = highEntropyBitness ?? "not available";
+        displayData["HIGH_ENTROPY_ARCHITECTURE"] = highEntropyArchitectureFull ?? "not available";
+        displayData["HIGH_ENTROPY_WOW64"] = highEntropyWow64 ?? "not available";
+        displayData["HIGH_ENTROPY_OS_CPU"] = highEntropyOsCpu ?? "not available";
 
         const fingerprintDataElement = document.getElementById("fingerprintData");
         if (fingerprintDataElement) {

@@ -60,7 +60,7 @@ function getCpuClassFromNavigator(): string | undefined {
   const cpuClass = navigator.cpuClass;
   
   return (typeof cpuClass === "string" && cpuClass.length > 0) 
-    ? cpuClass.trim()
+    ? cpuClass
     : undefined;
 }
 
@@ -69,7 +69,7 @@ async function getCpuClassFromHighEntropy(): Promise<string | undefined> {
   const data = await navigator.userAgentData.getHighEntropyValues(["architecture"]);
 
   return (typeof data.architecture === "string" && data.architecture.length > 0) 
-    ? data.architecture.trim()
+    ? data.architecture
     : undefined;
 }
 
@@ -78,7 +78,7 @@ function getCpuClassFromOsCpu(): CpuClassEnum | undefined {
   const oscpu = navigator.oscpu;
   if (typeof oscpu !== "string") return undefined;
 
-  return parseCpuClass(oscpu.trim(), CPU_OS_REGEX);
+  return parseCpuClass(oscpu, CPU_OS_REGEX);
 }
 
 function parseCpuClass<T extends CpuClassEnum>(
