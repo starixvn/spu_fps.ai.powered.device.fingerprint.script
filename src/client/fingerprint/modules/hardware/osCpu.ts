@@ -56,15 +56,11 @@ function trimIfString(value: any): string | undefined {
 }
 
 async function getOsCpuFromPlatform(): Promise<string | undefined> {
-  try {
-    const platform = getPlatformFromNavigator();
-    if (!platform) return undefined;
+  const platform = getPlatformFromNavigator();
+  if (!platform) return undefined;
 
-    const cpuClass = await collectCpuClass();
-    if (typeof cpuClass !== "string" || cpuClass.length === 0) return undefined;
+  const cpuClass = await collectCpuClass();
+  if (typeof cpuClass !== "string" || cpuClass.length === 0) return undefined;
 
-    return `${platform} ${cpuClass}`;
-  } catch {
-    return undefined;
-  }
+  return `${platform}; ${cpuClass}`;
 }
