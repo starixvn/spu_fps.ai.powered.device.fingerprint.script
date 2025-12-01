@@ -472,11 +472,11 @@
       let highEntropyWow64 = "pending";
       let highEntropyOsCpu = "pending";
 
-      if (navigator.userAgentData?.getHighEntropyValues) {
+      if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
         navigator.userAgentData
           .getHighEntropyValues(["architecture"])
           .then(architectureData => {
-            if (typeof architectureData?.architecture === "string" && architectureData.architecture.length > 0) {
+            if (architectureData && typeof architectureData.architecture === "string" && architectureData.architecture.length > 0) {
               highEntropyArchitecture = architectureData.architecture;
             } else {
               highEntropyArchitecture = "not provided";
@@ -494,10 +494,10 @@
             const architecture = data.architecture;
             const wow64 = data.wow64 ? "WOW64" : undefined;
 
-            highEntropyPlatform = platform ?? "not provided";
-            highEntropyBitness = bitness ?? "not provided";
-            highEntropyArchitectureFull = architecture ?? "not provided";
-            highEntropyWow64 = wow64 ?? "not provided";
+            highEntropyPlatform = platform !== undefined && platform !== null ? platform : "not provided";
+            highEntropyBitness = bitness !== undefined && bitness !== null ? bitness : "not provided";
+            highEntropyArchitectureFull = architecture !== undefined && architecture !== null ? architecture : "not provided";
+            highEntropyWow64 = wow64 !== undefined && wow64 !== null ? wow64 : "not provided";
 
             const osCpu = [platform, bitness, architecture, wow64]
               .filter(v => v !== undefined)
