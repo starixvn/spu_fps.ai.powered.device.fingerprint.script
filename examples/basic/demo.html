@@ -927,6 +927,7 @@
         };
         displayData["HIGH_ENTROPY_ARCH"] = highEntropyArchitecture ?? "not available";
         displayData["USER_AGENT"] = navigator.userAgent;
+        displayData["USER_AGENT_DATA"] = navigator.userAgentData ?? "not available";
 
         const fingerprintDataElement = document.getElementById("fingerprintData");
         if (fingerprintDataElement) {
