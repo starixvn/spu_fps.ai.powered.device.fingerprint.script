@@ -1,4 +1,4 @@
-import type { OSCpuInfo } from "../../types";
+import type { CpuClassInfo, OSCpuInfo } from "../../types";
 import { FingerprintSpecialValue } from "../../utils/consts";
 import { getPlatformFromNavigator } from "./platform";
 import { collectCpuClass } from "./cpuClass";
@@ -56,7 +56,13 @@ async function getOsCpuFromPlatform(): Promise<string | undefined> {
   if (!platform) return undefined;
 
   const cpuClass = await collectCpuClass();
-  if (typeof cpuClass !== "string" || cpuClass.length === 0) return undefined;
+  if (typeof cpuClass !== "string" || cpuClass.length === 0 || isSpecialValue(cpuClass)) {
+    return undefined;
+  }
 
   return `${platform}; ${cpuClass}`;
+}
+
+function isSpecialValue(value: CpuClassInfo): value is FingerprintSpecialValue {
+  return value === FingerprintSpecialValue.UNDEFINED || value === FingerprintSpecialValue.ERROR;
 }
