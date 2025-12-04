@@ -9,7 +9,7 @@ import type { HardwareGroupInfo } from "../../types";
 export class HardwareFingerprint {
   public static async collect(): Promise<HardwareGroupInfo> {
     const platformResult = collectPlatform();
-    const cpuClassResult = collectCpuClass();
+    const cpuClassResult = await collectCpuClass();
     const architectureResult = collectArchitecture();
     const osCpuResult = await collectOSCpu();
     const hardwareConcurrencyResult = await collectHardwareConcurrency();

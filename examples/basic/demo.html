@@ -465,6 +465,61 @@
     <script>
       let currentFingerprint = null;
       let scriptsLoaded = false;
+      let highEntropyArchitecture = "pending";
+      let highEntropyPlatform = "pending";
+      let highEntropyBitness = "pending";
+      let highEntropyArchitectureFull = "pending";
+      let highEntropyWow64 = "pending";
+      let highEntropyOsCpu = "pending";
+
+      if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
+        navigator.userAgentData
+          .getHighEntropyValues(["architecture"])
+          .then(architectureData => {
+            if (architectureData && typeof architectureData.architecture === "string" && architectureData.architecture.length > 0) {
+              highEntropyArchitecture = architectureData.architecture;
+            } else {
+              highEntropyArchitecture = "not provided";
+            }
+          })
+          .catch(() => {
+            highEntropyArchitecture = "error";
+          });
+
+        navigator.userAgentData
+          .getHighEntropyValues(["platform", "bitness", "architecture", "wow64"])
+          .then(data => {
+            const platform = data.platform;
+            const bitness = data.bitness;
+            const architecture = data.architecture;
+            const wow64 = data.wow64 ? "WOW64" : undefined;
+
+            highEntropyPlatform = platform !== undefined && platform !== null ? platform : "not provided";
+            highEntropyBitness = bitness !== undefined && bitness !== null ? bitness : "not provided";
+            highEntropyArchitectureFull = architecture !== undefined && architecture !== null ? architecture : "not provided";
+            highEntropyWow64 = wow64 !== undefined && wow64 !== null ? wow64 : "not provided";
+
+            const osCpu = [platform, bitness, architecture, wow64]
+              .filter(v => v !== undefined)
+              .join("; ");
+            
+            highEntropyOsCpu = osCpu.length > 0 ? osCpu : "not provided";
+          })
+          .catch(() => {
+            highEntropyPlatform = "error";
+            highEntropyBitness = "error";
+            highEntropyArchitectureFull = "error";
+            highEntropyWow64 = "error";
+            highEntropyOsCpu = "error";
+          });
+      } else {
+        highEntropyArchitecture = "not available";
+        highEntropyPlatform = "not available";
+        highEntropyBitness = "not available";
+        highEntropyArchitectureFull = "not available";
+        highEntropyWow64 = "not available";
+        highEntropyOsCpu = "not available";
+      }
       
       // Performance timing tracker
       const performanceTracker = {
@@ -907,6 +962,13 @@
           "PREFERENCES": preferencesData,
           "GRAPHICS": graphicsData
         };
+        displayData["USER_AGENT"] = navigator.userAgent;
+        displayData["USER_AGENT_DATA"] = navigator.userAgentData !== undefined && navigator.userAgentData !== null ? navigator.userAgentData : "not available";
+        displayData["HIGH_ENTROPY_PLATFORM"] = highEntropyPlatform !== undefined && highEntropyPlatform !== null ? highEntropyPlatform : "not available";
+        displayData["HIGH_ENTROPY_BITNESS"] = highEntropyBitness !== undefined && highEntropyBitness !== null ? highEntropyBitness : "not available";
+        displayData["HIGH_ENTROPY_ARCHITECTURE"] = highEntropyArchitectureFull !== undefined && highEntropyArchitectureFull !== null ? highEntropyArchitectureFull : "not available";
+        displayData["HIGH_ENTROPY_WOW64"] = highEntropyWow64 !== undefined && highEntropyWow64 !== null ? highEntropyWow64 : "not available";
+        displayData["HIGH_ENTROPY_OS_CPU"] = highEntropyOsCpu !== undefined && highEntropyOsCpu !== null ? highEntropyOsCpu : "not available";
 
         const fingerprintDataElement = document.getElementById("fingerprintData");
         if (fingerprintDataElement) {
