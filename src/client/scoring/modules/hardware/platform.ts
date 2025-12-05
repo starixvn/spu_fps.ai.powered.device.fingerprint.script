@@ -1,14 +1,14 @@
-import type { PlatformInfo } from '../types';
-import { ScoringSpecialValue } from '../consts';
+import type { PlatformInfo } from '../../types';
+import { ScoringConstants } from '../../config';
 
 export function collectPlatform(): PlatformInfo {
   try {
     if (typeof navigator !== 'undefined' && navigator.platform) {
       return navigator.platform;
     }
-    return ScoringSpecialValue.UNDEFINED;
+    return ScoringConstants.UNDEFINED;
   } catch {
-    return ScoringSpecialValue.ERROR;
+    return ScoringConstants.ERROR;
   }
 }
 

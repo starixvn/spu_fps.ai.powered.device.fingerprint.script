@@ -1,5 +1,5 @@
-import type { DevicePixelRatioInfo } from '../types';
-import { ScoringSpecialValue } from '../consts';
+import type { DevicePixelRatioInfo } from '../../types';
+import { ScoringConstants } from '../../config';
 
 export function collectDevicePixelRatio(): DevicePixelRatioInfo {
   try {
@@ -10,9 +10,8 @@ export function collectDevicePixelRatio(): DevicePixelRatioInfo {
         return dpr;
       }
     }
-    return ScoringSpecialValue.UNDEFINED;
+    return ScoringConstants.UNDEFINED;
   } catch {
-    return ScoringSpecialValue.ERROR;
+    return ScoringConstants.ERROR;
   }
 }
-

@@ -15,32 +15,45 @@ export class ScoringScriptService extends ScriptService {
       "utils/dom.js",
       
       // Scoring Core
-      "scoring/consts.js",
       "scoring/config.js",
       
       // Scoring Utils
       "scoring/utils/base64Encoder.js",
       
-      // Session Key
-      "scoring/sessionKey/index.js",
+      // Field Mapping
+      "scoring/fieldMapping.js",
       
-      // Collectors
-      "scoring/collectors/languages.js",
-      "scoring/collectors/userAgent.js",
-      "scoring/collectors/appVersion.js",
-      "scoring/collectors/platform.js",
-      "scoring/collectors/webgl.js",
-      "scoring/collectors/viewport.js",
-      "scoring/collectors/plugins.js",
-      "scoring/collectors/screen.js",
-      "scoring/collectors/devicePixelRatio.js",
-      "scoring/collectors/productSub.js",
-      "scoring/collectors/webdriver.js",
-      "scoring/collectors/timezone.js",
-      "scoring/collectors/touchPoints.js",
+      // Browser Module
+      "scoring/modules/browser/appVersion.js",
+      "scoring/modules/browser/plugins.js",
+      "scoring/modules/browser/productSub.js",
+      "scoring/modules/browser/userAgent.js",
+      "scoring/modules/browser/webdriver.js",
+      "scoring/modules/browser/index.js",
+      
+      // Hardware Module
+      "scoring/modules/hardware/platform.js",
+      "scoring/modules/hardware/index.js",
+
+      // Graphics Module
+      "scoring/modules/graphics/viewport.js",
+      "scoring/modules/graphics/screen.js",
+      "scoring/modules/graphics/devicePixelRatio.js",
+      "scoring/modules/graphics/render.js",
+      "scoring/modules/graphics/index.js",
+      
+      // Preference Module
+      "scoring/modules/preference/languages.js",
+      "scoring/modules/preference/timezone.js",
+      "scoring/modules/preference/maxTouchPoints.js",
+      "scoring/modules/preference/index.js",
+
+      // Session Key
+      "sessionKey/index.js",
       
       // Scoring Core
       "scoring/index.js",
+      "scoring.main.js",
     ];
   }
 

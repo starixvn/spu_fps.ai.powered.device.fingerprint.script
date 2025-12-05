@@ -9,6 +9,11 @@ export const SCORING_CONFIG = {
   }
 }
 
+export enum ScoringConstants {
+  UNDEFINED = -1,
+  ERROR = -3,  
+}
+
 function getServerDomain(): string {
   try {
     const script = document.currentScript as HTMLScriptElement | null;

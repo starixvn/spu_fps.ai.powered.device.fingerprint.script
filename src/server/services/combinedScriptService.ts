@@ -95,7 +95,7 @@ export class CombinedScriptService extends ScriptService {
             "tagging/index.js",
 
             // Core files
-            "index.js", 
+            "fingerprint-tagging.main.js", 
         ];
     }
 

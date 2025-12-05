@@ -21,6 +21,7 @@ export class TaggingScriptService extends ScriptService {
             'tagging/modules/windowName.js',
             'tagging/tagging.js',
             'tagging/index.js',
+            'tagging.main.js',
         ];
     }
 

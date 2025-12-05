@@ -1,51 +1,43 @@
-import { ScoringSpecialValue } from './consts';
+import { ScoringConstants } from './config';
+import type { BrowserGroupInfo } from './modules/browser';
+import type { HardwareGroupInfo } from './modules/hardware';
+import type { GraphicsGroupInfo } from './modules/graphics';
+import type { PreferenceGroupInfo } from './modules/preference';
+import { GROUP_FIELD_MAPPING } from './fieldMapping';
 
 export interface ScoringGroupInfo {
-  languages: LanguagesInfo;
-  userAgent: UserAgentInfo;
-  appVersion: AppVersionInfo;
-  platform: PlatformInfo;
-  webgl: WebGLInfo;
-  viewport: ViewportInfo;
-  plugins: PluginsInfo;
-  screen: ScreenInfo;
-  devicePixelRatio: DevicePixelRatioInfo;
-  productSub: ProductSubInfo;
-  webdriver: WebdriverInfo;
-  timezone: TimezoneInfo;
-  touchPoints: TouchPointsInfo;
+  [GROUP_FIELD_MAPPING.browser]: BrowserGroupInfo;
+  [GROUP_FIELD_MAPPING.hardware]: HardwareGroupInfo;
+  [GROUP_FIELD_MAPPING.graphics]: GraphicsGroupInfo;
+  [GROUP_FIELD_MAPPING.preference]: PreferenceGroupInfo;
 }
 
 export type SessionKeyInfo = string;
 
-export type LanguagesInfo = number | ScoringSpecialValue; // length only
+export type LanguagesInfo = number | ScoringConstants; // length only
 
-export type UserAgentInfo = string | ScoringSpecialValue;
+export type UserAgentInfo = string | ScoringConstants;
 
-export type AppVersionInfo = string | ScoringSpecialValue;
+export type AppVersionInfo = string | ScoringConstants;
 
-export type PlatformInfo = string | ScoringSpecialValue;
+export type PlatformInfo = string | ScoringConstants;
 
-export type WebGLInfo = [
-  string | ScoringSpecialValue, // VENDOR
-  string | ScoringSpecialValue, // RENDERER
-  string | ScoringSpecialValue, // SHADING_LANGUAGE_VERSION
-  string | ScoringSpecialValue  // UNMASKED_RENDERER_WEBGL
-];
+export type RenderInfo = string | ScoringConstants; // UNMASKED_RENDERER_WEBGL only
+export type WebGLInfo = string | ScoringConstants; // UNMASKED_RENDERER_WEBGL only (alias for RenderInfo)
 
-export type ViewportInfo = [number, number] | ScoringSpecialValue; // [width, height]
+export type ViewportInfo = [number, number] | ScoringConstants; // [width, height]
 
-export type PluginsInfo = number | ScoringSpecialValue; // length only
+export type PluginsInfo = number | ScoringConstants; // length only
 
-export type ScreenInfo = [number, number] | ScoringSpecialValue; // [width, height]
+export type ScreenInfo = [number, number] | ScoringConstants; // [width, height]
 
-export type DevicePixelRatioInfo = number | ScoringSpecialValue;
+export type DevicePixelRatioInfo = number | ScoringConstants;
 
-export type ProductSubInfo = string | ScoringSpecialValue;
+export type ProductSubInfo = string | ScoringConstants;
 
-export type WebdriverInfo = boolean | ScoringSpecialValue;
+export type WebdriverInfo = number | ScoringConstants;
 
-export type TimezoneInfo = string | ScoringSpecialValue;
+export type TimezoneInfo = string | ScoringConstants;
 
-export type TouchPointsInfo = number | ScoringSpecialValue;
+export type MaxTouchPointsInfo = number | ScoringConstants;
 

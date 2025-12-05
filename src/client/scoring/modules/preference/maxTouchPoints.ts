@@ -1,7 +1,7 @@
-import type { TouchPointsInfo } from '../types';
-import { ScoringSpecialValue } from '../consts';
+import type { MaxTouchPointsInfo } from '../../types';
+import { ScoringConstants } from '../../config';
 
-export function collectTouchPoints(): TouchPointsInfo {
+export function collectMaxTouchPoints(): MaxTouchPointsInfo {
   try {
     if (typeof navigator !== 'undefined') {
       const maxTouchPoints = navigator.maxTouchPoints;
@@ -10,9 +10,9 @@ export function collectTouchPoints(): TouchPointsInfo {
         return maxTouchPoints;
       }
     }
-    return ScoringSpecialValue.UNDEFINED;
+    return ScoringConstants.UNDEFINED;
   } catch {
-    return ScoringSpecialValue.ERROR;
+    return ScoringConstants.ERROR;
   }
 }
 

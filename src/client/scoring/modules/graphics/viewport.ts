@@ -1,5 +1,5 @@
-import type { ViewportInfo } from '../types';
-import { ScoringSpecialValue } from '../consts';
+import type { ViewportInfo } from '../../types';
+import { ScoringConstants } from '../../config';
 
 export function collectViewport(): ViewportInfo {
   try {
@@ -13,9 +13,9 @@ export function collectViewport(): ViewportInfo {
         return [width, height];
       }
     }
-    return ScoringSpecialValue.UNDEFINED;
+    return ScoringConstants.UNDEFINED;
   } catch {
-    return ScoringSpecialValue.ERROR;
+    return ScoringConstants.ERROR;
   }
 }
 

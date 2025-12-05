@@ -1,5 +1,5 @@
-import type { TimezoneInfo } from '../types';
-import { ScoringSpecialValue } from '../consts';
+import type { TimezoneInfo } from '../../types';
+import { ScoringConstants } from '../../config';
 
 export function collectTimezone(): TimezoneInfo {
   try {
@@ -18,7 +18,7 @@ export function collectTimezone(): TimezoneInfo {
     const offset = now.getTimezoneOffset(); // in minutes
 
     if (typeof offset !== 'number' || isNaN(offset)) {
-      return ScoringSpecialValue.ERROR;
+      return ScoringConstants.ERROR;
     }
 
     const absHours = Math.floor(Math.abs(offset) / 60);
@@ -29,7 +29,7 @@ export function collectTimezone(): TimezoneInfo {
       .toString()
       .padStart(2, '0')}`;
   } catch {
-    return ScoringSpecialValue.ERROR;
+    return ScoringConstants.ERROR;
   }
 }
 

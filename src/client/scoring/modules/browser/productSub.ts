@@ -1,14 +1,14 @@
-import type { ProductSubInfo } from '../types';
-import { ScoringSpecialValue } from '../consts';
+import type { ProductSubInfo } from '../../types';
+import { ScoringConstants } from '../../config';
 
 export function collectProductSub(): ProductSubInfo {
   try {
     if (typeof navigator !== 'undefined' && navigator.productSub) {
       return navigator.productSub;
     }
-    return ScoringSpecialValue.UNDEFINED;
+    return ScoringConstants.UNDEFINED;
   } catch {
-    return ScoringSpecialValue.ERROR;
+    return ScoringConstants.ERROR;
   }
 }
 

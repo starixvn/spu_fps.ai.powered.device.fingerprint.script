@@ -1,10 +1,10 @@
-import type { LanguagesInfo } from '../types';
-import { ScoringSpecialValue } from '../consts';
+import type { LanguagesInfo } from '../../types';
+import { ScoringConstants } from '../../config';
 
 export function collectLanguages(): LanguagesInfo {
   try {
     if (typeof navigator === 'undefined') {
-      return ScoringSpecialValue.UNDEFINED;
+      return ScoringConstants.UNDEFINED;
     }
 
     const languages = navigator.languages || 
@@ -16,9 +16,9 @@ export function collectLanguages(): LanguagesInfo {
       return languages.length;
     }
 
-    return ScoringSpecialValue.UNDEFINED;
+    return ScoringConstants.UNDEFINED;
   } catch {
-    return ScoringSpecialValue.ERROR;
+    return ScoringConstants.ERROR;
   }
 }
 

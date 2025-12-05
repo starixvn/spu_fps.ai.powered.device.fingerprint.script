@@ -1,14 +1,14 @@
-import type { AppVersionInfo } from '../types';
-import { ScoringSpecialValue } from '../consts';
+import type { AppVersionInfo } from '../../types';
+import { ScoringConstants } from '../../config';
 
 export function collectAppVersion(): AppVersionInfo {
   try {
     if (typeof navigator !== 'undefined' && navigator.appVersion) {
       return navigator.appVersion;
     }
-    return ScoringSpecialValue.UNDEFINED;
+    return ScoringConstants.UNDEFINED;
   } catch {
-    return ScoringSpecialValue.ERROR;
+    return ScoringConstants.ERROR;
   }
 }
 

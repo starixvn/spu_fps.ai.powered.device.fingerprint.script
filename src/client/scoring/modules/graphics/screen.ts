@@ -1,5 +1,5 @@
-import type { ScreenInfo } from '../types';
-import { ScoringSpecialValue } from '../consts';
+import type { ScreenInfo } from '../../types';
+import { ScoringConstants } from '../../config';
 
 export function collectScreen(): ScreenInfo {
   try {
@@ -13,9 +13,9 @@ export function collectScreen(): ScreenInfo {
         return [width, height];
       }
     }
-    return ScoringSpecialValue.UNDEFINED;
+    return ScoringConstants.UNDEFINED;
   } catch {
-    return ScoringSpecialValue.ERROR;
+    return ScoringConstants.ERROR;
   }
 }
 
